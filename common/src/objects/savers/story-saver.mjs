@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Moment from 'moment';
 
 const table = 'story';
 
@@ -34,7 +35,7 @@ async function unpublishStory(db, story) {
     return storyAfter;
 }
 
-async function bumpStory(story) {
+async function bumpStory(db, story) {
     const changes = {
         id: story.id,
         bump: true,

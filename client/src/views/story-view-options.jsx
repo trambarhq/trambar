@@ -1,7 +1,10 @@
 import _ from 'lodash';
 import React, { useState, useMemo } from 'react';
 import { useListener, useErrorCatcher } from 'relaks';
+import * as BookmarkSaver from 'common/objects/savers/bookmark-saver.mjs';
+import * as IssueUtils from 'common/objects/utils/issue-utils.mjs';
 import * as StorySaver from 'common/objects/savers/story-saver.mjs';
+import * as TaskSaver from 'common/objects/savers/task-saver.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
@@ -22,23 +25,26 @@ import './story-view-options.scss';
  * appear within the story view when there's room for the third column.
  */
 function StoryViewOptions(props) {
-    const { story, reactions, bookmark, recommendations, repos, currentUser } = props;
+    const { story, reactions, bookmarks, repos, currentUser } = props;
     const { database, route, env, access, bookmarkExpected, onComplete } = props;
     const { t } = env.locale;
     const [ selectingRecipients, selectRecipients ] = useState(false);
     const [ enteringIssueDetails, enterIssueDetails ] = useState(false);
     const originalOptions = useMemo(() => {
+        const own = _.find(bookmarks, (bookmark) => {
+            return (bookmark.target_user_id === currentUser.id);
+        });
+        const others = _.without(bookmarks, own);
         return {
-            bookmarked: false,
-            recipients: _.map(recommendations, 'target_user_id'),
+            bookmarked: !!own,
+            recipients: _.map(others, 'target_user_id'),
             hidden: !story.public,
             editable: !story.published,
             removed: story.deleted,
             bumped: false,
-            issue: null,
-
+            issue: IssueUtils.extractIssueDetails(story, repos),
         };
-    }, [ story, bookmark, recommendations ]);
+    }, [ story, bookmarks, repos ]);
     const options = useDraftBuffer({
         original: originalOptions
     });
@@ -49,10 +55,18 @@ function StoryViewOptions(props) {
             const adding = !options.get('bookmarked');
             options.update('bookmarked', adding);
             done();
+            if (adding) {
+                await BookmarkSaver.createBookmark(database, story, currentUser);
+            } else {
+                await BookmarkSaver.hideBookmark(database, bookmark);
+            }
         });
     });
     const handleKeepBookmarkClick = useListener((evt) => {
-        options.update('bookmarked', false);
+        run(async () => {
+            options.update('bookmarked', false);
+            await BookmarkSaver.hideBookmark(database, bookmark);
+        });
     });
     const handleHideClick = useListener((evt) => {
         run(async () => {
@@ -94,9 +108,14 @@ function StoryViewOptions(props) {
     });
     const handleRecipientsSelect = useListener((evt) => {
         run(async () => {
-            options.update('recipients', evt.selection);
+            const { selection } = evt;
+            const recipients = _.without(selection, currentUser.id);
+            const bookmarked = _.includes(selection, currentUser.id);
+            options.update('bookmarked', bookmarked);
+            options.update('recipients', recipients);
             selectRecipients(false);
             done();
+            await BookmarkSaver.syncRecipientList(database, story, bookmarks, currentUser.id, selection);
         });
     });
     const handleRecipientsCancel = useListener((evt) => {
@@ -107,7 +126,14 @@ function StoryViewOptions(props) {
     });
     const handleIssueConfirm = useListener((evt) => {
         run(async () => {
-
+            const { issue } = evt;
+            options.update('issue', issue);
+            enterIssueDetails(false);
+            done();
+            await TaskSaver.createTask(database, 'export-issue', currentUser, { 
+                story_id: story.id,
+                ...evt.issue
+            });
         });
     });
     const handleIssueCancel = useListener((evt) => {
@@ -201,9 +227,13 @@ function StoryViewOptions(props) {
     }
 
     function renderRecipientDialogBox() {
+        let selection = options.get('recipients');
+        if (options.get('bookmarked')) {
+            selection = _.concat(selection, currentUser.id);
+        }
         const props = {
             show: selectingRecipients,
-            selection: options.get('recipients'),
+            selection,
             database,
             route,
             env,

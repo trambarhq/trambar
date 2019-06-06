@@ -90,9 +90,9 @@ async function StoryList(props) {
     render();
     const respondents = await UserFinder.findReactionAuthors(database, reactions);
     render();
-    const recommendations = await BookmarkFinder.findBookmarksByUser(database, currentUser, allStories);
+    const bookmarks = await BookmarkFinder.findBookmarksByUser(database, currentUser, allStories);
     render();
-    const recipients = await UserFinder.findBookmarkRecipients(database, recommendations);
+    const recipients = await UserFinder.findBookmarkRecipients(database, bookmarks);
     render();
 
     function render() {
@@ -162,8 +162,8 @@ async function StoryList(props) {
                 highlighting,
                 story,
                 authors: findAuthors(authors, story, currentUser),
-                recommendations: findRecommendations(recommendations, story, currentUser),
-                recipients: findRecipients(recipients, recommendations, story, currentUser),
+                bookmarks: findBookmarks(bookmarks, story, currentUser),
+                recipients: findRecipients(recipients, bookmarks, story, currentUser),
                 repos,
                 isStationary: (index === 0),
                 currentUser,
@@ -190,8 +190,8 @@ async function StoryList(props) {
                     reactions: findReactions(reactions, story),
                     authors: findAuthors(authors, story, currentUser),
                     respondents: findRespondents(respondents, reactions),
-                    recommendations: findRecommendations(recommendations, story, currentUser),
-                    recipients: findRecipients(recipients, recommendations, story, currentUser),
+                    bookmarks: findBookmarks(bookmarks, story, currentUser),
+                    recipients: findRecipients(recipients, bookmarks, story, currentUser),
                     repos,
                     currentUser,
                     database,
@@ -294,10 +294,10 @@ const findRespondents = memoizeWeak(null, function(users, reactions) {
     }));
 });
 
-const findRecommendations = memoizeWeak(null, function(recommendations, story, currentUser) {
+const findBookmarks = memoizeWeak(null, function(bookmarks, story, currentUser) {
     if (story) {
         let storyID = story.published_version_id || story.id;
-        return _.filter(recommendations, (bookmark) => {
+        return _.filter(bookmarks, (bookmark) => {
             if (bookmark.story_id === storyID) {
                 // omit those hidden by the current user
                 if (!(bookmark.hidden && bookmark.target_user_id === currentUser.id)) {
@@ -308,10 +308,10 @@ const findRecommendations = memoizeWeak(null, function(recommendations, story, c
     }
 });
 
-const findRecipients = memoizeWeak(null, function(recipients, recommendations, story, currentUser) {
-    const storyRecommendations = findRecommendations(recommendations, story, currentUser);
+const findRecipients = memoizeWeak(null, function(recipients, bookmarks, story, currentUser) {
+    const storyBookmarks = findBookmarks(bookmarks, story, currentUser);
     return _.filter(recipients, (recipient) => {
-        return _.some(storyRecommendations, { target_user_id: recipient.id });
+        return _.some(storyBookmarks, { target_user_id: recipient.id });
     });
 });
 

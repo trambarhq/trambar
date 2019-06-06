@@ -84,7 +84,7 @@ StoryView.propTypes = {
     authors: PropTypes.arrayOf(PropTypes.object),
     reactions: PropTypes.arrayOf(PropTypes.object),
     respondents: PropTypes.arrayOf(PropTypes.object),
-    recommendations: PropTypes.arrayOf(PropTypes.object),
+    bookmarks: PropTypes.arrayOf(PropTypes.object),
     recipients: PropTypes.arrayOf(PropTypes.object),
     repos: PropTypes.arrayOf(PropTypes.object),
     currentUser: PropTypes.object.isRequired,

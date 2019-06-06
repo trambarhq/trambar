@@ -100,7 +100,7 @@ class StoryEditor extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        let { env, story, currentUser, repos, recommendations } = this.props;
+        let { env, story, currentUser, repos, bookmarks } = this.props;
         let nextState = _.clone(this.state);
         if (nextProps.story !== story) {
             this.updateDraft(nextState, nextProps);
@@ -114,7 +114,7 @@ class StoryEditor extends PureComponent {
         if (nextProps.env.locale !== env.locale) {
             this.updateLocaleCode(nextState, nextProps);
         }
-        if (nextProps.recommendations !== recommendations) {
+        if (nextProps.bookmarks !== bookmarks) {
             this.updateBookmarkRecipients(nextState, nextProps);
         }
         if (nextProps.repos !== repos) {
@@ -179,7 +179,7 @@ class StoryEditor extends PureComponent {
         } else {
             // reset options to default when a new story starts
             nextState.options = defaultOptions;
-        } 
+        }
     }
 
     /**
@@ -190,7 +190,7 @@ class StoryEditor extends PureComponent {
      */
     updateBookmarkRecipients(nextState, nextProps) {
         if (nextProps.story) {
-            let targetUserIDs = _.map(nextProps.recommendations, 'target_user_id');
+            let targetUserIDs = _.map(nextProps.bookmarks, 'target_user_id');
             nextState.options = _.clone(nextState.options);
             nextState.options.bookmarkRecipients = _.union(nextState.options.bookmarkRecipients, targetUserIDs);
         }
@@ -1617,7 +1617,7 @@ if (process.env.NODE_ENV !== 'production') {
         highlighting: PropTypes.bool,
         story: PropTypes.object,
         authors: PropTypes.arrayOf(PropTypes.object),
-        recommendations: PropTypes.arrayOf(PropTypes.object),
+        bookmarks: PropTypes.arrayOf(PropTypes.object),
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         repos: PropTypes.arrayOf(PropTypes.object),

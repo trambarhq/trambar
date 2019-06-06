@@ -163,7 +163,7 @@ function FrontEnd(props) {
         }
     }, [ payloads.uploading ]);
     useEffect(() => {
-        document.title = locale.t('app-title');
+        document.title = locale.t('app-name');
     }, [ locale ]);
     useEffect(() => {
         if (database.authorized && schema) {

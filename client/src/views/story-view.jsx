@@ -5,10 +5,8 @@ import { useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as FocusManager from 'common/utils/focus-manager.mjs';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
-import * as IssueUtils from 'common/objects/utils/issue-utils.mjs';
 import * as ReactionSaver from 'common/objects/savers/reaction-saver.mjs';
 import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
-import * as RandomToken from 'common/utils/random-token.mjs';
 
 // widgets
 import { ProfileImage } from '../widgets/profile-image.jsx';
@@ -30,7 +28,7 @@ import './story-view.scss';
  * task of rendering the actual story contents to StoryContents.
  */
 function StoryView(props) {
-    const { story, authors, reactions, respondents, recommendations, recipients, bookmark, repos, currentUser } = props;
+    const { story, authors, reactions, respondents, bookmarks, recipients, repos, currentUser } = props;
     const { access, highlighting, pending } = props;
     const { highlightReactionID, scrollToReactionID } = props;
     const { database, route, env, payloads } = props;
@@ -362,8 +360,7 @@ function StoryView(props) {
             story,
             reactions,
             repos,
-            bookmark,
-            recommendations,
+            bookmarks,
             currentUser,
             database,
             route,

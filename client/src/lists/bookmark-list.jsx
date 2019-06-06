@@ -64,9 +64,9 @@ async function BookmarkList(props) {
     render();
     const respondents = await UserFinder.findReactionAuthors(database, reactions);
     render();
-    const recommendations = await BookmarkFinder.findBookmarksByUser(database, currentUser);
+    const bookmarksSent = await BookmarkFinder.findBookmarksByUser(database, currentUser);
     render();
-    const recipients = await UserFinder.findBookmarkRecipients(database, recommendations);
+    const recipients = await UserFinder.findBookmarkRecipients(database, bookmarksSent);
     render();
 
     function render() {
@@ -143,8 +143,8 @@ async function BookmarkList(props) {
             const editorProps = {
                 story,
                 authors: (story) ? findAuthors(authors, story) : array(currentUser),
-                recommendations: findRecommendations(recommendations, story),
-                recipients: findRecipients(recipients, recommendations),
+                bookmarks: findBookmarks(bookmarksSent, story),
+                recipients: findRecipients(recipients, bookmarksSent),
                 currentUser,
                 database,
                 payloads,
@@ -167,8 +167,8 @@ async function BookmarkList(props) {
                     reactions: findReactions(reactions, story),
                     authors: findAuthors(authors, story),
                     respondents: findRespondents(respondents, reactions, story),
-                    recommendations: findRecommendations(recommendations, story),
-                    recipients: findRecipients(recipients, recommendations),
+                    bookmarks: findBookmarks(bookmarksSent, story),
+                    recipients: findRecipients(recipients, bookmarksSent),
                     repos,
                     currentUser,
                     database,
@@ -241,16 +241,16 @@ const findRespondents = memoizeWeak(null, function(users, reactions, story) {
     }));
 });
 
-const findRecommendations = memoizeWeak(null, function(recommendations, story) {
+const findBookmarks = memoizeWeak(null, function(bookmarks, story) {
     if (story) {
         const storyID = story.published_version_id || story.id;
-        return _.filter(recommendations, { story_id: storyID });
+        return _.filter(bookmarks, { story_id: storyID });
     }
 });
 
-const findRecipients = memoizeWeak(null, function(recipients, recommendations) {
+const findRecipients = memoizeWeak(null, function(recipients, bookmarks) {
     return _.filter(recipients, (recipient) => {
-        return _.some(recommendations, { target_user_id: recipient.id });
+        return _.some(bookmarks, { target_user_id: recipient.id });
     });
 });
 

@@ -7,9 +7,28 @@ async function saveBookmarks(db, bookmarks) {
     return bookmarksAfter;
 }
 
+async function saveBookmark(db, bookmark) {
+    const bookmarkAfter = saveBookmarks(db, [ bookmark ]);
+    return bookmarkAfter;
+}
+
+async function createBookmark(db, story, user) {
+    const bookmark = {
+        story_id: story.published_version_id || story.id,
+        user_ids: [ user.id ],
+        target_user_id: user.id,
+    };
+    return saveBookmark(db, bookmark);
+}
+
 async function removeBookmarks(db, bookmarks) {
     const bookmarksAfter = await db.remove({ table }, bookmarks);
     return bookmarksAfter;
+}
+
+async function removeBookmark(db, bookmark) {
+    const [ bookmarkAfter ] = await removeBookmarks(db, [ bookmark ]);
+    return bookmarkAfter;
 }
 
 async function hideBookmark(db, bookmark) {
@@ -43,7 +62,10 @@ async function syncRecipientList(db, story, bookmarks, senderID, recipientIDs) {
 }
 
 export {
+    saveBookmark,
     saveBookmarks,
+    createBookmark,
+    removeBookmark,
     removeBookmarks,
     hideBookmark,
     syncRecipientList,

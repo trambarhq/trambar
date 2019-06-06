@@ -14,8 +14,8 @@ async function removeLink(db, link) {
     return linkAfter;
 }
 
-async function createLink(db, address, schema) {
-    const project = await ProjectFinder.findProjectByName(db, schema);
+async function createLink(db, address, projectName) {
+    const project = await ProjectFinder.findProjectByName(db, projectName);
     const name = project.details.title;
     const atime = (new Date).toISOString();
     const key = `${address}/${schema}`;
