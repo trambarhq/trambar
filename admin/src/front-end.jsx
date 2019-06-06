@@ -78,17 +78,21 @@ function FrontEnd(props) {
         const handleStupefaction = (evt) => {
             routeManager.substitute('error-page');
         };
+        dataSource.addEventListener('stupefaction', handleStupefaction);
+        return () => {
+            dataSource.removeEventListener('stupefaction', handleStupefaction);
+        };
+    }, [ dataSource, routeManager ]);
+    useEffect(() => {
         const handleRouteBeforeChange = (evt) => {
             // postpone the route change until the change is confirmed
             evt.postponeDefault(route.confirm());
         }
-        dataSource.addEventListener('stupefaction', handleStupefaction);
         routeManager.addEventListener('beforechange', handleRouteBeforeChange, true);
         return () => {
-            dataSource.removeEventListener('stupefaction', handleStupefaction);
             routeManager.removeEventListener('beforechange', handleRouteBeforeChange);
         };
-    }, [ route ])
+    }, [ routeManager, route ]);
     useEffect(() => {
         if (payloads.uploading) {
             const handleBeforeUnload = (evt) => {

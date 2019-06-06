@@ -15,8 +15,8 @@ async function initialize(evt) {
 
     const React = await import('react');
     const ReactDOM = await import('react-dom');
-    const { FrontEndCore, FrontEnd } = await loadFrontEnd();
-    const props = await FrontEndCore(FrontEnd.coreConfiguration);
+    const { FrontEndCore, FrontEnd, coreConfiguration } = await loadFrontEnd();
+    const props = await FrontEndCore(coreConfiguration);
     const element = React.createElement(FrontEnd, props);
     const container = document.getElementById('react-container');
     ReactDOM.render(element, container);

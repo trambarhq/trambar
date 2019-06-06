@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
+import * as NotificationSaver from 'common/objects/savers/notification-saver.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
@@ -63,6 +64,33 @@ function NotificationView(props) {
         let icon = getNotificationIcon(notification);
         return <i className={`fa fa-${icon} fa-fw`}/>;
     }
+}
+
+async function processMobileAlert(alert, database, route) {
+    // create an object take has some of Notification's properties
+    const notification = {
+        id: alert.notification_id,
+        type: alert.type,
+        user_id: alert.user_id,
+        reaction_id: alert.reaction_id,
+        story_id: alert.story_id,
+    };
+    const url = getNotificationURL(notification, route);
+    const target = getNotificationTarget(notification);
+    const a = document.createElement('A');
+    a.href = url;
+    a.target = target;
+    if (target) {
+        // click it to open a new tab
+        a.click();
+    } else {
+        // handle it internally
+        route.change(a);
+        window.focus();
+    }
+
+    // make as seen
+    await NotificationSaver.markNotificationAsSeen(database, notification);
 }
 
 function getNotificationURL(notification, route) {
@@ -170,4 +198,5 @@ function getNotificationIcon(notification) {
 export {
     NotificationView as default,
     NotificationView,
+    processMobileAlert,
 };
