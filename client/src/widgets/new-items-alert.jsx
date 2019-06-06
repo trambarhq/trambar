@@ -1,6 +1,11 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+
+// custom hooks
+import {
+    useAfterglow,
+} from '../hooks.mjs';
 
 import './new-items-alert.scss';
 
@@ -10,11 +15,27 @@ import './new-items-alert.scss';
  * otherwise wouldn't notice due to scrolling.
  */
 function NewItemsAlert(props) {
-    const { show, url, children, onClick } = props;
+    const { url, children, onClick } = props;
+    const [ container, setContainer ] = useState(null);
+    const show = useAfterglow(!!url, 500);
 
-    if (url) {
-        const classNames = [ 'new-items-alert' ];
+    useEffect(() => {
         if (show) {
+            const viewport = document.getElementsByClassName('page-view-port')[0];
+            const node = document.createElement('DIV');
+            viewport.appendChild(node);
+            setContainer(node);
+            return () => {
+                viewport.removeChild(node);
+            };
+        } else {
+            setContainer(null);
+        }
+    }, [ show ]);
+
+    if (container) {
+        const classNames = [ 'new-items-alert' ];
+        if (url) {
             classNames.push('show');
         } else {
             classNames.push('hide');
@@ -26,12 +47,10 @@ function NewItemsAlert(props) {
         };
         const element = (
             <a {...anchorProps}>
-                <i className="fa fa-arrow-up" />
-                {props.children}
+                <i className="fa fa-arrow-up" />{children}
             </a>
         );
-        return ReactDOM.createPortal(element, dest);
-
+        return ReactDOM.createPortal(element, container);
     } else {
         return null;
     }

@@ -238,6 +238,12 @@ RoleFilterButton.propTypes = {
 
     env: PropTypes.instanceOf(Environment).isRequired,
 };
+SearchBar.propTypes = {
+    settings: PropTypes.object.isRequired,
+    database: PropTypes.instanceOf(Database),
+    route: PropTypes.instanceOf(Route),
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
 StoryEmblem.propTypes = {
     story: PropTypes.object.isRequired,
 };

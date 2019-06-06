@@ -65,6 +65,20 @@ async function StoryList(props) {
         }
     };
 
+    function reanchorAtStory(scrollToStoryID, scrollToReactionID) {
+        const params = {
+            scrollToStoryID,
+            highlightStoryID: undefined,
+            scrollToReactionID,
+            highlightReactionID: undefined,
+        };
+        route.reanchor(params);
+    }
+
+    function getAnchor(storyID) {
+        return (storyID) ? `story-${storyID}` : undefined
+    }
+
     render();
     // load repos first, so "add to issue tracker" option doesn't pop in
     // suddenly in triple-column mode
@@ -109,7 +123,7 @@ async function StoryList(props) {
     function renderNewStoryAlert() {
         const count = _.size(hiddenStoryIDs);
         let url;
-        if (!_.isEmpty(hiddenStoryIDs)) {
+        if (count > 0) {
             url = route.find(route.name, {
                 highlightStoryID: _.first(hiddenStoryIDs)
             });
@@ -197,20 +211,6 @@ async function StoryList(props) {
                 return <div className="story-view" style={{ height }} />
             }
         }
-    }
-
-    function reanchorAtStory(scrollToStoryID, scrollToReactionID) {
-        const params = {
-            scrollToStoryID,
-            highlightStoryID: undefined,
-            scrollToReactionID,
-            highlightReactionID: undefined,
-        };
-        route.reanchor(params);
-    }
-
-    function getAnchor(storyID) {
-        return (storyID) ? `story-${storyID}` : undefined
     }
 }
 

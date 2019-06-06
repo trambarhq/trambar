@@ -1,7 +1,6 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import ComponentRefs from 'common/utils/component-refs.mjs';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 import * as TagScanner from 'common/utils/tag-scanner.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
@@ -11,216 +10,110 @@ import './search-bar.scss';
 /**
  * Asynchronous component that retrieves data needed by the search bar, namely
  * project statistics, which include information concerning tag usage.
- *
- * @extends AsyncComponent
  */
-class SearchBar extends AsyncComponent {
-    static displayName = 'SearchBar';
+async function SearchBar(props) {
+    const { database, route, env, settings } = props;
+    const [ show ] = useProgress();
 
-    /**
-     * Render component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, env, settings } = this.props;
-        let db = database.use({ by: this });
-        let props = {
-            dailyActivities: undefined,
+    render();
+    const currentUserID = await database.start();
+    const currentUser = await UserFinder.findUser(database, currentUserID);
+    const params = { ...settings.statistics };
+    if (params.user_id === 'current') {
+        params.user_id = currentUser.id;
+    }
+    if (params.public === 'guest') {
+        params.public = (currentUser.type === 'guest');
+    }
+    const dailyActivities = await StatisticsFinder.find(database, params);
+    render();
 
+    function render() {
+        const sprops = {
+            dailyActivities,
             settings,
             route,
             env,
         };
         // don't let the component be empty initially
-        meanwhile.show(<SearchBarSync {...props} />, 'initial');
-        let currentUserID = await db.start();
-        let currentUser = await UserFinder.findUser(db, currentUserID);
-        let params = _.clone(settings.statistics);
-        if (params.user_id === 'current') {
-            params.user_id = currentUser.id;
-        }
-        if (params.public === 'guest') {
-            params.public = (currentUser.type === 'guest');
-        }
-        props.dailyActivities = await StatisticsFinder.find(db, params);
-        return <SearchBarSync {...props} />;
+        show(<SearchBarSync {...sprops} />, 'initial') ;
     }
 }
 
 /**
  * Synchronous component that actually renders the search bar.
- *
- * @extends PureComponent
  */
-class SearchBarSync extends PureComponent {
-    static displayName = 'SearchBarSync';
+function SearchBarSync(props) {
+    const { env, route, dailyActivities, settings } = props;
+    const { t } = env.locale;
+    const tagsRef = useRef();
+    const hashTags = useMemo(() => {
+        return extractTags(dailyActivities, env);
+    }, [ dailyActivities, env ]);
+    const [ selectedHashTags ] = useMemo(() => {
+        return findTags(route.params.search);
+    }, [ route ]);
+    const [ search, setSearch ] = useState(null);
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    constructor(props) {
-        super(props);
-        let { env, route, dailyActivities } = props;
-        this.components = ComponentRefs({
-            tags: HTMLDivElement,
-        });
-        // TODO: shouldn't have properties derived from props in state
-        this.state = {
-            keywords: route.params.search || '',
-            hashTags: extractTags(dailyActivities, env),
-            selectedHashTags: findTags(route.params.search),
-        };
-    }
-
-    /**
-     * Update keywords if necessary
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { env, route, dailyActivities } = this.props;
-        let { keywords } = this.state;
-        if (nextProps.route !== route) {
-            let route = nextProps.route;
-            let keywordsAfter = route.query.search || '';
-            if (!_.isEqual(normalize(keywords), normalize(keywordsAfter))) {
-                this.setState({
-                    keywords: keywordsAfter,
-                    selectedHashTags: findTags(keywordsAfter),
-                });
+    const handleTextChange = useListener((evt) => {
+        const keywords = _.trim(evt.target.value);
+        setSearch({ keywords, delay: 800 });
+    });
+    const handleKeyDown = useListener((evt) => {
+        if (evt.keyCode === 13) {
+            if (search) {
+                setSearch({ keywords: search.keywords, delay: 0 });
             }
         }
-        if (nextProps.dailyActivities !== dailyActivities) {
-            let hashTags = extractTags(nextProps.dailyActivities, env);
-            this.setState({ hashTags });
+    });
+    const handleFocus = useListener((evt) => {
+        const target = evt.target;
+        target.selectionStart = 0;
+        target.selectionEnd = target.value.length;
+    });
+    const handleWindowResize = useListener((evt) => {
+        hideUnpopularTags();
+    });
+
+    useEffect(() => {
+        if (search) {
+            const timeout = setTimeout(() => {
+                const params = { search: search.keywords, ...settings.route };
+                route.push(route.name, params);
+            }, search.delay);
+            return () => {
+                clearTimeout(timeout);
+            };
         }
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        return (
-            <div className="search-bar">
-                {this.renderTextInput()}
-                {this.renderHashTags()}
-            </div>
-        );
-    }
-
-    renderTextInput() {
-        let { env } = this.props;
-        let { keywords } = this.state;
-        let { t } = env.locale;
-        let inputProps = {
-            type: 'text',
-            value: keywords,
-            placeholder: t('search-bar-keywords'),
-            onChange: this.handleTextChange,
-            onKeyDown: this.handleKeyDown,
-            onFocus: this.handleFocus,
+    }, [ search, route ]);
+    useEffect(() => {
+        window.addEventListener('resize', handleWindowResize);
+        return () => {
+            window.addEventListener('resize', handleWindowResize);
         };
-        return (
-            <div className="text-input">
-                <input {...inputProps} />
-            </div>
-        );
-    }
+    }, []);
+    useEffect(() => {
+        hideUnpopularTags();
+    }, [ hashTags ]);
 
-    /**
-     * Render list of hash tags
-     *
-     * @return {ReactElement}
-     */
-    renderHashTags() {
-        let { setters } = this.components;
-        let { hashTags } = this.state;
-        return (
-            <div ref={setters.tags} className="tags">
-            {
-                _.map(hashTags, (tag, index) => {
-                    return this.renderHashTag(tag, index);
-                })
-            }
-            </div>
-        );
-    }
-
-    /**
-     * Render a hash tag
-     *
-     * @param  {Object} tag
-     * @param  {Number} index
-     *
-     * @return {ReactElement}
-     */
-    renderHashTag(tag, index) {
-        let { route, settings } = this.props;
-        let { selectedHashTags } = this.state;
-        let params = _.assign({ search: tag.name }, settings.route);
-        let url = route.find(route.name, params);
-        let props = {
-            className: 'tag',
-            onClick: this.handleHashTagClick,
-            'data-tag': tag.name,
-            href: url
-        };
-        if (_.includes(selectedHashTags, _.toLower(tag.name))) {
-            props.className += ' selected'
-        }
-        return <a key={index} {...props}>{tag.name}</a>;
-    }
-
-    /**
-     * Attach handler for resize
-     */
-    componentDidMount() {
-        window.addEventListener('resize', this.handleWindowResize);
-    }
-
-    /**
-     * Adjust tags visibility based on popularity upon redraw
-     */
-    componentDidUpdate() {
-        this.hideUnpopularTags();
-    }
-
-    /**
-     * Remove resize handler
-     */
-    componentDidMount() {
-        window.addEventListener('resize', this.handleWindowResize);
-    }
-
-    /**
-     * Hide less popular tags until the remaining fit on one line
-     */
-    hideUnpopularTags() {
-        let { hashTags } = this.state;
-        let { container } = this.components;
+    function hideUnpopularTags() {
+        let container = tagsRef.current;
         if (container) {
             // first, make all node visible
-            let nodes = {};
-            _.each(container.children, (node) => {
+            const nodes = {};
+            for (let node of container.children) {
                 if (node.style.display === 'none') {
                     node.style.display = '';
                 }
-                let tag = node.getAttribute('data-tag');
+                const tag = node.getAttribute('data-tag');
                 nodes[tag] = node;
-            });
-            let tagsByPopularity = _.sortBy(hashTags, 'score');
+            }
+            const tagsByPopularity = _.sortBy(hashTags, 'score');
+            // hide tags until container has only a single line
             while (isWrapping(nodes)) {
-                let tag = tagsByPopularity.shift();
+                const tag = tagsByPopularity.shift();
                 if (tag) {
-                    let node = nodes[tag.name];
-                    delete nodes[tag.name];
+                    const node = nodes[tag.name];
                     node.style.display = 'none';
                 } else {
                     break;
@@ -229,81 +122,56 @@ class SearchBarSync extends PureComponent {
         }
     }
 
-    /**
-     * Perform search by inserting search terms into URL
-     */
-    performSearch() {
-        let { route, settings } = this.props;
-        let { keywords } = this.state;
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = null;
+    return (
+        <div className="search-bar">
+            {renderTextInput()}
+            {renderHashTags()}
+        </div>
+    );
+
+    function renderTextInput() {
+        let keywords;
+        if (search) {
+            keywords = search.keywords;
+        } else {
+            keywords = route.params.search || '';
         }
-        let params = _.assign({ search: keywords }, settings.route);
-        route.push(route.name, params);
+        const inputProps = {
+            type: 'text',
+            value: keywords,
+            placeholder: t('search-bar-keywords'),
+            onChange: handleTextChange,
+            onKeyDown: handleKeyDown,
+            onFocus: handleFocus,
+        };
+        return (
+            <div className="text-input">
+                <input {...inputProps} />
+            </div>
+        );
     }
 
-    /**
-     * Called when user changes search string
-     *
-     * @param  {Event} evt
-     */
-    handleTextChange = (evt) => {
-        let text = evt.target.value;
-        let tags = findTags(text);
-        this.setState({
-            keywords: text,
-            selectedHashTags: tags
-        });
-        if (this.timeout) {
-            clearTimeout(this.timeout);
+    function renderHashTags() {
+        return (
+            <div ref={tagsRef} className="tags">
+                {_.map(hashTags, renderHashTag)}
+            </div>
+        );
+    }
+
+    function renderHashTag(tag, index) {
+        const params = { search: tag.name, ...settings.route };
+        const url = route.find(route.name, params);
+        const classNames = [ 'tag' ];
+        if (_.includes(selectedHashTags, _.toLower(tag.name))) {
+            classNames.push('selected');
         }
-        this.timeout = setTimeout(() => {
-            this.performSearch();
-        }, 800);
-    }
-
-    /**
-     * Called when user press a key
-     *
-     * @param  {Evt} evt
-     */
-    handleKeyDown = (evt) => {
-        if (evt.keyCode === 13) {
-            this.performSearch();
-        }
-    }
-
-    /**
-     * Called when input field received focus
-     *
-     * @param  {Event} evt
-     */
-    handleFocus = (evt) => {
-        let target = evt.target;
-        target.selectionStart = 0;
-        target.selectionEnd = target.value.length;
-    }
-
-    /**
-     * Called when user clicks on a tag
-     *
-     * @param  {Event} evt
-     */
-    handleHashTagClick = (evt) => {
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = null;
-        }
-    }
-
-    /**
-     * Called when user resizes the browser window
-     *
-     * @param  {Event} evt
-     */
-    handleWindowResize = (evt) => {
-        this.hideUnpopularTags();
+        const props = {
+            className: classNames.join(' '),
+            'data-tag': name,
+            href: url
+        };
+        return <a key={index} {...props}>{tag.name}</a>;
     }
 }
 
@@ -389,29 +257,9 @@ function extractTags(dailyActivities, env) {
     return _.sortBy(hashTags, 'name');
 }
 
+const component = Relaks.memo(SearchBar);
+
 export {
-    SearchBar as default,
-    SearchBar,
-    SearchBarSync,
+    component as default,
+    component as SearchBar,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    SearchBar.propTypes = {
-        settings: PropTypes.object.isRequired,
-        database: PropTypes.instanceOf(Database),
-        route: PropTypes.instanceOf(Route),
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    SearchBarSync.propTypes = {
-        settings: PropTypes.object.isRequired,
-        dailyActivities: PropTypes.object,
-        route: PropTypes.instanceOf(Route),
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

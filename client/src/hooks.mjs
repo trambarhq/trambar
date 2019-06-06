@@ -163,6 +163,7 @@ function openPopUpWindow(target) {
 
 export {
     useLatest,
+    useAfterglow,
     useConfirmation,
     useDialogHandling,
     useStreamHandling,

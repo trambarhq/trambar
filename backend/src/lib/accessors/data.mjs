@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import * as TagScanner from '../common/utils/tag-scanner.mjs';
 
 class Data {
     constructor() {
