@@ -22,7 +22,7 @@ import MediaImporter from '../editors/media-importer.jsx';
 
 // custom hooks
 import {
-    useDraftBuffer,
+    useReactionBuffer,
 } from '../hooks';
 
 import './reaction-editor.scss';
@@ -36,11 +36,11 @@ const autoSave = 2000;
 function ReactionEditor(props) {
     const { reaction, story, currentUser } = props;
     const { database, env, payloads, onFinish } = props;
-    const { t, languageCode, localeCode } = env.locale;
+    const { t } = env.locale;
     const [ capturing, capture ] = useState(false);
     const importerRef = useRef();
     const textAreaRef = useRef();
-    const draft = useDraftBuffer({
+    const draft = useReactionBuffer({
         original: reaction || createBlankComment(story, currentUser),
     });
     const [ selectedResourceIndex, setSelectedResourceIndex ] = useState(0);
@@ -48,7 +48,7 @@ function ReactionEditor(props) {
 
     const handleTextChange = useListener((evt) => {
         const langText = evt.currentTarget.value;
-        draft.update([ 'details', 'text', languageCode ], langText);
+        draft.updateLocalized('details.text', env.locale, langText);
 
         // automatically enable Markdown formatting
         if (draft.get('details.markdown') === undefined) {
@@ -195,11 +195,11 @@ function ReactionEditor(props) {
     }
 
     function renderTextArea() {
-        const langText = draft.get([ 'details', 'text', languageCode ], '');
+        const langText = draft.getLocalized('details.text', env.locale);
         const textareaProps = {
             ref: textAreaRef,
             value: langText,
-            lang: localeCode,
+            lang: env.locale.localeCode,
             onChange: handleTextChange,
             onKeyPress: handleKeyPress,
             onPaste: handlePaste,
@@ -218,17 +218,15 @@ function ReactionEditor(props) {
     }
 
     function renderActionButtons() {
-        const publishing = draft.get('published', false);
         const cancelButtonProps = {
             label: t('story-cancel'),
             onClick: handleCancelClick,
-            disabled: publishing,
         };
         const postButtonProps = {
             label: t('story-post'),
             onClick: handlePublishClick,
             emphasized: true,
-            disabled: !draft.changed || publishing,
+            disabled: !draft.hasContents(),
         };
         return (
             <div className="action-buttons">
@@ -241,7 +239,7 @@ function ReactionEditor(props) {
     function renderMediaEditor() {
         const props = {
             allowShifting: env.isWiderThan('double-col'),
-            resources: _.get(draft, 'details.resources'),
+            resources: draft.get('details.resources'),
             resourceIndex: selectedResourceIndex,
             payloads,
             env,

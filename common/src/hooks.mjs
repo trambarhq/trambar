@@ -116,7 +116,7 @@ function useDraftBuffer(params) {
     const draft = useSaveBuffer({
         compare: _.isEqual,
         ...params,
-    }, DraftBuffer);
+    }, AsyncDraftBuffer);
     return draft;
 }
 
