@@ -2,7 +2,6 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
-import ComponentRefs from 'common/utils/component-refs.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets

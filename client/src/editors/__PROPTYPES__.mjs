@@ -26,3 +26,15 @@ MediaEditor.propTypes = {
     onChange: PropTypes.func.isRequired,
     onEmbed: PropTypes.func,
 };
+ReactionEditor.propTypes = {
+    reaction: PropTypes.object,
+    story: PropTypes.object.isRequired,
+    currentUser: PropTypes.object,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    payloads: PropTypes.instanceOf(Payloads).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+
+    onFinish: PropTypes.func,
+};

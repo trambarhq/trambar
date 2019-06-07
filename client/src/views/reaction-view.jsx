@@ -4,7 +4,6 @@ import { useListener } from 'relaks';
 import * as Markdown from 'common/utils/markdown.mjs';
 import * as PlainText from 'common/utils/plain-text.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
-import ComponentRefs from 'common/utils/component-refs.mjs';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';

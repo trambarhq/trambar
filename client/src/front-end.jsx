@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useListener, useEventTime } from 'relaks';
-import ComponentRefs from 'common/utils/component-refs.mjs';
 import FrontEndCore from 'common/front-end-core.mjs';
 import { routes } from './routing.mjs';
 import CORSRewriter from 'common/routing/cors-rewriter.mjs';
