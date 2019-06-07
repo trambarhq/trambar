@@ -1603,28 +1603,3 @@ export {
     StoryEditor as default,
     StoryEditor,
 };
-
-import Database from 'common/data/database.mjs';
-import Payloads from 'common/transport/payloads.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    StoryEditor.propTypes = {
-        isStationary: PropTypes.bool,
-        highlighting: PropTypes.bool,
-        story: PropTypes.object,
-        authors: PropTypes.arrayOf(PropTypes.object),
-        bookmarks: PropTypes.arrayOf(PropTypes.object),
-        recipients: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        repos: PropTypes.arrayOf(PropTypes.object),
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

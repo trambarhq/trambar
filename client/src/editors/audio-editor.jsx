@@ -2,7 +2,7 @@ import React from 'react';
 
 // widgets
 import { ImageEditor } from '../editors/image-editor.jsx';
-import { DurationIndicator } from '../widgets/duration-indicator.jsx';
+import { formatDuration } from '../widgets/duration-indicator.jsx';
 
 import './audio-editor.scss';
 
@@ -16,7 +16,7 @@ function AudioEditor(props) {
         return (
             <ImageEditor {...props}>
                 <div className="audio-duration">
-                    {DurationIndicator.format(duration)}
+                    {formatDuration(duration)}
                 </div>
             </ImageEditor>
         );
@@ -28,7 +28,7 @@ function AudioEditor(props) {
                         <i className="fa fa-microphone" />
                     </div>
                     <div className="duration">
-                        {DurationIndicator.format(duration)}
+                        {formatDuration(duration)}
                     </div>
                 </div>
             </div>

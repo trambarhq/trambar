@@ -368,26 +368,3 @@ export {
     StoryEditorOptions as default,
     StoryEditorOptions,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    StoryEditorOptions.propTypes = {
-        section: PropTypes.oneOf([ 'main', 'preview', 'both' ]),
-        story: PropTypes.object.isRequired,
-        repos: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        options: PropTypes.object.isRequired,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onChange: PropTypes.func,
-        onComplete: PropTypes.func,
-    };
-}

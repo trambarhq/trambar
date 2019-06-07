@@ -41,7 +41,7 @@ async function PhotoCaptureDialogBoxBrowser(props) {
     const handleAcceptClick = useListener((evt) => {
         if (onCapture) {
             const { capturedImage } = capture;
-            const payload = payloads.prepare('image');
+            const payload = payloads.add('image');
             payload.attachFile(capturedImage.blob);
             const resource = {
                 type: 'image',

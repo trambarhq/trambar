@@ -2,7 +2,7 @@ import React from 'react';
 
 // widgets
 import { ImageEditor } from '../editors/image-editor.jsx';
-import { DurationIndicator } from '../widgets/duration-indicator.jsx';
+import { formatDuration } from '../widgets/duration-indicator.jsx';
 
 import './video-editor.scss';
 
@@ -15,7 +15,7 @@ function VideoEditor(props) {
     return (
         <ImageEditor {...props}>
             <div className="video-duration">
-                {DurationIndicator.format(duration)}
+                {formatDuration(duration)}
             </div>
         </ImageEditor>
     );
