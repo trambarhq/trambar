@@ -76,9 +76,7 @@ function RepoListPageSync(props) {
     });
     const handleSaveClick = useListener((evt) => {
         run(async () => {
-            const removal = _.filter(repos, (repo) => {
-                return selection.removing(repo.id);
-            });
+            const removal = selection.filter(repos, 'removing');
             if (removal.length > 0) {
                 await confirm(t('repo-list-confirm-remove-$count', removal.removal));
             }

@@ -116,12 +116,8 @@ function RoleSummaryPageSync(props) {
                 reportProblems(problems);
 
                 const roleAfter = await RoleSaver.saveRole(database, draft.current);
-                const addition = _.filter(users, (user) => {
-                    return userSelection.adding(user.id);
-                });
-                const removal = _.filter(users, (user) => {
-                    return userSelection.removing(user.id);
-                });
+                const addition = userSelection.filter(users, 'adding');
+                const removal = userSelection.filter(users, 'removing');
                 await UserSaver.addToRoleLists(database, addition, roleAfter.id);
                 await UserSaver.removeFromRoleLists(database, removal, roleAfter.id);
 

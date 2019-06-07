@@ -72,12 +72,8 @@ function ServerListPageSync(props) {
     });
     const handleSaveClick = useListener((evt) => {
         run(async () => {
-            const removal = _.filter(servers, (server) => {
-                return selection.removing(server.id);
-            });
-            const addition = _.filter(servers, (server) => {
-                return selection.adding(server.id);
-            });
+            const removal = selection.filter(servers, 'removing');
+            const addition = selection.filter(servers, 'adding');
             if (removal.length > 0) {
                 await confirm(t('server-list-confirm-disable-$count', removal.length));
             }

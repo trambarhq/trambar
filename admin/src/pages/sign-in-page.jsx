@@ -17,9 +17,10 @@ async function SignInPage(props) {
     const [ username, setUsername ] = useState('');
     const [ password, setPassowrd ] = useState('');
     const [ submitting, setSubmitting ] = useState(false);
-    const [ error, run ] = useErrorCatcher();
+    const [ error, run ] = useErrorCatcher(true);
     const [ oauthErrors, setOAuthErrors ] = useState({});
     const [ savedCredentials, setSavedCredentials ] = useState(false);
+    const credentialsValid = !!_.trim(username) && !!_.trim(password);
 
     const handleOAuthButtonClick = useListener(async (evt) => {
         evt.preventDefault();
@@ -45,8 +46,7 @@ async function SignInPage(props) {
     });
     const handleFormSubmit = useListener((evt) => {
         evt.preventDefault();
-        const valid = !_.trim(username) && !_.trim(password);
-        if (!valid) {
+        if (!credentialsValid) {
             return;
         }
         run(async () => {
@@ -101,8 +101,7 @@ async function SignInPage(props) {
             env,
             onChange: handlePasswordChange,
         };
-        const valid = !_.trim(username) && !_.trim(password);
-        let disabled = !valid;
+        let disabled = !credentialsValid;
         if (savedCredentials) {
             // don't disable the button, since the browser will immediately
             // set the password on user action

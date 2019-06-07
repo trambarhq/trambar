@@ -1,6 +1,7 @@
 class Cancellation extends Error {
     constructor() {
         super('Operation cancelled');
+        this.cancellation = true;
     };
 }
 

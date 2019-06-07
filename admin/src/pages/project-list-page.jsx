@@ -79,12 +79,8 @@ function ProjectListPageSync(props) {
     });
     const handleSaveClick = useListener((evt) => {
         run(async () => {
-            const removal = _.filter(projects, (project) => {
-                return selection.removing(project.id);
-            });
-            const addition = _.filter(projects, (project) => {
-                return selection.adding(project.id);
-            });
+            const removal = selection.filter(projects, 'removing');
+            const addition = selection.filter(projects, 'adding');
             if (removal.length > 0) {
                 await confirm(t('project-list-confirm-archive-$count', removal.length));
             }

@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { useSaveBuffer, Cancellation } from 'relaks';
-import * as Markdown from 'common/utils/markdown.mjs';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import { useSaveBuffer, AsyncSaveBuffer } from 'relaks';
+import * as Markdown from './utils/markdown.mjs';
+import Cancellation from './errors/cancellation.mjs';
 
 function useLatest(propValue) {
     const [ stateValue, setStateValue ] = useState();
@@ -53,56 +53,70 @@ function useConfirmation() {
     return [ confirmationRef, confirm ];
 }
 
+class AsyncSelectionBuffer extends AsyncSaveBuffer {
+    existing(id) {
+        return _.includes(this.original, id);
+    }
+
+    toggle(id) {
+        const list = _.toggle(this.current, id);
+        this.set(list);
+    }
+
+    adding(id) {
+        return !this.existing(id) && _.includes(this.current, id);
+    }
+
+    keeping(id) {
+        return _.includes(this.current, id);
+    }
+
+    removing(id) {
+        return this.existing(id) && !_.includes(this.current, id);
+    }
+
+    filter(objects, action) {
+        const f = this[action];
+        return _.filter(objects, (object) => {
+            return f.call(this, object.id);
+        });
+    }
+}
+
 function useSelectionBuffer(params) {
     const selection = useSaveBuffer({
         compare: (a, b) => {
             return _.isEmpty(_.xor(a, b));
         },
         ...params,
-    });
+    }, AsyncSelectionBuffer);
     selection.shown = useAfterglow(!params.reset);
-    selection.existing = function(id) {
-        return _.includes(this.original, id);
-    };
-    selection.toggle = function(id) {
-        const list = _.toggle(this.current, id);
-        this.set(list);
-    };
-    selection.adding = function(id) {
-        return !this.existing(id) && _.includes(this.current, id);
-    };
-    selection.keeping = function(id) {
-        return _.includes(this.current, id);
-    };
-    selection.removing = function(id) {
-        return this.existing(id) && !_.includes(this.current, id);
-    };
-    selection.removal = function() {
-        const ids = _.difference(this.original, this.current);
-        return ids.length;
-    };
-    selection.addition = function() {
-        const ids = _.difference(this.current, this.original);
-        return ids.length;
-    };
     return selection;
+}
+
+class AsyncDraftBuffer extends AsyncSaveBuffer {
+    getCurrent(key, def) {
+        return _.get(this.current, key, def);
+    }
+
+    getOriginal(key, def) {
+        return _.get(this.original, key, def);
+    }
+
+    get(key, def) {
+        return this.getCurrent(key, def);
+    }
+
+    update(key, value) {
+        this.set(_.decoupleSet(this.current, key, value));
+    };
 }
 
 function useDraftBuffer(params) {
     const draft = useSaveBuffer({
         compare: _.isEqual,
         ...params,
-    });
-    draft.getCurrent = function(key, def) {
-        return _.get(this.current, key, def);
-    };
-    draft.getOriginal = function(key, def) {
-        return _.get(this.original, key, def);
-    };
-    draft.get = draft.getCurrent;
-    draft.update = function(key, value) {
-        this.set(_.decoupleSet(this.current, key, value));
-    };
+    }, DraftBuffer);
     return draft;
 }
 
@@ -112,4 +126,7 @@ export {
     useConfirmation,
     useSelectionBuffer,
     useDraftBuffer,
+
+    AsyncSelectionBuffer,
+    AsyncDraftBuffer,
 };

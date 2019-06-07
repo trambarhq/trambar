@@ -35,7 +35,7 @@ const autoSave = 2000;
  */
 function ReactionEditor(props) {
     const { reaction, story, currentUser } = props;
-    const { env, payloads } = props;
+    const { database, env, payloads, onFinish } = props;
     const { t, languageCode, localeCode } = env.locale;
     const [ capturing, capture ] = useState(false);
     const importerRef = useRef();
@@ -76,8 +76,8 @@ function ReactionEditor(props) {
     });
     const handlePublishClick = useListener((evt) => {
         run(async () => {
-            this.triggerFinishEvent();
             draft.update('published', true);
+            done();
             const resources = draft.get('details.resources');
             await ResourceUtils.attachMosaic(resources, env);
             await ReactionSaver.saveReaction(database, draft.current);
@@ -85,7 +85,7 @@ function ReactionEditor(props) {
     });
     const handleCancelClick = useListener((evt) => {
         run(async () => {
-            this.triggerFinishEvent();
+            done();
             if (reaction) {
                 if (reaction.ptime) {
                     // reaction was published before--publish it again
@@ -104,10 +104,10 @@ function ReactionEditor(props) {
     const handleCaptureStart = useListener((evt) => {
         capture(evt.mediaType);
     });
-    const handleCaptureEnd = useListner((evt) => {
+    const handleCaptureEnd = useListener((evt) => {
         capture(null);
     });
-    const handleReference = useListner((evt) => {
+    const handleReference = useListener((evt) => {
         const resources = draft.get('details.resources', []);
         const res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
@@ -156,6 +156,12 @@ function ReactionEditor(props) {
         }
     }, [ story, currentUser ]);
 
+    function done() {
+        if (onFinish) {
+            onFinish({})
+        }
+    }
+
     return (
         <div className="reaction-editor">
             <div className="profile-image-column">
@@ -189,6 +195,7 @@ function ReactionEditor(props) {
     }
 
     function renderTextArea() {
+        const langText = draft.get([ 'details', 'text', languageCode ], '');
         const textareaProps = {
             ref: textAreaRef,
             value: langText,
@@ -221,7 +228,7 @@ function ReactionEditor(props) {
             label: t('story-post'),
             onClick: handlePublishClick,
             emphasized: true,
-            disabled: draft.changed || publishing,
+            disabled: !draft.changed || publishing,
         };
         return (
             <div className="action-buttons">

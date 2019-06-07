@@ -77,12 +77,8 @@ function UserListPageSync(props) {
     });
     const handleSaveClick = useListener(async (evt) => {
         run(async () => {
-            const removal = _.filter(users, (user) => {
-                return selection.removing(user.id);
-            });
-            const addition = _.filter(users, (user) => {
-                return selection.adding(user.id);
-            });
+            const removal = selection.filter(users, 'removing');
+            const addition = selection.filter(users, 'adding');
             if (removal.length > 0) {
                 await confirm(t('user-list-confirm-disable-$count', removal.length));
             }

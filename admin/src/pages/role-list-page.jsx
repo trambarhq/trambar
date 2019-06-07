@@ -71,12 +71,8 @@ function RoleListPageSync(props) {
     });
     const handleSaveClick = useListener((evt) => {
         run(async () => {
-            const removal = _.filter(roles, (role) => {
-                return selection.removing(role.id);
-            });
-            const addition = _.filter(roles, (role) => {
-                return selection.adding(role.id);
-            });
+            const removal = _.filter(roles, 'removing');
+            const addition = _.filter(roles, 'adding');
             if (removal.length > 0) {
                 await confirm(t('role-list-confirm-disable-$count', removal.length));
             }
