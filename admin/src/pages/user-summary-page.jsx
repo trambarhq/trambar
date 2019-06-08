@@ -127,7 +127,7 @@ function UserSummaryPageSync(props) {
                 }
                 setProblems(problems);
                 if (_.isEmpty(problems)) {
-                    const userAfter = await UserSaver.saveUSer(database, draft.current);
+                    const userAfter = await UserSaver.saveUser(database, draft.current);
                     payloads.dispatch(userAfter);
 
                     // add user to member list if he's not there yet

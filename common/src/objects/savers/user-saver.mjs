@@ -47,21 +47,31 @@ async function restoreUser(db, user) {
     return userAfter;
 }
 
-async function addToRoleLists(db, users, roleID) {
+async function addRole(db, users, role) {
     const changes = _.map(users, (user) => {
         return {
             id: user.id,
-            role_ids: _.union(user.role_ids, [ roleID ])
+            role_ids: _.union(user.role_ids, [ role.id ])
         };
     });
     return saveUsers(db, changes);
 }
 
-async function removeFromRoleLists(db, users, roleID) {
+async function removeRole(db, users, role) {
     const changes = _.map(users, (user) => {
         return {
             id: user.id,
-            role_ids: _.difference(user.role_ids, [ roleID ])
+            role_ids: _.difference(user.role_ids, [ role.id ])
+        };
+    });
+    return saveUsers(db, changes);
+}
+
+async function removeRequestedProject(db, users, project) {
+    const changes = _.map(users, (user) => {
+        return {
+            id: user.id,
+            requested_project_ids: _.difference(user.requested_project_ids, [ project.id ])
         };
     });
     return saveUsers(db, changes);
@@ -76,6 +86,9 @@ export {
     disableUser,
     restoreUsers,
     restoreUser,
-    addToRoleLists,
-    removeFromRoleLists,
+
+    addRole,
+    removeRole,
+
+    removeRequestedProject,
 };

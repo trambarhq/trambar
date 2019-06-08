@@ -49,32 +49,34 @@ async function restoreProject(db, project) {
     return projectAfter;
 }
 
-async function updateRepoList(db, project, repoIDs) {
+async function associateRepos(db, project, repos) {
+    const repoIDs = _.map(repos, 'id');
     return saveProject(db, { id: project.id, repo_ids: repoIDs });
 }
 
-async function addToRepoList(db, project, repoIDs) {
-    const newList = _.union(project.repo_ids, repoIDs);
-    return updateRepoList(db, project, newList);
+async function addRepos(db, project, repos) {
+    const repoIDs = _.union(project.repo_ids, _.map(repos, 'id'));
+    return saveProject(db, { id: project.id, repo_ids: repoIDs });
 }
 
-async function removeFromRepoList(db, project, repoIDs) {
-    const newList = _.difference(project.repo_ids, repoIDs);
-    return updateRepoList(db, project, repoIDs);
+async function removeRepos(db, project, repos) {
+    const repoIDs = _.difference(project.repo_ids, _.map(repos, 'id'));
+    return saveProject(db, { id: project.id, repo_ids: repoIDs });
 }
 
-async function updateMemberList(db, project, userIDs) {
+async function associateUsers(db, project, users) {
+    const userIDs = _.map(users, 'id');
     return saveProject(db, { id: project.id, user_ids: userIDs });
 }
 
-async function addToMemberList(db, project, userIDs) {
-    const newList = _.union(project.repo_ids, userIDs);
-    return updateMemberList(db, project, newList);
+async function addUsers(db, project, users) {
+    const userIDs = _.union(project.repo_ids, _.map(users, 'id'));
+    return saveProject(db, { id: project.id, user_ids: userIDs });
 }
 
-async function removeFromMemberList(db, project, userIDs) {
-    const newList = _.difference(project.user_ids, userIDs);
-    return updateMemberList(db, project, newList);
+async function removeUsers(db, project, users) {
+    const userIDs = _.difference(project.repo_ids, _.map(users, 'id'));
+    return saveProject(db, { id: project.id, user_ids: userIDs });
 }
 
 export {
@@ -86,10 +88,12 @@ export {
     removeProjects,
     restoreProject,
     restoreProjects,
-    updateRepoList,
-    addToRepoList,
-    removeFromRepoList,
-    updateMemberList,
-    addToMemberList,
-    removeFromMemberList,
+
+    associateRepos,
+    addRepos,
+    removeRepos,
+
+    associateUsers,
+    addUsers,
+    removeUsers,
 };

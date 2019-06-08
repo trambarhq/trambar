@@ -51,7 +51,7 @@ function RoleListPageSync(props) {
     const readOnly = !editing;
     const activeRoles = filterRoles(roles);
     const selection = useSelectionBuffer({
-        original: _.map(activeRoles, 'id'),
+        original: activeRoles,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
@@ -59,7 +59,7 @@ function RoleListPageSync(props) {
     const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const [ sort, handleSort ] = useSortHandler();
-    const handleRowClick = useRowToggle(selection, 'data-role-id');
+    const handleRowClick = useRowToggle(selection, roles);
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
     });
@@ -71,16 +71,16 @@ function RoleListPageSync(props) {
     });
     const handleSaveClick = useListener((evt) => {
         run(async () => {
-            const removal = _.filter(roles, 'removing');
-            const addition = _.filter(roles, 'adding');
-            if (removal.length > 0) {
-                await confirm(t('role-list-confirm-disable-$count', removal.length));
+            const removing = selection.removing();
+            if (removing.length > 0) {
+                await confirm(t('role-list-confirm-disable-$count', removing.length));
             }
-            if (addition.length > 0) {
-                await confirm(t('role-list-confirm-reactivate-$count', addition.length));
+            const adding = selection.adding();
+            if (adding.length > 0) {
+                await confirm(t('role-list-confirm-reactivate-$count', adding.length));
             }
-            await RoleSaver.disableRoles(database, removal);
-            await RoleSaver.restoreRoles(database, addition);
+            await RoleSaver.disableRoles(database, removing);
+            await RoleSaver.restoreRoles(database, adding);
             warnDataLoss(false);
             handleCancelClick();
         });
@@ -178,17 +178,17 @@ function RoleListPageSync(props) {
             title = t('role-list-status-disabled');
         }
         if (selection.shown) {
-            if (selection.existing(role.id)) {
+            if (selection.isExisting(role)) {
                 classNames.push('fixed');
             }
-            if (selection.adding(role.id) || selection.keeping(role.id)) {
+            if (selection.isKeeping(role)) {
                 classNames.push('selected');
             }
             onClick = handleRowClick;
         }
         const props = {
             className: classNames.join(' '),
-            'data-role-id': role.id,
+            'data-id': role.id,
             title,
             onClick,
         };
@@ -210,9 +210,9 @@ function RoleListPageSync(props) {
             if (selection.shown) {
                 // add a badge next to the name if we're disabling or
                 // restoring a role
-                if (selection.adding(role.id)) {
+                if (selection.isAdding(role)) {
                     badge = <ActionBadge type="reactivate" env={env} />;
-                } else if (selection.removing(role.id)) {
+                } else if (selection.isRemoving(role)) {
                     badge = <ActionBadge type="disable" env={env} />;
                 }
             } else {

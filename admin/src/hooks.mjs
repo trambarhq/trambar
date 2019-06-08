@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import { useState, useCallback, useEffect } from 'react';
+import { useListener } from 'relaks';
 import { useLatest, useAfterglow, useConfirmation, useSelectionBuffer, useDraftBuffer } from 'common/hooks.mjs';
 import * as SlugGenerator from 'common/utils/slug-generator.mjs';
 import Cancellation from 'common/errors/cancellation.mjs';
@@ -44,11 +45,15 @@ function useSortHandler() {
     return [ sort, handleSort ];
 }
 
-function useRowToggle(selection, attr) {
-    const handleRowClick = useCallback((evt) => {
-        const id = parseInt(evt.currentTarget.getAttribute(attr));
-        selection.toggle(id);
-    }, []);
+function useRowToggle(selection, objects) {
+    const handleRowClick = useListener((evt) => {
+        const id = parseInt(evt.currentTarget.getAttribute('data-id'));
+        const object = _.find(objects, { id });
+        console.log(id, object);
+        if (object) {
+            selection.toggle(object);
+        }
+    });
     return handleRowClick;
 }
 

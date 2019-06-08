@@ -6,6 +6,7 @@ import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as UserSaver from 'common/objects/savers/user-saver.mjs';
 import UserTypes from 'common/objects/types/user-types.mjs';
 
 // widgets
@@ -57,7 +58,7 @@ function UserListPageSync(props) {
     const readOnly = !editing;
     const activeUsers = filterUsers(users);
     const selection = useSelectionBuffer({
-        original: _.map(activeUsers, 'id'),
+        original: activeUsers,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
@@ -65,7 +66,7 @@ function UserListPageSync(props) {
     const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const [ sort, handleSort ] = useSortHandler();
-    const handleRowClick = useRowToggle(selection, 'data-user-id');
+    const handleRowClick = useRowToggle(selection, users);
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
     });
@@ -77,16 +78,16 @@ function UserListPageSync(props) {
     });
     const handleSaveClick = useListener(async (evt) => {
         run(async () => {
-            const removal = selection.filter(users, 'removing');
-            const addition = selection.filter(users, 'adding');
-            if (removal.length > 0) {
-                await confirm(t('user-list-confirm-disable-$count', removal.length));
+            const removing = selection.removing();
+            if (removing.length > 0) {
+                await confirm(t('user-list-confirm-disable-$count', removing.length));
             }
-            if (addition.length > 0) {
-                await confirm(t('user-list-confirm-reactivate-$count', addition.length));
+            const adding = selection.adding();
+            if (adding.length > 0) {
+                await confirm(t('user-list-confirm-reactivate-$count', adding.length));
             }
-            await UserSaver.disableUsers(databse, removal);
-            await UserSaver.restoreUsers(databse, addition);
+            await UserSaver.disableUsers(database, removing);
+            await UserSaver.restoreUsers(database, adding);
             warnDataLoss(false);
             handleCancelClick();
         });
@@ -186,17 +187,17 @@ function UserListPageSync(props) {
             title = t('user-list-status-disabled');
         }
         if (selection.shown) {
-            if (selection.existing(user.id)) {
+            if (selection.isExisting(user)) {
                 classNames.push('fixed');
             }
-            if (selection.keeping(user.id) || selection.adding(user.id)) {
+            if (selection.isKeeping(user)) {
                 classNames.push('selected');
             }
             onClick = handleRowClick;
         }
         let props = {
             className: classNames.join(' '),
-            'data-user-id': user.id,
+            'data-id': user.id,
             title,
             onClick,
         };
@@ -220,9 +221,9 @@ function UserListPageSync(props) {
             const name = p(user.details.name);
             let url, badge;
             if (selection.shown) {
-                if (selection.adding(user.id)) {
+                if (selection.isAdding(user)) {
                     badge = <ActionBadge type="reactivate" env={env} />;
-                } else if (selection.removing(user.id)) {
+                } else if (selection.isRemoving(user)) {
                     badge = <ActionBadge type="disable" env={env} />;
                 }
             } else {

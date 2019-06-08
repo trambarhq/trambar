@@ -59,7 +59,7 @@ function ProjectListPageSync(props) {
     const readOnly = !editing;
     const activeProjects = filterProjects(projects);
     const selection = useSelectionBuffer({
-        original: _.map(activeProjects, 'id'),
+        original: activeProjects,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
@@ -67,7 +67,7 @@ function ProjectListPageSync(props) {
     const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const [ sort, handleSort ] = useSortHandler();
-    const handleRowClick = useRowToggle(selection, 'data-project-id');
+    const handleRowClick = useRowToggle(selection, projects);
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
     });
@@ -79,16 +79,16 @@ function ProjectListPageSync(props) {
     });
     const handleSaveClick = useListener((evt) => {
         run(async () => {
-            const removal = selection.filter(projects, 'removing');
-            const addition = selection.filter(projects, 'adding');
-            if (removal.length > 0) {
-                await confirm(t('project-list-confirm-archive-$count', removal.length));
+            const removing = selection.removing();
+            if (removing.length > 0) {
+                await confirm(t('project-list-confirm-archive-$count', removing.length));
             }
-            if (addition.length > 0) {
-                await confirm(t('project-list-confirm-restore-$count', addition.length));
+            const adding = selection.adding();
+            if (adding.length > 0) {
+                await confirm(t('project-list-confirm-restore-$count', adding.length));
             }
-            await ProjectSaver.archiveProjects(database, removal);
-            await ProjectSaver.restoreProjects(database, addition);
+            await ProjectSaver.archiveProjects(database, removing);
+            await ProjectSaver.restoreProjects(database, adding);
             warnDataLoss(false);
             handleCancelClick();
         })
@@ -190,17 +190,17 @@ function ProjectListPageSync(props) {
             title = t('project-list-status-archived');
         }
         if (selection.shown) {
-            if (selection.existing(project.id)) {
+            if (selection.isExisting(project)) {
                 classNames.push('fixed');
             }
-            if (selection.adding(project.id) || selection.keeping(project.id)) {
+            if (selection.isKeeping(project)) {
                 classNames.push('selected');
             }
             onClick = handleRowClick;
         }
         const props = {
             className: classNames.join(' '),
-            'data-project-id': project.id,
+            'data-id': project.id,
             title,
             onClick,
         };
@@ -227,9 +227,9 @@ function ProjectListPageSync(props) {
             if (selection.shown) {
                 // add a badge next to the name if we're archiving or
                 // restoring a project
-                if (selection.adding(project.id)) {
+                if (selection.isAdding(project)) {
                     badge = <ActionBadge type="restore" env={env} />;
-                } else if (selection.removing(project.id)) {
+                } else if (selection.isRemoving(project)) {
                     badge = <ActionBadge type="archive" env={env} />;
                 }
             } else {

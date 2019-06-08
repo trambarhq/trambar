@@ -52,7 +52,7 @@ function ServerListPageSync(props) {
     const readOnly = !editing;
     const activeServers = filterServers(servers);
     const selection = useSelectionBuffer({
-        original: _.map(activeServers, 'id'),
+        original: activeServers,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
@@ -60,7 +60,7 @@ function ServerListPageSync(props) {
     const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const [ sort, handleSort ] = useSortHandler();
-    const handleRowClick = useRowToggle(selection, 'data-server-id');
+    const handleRowClick = useRowToggle(selection, servers);
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
     });
@@ -72,16 +72,16 @@ function ServerListPageSync(props) {
     });
     const handleSaveClick = useListener((evt) => {
         run(async () => {
-            const removal = selection.filter(servers, 'removing');
-            const addition = selection.filter(servers, 'adding');
-            if (removal.length > 0) {
-                await confirm(t('server-list-confirm-disable-$count', removal.length));
+            const removing = selection.removing();
+            if (removing.length > 0) {
+                await confirm(t('server-list-confirm-disable-$count', removing.length));
             }
-            if (addition.length > 0) {
-                await confirm(t('server-list-confirm-reactivate-$count', addition.length));
+            const adding = selection.adding();
+            if (adding.length > 0) {
+                await confirm(t('server-list-confirm-reactivate-$count', adding.length));
             }
-            await ServerSaver.disableServers(database, removal);
-            await ServerSaver.restoreServers(database, addition);
+            await ServerSaver.disableServers(database, removing);
+            await ServerSaver.restoreServers(database, adding);
             warnDataLoss(false);
             handleCancelClick();
         });
@@ -182,17 +182,17 @@ function ServerListPageSync(props) {
             title = t('server-list-status-disabled');
         }
         if (selection.shown) {
-            if (selection.existing(server.id)) {
+            if (selection.isExisting(server)) {
                 classNames.push('fixed');
             }
-            if (selection.keeping(server.id) || selection.adding(server.id)) {
+            if (selection.isKeeping(server)) {
                 classNames.push('selected');
             }
             onClick = handleRowClick;
         }
         const props = {
             className: classNames.join(' '),
-            'data-server-id': server.id,
+            'data-id': server.id,
             title,
             onClick,
         };
@@ -215,9 +215,9 @@ function ServerListPageSync(props) {
             const title = p(server.details.title) || t(`server-type-${server.type}`);
             let url, badge;
             if (selection.shown) {
-                if (selection.adding(server.id)) {
+                if (selection.isAdding(server)) {
                     badge = <ActionBadge type="reactivate" env={env} />;
-                } else if (selection.removing(server.id)) {
+                } else if (selection.isRemoving(server)) {
                     badge = <ActionBadge type="disable" env={env} />;
                 }
             } else {

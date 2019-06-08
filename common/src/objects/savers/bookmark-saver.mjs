@@ -36,15 +36,15 @@ async function hideBookmark(db, bookmark) {
     const [ bookmarkAfter ] = await saveBookmarks(db, [ changes ]);
 }
 
-async function syncRecipientList(db, story, bookmarks, senderID, recipientIDs) {
+async function syncBookmarks(db, bookmarks, story, sender, recipients) {
     // add bookmarks that don't exist yet
     const addition = [];
-    for (let recipientID of recipientIDs) {
-        if (!_.some(bookmarks, { target_user_id: recipientID })) {
+    for (let recipient of recipients) {
+        if (!_.some(bookmarks, { target_user_id: recipient.id })) {
             addition.push({
                 story_id: story.published_version_id || story.id,
-                user_ids: [ senderID ],
-                target_user_id: recipientID,
+                user_ids: [ sender.id ],
+                target_user_id: recipient.id,
             });
         }
     }
@@ -54,7 +54,7 @@ async function syncRecipientList(db, story, bookmarks, senderID, recipientIDs) {
     // the backend will handle the fact a bookmark can belong to multiple users
     const removal = [];
     for (let bookmark of bookmarks) {
-        if (!_.includes(recipientIDs, bookmark.target_user_id)) {
+        if (!_.some(recipients, { id: bookmark.target_user_id })) {
             removal.push(bookmark);
         }
     }
@@ -68,5 +68,5 @@ export {
     removeBookmark,
     removeBookmarks,
     hideBookmark,
-    syncRecipientList,
+    syncBookmarks,
 };

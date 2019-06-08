@@ -60,7 +60,7 @@ function MemberListPageSync(props) {
     const members = filterUsers(users, project);
     const membersPlus = filterUsers(users, project, true);
     const selection = useSelectionBuffer({
-        original: _.map(members, 'id'),
+        original: members,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
@@ -68,7 +68,7 @@ function MemberListPageSync(props) {
     const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const [ sort, handleSort ] = useSortHandler();
-    const handleRowClick = useRowToggle(selection, 'data-user-id');
+    const handleRowClick = useRowToggle(selection, users);
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
     });
@@ -80,7 +80,7 @@ function MemberListPageSync(props) {
     });
     const handleSaveClick = async (evt) => {
         run(async () => {
-            await ProjectSaver.updateMemberList(database, project, selection.current);
+            await ProjectSaver.associateUsers(database, project, selection.current);
             warnDataLoss(false);
             handleCancelClick();
         });
@@ -90,8 +90,7 @@ function MemberListPageSync(props) {
             const pendingUsers = _.filter(users, (user) => {
                 return _.includes(user.requested_project_ids, project.id);
             });
-            const pendingUserIDs = _.map(pendingUsers, 'id');
-            await ProjectSaver.addToMemberList(database, project, pendingUserIDs);
+            await ProjectSaver.addUsers(database, project, pendingUser);
         });
     });
     const handleRejectClick = useListener((evt) => {
@@ -99,7 +98,7 @@ function MemberListPageSync(props) {
             const pendingUsers = _.filter(users, (user) => {
                 return _.includes(user.requested_project_ids, project.id);
             });
-            await UserSaver.removeRequestedProject(database, pendingUsers, project.id);
+            await UserSaver.removeRequestedProject(database, pendingUsers, project);
         });
     });
 
@@ -197,7 +196,7 @@ function MemberListPageSync(props) {
     function renderRow(user) {
         const classNames = [];
         let title, onClick;
-        if (!selection.existing(user.id)) {
+        if (!selection.isExisting(user)) {
             const pending = _.includes(user.requested_project_ids, project.id);
             if (pending) {
                 classNames.push('pending');
@@ -208,17 +207,17 @@ function MemberListPageSync(props) {
             }
         }
         if (selection.shown) {
-            if (selection.existing(user.id)) {
+            if (selection.isExisting(user)) {
                 classNames.push('fixed');
             }
-            if (selection.keeping(user.id) || selection.adding(user.id)) {
+            if (selection.isKeeping(user)) {
                 classNames.push('selected');
             }
             onClick = handleRowClick;
         }
         const props = {
             className: classNames.join(' '),
-            'data-user-id': user.id,
+            'data-id': user.id,
             onClick,
             title,
         };
@@ -243,9 +242,9 @@ function MemberListPageSync(props) {
             const name = p(user.details.name);
             let url, badge;
             if (selection.shown) {
-                if (selection.adding(user.id)) {
+                if (selection.isAdding(user)) {
                     badge = <ActionBadge type="add" env={env} />;
-                } else if (selection.removing(user.id)) {
+                } else if (selection.isRemoving(user)) {
                     badge = <ActionBadge type="remove" env={env} />;
                 }
             } else {

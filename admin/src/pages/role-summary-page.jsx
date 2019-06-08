@@ -65,7 +65,7 @@ function RoleSummaryPageSync(props) {
         return (role) ? _.includes(user.role_ids, role.id) : false;
     });
     const userSelection = useSelectionBuffer({
-        original: _.map(members, 'id'),
+        original: members,
         reset: readOnly,
     });
     const [ problems, reportProblems ] = useValidation();
@@ -116,10 +116,10 @@ function RoleSummaryPageSync(props) {
                 reportProblems(problems);
 
                 const roleAfter = await RoleSaver.saveRole(database, draft.current);
-                const addition = userSelection.filter(users, 'adding');
-                const removal = userSelection.filter(users, 'removing');
-                await UserSaver.addToRoleLists(database, addition, roleAfter.id);
-                await UserSaver.removeFromRoleLists(database, removal, roleAfter.id);
+                const adding = userSelection.adding();
+                const removing = userSelection.removing();
+                await UserSaver.addRole(database, adding, roleAfter);
+                await UserSaver.removeRole(database, removing, roleAfter);
 
                 if (creating) {
                     setAdding(true);
@@ -150,7 +150,8 @@ function RoleSummaryPageSync(props) {
     });
     const handleUserOptionClick = useListener((evt) => {
         const userID = parseInt(evt.name);
-        userSelection.toggle(userID);
+        const user = _.find(users, { id: userID });
+        userSelection.toggle(user);
     });
 
     warnDataLoss(draft.changed || userSelection.changed);
@@ -321,8 +322,8 @@ function RoleSummaryPageSync(props) {
     function renderUserOption(user, i) {
         const props = {
             name: String(user.id),
-            selected: userSelection.keeping(user.id),
-            previous: userSelection.existing(user.id),
+            selected: userSelection.isKeeping(user),
+            previous: userSelection.isExisting(user),
             children: p(user.details.name) || p.username
         };
         return <option key={i} {...props} />;

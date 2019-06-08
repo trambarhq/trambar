@@ -4,6 +4,7 @@ import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectSaver from 'common/objects/savers/project-saver.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as RepoSaver from 'common/objects/savers/repo-saver.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
@@ -57,7 +58,7 @@ function RepoListPageSync(props) {
     const readOnly = !editing;
     const linkedRepos = findRepos(repos, project);
     const selection = useSelectionBuffer({
-        original: _.map(linkedRepos, 'id'),
+        original: linkedRepos,
         save: (base, ours) => {
         },
         reset: readOnly,
@@ -67,7 +68,7 @@ function RepoListPageSync(props) {
     const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const [ sort, handleSort ] = useSortHandler();
-    const handleRowClick = useRowToggle(selection, 'data-repo-id');
+    const handleRowClick = useRowToggle(selection, repos);
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
     });
@@ -76,11 +77,11 @@ function RepoListPageSync(props) {
     });
     const handleSaveClick = useListener((evt) => {
         run(async () => {
-            const removal = selection.filter(repos, 'removing');
-            if (removal.length > 0) {
-                await confirm(t('repo-list-confirm-remove-$count', removal.removal));
+            const removing = selection.removing();
+            if (removing.length > 0) {
+                await confirm(t('repo-list-confirm-remove-$count', removing.length));
             }
-            await ProjectSaver.saveRepoList(database, project, ours);
+            await ProjectSaver.associateRepos(database, project, selection.current);
             warnDataLoss(false);
             handleCancelClick();
         });
@@ -168,17 +169,17 @@ function RepoListPageSync(props) {
         const classNames = [];
         let onClick;
         if (selection.shown) {
-            if (selection.existing(repo.id)) {
+            if (selection.isExisting(repo)) {
                 classNames.push('fixed');
             }
-            if (selection.keeping(repo.id) || selection.adding(repo.id)) {
+            if (selection.isKeeping(repo)) {
                 classNames.push('selected');
             }
             onClick = handleRowClick;
         }
         const props = {
             className: classNames.join(' '),
-            'data-repo-id': repo.id,
+            'data-id': repo.id,
             onClick,
         };
         return (
@@ -202,9 +203,9 @@ function RepoListPageSync(props) {
             const title = p(repo.details.title) || repo.name;
             let url, badge;
             if (selection.shown) {
-                if (selection.adding(repo.id)) {
+                if (selection.isAdding(repo)) {
                     badge = <ActionBadge type="add" env={env} />;
-                } else if (selection.removing(repo.id)) {
+                } else if (selection.isRemoving(repo)) {
                     badge = <ActionBadge type="remove" env={env} />;
                 }
             } else {

@@ -54,39 +54,60 @@ function useConfirmation() {
 }
 
 class AsyncSelectionBuffer extends AsyncSaveBuffer {
-    existing(id) {
-        return _.includes(this.original, id);
+    isExisting(object) {
+        return _.some(this.original, { id: object.id });
     }
 
-    toggle(id) {
-        const list = _.toggle(this.current, id);
-        this.set(list);
+    isKeeping(object) {
+        return _.some(this.current, { id: object.id });
     }
 
-    adding(id) {
-        return !this.existing(id) && _.includes(this.current, id);
+    isAdding(object) {
+        return !this.isExisting(object) && this.isKeeping(object);
     }
 
-    keeping(id) {
-        return _.includes(this.current, id);
+    isRemoving(object) {
+        return this.isExisting(object) && !this.isKeeping(object);
     }
 
-    removing(id) {
-        return this.existing(id) && !_.includes(this.current, id);
+    adding() {
+        const list = [];
+        for (let object of this.current) {
+            if (!this.isExisting(object)) {
+                list.push(object);
+            }
+        }
+        return list;
     }
 
-    filter(objects, action) {
-        const f = this[action];
-        return _.filter(objects, (object) => {
-            return f.call(this, object.id);
-        });
+    removing() {
+        const list = [];
+        for (let object of this.original) {
+            if (!this.isKeeping(object)) {
+                list.push(object);
+            }
+        }
+        return list;
+    }
+
+    toggle(object) {
+        const existing = _.find(this.current, { id: object.id });
+        let newList;
+        if (existing) {
+            newList = _.without(this.current, existing);
+        } else {
+            newList = _.concat(this.current, object);
+        }
+        this.set(newList);
     }
 }
 
 function useSelectionBuffer(params) {
     const selection = useSaveBuffer({
         compare: (a, b) => {
-            return _.isEmpty(_.xor(a, b));
+            const idsA = _.map(a, 'id');
+            const idsB = _.map(b, 'id');
+            return _.isEmpty(_.xor(idsA, idsB));
         },
         ...params,
     }, AsyncSelectionBuffer);
