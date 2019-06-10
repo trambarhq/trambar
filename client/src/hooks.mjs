@@ -2,6 +2,7 @@ import _ from 'lodash';
 import RelaksMediaCapture from 'relaks-media-capture';
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
+import * as Markdown from 'common/utils/markdown.mjs';
 import { useLatest, useAfterglow, useConfirmation, useSelectionBuffer, useDraftBuffer } from 'common/hooks.mjs';
 import { AsyncDraftBuffer } from 'common/hooks.mjs';
 
@@ -64,72 +65,6 @@ function useMediaCapture(options, stream) {
         };
     }, []);
     return capture;
-}
-
-class AsyncReactionBuffer extends AsyncDraftBuffer {
-    update(obj) {
-        obj = removeSuperfluousDetails(obj);
-        super.set(obj);
-    }
-
-    getLocalized(path, locale) {
-        const obj = this.getCurrent(path);
-        const langText = locale.pick(obj);
-        return (langText !== undefined) ? langText : '';
-    }
-
-    setLocalized(path, locale, langText) {
-        const text = this.getCurrent(path, {});
-        text[locale.languageCode] = langText;
-        this.set(path, text);
-    }
-
-    hasContents() {
-        if (!_.isEmpty(_.get(this.current, 'details.text'))) {
-            return true;
-        }
-        if (!_.isEmpty(_.get(this.current, 'details.resources'))) {
-            return true;
-        }
-        return false;
-    }
-}
-
-function removeSuperfluousDetails(obj) {
-    // remove text object from details if it's empty
-    let text = _.get(obj, 'details.text');
-    text = _.pickBy(text);
-    if (_.isEmpty(text)) {
-        obj = _.decoupleUnset(obj, 'details.text');
-    } else {
-        obj = _.decoupleSet(obj, 'details.text', text);
-    }
-
-    // remove empty resources array
-    let resources = _.get(obj, 'details.resources');
-    if (_.isEmpty(resources)) {
-        obj = _.decoupleUnset(obj, 'details.resources');
-    }
-    return obj;
-}
-
-class AsyncStoryBuffer extends AsyncReactionBuffer {
-}
-
-function useStoryBuffer(params) {
-    const draft = useSaveBuffer({
-        compare: _.isEqual,
-        ...params,
-    }, AsyncStoryBuffer);
-    return draft;
-}
-
-function useReactionBuffer(params) {
-    const draft = useSaveBuffer({
-        compare: _.isEqual,
-        ...params,
-    }, AsyncReactionBuffer);
-    return draft;
 }
 
 function useMarkdownResources(resources, env) {
@@ -237,7 +172,5 @@ export {
     useMediaCapture,
     useSelectionBuffer,
     useDraftBuffer,
-    useReactionBuffer,
-    useStoryBuffer,
     useMarkdownResources,
 };

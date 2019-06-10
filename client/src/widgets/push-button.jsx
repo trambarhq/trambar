@@ -11,7 +11,7 @@ function PushButton(props) {
         return null;
     }
     let classNames = [ 'push-button' ];
-    if (emphasized) {
+    if (emphasized && !disabled) {
         classNames.push('emphasized');
     }
     return (

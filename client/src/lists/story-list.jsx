@@ -161,7 +161,7 @@ async function StoryList(props) {
             const editorProps = {
                 highlighting,
                 story,
-                authors: findAuthors(authors, story, currentUser),
+                authors: findDraftAuthors(currentUser, authors, story),
                 bookmarks: findBookmarks(bookmarks, story, currentUser),
                 recipients: findRecipients(recipients, bookmarks, story, currentUser),
                 repos,
@@ -188,7 +188,7 @@ async function StoryList(props) {
                     scrollToReactionID,
                     story,
                     reactions: findReactions(reactions, story),
-                    authors: findAuthors(authors, story, currentUser),
+                    authors: findAuthors(authors, story),
                     respondents: findRespondents(respondents, reactions),
                     bookmarks: findBookmarks(bookmarks, story, currentUser),
                     recipients: findRecipients(recipients, bookmarks, story, currentUser),
@@ -213,10 +213,6 @@ async function StoryList(props) {
         }
     }
 }
-
-const array = memoizeWeak([], function(object) {
-    return [ object ];
-});
 
 const sortStories = memoizeWeak(null, function(stories, pendingStories) {
     if (!_.isEmpty(pendingStories)) {
@@ -273,17 +269,21 @@ const findReactions = memoizeWeak(null, function(reactions, story) {
     }
 });
 
-const findAuthors = memoizeWeak(null, function(users, story, currentUser) {
+const findAuthors = memoizeWeak(null, function(users, story) {
     if (story) {
         const hash = _.keyBy(users, 'id');
         const list = _.filter(_.map(story.user_ids, (userID) => {
             return hash[userID];
         }));
-        if (_.isEmpty(list) && currentUser) {
-            return array(currentUser);
-        }
         return list;
     }
+});
+
+const findDraftAuthors = memoizeWeak(null, function(currentUser, users, story) {
+    if (story && users) {
+        return findAuthors(users, story);
+    }
+    return [ currentUser ];
 });
 
 const findRespondents = memoizeWeak(null, function(users, reactions) {

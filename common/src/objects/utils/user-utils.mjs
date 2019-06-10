@@ -101,6 +101,36 @@ function isAuthor(user, story) {
 }
 
 /**
+ * Return true if user is the lead author
+ *
+ * @param  {Array<User>} authors
+ * @param  {User} user
+ *
+ * @return {Boolean}
+ */
+function isLeadAuthor(authors, user) {
+    if (!authors || !user) {
+        return false;
+    }
+    return _.findIndex(authors, { id: user.id }) === 0;
+}
+
+/**
+ * Return true if user is an coauthor
+ *
+ * @param  {Array<User>} authors
+ * @param  {User} user
+ *
+ * @return {Boolean}
+ */
+function isCoauthor(authors, user) {
+    if (!authors || !user) {
+        return false;
+    }
+    return _.findIndex(authors, { id: user.id }) >= 1;
+}
+
+/**
  * Return true if user can moderate a project
  *
  * @param  {User} user
@@ -491,6 +521,8 @@ export {
     isMember,
     isPendingMember,
     isAuthor,
+    isLeadAuthor,
+    isCoauthor,
     isRespondent,
     canJoinProject,
     canViewProject,

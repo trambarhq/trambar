@@ -43,7 +43,7 @@ function StoryView(props) {
     const handleExpansionClick = useListener((evt) => {
         showComments(true);
     });
-    const handleOptionsComplete = useListener((evt) => {
+    const handleOptionComplete = useListener((evt) => {
         setOpenMenu('');
     });
     const handleMenuOpen = useListener((evt) => {
@@ -361,11 +361,12 @@ function StoryView(props) {
             reactions,
             repos,
             bookmarks,
+            recipients,
             currentUser,
             database,
             route,
             env,
-            onComplete: handleOptionsComplete,
+            onComplete: handleOptionComplete,
         };
         return <StoryViewOptions {...props} />;
     }

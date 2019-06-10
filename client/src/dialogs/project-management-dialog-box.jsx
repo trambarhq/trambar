@@ -8,11 +8,6 @@ import { PushButton } from '../widgets/push-button.jsx';
 import { Scrollable } from '../widgets/scrollable.jsx';
 import { OptionButton } from '../widgets/option-button.jsx';
 
-// custom hooks
-import {
-    useSelectionBuffer,
-} from '../hooks';
-
 import './project-management-dialog-box.scss';
 
 /**
@@ -21,20 +16,15 @@ import './project-management-dialog-box.scss';
 function ProjectManagementDialogBox(props) {
     const { env, projectLinks, onDelete, onCancel } = props;
     const { t, p } = env.locale;
-    const projectSelection = useSelectionBuffer({
-        original: _.map(projectLinks, 'key')
-    });
+    const [ selection, setSelection ] = _.map(projectLinks, 'key');
 
     const handleProjectClick = useListener((evt) => {
         const key = evt.currentTarget.id;
-        projectSelection.toggle(key);
+        setSelection(_.toggle(selection, key));
     });
     const handleRemoveClick = useListener((evt) => {
         if (onDelete) {
-            const links = _.filter(projectLinks, (link) => {
-                return projectSelection.removing(link.key);
-            });
-            onDelete({ selection: _.map(links, 'name') });
+            onDelete({ selection });
         }
     });
 
@@ -52,7 +42,7 @@ function ProjectManagementDialogBox(props) {
             id: link.key,
             label: p(link.name),
             iconOn: 'times-circle',
-            selected: projectSelection.removing(link.key),
+            selected: projectSelection.isRemoving(link),
             onClick: handleProjectClick,
         };
         return <OptionButton key={i} {...props} />;

@@ -25,19 +25,14 @@ import './story-view-options.scss';
  * appear within the story view when there's room for the third column.
  */
 function StoryViewOptions(props) {
-    const { story, reactions, bookmarks, repos, currentUser } = props;
+    const { story, reactions, bookmarks, recipients, repos, currentUser } = props;
     const { database, route, env, access, bookmarkExpected, onComplete } = props;
     const { t } = env.locale;
     const [ selectingRecipients, selectRecipients ] = useState(false);
     const [ enteringIssueDetails, enterIssueDetails ] = useState(false);
     const originalOptions = useMemo(() => {
-        const own = _.find(bookmarks, (bookmark) => {
-            return (bookmark.target_user_id === currentUser.id);
-        });
-        const others = _.without(bookmarks, own);
         return {
-            bookmarked: !!own,
-            recipients: _.map(others, 'target_user_id'),
+            recipients,
             hidden: !story.public,
             editable: !story.published,
             removed: story.deleted,
@@ -52,26 +47,18 @@ function StoryViewOptions(props) {
 
     const handleAddBookmarkClick = useListener((evt) => {
         run(async () => {
-            const adding = !options.get('bookmarked');
-            options.update('bookmarked', adding);
+            const list = options.get('recipients');
+            const self = _.find(list, { id: currentUser });
+            const newList = (self) ? _.without(list, self) : _.concat(list, currentUser);
+            options.set('recipients', newList);
             done();
-            if (adding) {
-                await BookmarkSaver.createBookmark(database, story, currentUser);
-            } else {
-                await BookmarkSaver.hideBookmark(database, bookmark);
-            }
-        });
-    });
-    const handleKeepBookmarkClick = useListener((evt) => {
-        run(async () => {
-            options.update('bookmarked', false);
-            await BookmarkSaver.hideBookmark(database, bookmark);
+            await BookmarkSaver.syncBookmarks(database, story, bookmarks, currentUser, newList);
         });
     });
     const handleHideClick = useListener((evt) => {
         run(async () => {
             const hidding = !options.get('hidden');
-            options.update('hidden', hidding);
+            options.set('hidden', hidding);
             done();
             await StorySaver.hideStory(database, story, hidding);
         });
@@ -79,7 +66,7 @@ function StoryViewOptions(props) {
     const handleEditClick = useListener((evt) => {
         run(async () => {
             if (!options.get('editable')) {
-                options.update('editable', true);
+                options.set('editable', true);
                 done();
                 await StorySaver.unpublishStory(database, story);
             }
@@ -88,7 +75,7 @@ function StoryViewOptions(props) {
     const handleRemoveClick = useListener((evt) => {
         run(async () => {
             if (!options.get('removed')) {
-                options.update('removed', true);
+                options.set('removed', true);
                 done();
                 await StorySaver.removeStory(database, story);
             }
@@ -97,7 +84,7 @@ function StoryViewOptions(props) {
     const handleBumpClick = useListener((evt) => {
         run(async () => {
             if (!options.get('removed')) {
-                options.update('bumped', true);
+                options.set('bumped', true);
                 done();
                 await StorySaver.bumpStory(database, story);
             }
@@ -109,13 +96,10 @@ function StoryViewOptions(props) {
     const handleRecipientsSelect = useListener((evt) => {
         run(async () => {
             const { selection } = evt;
-            const recipients = _.without(selection, currentUser.id);
-            const bookmarked = _.includes(selection, currentUser.id);
-            options.update('bookmarked', bookmarked);
-            options.update('recipients', recipients);
+            options.set('recipients', selection);
             selectRecipients(false);
             done();
-            await BookmarkSaver.syncRecipientList(database, story, bookmarks, currentUser.id, selection);
+            await BookmarkSaver.syncBookmarks(database, story, bookmarks, currentUser, selection);
         });
     });
     const handleRecipientsCancel = useListener((evt) => {
@@ -127,10 +111,10 @@ function StoryViewOptions(props) {
     const handleIssueConfirm = useListener((evt) => {
         run(async () => {
             const { issue } = evt;
-            options.update('issue', issue);
+            options.set('issue', issue);
             enterIssueDetails(false);
             done();
-            await TaskSaver.createTask(database, 'export-issue', currentUser, { 
+            await TaskSaver.createTask(database, 'export-issue', currentUser, {
                 story_id: story.id,
                 ...evt.issue
             });
@@ -154,30 +138,21 @@ function StoryViewOptions(props) {
 
     function renderButtons(section) {
         if (section === 'main') {
-            let bookmarkProps;
-            if (bookmarkExpected) {
-                // in bookmark page
-                 bookmarkProps = {
-                    label: t('option-keep-bookmark'),
-                    selected: options.get('bookmarked'),
-                    onClick: handleKeepBookmarkClick,
-                };
-            } else {
-                // in news page
-                bookmarkProps = {
-                    label: t('option-add-bookmark'),
-                    selected: options.get('bookmarked'),
-                    hidden: !UserUtils.canCreateBookmark(currentUser, story, access),
-                    onClick: handleAddBookmarkClick,
-                };
-            }
             const recipients = options.get('recipients');
+            const self = _.find(recipients, { id: currentUser.id });
+            const bookmarkProps = {
+               label: t(bookmarkExpected ? 'option-keep-bookmark' : 'option-add-bookmark'),
+               selected: !!self,
+               hidden: !bookmarkExpected && !UserUtils.canCreateBookmark(currentUser, story, access),
+               onClick: handleAddBookmarkClick,
+            };
+            const otherRecipients = _.reject(recipients, { id: currentUser.id });
             const sendBookmarkProps = {
-                label: (recipients.length > 0)
-                    ? t('option-send-bookmarks-to-$count-users', recipients.length)
-                    : t('option-send-bookmarks'),
+                label: _.isEmpty(otherRecipients)
+                    ? t('option-send-bookmarks')
+                    : t('option-send-bookmarks-to-$count-users', otherRecipients.length),
                 hidden: !UserUtils.canSendBookmarks(currentUser, story, access),
-                selected: (recipients.length > 0) || selectingRecipients,
+                selected: !_.isEmpty(otherRecipients) || selectingRecipients,
                 onClick: handleSendBookmarkClick,
             };
             const addIssueProps = {
@@ -227,13 +202,9 @@ function StoryViewOptions(props) {
     }
 
     function renderRecipientDialogBox() {
-        let selection = options.get('recipients');
-        if (options.get('bookmarked')) {
-            selection = _.concat(selection, currentUser.id);
-        }
         const props = {
             show: selectingRecipients,
-            selection,
+            selection: options.get('recipients'),
             database,
             route,
             env,

@@ -22,12 +22,12 @@ import MediaImporter from '../editors/media-importer.jsx';
 
 // custom hooks
 import {
-    useReactionBuffer,
+    useDraftBuffer,
 } from '../hooks';
 
 import './reaction-editor.scss';
 
-const autoSave = 2000;
+const autoSaveDuration = 2000;
 
 /**
  * Component for creating or editing a comment--the only reaction where the
@@ -36,30 +36,20 @@ const autoSave = 2000;
 function ReactionEditor(props) {
     const { reaction, story, currentUser } = props;
     const { database, env, payloads, onFinish } = props;
-    const { t } = env.locale;
+    const { t, languageCode } = env.locale;
     const [ capturing, capture ] = useState(false);
     const importerRef = useRef();
     const textAreaRef = useRef();
-    const draft = useReactionBuffer({
+    const draft = useDraftBuffer({
         original: reaction || createBlankComment(story, currentUser),
+        transform: adjustReaction,
     });
     const [ selectedResourceIndex, setSelectedResourceIndex ] = useState(0);
     const [ error, run ] = useErrorCatcher(true);
 
     const handleTextChange = useListener((evt) => {
         const langText = evt.currentTarget.value;
-        draft.setLocalized('details.text', env.locale, langText);
-
-        // automatically enable Markdown formatting
-        if (draft.get('details.markdown') === undefined) {
-            if (Markdown.detect(langText, handleReference)) {
-                draft.set('details.markdown', true);
-            }
-        }
-
-        // look for tags
-        const tags = TagScanner.findTags(draft.get('details.text'));
-        draft.set('tags', tags);
+        draft.set(`details.text.${languageCode}`, langText);
     });
     const handleKeyPress = useListener((evt) => {
         if (evt.charCode == 0x0D /* ENTER */) {
@@ -107,14 +97,6 @@ function ReactionEditor(props) {
     const handleCaptureEnd = useListener((evt) => {
         capture(null);
     });
-    const handleReference = useListener((evt) => {
-        const resources = draft.get('details.resources', []);
-        const res = Markdown.findReferencedResource(resources, evt.name);
-        if (res) {
-            let url = ResourceUtils.getMarkdownIconURL(res, evt.forImage, env);
-            return { href: url, title: undefined };
-        }
-    });
     const handleAction = useListener((evt) => {
         switch (evt.action) {
             case 'markdown-set':
@@ -135,7 +117,7 @@ function ReactionEditor(props) {
         }
     });
 
-    useAutoSave(draft, autoSave, async () => {
+    useAutoSave(draft, autoSaveDuration, async () => {
         // don't save when editing previously published comment
         if (!reaction.ptime) {
             const reactionAfter = await ReactionSaver.saveReaction(database, draft.current);
@@ -195,7 +177,7 @@ function ReactionEditor(props) {
     }
 
     function renderTextArea() {
-        const langText = draft.getLocalized('details.text', env.locale);
+        const langText = draft.get(`details.text.${languageCode}`, '');
         const textareaProps = {
             ref: textAreaRef,
             value: langText,
@@ -226,7 +208,7 @@ function ReactionEditor(props) {
             label: t('story-post'),
             onClick: handlePublishClick,
             emphasized: true,
-            disabled: !draft.hasContents(),
+            disabled: !ReactionUtils.hasContents(draft.current),
         };
         return (
             <div className="action-buttons">
@@ -272,6 +254,24 @@ function createBlankComment(story, currentUser) {
             details: {},
         };
     }
+}
+
+function adjustReaction(reaction) {
+    reaction = ReactionUtils.removeSuperfluousDetails(reaction);
+
+    if (reaction.details.markdown === undefined) {
+        for (let [ lang, langText ] of _.entries(reaction.details.text)) {
+            if (Markdown.detect(langText)) {
+                reaction.details.markdown = true;
+                break;
+            }
+        }
+    }
+
+    // look for tags
+    reaction.tags = TagScanner.findTags(reaction.details.text);
+
+    return reaction
 }
 
 export {

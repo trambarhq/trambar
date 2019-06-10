@@ -60,8 +60,8 @@ ChartToolbar.propTypes = {
     onAction: PropTypes.func,
 };
 CoauthoringButton.propTypes = {
-    coauthoring: PropTypes.bool,
-    story: PropTypes.object.isRequired,
+    authors: PropTypes.arrayOf(PropTypes.object).isRequired,
+    currentUser: PropTypes.object.isRequired,
     database: PropTypes.instanceOf(Database).isRequired,
     route: PropTypes.instanceOf(Route).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,

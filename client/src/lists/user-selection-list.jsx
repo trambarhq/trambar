@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
@@ -15,9 +15,16 @@ async function UserSelectionList(props) {
     const { database, route, env, selection, disabled, onSelect } = props;
     const [ show ] = useProgress();
 
-    const handleUserClick = useCallback((evt) => {
-        const userID = parseInt(evt.currentTarget.getAttribute('data-user-id'));
-        const newSelection = _.toggle(selection, userID);
+    const handleUserClick = useListener((evt) => {
+        const userID = parseInt(evt.currentTarget.getAttribute('data-id'));
+        const user = _.find(users, { id: userID });
+        const userSelected = _.find(selection, { id: userID });
+        let newSelection;
+        if (userSelected) {
+            newSelection = _.without(selection, userSelected);
+        } else {
+            newSelection = _.concat(selection, user);
+        }
         if (onSelect) {
             onSelect({ selection: newSelection });
         }
@@ -40,8 +47,8 @@ async function UserSelectionList(props) {
     function renderUser(user) {
         const props = {
             user,
-            selected: _.includes(selection, user.id),
-            disabled: _.includes(disabled, user.id),
+            selected: _.some(selection, { id: user.id }),
+            disabled: _.some(disabled, { id: user.id }),
             env,
             onClick: handleUserClick,
         };
@@ -61,7 +68,7 @@ function User(props) {
     const name = UserUtils.getDisplayName(user, env);
     let containerProps = {
         className: classNames.join(' '),
-        'data-user-id': user.id,
+        'data-id': user.id,
         onClick: !disabled ? onClick : null,
     };
     const imageProps = { user, env, size: 'small' };

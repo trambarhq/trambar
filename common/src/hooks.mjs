@@ -129,7 +129,6 @@ class AsyncDraftBuffer extends AsyncSaveBuffer {
     }
 
     set(key, value) {
-        console.log(key, value);
         this.update(_.decoupleSet(this.current, key, value));
     };
 }

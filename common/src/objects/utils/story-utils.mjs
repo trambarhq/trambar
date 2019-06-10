@@ -65,6 +65,44 @@ function isEditable(story) {
 }
 
 /**
+ * Return true if the story can be canceled
+ *
+ * @param  {Story}  story
+ *
+ * @return {Boolean}
+ */
+function isCancelable(story) {
+    if (!story) {
+        return false;
+    }
+    if (hasContents(story) || story.ptime) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Return true if the story has contents
+ *
+ * @param  {Story}  story
+ *
+ * @return {Boolean}
+ */
+function hasContents(story) {
+    if (!story) {
+        return false;
+    }
+    if (!_.isEmpty(_.get(story, 'details.text'))) {
+        return true;
+    }
+    if (!_.isEmpty(_.get(story, 'details.resources'))) {
+        return true;
+    }
+    return false;
+}
+
+
+/**
  * Return true if the story is of a type that can be exported to issue-tracker
  *
  * @param  {Story}  story
@@ -215,10 +253,30 @@ function insertUserAnswers(story, answers) {
     return storyUpdated;
 }
 
+function removeSuperfluousDetails(story) {
+    // remove text object from details if it's empty
+    let text = _.get(story, 'details.text');
+    text = _.pickBy(text);
+    if (_.isEmpty(text)) {
+        story = _.decoupleUnset(story, 'details.text');
+    } else {
+        story = _.decoupleSet(story, 'details.text', text);
+    }
+
+    // remove empty resources array
+    let resources = _.get(story, 'details.resources');
+    if (_.isEmpty(resources)) {
+        story = _.decoupleUnset(story, 'details.resources');
+    }
+    return story;
+}
+
 export {
     isSaved,
     isEditable,
     isTrackable,
+    isCancelable,
+    hasContents,
     isActuallyPublished,
     wasPublishedWithin,
     wasBumpedWithin,
@@ -226,4 +284,5 @@ export {
     mergeRemoteChanges,
     extractUserAnswers,
     insertUserAnswers,
+    removeSuperfluousDetails,
 };

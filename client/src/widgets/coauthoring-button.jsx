@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
 import { HeaderButton } from './header-button.jsx';
@@ -13,9 +14,12 @@ import './coauthoring-button.scss';
  * responsible for rendering the dialog box.
  */
 function CoauthoringButton(props) {
-    const { database, route, env, story, coauthoring, onRemove, onSelect } = props;
+    const { authors, currentUser } = props;
+    const { database, route, env } = props;
+    const { onRemove, onSelect } = props;
     const { t } = env.locale;
     const [ selecting, setSelecting ] = useState(false);
+    const coauthoring = UserUtils.isCoauthor(authors, currentUser);
 
     const handleClick = useListener((evt) => {
         if (coauthoring) {
@@ -42,7 +46,7 @@ function CoauthoringButton(props) {
         label = t('story-remove-yourself');
     } else {
         icon = 'plus-square';
-        if (story.user_ids.length > 1) {
+        if (_.size(authors) > 1) {
             label = t('story-add-remove-coauthor');
         } else {
             label = t('story-add-coauthor');
@@ -61,8 +65,8 @@ function CoauthoringButton(props) {
     function renderDialogBox() {
         const props = {
             show: selecting,
-            selection: story.user_ids,
-            disabled: _.slice(story.user_ids, 0, 1),
+            selection: authors,
+            disabled: _.slice(authors, 0, 1),
             database,
             route,
             env,
