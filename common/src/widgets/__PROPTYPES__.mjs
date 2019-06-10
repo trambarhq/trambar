@@ -15,6 +15,9 @@ BitmapView.propTypes = {
     onLoad: PropTypes.func,
     onError: PropTypes.func,
 };
+CollapsibleContainer.propTypes = {
+    open: PropTypes.bool,
+};
 
 ErrorBoundary.propTypes = {
     env: PropTypes.instanceOf(Environment).isRequired,

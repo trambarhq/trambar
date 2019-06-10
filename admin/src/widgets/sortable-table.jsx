@@ -26,7 +26,12 @@ function SortableTable(props) {
         }
     }, [ action ])
     useEffect(() => {
-        setTransition(true);
+        const timeout = setTimeout(() => {
+            setTransition(true);
+        }, 100);
+        return () => {
+            clearTimeout(timeout);
+        }
     }, [])
 
     const handleClick = useListener((evt) => {
@@ -128,7 +133,7 @@ function SortableTable(props) {
             const className = _.trim(`${c} ${state}`);
             const newTds = _.map(tds, (td, j) => {
                 const container = (
-                    <CollapsibleContainer open={open}>
+                    <CollapsibleContainer open={open} animateIn={transition}>
                         {td.props.children}
                     </CollapsibleContainer>
                 );
