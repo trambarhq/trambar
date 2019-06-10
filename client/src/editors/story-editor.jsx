@@ -170,7 +170,7 @@ function StoryEditor(props) {
     });
     const handleResourceEmbed = useListener((evt) => {
         const { resource } = evt;
-        const textArea = textAreaRef.current.getElement();
+        const textArea = textAreaRef.current;
         insertResourceReference(textArea, draft.get('details.resources'), resource);
         options.set('preview', 'media');
         draft.set('details.markdown', true);
@@ -196,7 +196,7 @@ function StoryEditor(props) {
 
                 // attach a list template to the story if there's no list yet
                 if (type === 'task-list' || type === 'survey') {
-                    const textArea = textAreaRef.current.getElement();
+                    const textArea = textAreaRef.current;
                     insertListTemplate(textArea);
                 }
                 break;
