@@ -73,13 +73,13 @@ function useAutogenID(draft, params) {
         if (!nameBefore || nameBefore === autoNameBefore) {
             after = _.decoupleSet(after, nameKey, autoName);
         }
-        draft.set(after);
+        draft.update(after);
     }, []);
     const handleNameChange = useCallback((evt) => {
         const name = evt.target.value;
         const nameTransformed = _.toLower(name).replace(/[^\w\-]+/g, '');
         const nameLimited = nameTransformed.substr(0, 128);
-        draft.set(_.decoupleSet(draft.current, nameKey, nameLimited));
+        draft.update(_.decoupleSet(draft.current, nameKey, nameLimited));
     }, []);
     return [ handleTitleChange, handleNameChange ];
 }

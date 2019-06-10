@@ -157,56 +157,56 @@ function UserSummaryPageSync(props) {
     });
     const handleEmailChange = useListener((evt) => {
         const address = evt.target.value;
-        draft.update(`details.email`, address);
+        draft.set(`details.email`, address);
     });
     const handlePhoneChange = useListener((evt) => {
         const number = evt.target.value;
-        draft.update(`details.phone`, number);
+        draft.set(`details.phone`, number);
     });
     const handleProfileImageChange = useListener((evt) => {
         const resources = evt.target.value;
-        draft.update(`details.resources`, resources);
+        draft.set(`details.resources`, resources);
     });
     const handleTypeOptionClick = useListener((evt) => {
         const type = evt.name;
-        draft.update('type', type);
+        draft.set('type', type);
     });
     const handleRoleOptionClick = useListener((evt) => {
         const roleID = parseInt(evt.name);
         const before = draft.get('role_ids', []);
         const after = (roleID) ? _.toggle(before, roleID) : [];
-        draft.update('role_ids', after);
+        draft.set('role_ids', after);
     });
     const handleSocialLinksToggleClick = useListener((evt) => {
         setShowingSocialLinks(!showingSocialLinks);
     });
     const handleSkypeUsernameChange = useListener((evt) => {
         const username = _.trim(evt.target.value);
-        draft.update(`details.skype_username`, username);
+        draft.set(`details.skype_username`, username);
     });
     const handleIchatUsernameChange = useListener((evt) => {
         const username = _.trim(evt.target.value);
-        draft.update(`details.ichat_username`, username);
+        draft.set(`details.ichat_username`, username);
     });
     const handleTwitterUsernameChange = useListener((evt) => {
         const username = extractUsername(evt.target.value);
-        draft.update(`details.twitter_username`, username);
+        draft.set(`details.twitter_username`, username);
     });
     const handleLinkedinURLChange = useListener((evt) => {
         const url = _.trim(evt.target.value);
-        draft.update(`details.linkedin_url`, url);
+        draft.set(`details.linkedin_url`, url);
     });
     const handleGitHubURLChange = useListener((evt) => {
         const url = _.trim(evt.target.value);
-        draft.update(`details.github_url`, url);
+        draft.set(`details.github_url`, url);
     });
     const handleGitlabURLChange = useListener((evt) => {
         const url = _.trim(evt.target.value);
-        draft.update(`details.gitlab_url`, url);
+        draft.set(`details.gitlab_url`, url);
     });
     const handleStackoverflowURLChange = useListener((evt) => {
         const url = _.trim(evt.target.value);
-        draft.update(`details.stackoverflow_url`, url);
+        draft.set(`details.stackoverflow_url`, url);
     });
 
     warnDataLoss(draft.changed);

@@ -43,7 +43,7 @@ function UserImagePanel(props) {
     });
     const handleSaveClick = useListener((evt) => {
         if (newImage) {
-            userDraft.update('details.resources', [ newImage ]);
+            userDraft.set('details.resources', [ newImage ]);
             setNewImage(null);
             setAction('')
         }

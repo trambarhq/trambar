@@ -18,19 +18,19 @@ function UserInfoPanel(props) {
 
     const handleNameChange = useListener((evt) => {
         const name = evt.target.value;
-        userDraft.update('details.name', name);
+        userDraft.set('details.name', name);
     });
     const handleEmailChange = useListener((evt) => {
         const address = evt.target.value;
-        userDraft.update('details.email', address);
+        userDraft.set('details.email', address);
     });
     const handlePhoneChange = useListener((evt) => {
         const number = evt.target.value;
-        userDraft.update('details.phone', number);
+        userDraft.set('details.phone', number);
     });
     const handleGenderChange = useListener((evt) => {
         const gender = evt.target.value;
-        userDraft.update('details.gender', gender || undefined);
+        userDraft.set('details.gender', gender || undefined);
     });
 
     return (

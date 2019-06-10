@@ -63,17 +63,17 @@ function IssueDialogBox(props) {
     });
     const handleTitleChange = useListener((evt) => {
         const text = evt.target.value;
-        draft.update('title', text);
+        draft.set('title', text);
     });
     const handleRepoChange = useListener((evt) => {
         const repoID = parseInt(evt.target.value);
-        draft.update('repo_id', repoID);
+        draft.set('repo_id', repoID);
     });
     const handleTagClick = useListener((evt) => {
         const label = evt.target.getAttribute('data-label');
         const labelsBefore = draft.get('labels', []);
         const labels = _.toggle(labelsBefore, label);
-        draft.update('labels', labels);
+        draft.set('labels', labels);
     });
 
     return (

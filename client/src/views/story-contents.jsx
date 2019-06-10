@@ -52,7 +52,7 @@ function StoryContents(props) {
         run(async () => {
             const target = evt.currentTarget;
             const { name, value, checked } = target;
-            userAnswers.update([ name, value ], checked);
+            userAnswers.set([ name, value ], checked);
 
             const storyUpdated = StoryUtils.insertUserAnswers(story, userAnswers.current);
             const storyAfter = await StorySaver.saveStory(database, storyUpdated);
@@ -62,7 +62,7 @@ function StoryContents(props) {
     const handleSurveyItemChange = useListener((evt) => {
         const target = evt.currentTarget;
         const { name, value, checked } = target;
-        userAnswers.update(name, value);
+        userAnswers.set(name, value);
     });
     const handleVoteSubmitClick = useListener((evt) => {
         run(async () => {

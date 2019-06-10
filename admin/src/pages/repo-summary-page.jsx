@@ -56,7 +56,7 @@ async function RepoSummaryPage(props) {
     const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !editing;
     const [ show ] = useProgress();
-    const draft = useDraftBuffer(editing, {
+    const draft = useDraftBuffer({
         original: repo,
         reset: readOnly,
     });
@@ -95,7 +95,7 @@ async function RepoSummaryPage(props) {
     });
     const handleTitleChange = useListener((evt) => {
         const title = evt.target.value;
-        draft.update('details.title', title);
+        draft.set('details.title', title);
     });
 
     warnDataLoss(draft.changed);

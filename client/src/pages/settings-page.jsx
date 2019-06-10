@@ -78,7 +78,7 @@ function SettingsPageSync(props) {
     });
     useEffect(() => {
         const handleKonamiCode = (evt) => {
-            userDraft.update('settings.development.show_panel', true);
+            userDraft.set('settings.development.show_panel', true);
         };
         KonamiCode.addListener(handleKonamiCode);
         return () => {

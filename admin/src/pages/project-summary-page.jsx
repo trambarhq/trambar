@@ -135,21 +135,21 @@ function ProjectSummaryPageSync(props) {
     });
     const handleDescriptionChange = useListener((evt) => {
         const description = evt.target.value;
-        draft.update('details.description', description);
+        draft.set('details.description', description);
     });
     const handleEmblemChange = useListener((evt) => {
         const resources = evt.target.value;
-        draft.update('details.resources', resources);
+        draft.set('details.resources', resources);
     });
     const handleMembershipOptionClick = useListener((evt) => {
         const optsBefore = draft.get('settings.membership', {});
         const opts = toggleOption(optsBefore, membershipOptions, evt.name);
-        draft.update('settings.membership', opts);
+        draft.set('settings.membership', opts);
     });
     const handleAccessControlOptionClick = useListener((evt) => {
         const optsBefore = draft.get('settings.access_control', {});
         const opts = toggleOption(optsBefore, accessControlOptions, evt.name);
-        draft.update('settings.access_control', opts);
+        draft.set('settings.access_control', opts);
     });
 
     warnDataLoss(draft.changed);

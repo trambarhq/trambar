@@ -166,13 +166,13 @@ function ImageEditor(props, ref) {
     }
 }
 
-ImageEditor.defaultProps = {
+const component = React.forwardRef(ImageEditor);
+
+component.defaultProps = {
     previewWidth: 512,
     previewHeight: 512,
     disabled: false,
 };
-
-const component = React.forwardRef(ImageEditor);
 
 export {
     component as default,

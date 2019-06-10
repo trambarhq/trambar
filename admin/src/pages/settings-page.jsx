@@ -70,33 +70,33 @@ function SettingsPageSync(props) {
     });
     const handleTitleChange = useListener((evt) => {
         const title = evt.target.value;
-        draft.update('details.title', title);
+        draft.set('details.title', title);
     });
     const handleCompanyNameChange = useListener((evt) => {
         const name = evt.target.value;
-        draft.update('details.company_name', name);
+        draft.set('details.company_name', name);
     });
     const handleAddressChange = useListener((evt) => {
         const address = evt.target.value;
-        draft.update('settings.address', address);
+        draft.set('settings.address', address);
     });
     const handlePushRelayChange = useListener((evt) => {
         const address = evt.target.value;
-        draft.update('settings.push_relay', address);
+        draft.set('settings.push_relay', address);
     });
     const handleDescriptionChange = useListener((evt) => {
         const description = evt.target.value;
-        draft.update('details.description', description);
+        draft.set('details.description', description);
     });
     const handleBackgroundImageChange = useListener((evt) => {
         const resources = evt.target.value;
-        draft.update('details.resources', resources);
+        draft.set('details.resources', resources);
     });
     const handleLanguageOptionClick = useListener((evt) => {
         const lang = evt.name;
         const listBefore = draft.get('settings.input_languages', []);
         const list = _.toggle(listBefore, lang);
-        draft.update('settings.input_languages', list);
+        draft.set('settings.input_languages', list);
     });
 
     warnDataLoss(draft.changed);

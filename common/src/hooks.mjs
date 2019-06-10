@@ -98,7 +98,7 @@ class AsyncSelectionBuffer extends AsyncSaveBuffer {
         } else {
             newList = _.concat(this.current, object);
         }
-        this.set(newList);
+        this.update(newList);
     }
 }
 
@@ -128,8 +128,9 @@ class AsyncDraftBuffer extends AsyncSaveBuffer {
         return this.getCurrent(key, def);
     }
 
-    update(key, value) {
-        this.set(_.decoupleSet(this.current, key, value));
+    set(key, value) {
+        console.log(key, value);
+        this.update(_.decoupleSet(this.current, key, value));
     };
 }
 

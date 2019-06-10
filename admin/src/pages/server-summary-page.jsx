@@ -163,7 +163,7 @@ function ServerSummaryPageSync(props) {
     const handleTypeOptionClick = useListener((evt) => {
         const typeBefore = draft.get('type');
         const type = evt.name;
-        draft.update('type', type);
+        draft.set('type', type);
 
         // derive title from type
         const autoTitleBefore = t(`server-type-${typeBefore}`);
@@ -171,7 +171,7 @@ function ServerSummaryPageSync(props) {
         const title = p(draft.get('details.title'));
         if (!title || title === autoTitleBefore) {
             const titles = _.set({}, languageCode, autoTitleAfter);
-            draft.update('details.title', titles);
+            draft.set('details.title', titles);
         }
 
         // derive name from type
@@ -179,7 +179,7 @@ function ServerSummaryPageSync(props) {
         const autoNameAfter = type;
         const name = draft.get('name');
         if (!name || name === autoNameBefore) {
-            draft.update('name', autoNameAfter);
+            draft.set('name', autoNameAfter);
         }
     });
     const handleGitlabUserOptionClick = useListener((evt) => {
@@ -191,7 +191,7 @@ function ServerSummaryPageSync(props) {
         if (option.value && typeBefore !== option.value) {
             type = option.value;
         }
-        draft.update(`settings.user.mapping.${option.type}`, type);
+        draft.set(`settings.user.mapping.${option.type}`, type);
     })
     const handleOAuthUserOptionClick = useListener((evt) => {
         const option = _.find(gitlabImportOptions, (option) => {
@@ -202,7 +202,7 @@ function ServerSummaryPageSync(props) {
         if (option.value && typeBefore !== option.value) {
             type = option.value;
         }
-        draft.update('settings.user.type', type);
+        draft.set('settings.user.type', type);
     });
     const handleRoleOptionClick = useListener((evt) => {
         const roleIDsBefore = draft.get('settings.user.role_ids', []);
@@ -214,19 +214,19 @@ function ServerSummaryPageSync(props) {
         } else {
             roleIDs = _.toggle(roleIDsBefore, option.value);
         }
-        draft.update('settings.user.role_ids', roleIDs);
+        draft.set('settings.user.role_ids', roleIDs);
     });
     const handleWhitelistChange = useListener((evt) => {
         const whitelist = evt.target.value.replace(/\s*[;,]\s*/g, '\n');
-        draft.update('settings.user.whitelist', whitelist);
+        draft.set('settings.user.whitelist', whitelist);
     });
     const handleApiTokenChange = useListener((evt) => {
         const token = evt.target.value;
-        draft.update('settings.api.token', token);
+        draft.set('settings.api.token', token);
     });
     const handleOAuthURLChange = useListener((evt) => {
         const url = evt.target.value;
-        draft.update('settings.oauth.base_url', url);
+        draft.set('settings.oauth.base_url', url);
 
         // make sure the URL isn't localhost, which points to the Docker container
         let newProblems;
@@ -241,11 +241,11 @@ function ServerSummaryPageSync(props) {
     });
     const handleOAuthIDChange = useListener((evt) => {
         const id = evt.target.value;
-        draft.update('settings.oauth.client_id', id);
+        draft.set('settings.oauth.client_id', id);
     });
     const handleOAuthSecretChange = useListener((evt) => {
         const secret = evt.target.value;
-        draft.update('settings.oauth.client_secret', secret);
+        draft.set('settings.oauth.client_secret', secret);
     });
     const handleTaskSelectionClear = useListener(() => {
         // TODO

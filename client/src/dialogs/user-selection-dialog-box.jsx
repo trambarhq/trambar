@@ -25,7 +25,7 @@ function UserSelectionDialogBox(props) {
     });
 
     const handleListSelect = useListener((evt) => {
-        userSelection.set(evt.selection)
+        userSelection.update(evt.selection);
     });
     const handleOKClick = useListener((evt) => {
         if (onSelect) {

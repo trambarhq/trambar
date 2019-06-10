@@ -48,18 +48,18 @@ function ReactionEditor(props) {
 
     const handleTextChange = useListener((evt) => {
         const langText = evt.currentTarget.value;
-        draft.updateLocalized('details.text', env.locale, langText);
+        draft.setLocalized('details.text', env.locale, langText);
 
         // automatically enable Markdown formatting
         if (draft.get('details.markdown') === undefined) {
             if (Markdown.detect(langText, handleReference)) {
-                draft.update('details.markdown', true);
+                draft.set('details.markdown', true);
             }
         }
 
         // look for tags
         const tags = TagScanner.findTags(draft.get('details.text'));
-        draft.update('tags', tags);
+        draft.set('tags', tags);
     });
     const handleKeyPress = useListener((evt) => {
         if (evt.charCode == 0x0D /* ENTER */) {
@@ -76,7 +76,7 @@ function ReactionEditor(props) {
     });
     const handlePublishClick = useListener((evt) => {
         run(async () => {
-            draft.update('published', true);
+            draft.set('published', true);
             done();
             const resources = draft.get('details.resources');
             await ResourceUtils.attachMosaic(resources, env);
@@ -98,7 +98,7 @@ function ReactionEditor(props) {
         });
     });
     const handleResourcesChange = useListener((evt) => {
-        draft.update('details.resources', evt.resources);
+        draft.set('details.resources', evt.resources);
         setSelectedResourceIndex(evt.selection);
     });
     const handleCaptureStart = useListener((evt) => {
@@ -118,7 +118,7 @@ function ReactionEditor(props) {
     const handleAction = useListener((evt) => {
         switch (evt.action) {
             case 'markdown-set':
-                draft.update('details.markdown', evt.value);
+                draft.set('details.markdown', evt.value);
                 break;
             case 'photo-capture':
                 importerRef.current.capture('image');

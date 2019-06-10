@@ -43,7 +43,7 @@ function NotificationPanel(props) {
                 }
             }
         }
-        userDraft.update('settings', settings);
+        userDraft.set('settings', settings);
     });
 
     return (

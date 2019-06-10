@@ -18,31 +18,31 @@ function SocialNetworkPanel(props) {
 
     const handleSkypeUsernameChange = useListener((evt) => {
         const username = _.trim(evt.target.value);
-        userDraft.update('details.skype_username', username);
+        userDraft.set('details.skype_username', username);
     });
     const handleIchatUsernameChange = useListener((evt) => {
         const username = _.trim(evt.target.value);
-        userDraft.update('details.ichat_username', username);
+        userDraft.set('details.ichat_username', username);
     });
     const handleTwitterUsernameChange = useListener((evt) => {
         const username = extractUsername(evt.target.value);
-        userDraft.update('details.twitter_username', username);
+        userDraft.set('details.twitter_username', username);
     });
     const handleLinkedinURLChange = useListener((evt) => {
         const url = _.trim(evt.target.value);
-        userDraft.update('details.linkedin_url', url);
+        userDraft.set('details.linkedin_url', url);
     })
     const handleGitHubURLChange = useListener((evt) => {
         const url = _.trim(evt.target.value);
-        userDraft.update('details.github_url', url);
+        userDraft.set('details.github_url', url);
     });
     const handleGitlabURLChange = useListener((evt) => {
         let url = _.trim(evt.target.value);
-        userDraft.update('details.gitlab_url', url);
+        userDraft.set('details.gitlab_url', url);
     });
     const handleStackoverflowURLChange = useListener((evt) => {
         let url = _.trim(evt.target.value);
-        userDraft.update('details.stackoverflow_url', url);
+        userDraft.set('details.stackoverflow_url', url);
     });
 
     return (

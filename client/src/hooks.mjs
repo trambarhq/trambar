@@ -67,7 +67,7 @@ function useMediaCapture(options, stream) {
 }
 
 class AsyncReactionBuffer extends AsyncDraftBuffer {
-    set(obj) {
+    update(obj) {
         obj = removeSuperfluousDetails(obj);
         super.set(obj);
     }
@@ -78,10 +78,10 @@ class AsyncReactionBuffer extends AsyncDraftBuffer {
         return (langText !== undefined) ? langText : '';
     }
 
-    updateLocalized(path, locale, langText) {
+    setLocalized(path, locale, langText) {
         const text = this.getCurrent(path, {});
         text[locale.languageCode] = langText;
-        this.update(path, text);
+        this.set(path, text);
     }
 
     hasContents() {

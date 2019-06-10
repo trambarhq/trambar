@@ -141,12 +141,12 @@ function RoleSummaryPageSync(props) {
     });
     const handleDescriptionChange = useListener((evt) => {
         const description = evt.target.value;
-        draft.update('details.description', description);
+        draft.set('details.description', description);
     });
     const handleRatingOptionClick = useListener((evt) => {
         const key = evt.name;
         const rating = messageRatings[key];
-        draft.update('settings.rating', rating);
+        draft.set('settings.rating', rating);
     });
     const handleUserOptionClick = useListener((evt) => {
         const userID = parseInt(evt.name);

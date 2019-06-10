@@ -51,12 +51,12 @@ function ProjectPanel(props) {
     const handleJoinClick = useListener((evt) => {
         const projectIDsBefore = userDraft.get('requested_project_ids', []);
         const projectIDs = _.union(projectIDsBefore, [ project.id ]);
-        userDraft.update('requested_project_ids', projectIDs);
+        userDraft.set('requested_project_ids', projectIDs);
     });
     const handleCancelJoinClick = useListener((evt) => {
         const projectIDsBefore = userDraft.get('requested_project_ids', []);
         const projectIDs = _.difference(projectIDsBefore, [ project.id ]);
-        userDraft.update('requested_project_ids', projectIDs);
+        userDraft.set('requested_project_ids', projectIDs);
     });
     const handleSignOutClick = useListener((evt) => {
         run(async () => {
