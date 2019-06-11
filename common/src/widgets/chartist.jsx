@@ -1,8 +1,6 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useRef, useEffect } from 'react';
 import { Bar, Pie, Line, Interpolation, Svg } from 'chartist';
-import ComponentRefs from '../utils/component-refs.mjs';
 
 import 'context/widgets/chartist.scss';
 
@@ -12,104 +10,54 @@ const chartClasses = {
     line: Line
 };
 
-class Chartist extends PureComponent {
-    static displayName = 'Chartist';
+function Chartist(props) {
+    const { type, data, options, responsiveOptions, style, className } = props;
+    const { onClick, onDraw } = props;
+    const containerRef = useRef();
+    const [ state ] = useState({});
 
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            container: HTMLDivElement
-        });
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { style, className, onClick } = this.props;
-        let { setters } = this.components;
-        let classNames = [ 'ct-chart' ];
-        if (className) {
-            classNames.push(className);
-        }
-        let containerProps = {
-            ref: setters.container,
-            className: classNames.join(' '),
-            style,
-            onClick,
-        };
-        return <div {...containerProps} />
-    }
-
-    /**
-     * Update chart on prop changes
-     *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
-     */
-    componentDidUpdate(prevProps, prevState) {
-        let { type, data, options, responsiveOptions } = this.props;
-        let { onDraw } = this.props;
-        if (prevProps.onDraw !== onDraw) {
-            if (this.chartist) {
-                this.chartist.off('draw', prevProps.onDraw);
-                this.chartist.on('draw', onDraw);
-            }
-        }
-        if (prevProps.type !== type) {
-            this.destroyChart();
-            this.createChart();
-        } else if (prevProps.data !== data
-                || prevProps.options !== options
-                || prevProps.responsiveOptions !== responsiveOptions) {
-            this.updateChart();
-        }
-    }
-
-    /**
-     * Create chart on mount
-     */
-    componentDidMount() {
-        this.createChart();
-    }
-
-    /**
-     * Create Chartist instance
-     */
-    createChart() {
-        let { type, data, options, responsiveOptions, onDraw } = this.props;
-        let { container } = this.components;
-        let ChartClass = chartClasses[type];
-        this.chartist = new ChartClass(container, data, options, responsiveOptions);
-        if (onDraw) {
-            this.chartist.on('draw', onDraw);
-        }
-    }
-
-    /**
-     * Update data series
-     */
-    updateChart() {
-        let { data, options, responsiveOptions } = this.props;
-        this.chartist.update(data, options, responsiveOptions);
-    }
-
-    /**
-     * Destroy Chartist instance
-     */
-    destroyChart() {
-        if (this.chartist) {
-            this.chartist.detach();
-        }
-        let container = this.components.container;
-        if (container) {
+    useEffect(() => {
+        const container = containerRef.current;
+        const ChartClass = chartClasses[type];
+        const chartist = new ChartClass(container, data, options, responsiveOptions);
+        state.chartist = chartist;
+        state.fresh = true;
+        return () => {
+            chartist.detach();
             while (container.firstChild) {
                 container.removeChild(container.firstChild);
             }
+        };
+    }, [ type ]);
+    useEffect(() => {
+        // update only if the function above hasn't been called
+        const { chartist, fresh } = state;
+        if (!fresh) {
+            chartist.update(data, options, responsiveOptions);
+        } else {
+            state.fresh = false;
         }
+    }, [ type, data, options, responsiveOptions ]);
+    useEffect(() => {
+        const { chartist } = state;
+        if (onDraw) {
+            chartist.on('draw', onDraw);
+            return () => {
+                chartist.off('draw', onDraw)
+            };
+        }
+    }, [ state.chartist, onDraw ]);
+
+    const classNames = [ 'ct-chart' ];
+    if (className) {
+        classNames.push(className);
     }
+    const containerProps = {
+        className: classNames.join(' '),
+        style,
+        onClick,
+    };
+    return <div ref={containerRef} {...containerProps} />
 }
 
 export {
@@ -118,18 +66,3 @@ export {
     Interpolation,
     Svg,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    Chartist.propTypes = {
-        type: PropTypes.oneOf(['line', 'bar', 'pie']).isRequired,
-        data: PropTypes.object.isRequired,
-        className: PropTypes.string,
-        options: PropTypes.object,
-        responsiveOptions: PropTypes.array,
-        style: PropTypes.object,
-        onDraw: PropTypes.func,
-        onClick: PropTypes.func,
-    };
-}

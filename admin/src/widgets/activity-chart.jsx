@@ -218,8 +218,10 @@ function getDay(date) {
     return parseInt(date.substr(8));
 }
 
+const component = React.memo(ActivityChart);
+
 export {
-    ActivityChart as default,
-    ActivityChart,
+    component as default,
+    component as ActivityChart,
     LegendItem,
 };

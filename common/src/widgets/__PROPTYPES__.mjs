@@ -15,6 +15,16 @@ BitmapView.propTypes = {
     onLoad: PropTypes.func,
     onError: PropTypes.func,
 };
+Chartist.propTypes = {
+    type: PropTypes.oneOf(['line', 'bar', 'pie']).isRequired,
+    data: PropTypes.object.isRequired,
+    className: PropTypes.string,
+    options: PropTypes.object,
+    responsiveOptions: PropTypes.array,
+    style: PropTypes.object,
+    onDraw: PropTypes.func,
+    onClick: PropTypes.func,
+};
 CollapsibleContainer.propTypes = {
     open: PropTypes.bool,
 };
