@@ -1,3 +1,4 @@
+const schema = 'global';
 const table = 'picture';
 
 /**
@@ -11,6 +12,7 @@ const table = 'picture';
  */
 async function findPictures(db, purpose, minimum) {
     return db.find({
+        schema,
         table,
         criteria: {
             purpose: purpose,

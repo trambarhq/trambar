@@ -90,7 +90,7 @@ async function ImageAlbumDialogBox(props) {
     });
 
     render();
-    const pictures = await PictureFinder.findPictures(db, purpose);
+    const pictures = await PictureFinder.findPictures(database, purpose);
     render();
 
     function render() {
