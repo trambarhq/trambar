@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 
 let diagnosticsContents = {};
 let listeners = [];
@@ -40,11 +40,3 @@ export {
     Diagnostics as default,
     Diagnostics,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    Diagnostics.propTypes = {
-        type: PropTypes.string.isRequired,
-    };
-}

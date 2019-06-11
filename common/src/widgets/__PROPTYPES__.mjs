@@ -3,6 +3,9 @@ import Environment from '../env/environment.mjs';
 import Payloads from '../transport/payloads.mjs';
 
 import { BitmapView } from './bitmap-view.jsx';
+import { Chartist } from './chartist.jsx';
+import { CollapsibleContainer } from './collapsible-container.jsx';
+import { Diagnostics } from './diagnostics.jsx';
 
 import { ErrorBoundary } from './error-boundary.jsx';
 
@@ -27,6 +30,9 @@ Chartist.propTypes = {
 };
 CollapsibleContainer.propTypes = {
     open: PropTypes.bool,
+};
+Diagnostics.propTypes = {
+    type: PropTypes.string.isRequired,
 };
 
 ErrorBoundary.propTypes = {
