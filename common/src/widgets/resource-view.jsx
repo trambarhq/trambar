@@ -141,19 +141,3 @@ export {
     ResourceView as default,
     ResourceView,
 };
-
-import Environment from '../env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ResourceView.propTypes = {
-        resource: PropTypes.object.isRequired,
-        width: PropTypes.number,
-        height: PropTypes.number,
-        clip: PropTypes.bool,
-        showAnimation: PropTypes.bool,
-        showMosaic: PropTypes.bool,
-        env: PropTypes.instanceOf(Environment),
-    };
-}

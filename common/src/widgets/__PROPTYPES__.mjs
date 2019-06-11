@@ -7,10 +7,11 @@ import { Chartist } from './chartist.jsx';
 import { CollapsibleContainer } from './collapsible-container.jsx';
 import { Diagnostics } from './diagnostics.jsx';
 import { ErrorBoundary } from './error-boundary.jsx';
-import { ImageCropper } from '.image-cropper.jsx';
-
+import { ImageCropper } from './image-cropper.jsx';
+import { Overlay } from './overlay.jsx';
+import { ResourceView } from './resource-view.jsx';
 import { UploadProgress } from './upload-progress.jsx';
-import { VectorView } from './vector-view';
+import { VectorView } from './vector-view.jsx';
 
 BitmapView.propTypes = {
     url: PropTypes.string,
@@ -46,7 +47,20 @@ ImageCropper.propTypes = {
     onChange: PropTypes.func,
     onLoad: PropTypes.func,
 };
-
+Overlay.propTypes = {
+    className: PropTypes.string,
+    show: PropTypes.bool,
+    onBackgroundClick: PropTypes.func,
+};
+ResourceView.propTypes = {
+    resource: PropTypes.object.isRequired,
+    width: PropTypes.number,
+    height: PropTypes.number,
+    clip: PropTypes.bool,
+    showAnimation: PropTypes.bool,
+    showMosaic: PropTypes.bool,
+    env: PropTypes.instanceOf(Environment),
+};
 UploadProgress.propTypes = {
     payloads: PropTypes.instanceOf(Payloads).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,
