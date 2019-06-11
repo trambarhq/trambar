@@ -6,8 +6,8 @@ import { BitmapView } from './bitmap-view.jsx';
 import { Chartist } from './chartist.jsx';
 import { CollapsibleContainer } from './collapsible-container.jsx';
 import { Diagnostics } from './diagnostics.jsx';
-
 import { ErrorBoundary } from './error-boundary.jsx';
+import { ImageCropper } from '.image-cropper.jsx';
 
 import { UploadProgress } from './upload-progress.jsx';
 import { VectorView } from './vector-view';
@@ -34,10 +34,17 @@ CollapsibleContainer.propTypes = {
 Diagnostics.propTypes = {
     type: PropTypes.string.isRequired,
 };
-
 ErrorBoundary.propTypes = {
     env: PropTypes.instanceOf(Environment).isRequired,
     showError: PropTypes.bool,
+};
+ImageCropper.propTypes = {
+    url: PropTypes.string.isRequired,
+    clippingRect: PropTypes.object,
+    vector: PropTypes.bool,
+    disabled: PropTypes.bool,
+    onChange: PropTypes.func,
+    onLoad: PropTypes.func,
 };
 
 UploadProgress.propTypes = {
