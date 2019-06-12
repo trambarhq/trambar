@@ -225,33 +225,29 @@ function SmartList(props) {
             return;
         }
         const scrollWindow = getScrollWindow(scrollContainerRef);
-        const pos = getSlotPosition(anchorSlot);
-        const offsets = getScrollOffsets(pos, scrollWindow);
-        const adjustment = anchorSlot.offset - offsets.fromTop;
+        const offset = getSlotOffset(anchorSlot, scrollWindow, inverted);
+        const adjustment = anchorSlot.offset - offset;
         if (adjustment !== 0) {
-            scrollContainer.scrollTop += adjustment;
+            scrollContainerRef.current.scrollTop += adjustment;
         }
     });
     useEffect(() => {
-        const heights = [];
         for (let slot of slots) {
             if (slot.rendering) {
                 const child = slot.node.firstChild;
                 slot.height = (child) ? child.offsetHeight : 0;
             }
-            heights.push(slot.height);
         }
-        /*
         if (estimatedHeight === undefined) {
+            const heights = _.filter(_.map(slots, 'height'));
             if (!_.isEmpty(heights)) {
-                const avg = _.sum(heights) / heights.length;
+                const avg = _.sum(heights) / _.size(heights);
                 const estimatedHeight = Math.round(avg);
-                if (estimatedHeight !== 0) {
+                if (estimatedHeight > 0) {
                     setEstimatedHeight(estimatedHeight);
                 }
             }
         }
-        */
     });
     useEffect(() => {
         /*
@@ -283,20 +279,21 @@ function SmartList(props) {
     // render some items ahead of (i.e. below) the anchored item
     // (presumably the number is sufficient to fill the viewport)
     const endIndex = Math.min(_.size(slots), anchorIndex + ahead + 1);
+    const list = (inverted) ? _.reverse(slots) : slots;
     return (
         <div ref={containerRef} className="smart-list" onTransitionEnd={handleTransitionEnd}>
-            {_.map(slots, renderSlot)}
+            {_.map(list, renderSlot)}
         </div>
     );
 
     function renderSlot(slot, index) {
-        slot.rendering = (startIndex <= index && index < endIndex);
+        slot.rendering = (startIndex <= slot.index && slot.index < endIndex);
         if (slot.state !== 'disappearing') {
             const evt = {
                 item: slot.item,
                 needed: slot.rendering,
                 startIndex,
-                currentIndex: index,
+                currentIndex: slot.index,
                 endIndex,
                 previousHeight: slot.height,
                 estimatedHeight,
@@ -305,7 +302,6 @@ function SmartList(props) {
         } else {
             // use what was rendered before, since parent component might
             // not be able to render something that's no longer there
-            slot.contents;
         }
         const classNames = [ 'slot' ];
         let style;
@@ -354,21 +350,29 @@ function getSlotPosition(slot) {
     return { top, bottom, height };
 }
 
+function getSlotOffset(slot, scrollWindow, inverted) {
+    const pos = getSlotPosition(slot);
+    if (!inverted) {
+        return (pos.top - scrollWindow.scrollTop);
+    } else {
+        return (scrollWindow.scrollBottom - pos.bottom);
+    }
+}
+
 function findAnchorSlot(slots, scrollWindow, inverted) {
     for (let slot of slots) {
-        const pos = getSlotPosition(slot);
-        if (pos.top >= scrollWindow.scrollTop) {
+        const offset = getSlotOffset(slot, scrollWindow, inverted);
+        if (offset > 0) {
+            slot.offset = offset;
             return slot;
         }
     }
 }
 
 function isSlotVisible(slot, scrollWindow) {
-    for (let slot of slots) {
-        const pos = getSlotPosition(slot);
-        if (slot.bottom > scrollWindow.scrollTop && slot.top < scrollWindow.scrollBottom) {
-            return true;
-        }
+    const pos = getSlotPosition(slot);
+    if (slot.bottom > scrollWindow.scrollTop && slot.top < scrollWindow.scrollBottom) {
+        return true;
     }
     return false;
 }
