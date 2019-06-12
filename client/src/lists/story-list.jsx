@@ -315,11 +315,11 @@ const findRecipients = memoizeWeak(null, function(recipients, bookmarks, story, 
     });
 });
 
-StoryList.defaultProps = {
+const component = Relaks.memo(StoryList);
+
+component.defaultProps = {
     acceptNewStory: false,
 };
-
-const component = Relaks.memo(StoryList);
 
 export {
     component as default,

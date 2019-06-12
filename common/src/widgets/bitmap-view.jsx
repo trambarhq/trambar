@@ -5,7 +5,6 @@ import * as BlobReader from '../transport/blob-reader.mjs';
 import * as MediaLoader from '../media/media-loader.mjs';
 import * as JPEGAnalyser from '../media/jpeg-analyser.mjs';
 import * as ImageOrientation from '../media/image-orientation.mjs';
-import ComponentRefs from '../utils/component-refs.mjs';
 
 /**
  * A component that displays a bitmap image file (JPEG, PNG, etc.), with

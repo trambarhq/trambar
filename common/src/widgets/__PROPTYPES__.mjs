@@ -61,6 +61,22 @@ ResourceView.propTypes = {
     showMosaic: PropTypes.bool,
     env: PropTypes.instanceOf(Environment),
 };
+SmartList.propTypes = {
+    items: PropTypes.arrayOf(PropTypes.object),
+    behind: PropTypes.number,
+    ahead: PropTypes.number,
+    anchor: PropTypes.string,
+    offset: PropTypes.number,
+    inverted: PropTypes.bool,
+    transitioning: PropTypes.number,
+    noReset: PropTypes.bool,
+
+    onIdentity: PropTypes.func.isRequired,
+    onTransition: PropTypes.func,
+    onRender: PropTypes.func.isRequired,
+    onAnchorChange: PropTypes.func,
+    onBeforeAnchor: PropTypes.func,
+};
 UploadProgress.propTypes = {
     payloads: PropTypes.instanceOf(Payloads).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,
