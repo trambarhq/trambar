@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
+import { usePrevious } from 'relaks';
 import ReactDOM from 'react-dom';
 
 // custom hooks
@@ -16,8 +17,10 @@ import './new-items-alert.scss';
  */
 function NewItemsAlert(props) {
     const { url, children, onClick } = props;
+    const previousChildren = usePrevious(children, !!url);
     const [ container, setContainer ] = useState(null);
     const show = useAfterglow(!!url, 500);
+    const contents = (url) ? children : previousChildren;
 
     useEffect(() => {
         if (show) {
@@ -47,7 +50,8 @@ function NewItemsAlert(props) {
         };
         const element = (
             <a {...anchorProps}>
-                <i className="fa fa-arrow-up" />{children}
+                <i className="fa fa-arrow-up" />
+                {contents}
             </a>
         );
         return ReactDOM.createPortal(element, container);

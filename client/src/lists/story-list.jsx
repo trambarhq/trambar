@@ -66,13 +66,12 @@ async function StoryList(props) {
     };
 
     function reanchorAtStory(scrollToStoryID, scrollToReactionID) {
-        const params = {
+        route.replace({
             scrollToStoryID,
             highlightStoryID: undefined,
             scrollToReactionID,
             highlightReactionID: undefined,
-        };
-        route.reanchor(params);
+        });
     }
 
     function getAnchor(storyID) {

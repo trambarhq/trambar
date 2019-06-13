@@ -34,7 +34,8 @@ async function NotificationList(props) {
         return renderNotification(evt.item, evt.needed, evt.previousHeight, evt.estimatedHeight);
     };
     const handleNotificationAnchorChange = (evt) => {
-        reanchorAtNotification(_.get(evt.item, 'id'))
+        const scrollToNotificationID = _.get(evt.item, 'id');
+        route.replace({ scrollToNotificationID });
     };
     const handleNotificationBeforeAnchor = (evt) => {
         setHiddenNotificationIDs(_.map(evt.items, 'id'));
@@ -163,11 +164,6 @@ async function NotificationList(props) {
 
     function getAnchor(notificationID) {
         return (notificationID) ? `notification-${notificationID}` : undefined;
-    }
-
-    function reanchorAtNotification(scrollToNotificationID) {
-        const params = { scrollToNotificationID };
-        route.reanchor(params);
     }
 }
 

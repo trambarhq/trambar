@@ -34,7 +34,8 @@ async function BookmarkList(props) {
         return renderBookmark(evt.item, evt.needed, evt.previousHeight, evt.estimatedHeight);
     };
     const handleBookmarkAnchorChange = (evt) => {
-        reanchorAtStory(_.get(evt.item, 'story_id'));
+        const scrollToStoryID  = _.get(evt.item, 'story_id');
+        route.replace({ scrollToStoryID, highlightStoryID: undefined });
     };
     const handleBookmarkBeforeAnchor = (evt) => {
         setHiddenStoryIDs(_.map(evt.items, 'story_id'));
@@ -43,9 +44,9 @@ async function BookmarkList(props) {
         setHiddenStoryIDs([]);
     };
     const handleStoryEdit = (evt) => {
-        const storyID = evt.target.props.story.id;
-        if (storyID === highlightStoryID) {
-            reanchorAtStory(highlightStoryID);
+        const scrollToStoryID = evt.target.props.story.id;
+        if (scrollToStoryID === highlightStoryID) {
+            route.replace({ scrollToStoryID, highlightStoryID: undefined });
         }
     };
 
@@ -193,11 +194,6 @@ async function BookmarkList(props) {
 
     function getAnchor(storyID) {
         return (storyID) ? `story-${storyID}` : undefined;
-    }
-
-    function reanchorAtStory(scrollToStoryID) {
-        const params = { scrollToStoryID, highlightStoryID: undefined };
-        route.reanchor(params);
     }
 }
 

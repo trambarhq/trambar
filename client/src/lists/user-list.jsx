@@ -44,8 +44,8 @@ function UserList(props) {
         return renderUser(evt.item, evt.needed, evt.previousHeight, evt.estimatedHeight);
     };
     const handleUserAnchorChange = useListener((evt) => {
-        const params = { scrollToUserID };
-        route.reanchor(params);
+        const scrollToUserID = _.get(evt.item, 'id');
+        route.replace({ scrollToUserID });
     });
 
     function getAnchor(userID) {
