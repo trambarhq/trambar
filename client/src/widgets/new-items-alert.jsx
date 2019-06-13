@@ -62,4 +62,5 @@ function NewItemsAlert(props) {
 
 export {
     NewItemsAlert as default,
+    NewItemsAlert,
 };

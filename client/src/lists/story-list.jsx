@@ -8,11 +8,11 @@ import * as BookmarkFinder from 'common/objects/finders/bookmark-finder.mjs';
 import * as ReactionFinder from 'common/objects/finders/reaction-finder.mjs';
 
 // widgets
-import SmartList from 'common/widgets/smart-list.jsx';
-import StoryView from '../views/story-view.jsx';
-import StoryEditor from '../editors/story-editor.jsx';
-import NewItemsAlert from '../widgets/new-items-alert.jsx';
-import ErrorBoundary from 'common/widgets/error-boundary.jsx';
+import { SmartList } from 'common/widgets/smart-list.jsx';
+import { StoryView } from '../views/story-view.jsx';
+import { StoryEditor } from '../editors/story-editor.jsx';
+import { NewItemsAlert } from '../widgets/new-items-alert.jsx';
+import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import './story-list.scss';
 

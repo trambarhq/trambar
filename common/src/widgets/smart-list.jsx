@@ -4,15 +4,13 @@ import { useListener, useComputed, useSaveBuffer, useAutoSave } from 'relaks';
 
 import './smart-list.scss';
 
-const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-
 /**
  * A component for rendering a list that can be very long. Items are rendered
  * only when the current scroll position make them visible (or likely to be
  * visible in the near future).
  */
 function SmartList(props) {
-    const { items, behind, ahead, anchor, offset, inverted, transitioning, noReset } = props;
+    const { items, behind, ahead, anchor, offset, inverted, noReset } = props;
     const { onIdentity, onTransition, onRender, onAnchorChange, onBeforeAnchor } = props;
     const containerRef = useRef();
     const scrollContainerRef = useRef();
@@ -96,12 +94,6 @@ function SmartList(props) {
         const slots = [];
         const scrollWindow = getScrollWindow(scrollContainerRef);
         for (let slot of _.values(slotHash)) {
-            if (slot.unseen) {
-                const slotPos = getSlotPosition(slot);
-                if (isWithin(slotPos, scrollWindow)) {
-                    slot.unseen = false;
-                }
-            }
             if (slot.transition === 'decide' && slot.node) {
                 const slotPos = getSlotPosition(slot);
                 if (isWithin(slotPos, scrollWindow)) {
@@ -127,26 +119,25 @@ function SmartList(props) {
     }, [ slotHash ]);
     const anchorBuffer = useSaveBuffer({ original: anchor || '' });
     const anchorSlot = (slotHash) ? slotHash[anchorBuffer.current] : null;
-    const anchorIndex = (anchorSlot) ? anchorSlot.index : 0;
+    const anchorIndex = (anchorSlot) ? anchorSlot.index : -1;
     useAutoSave(anchorBuffer, 500, () => {
-        if (onAnchorChange && anchorSlot) {
-            onAnchorChange({ item: anchorSlot.item });
+        const item = _.get(anchorSlot, 'item', null);
+        if (onAnchorChange) {
+            onAnchorChange({ item });
         }
     });
+    const transitioning = _.some(slots, { transition: 'run' });
 
     const handleScroll = useListener((evt) => {
-        const scrollWindow = getScrollWindow(scrollContainerRef);
-        const slot = findAnchorSlot(slots, scrollWindow, inverted);
-        if (slot) {
-            const newAnchor = (slot.index > 0) ? slot.id : '';
+        if (updateScrollState(scrollContainerRef, scrollState, inverted)) {
+            const scrollWindow = getScrollWindow(scrollContainerRef);
+            const slot = findAnchorSlot(slots, scrollWindow, inverted);
+            let newAnchor = '';
+            if (slot && slot.index > 0) {
+                newAnchor = slot.key;
+            }
             anchorBuffer.update(newAnchor);
         }
-
-        scrollState.scrolling = true;
-        clearTimeout(scrollState.endTimeout);
-        scrollState.endTimeout = setTimeout(() => {
-            scrollState.scrolling = false;
-        }, 500);
     });
     const handleWindowResize = useListener((evt) => {
         // recalculate heights
@@ -186,19 +177,26 @@ function SmartList(props) {
         }
     }, [ slots ]);
     useEffect(() => {
-        const unseenSlots = _.filter(slots, (slot) => {
+        const scrollWindow = getScrollWindow(scrollContainerRef);
+        const unseenSlots = [];
+        for (let slot of slots) {
             if (slot.unseen) {
-                // if the slot is behind the anchor (i.e. above it when
-                // inverted = false; below it when inverted = true)
-                // then the user won't see it yet
-                //
-                // we're not tracking items appearing from the other
-                // direction at the moment
-                if (slot.index < anchorIndex) {
-                    return true;
+                const slotPos = getSlotPosition(slot);
+                if (isWithin(slotPos, scrollWindow)) {
+                    slot.unseen = false;
+                } else {
+                    // if the slot is behind the anchor (i.e. above it when
+                    // inverted = false; below it when inverted = true)
+                    // then the user won't see it yet
+                    //
+                    // we're not tracking items appearing from the other
+                    // direction at the moment
+                    if (slot.index < anchorIndex) {
+                        unseenSlots.push(slot);
+                    }
                 }
             }
-        });
+        }
         const unseenItems = _.map(unseenSlots, 'item');
         if (_.xor(scrollState.unseenItems, unseenItems).length > 0) {
             if (onBeforeAnchor) {
@@ -207,9 +205,6 @@ function SmartList(props) {
             scrollState.unseenItems = unseenItems;
         }
     }, [ slots, anchorIndex ]);
-    useEffect(() => {
-        // interrupt momentum scrolling when parent passes a new anchor
-    }, [ anchor ]);
     useEffect(() => {
         // find scroll container and attach scroll handler
         let scrollContainer;
@@ -234,17 +229,28 @@ function SmartList(props) {
         };
     }, []);
     useEffect(() => {
+        if (!anchor) {
+            resetScrollPosition(scrollContainerRef, scrollState, inverted);
+        }
+    }, [ anchor ]);
+    useEffect(() => {
         // maintain scroll position based on anchor
-        if (!anchorSlot || scrollState.scrolling) {
-            return;
-        }
-        const scrollWindow = getScrollWindow(scrollContainerRef);
-        const offset = getSlotOffset(anchorSlot, scrollWindow, inverted);
-        const adjustment = offset - anchorSlot.offset;
-        if (adjustment !== 0) {
-            scrollContainerRef.current.scrollTop += adjustment;
-        }
+        maintainAnchorPosition(anchorSlot, scrollContainerRef, scrollState, inverted);
     });
+    useEffect(() => {
+        // continually adjust scroll position when transitioning
+        if (inverted && transitioning) {
+            let end = false;
+            function adjust() {
+                if (!end) {
+                    maintainAnchorPosition(anchorSlot, scrollContainerRef, scrollState, inverted);
+                    requestAnimationFrame(adjust);
+                }
+            }
+            adjust();
+            return () => { end = true };
+        }
+    }, [ transitioning, inverted ]);
     useEffect(() => {
         // update slot height (for transition purpose)
         for (let slot of slots) {
@@ -318,14 +324,15 @@ function SmartList(props) {
     }
 }
 
-function getScrollWindow(ref) {
+function getScrollWindow(scrollContainerRef) {
     let top, bottom, height, scrollTop, scrollBottom;
-    if (ref.current) {
-        top = ref.current.offsetTop;
-        height = ref.current.offsetHeight;
-        scrollTop = top + ref.current.scrollTop;
+    const container = scrollContainerRef.current;
+    if (container) {
+        top = container.offsetTop;
+        height = container.offsetHeight;
+        scrollTop = top + container.scrollTop;
         scrollBottom = scrollTop + height;
-        bottom = top + ref.current.scrollHeight;
+        bottom = top + container.scrollHeight;
     }
     return { top, bottom, height, scrollTop, scrollBottom };
 }
@@ -391,12 +398,86 @@ function setter(node) {
     this.node = node;
 }
 
+function maintainAnchorPosition(anchorSlot, scrollContainerRef, scrollState, inverted) {
+    if (scrollState.scrolling) {
+        return;
+    }
+    const scrollWindow = getScrollWindow(scrollContainerRef);
+    let adjustment = 0;
+    if (anchorSlot) {
+        // adjust based on anchor
+        const offset = getSlotOffset(anchorSlot, scrollWindow, inverted);
+        adjustment = offset - anchorSlot.offset;
+    } else {
+        // reapply previous scroll amount
+        const currentAmount = getScrollAmount(scrollContainerRef, inverted);
+        adjustment = scrollState.amount - currentAmount;
+    }
+    if (adjustment !== 0) {
+        if (inverted) {
+            adjustment *= -1;
+        }
+        applyScrollPosition(scrollContainerRef, scrollState, scrollWindow.scrollTop + adjustment);
+        scrollState.amount = getScrollAmount(scrollContainerRef, inverted);
+    }
+}
+
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+function resetScrollPosition(scrollContainerRef, scrollState, inverted) {
+    const container = scrollContainerRef.current;
+    const newScrollTop = (inverted) ? container.scrollHeight - container.clientHeight : 0;
+    if (container.scrollTop !== newScrollTop) {
+        // stop momentum scrolling if active
+        const haltMomentum = isIOS && scrollState.scrolling;
+        if (haltMomentum) {
+            container.style.overflowY = 'hidden';
+        }
+        applyScrollPosition(scrollContainerRef, scrollState, newScrollTop);
+        if (haltMomentum) {
+            container.style.overflowY = 'scroll';
+        }
+    }
+    scrollState.amount = 0;
+    scrollState.scrolling = false;
+}
+
+function updateScrollState(scrollContainerRef, scrollState, inverted) {
+    if (scrollState.skipEvent) {
+        scrollState.skipEvent = false;
+        return false;
+    }
+    scrollState.scrolling = true;
+    scrollState.amount = getScrollAmount(scrollContainerRef, inverted);
+    clearTimeout(scrollState.endTimeout);
+    scrollState.endTimeout = setTimeout(() => {
+        scrollState.scrolling = false;
+    }, 500);
+    return true;
+}
+
+function applyScrollPosition(scrollContainerRef, scrollState, scrollTop) {
+    scrollState.skipEvent = true;
+    scrollContainerRef.current.scrollTop = scrollTop;
+}
+
+function getScrollAmount(scrollContainerRef, inverted) {
+    const container = scrollContainerRef.current;
+    if (container) {
+        if (!inverted) {
+            return container.scrollTop;
+        } else {
+            return container.scrollHeight - container.scrollTop - container.clientHeight;
+        }
+    }
+    return 0;
+}
+
 SmartList.defaultProps = {
     behind: 5,
     ahead: 10,
     offset: 0,
     inverted: false,
-    transitioning: 5,
     noReset: false,
 };
 
