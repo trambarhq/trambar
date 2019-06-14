@@ -231,9 +231,7 @@ function ServerSummaryPageSync(props) {
         // make sure the URL isn't localhost, which points to the Docker container
         let newProblems;
         if (/https?:\/\/localhost\b/.test(url)) {
-            newProblems = _.assign({}, problems, {
-                base_url: 'validation-localhost-is-wrong'
-            });
+            newProblems = { ...problems, base_url: 'validation-localhost-is-wrong' };
         } else {
             newProblems = _.omit(problems, 'base_url');
         }

@@ -48,7 +48,7 @@ async function CalendarBar(props) {
         const handleDateURL = (evt) => {
             const activities = _.get(dailyActivities, [ 'daily', evt.date ]);
             if (activities) {
-                const params = _.assign({ date: evt.date }, settings.route);
+                const params = { date: evt.date, ...settings.route };
                 const url = route.find(route.name, params);
                 return url;
             }

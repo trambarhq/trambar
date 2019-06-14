@@ -42,14 +42,12 @@ function ImageSelector(props, ref) {
         setCropping(false);
     });
     const handleImageSelect = useListener((evt) => {
-        const newImage = _.clone(evt.image);
-        newImage.type = 'image';
+        const newImage = { type: 'image', ...evt.image };
         setShowingAlbum(false);
         setImage(newImage);
     });
     const handleImageSectionSelect = useListener((evt) => {
-        const newImage = _.clone(image);
-        newImage.clip = evt.clippingRect;
+        const newImage = { ...image, clip: evt.clippingRect };
         setCropping(false);
         setImage(newImage);
     });
@@ -257,8 +255,8 @@ function updateResource(resources, image, desiredWidth, desiredHeight) {
                 left = Math.round((image.width - width) / 2);
                 top = 0;
             }
-            image = _.clone(image);
-            image.clip = { left, top, width, height };
+            const clip = { left, top, width, height };
+            image = { clip, ...image };
         }
     }
     resources = _.slice(resources);

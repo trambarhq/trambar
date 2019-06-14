@@ -387,7 +387,7 @@ function toggleOption(optsBefore, list, name) {
     if (option.none) {
         opts = {};
     } else {
-        opts = _.clone(optsBefore);
+        opts = { ...optsBefore };
         if (opts[option.name]) {
             delete opts[option.name];
             for (let depOption of list) {

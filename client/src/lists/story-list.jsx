@@ -223,9 +223,11 @@ const sortStories = memoizeWeak(null, function(stories, pendingStories) {
                 // copy pending changes into story
                 const index = _.findIndex(stories, { id: story.published_version_id });
                 if (index !== -1) {
-                    const publishedStory = stories[index] = _.clone(stories[index]);
-                    publishedStory.details = story.details;
-                    publishedStory.user_ids = story.user_ids;
+                    stories[index] = {
+                        ...stories[index],
+                        details: story.details,
+                        user_ids: story.user_ids,
+                    };
                 }
             }
         }

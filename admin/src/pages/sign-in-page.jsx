@@ -31,7 +31,7 @@ async function SignInPage(props) {
             await openPopUpWindow(url);
             await database.checkAuthorization();
         } catch (err) {
-            const newErrors = _.clone(oauthErrors);
+            const newErrors = { ...oauthErrors };
             newErrors[serverID] = err;
             setOAuthErrors(newErrors);
         }

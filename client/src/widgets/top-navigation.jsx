@@ -72,10 +72,10 @@ function TopNavigation(props) {
         const active = (selectedControl && selectedControl.name === name);
         let url;
         if (controlSettings) {
-            const params = { ...controlSettings.route };
+            let params = { ...controlSettings.route };
             if (!active) {
                 // add empty parameters to trigger the control's activation
-                _.assign(params, control.params);
+                params = { ...params, ...control.params };
             }
             url = route.find(route.name, params);
         }

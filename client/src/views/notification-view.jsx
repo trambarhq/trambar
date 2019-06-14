@@ -94,7 +94,7 @@ async function processMobileAlert(alert, database, route) {
 }
 
 function getNotificationURL(notification, route) {
-    let params = _.clone(route.params);
+    let params = { ...route.params };
     switch (notification.type) {
         case 'like':
         case 'comment':

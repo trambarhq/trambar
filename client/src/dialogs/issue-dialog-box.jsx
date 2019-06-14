@@ -54,9 +54,9 @@ function IssueDialogBox(props) {
         }
     });
     const handleOKClick = useListener((evt) => {
-        const newIssue = _.clone(draft.current);
         // make sure the selected labels exist in the selected repo only
-        newIssue.labels = _.intersection(newIssue.labels, selectedRepo.details.labels);
+        const labels = _.intersection(draft.current.labels, selectedRepo.details.labels);
+        const newIssue = { ...draft.current, labels };
         if (onConfirm) {
             onConfirm({ issue: newIssue });
         }

@@ -249,7 +249,7 @@ function MemberListPageSync(props) {
                 }
             } else {
                 // don't create the link when we're editing the list
-                const params = _.assign({}, route.params, { userID: user.id });
+                const params = { ...route.params, userID: user.id };
                 url = route.find('member-summary-page', params);
             }
             const image = <ProfileImage user={user} env={env} />;

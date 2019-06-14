@@ -93,7 +93,7 @@ async function PeoplePage(props) {
         // load statistics of selected user if he's not a member
         if (!_.includes(members, selectedUser)) {
             let selectedUserStats = await StatisticsFinder.findDailyActivitiesOfUser(database, project, selectedUser, publicOnly);
-            dailyActivities = _.clone(dailyActivities);
+            dailyActivities = { ...dailyActivities };
             dailyActivities[selectedUser.id] = selectedUserStats;
         }
     }
@@ -155,8 +155,7 @@ async function PeoplePage(props) {
                 }
                 render();
                 const nonMemberStats = await StatisticsFinder.findDailyActivitiesOfUsers(database, project, users, publicOnly);
-                dailyActivities = _.clone(dailyActivities);
-                _.assign(dailyActivities, nonMemberStats);
+                dailyActivities = { ...dailyActivities, ...nonMemberStats };
             }
         }
     }

@@ -58,7 +58,7 @@ function MultilingualTextField(props, ref) {
         let newValue;
         if (text) {
             if (value instanceof Object) {
-                newValue = _.clone(value);
+                newValue = { ...value };
             } else if (typeof(value) === 'string') {
                 // convert a string to a multi-lingual object
                 newValue = _.transform(availableLanguageCodes, (text, code) => {

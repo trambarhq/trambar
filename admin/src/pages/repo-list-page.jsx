@@ -210,7 +210,7 @@ function RepoListPageSync(props) {
                 }
             } else {
                 // don't create the link when we're editing the list
-                const params = _.assign({}, route.params, { repoID: repo.id });
+                const params = { ...route.params, repoID: repo.id };
                 url = route.find('repo-summary-page', params);
             }
             return (
