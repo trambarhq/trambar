@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import HTTPError from '../common/errors/http-error.mjs';
 import { ExternalData } from './external-data.mjs';
 import Task from './task.mjs';
@@ -8,15 +7,17 @@ class Role extends ExternalData {
         super();
         this.schema = 'global';
         this.table = 'role';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             name: String,
             disabled: Boolean,
             settings: Object,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             name: String,
             disabled: Boolean,
-        });
+        };
     }
 
     /**
@@ -28,8 +29,8 @@ class Role extends ExternalData {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -61,8 +62,8 @@ class Role extends ExternalData {
      * @return {Promise}
      */
     async grant(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT SELECT ON ${table} TO client_role;
         `;
@@ -104,9 +105,9 @@ class Role extends ExternalData {
      * @return {Promise<Array<Object>>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.name = row.name;
 
             if (credentials.unrestricted) {
@@ -134,7 +135,7 @@ class Role extends ExternalData {
      * @return {Promise<Object>}
      */
     async importOne(db, schema, roleReceived, roleBefore, credentials, options) {
-        let row = await super.importOne(db, schema, roleReceived, roleBefore, credentials, options);
+        const row = await super.importOne(db, schema, roleReceived, roleBefore, credentials, options);
         await this.ensureUniqueName(db, schema, roleBefore, roleReceived);
         return row;
     }

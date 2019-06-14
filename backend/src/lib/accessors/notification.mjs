@@ -7,7 +7,8 @@ class Notification extends Data {
         super();
         this.schema = 'both';
         this.table = 'notification';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             type: String,
             story_id: Number,
             reaction_id: Number,
@@ -15,8 +16,9 @@ class Notification extends Data {
             target_user_id: Number,
             seen: Boolean,
             suppressed: Boolean,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             type: String,
             story_id: Number,
             reaction_id: Number,
@@ -28,7 +30,7 @@ class Notification extends Data {
             time_range: String,
             newer_than: String,
             older_than: String,
-        });
+        };
     }
 
     /**
@@ -40,8 +42,8 @@ class Notification extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -76,8 +78,8 @@ class Notification extends Data {
     async upgrade(db, schema, version) {
         if (version === 2) {
             // adding: suppressed
-            let table = this.getTableName(schema);
-            let sql = `
+            const table = this.getTableName(schema);
+            const sql = `
                 ALTER TABLE ${table}
                 ADD COLUMN IF NOT EXISTS
                 suppressed boolean NOT NULL DEFAULT false;
@@ -119,24 +121,19 @@ class Notification extends Data {
      * @return {Promise}
      */
     apply(criteria, query) {
-        let special = [
-            'time_range',
-            'newer_than',
-            'older_than',
-            'search',
-        ];
-        super.apply(_.omit(criteria, special), query);
+        const { time_range, newer_than, older_than, search, ...basic } = criteria;
+        super.apply(basic, query);
 
-        let params = query.parameters;
-        let conds = query.conditions;
-        if (criteria.time_range !== undefined) {
-            conds.push(`ctime <@ $${params.push(criteria.time_range)}::tsrange`);
+        const params = query.parameters;
+        const conds = query.conditions;
+        if (time_range !== undefined) {
+            conds.push(`ctime <@ $${params.push(time_range)}::tsrange`);
         }
-        if (criteria.newer_than !== undefined) {
-            conds.push(`ctime > $${params.push(criteria.newer_than)}`);
+        if (newer_than !== undefined) {
+            conds.push(`ctime > $${params.push(newer_than)}`);
         }
-        if (criteria.older_than !== undefined) {
-            conds.push(`ctime < $${params.push(criteria.older_than)}`);
+        if (older_than !== undefined) {
+            conds.push(`ctime < $${params.push(older_than)}`);
         }
     }
 
@@ -153,9 +150,9 @@ class Notification extends Data {
      * @return {Promise<Array<Object>>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.ctime = row.ctime;
             object.type = row.type;
             object.details = row.details;
@@ -221,13 +218,13 @@ class Notification extends Data {
                 continue;
             }
             if (type === 'story') {
-                let criteria = {
+                const criteria = {
                     story_id: _.map(objects, 'id'),
                     deleted: false,
                 };
                 await this.updateMatching(db, schema, criteria, { deleted: true });
             } else if (type === 'reaction') {
-                let criteria = {
+                const criteria = {
                     reaction_id: _.map(objects, 'id'),
                     deleted: false,
                 };
@@ -251,14 +248,14 @@ class Notification extends Data {
                 return;
             }
             if (type === 'story') {
-                let criteria = {
+                const criteria = {
                     story_id: _.map(objects, 'id'),
                     deleted: true,
                     suppressed: false,
                 };
                 await this.updateMatching(db, schema, criteria, { deleted: false });
             } else if (type === 'reaction') {
-                let criteria = {
+                const criteria = {
                     reaction_id: _.map(objects, 'id'),
                     deleted: true,
                     suppressed: false,

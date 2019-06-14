@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { Data } from './data.mjs';
 import HTTPError from '../common/errors/http-error.mjs';
 
@@ -7,7 +6,8 @@ class Task extends Data {
         super();
         this.schema = 'both';
         this.table = 'task';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             action: String,
             token: String,
             options: Object,
@@ -16,8 +16,9 @@ class Task extends Data {
             failed: Boolean,
             user_id: Number,
             etime: String,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             action: String,
             token: String,
             completion: Number,
@@ -30,7 +31,7 @@ class Task extends Data {
             older_than: String,
             complete: Boolean,
             noop: Boolean,
-        });
+        };
     }
 
     /**
@@ -42,8 +43,8 @@ class Task extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -91,35 +92,29 @@ class Task extends Data {
      * @param  {Object} query
      */
     apply(criteria, query) {
-        let special = [
-            'options',
-            'newer_than',
-            'older_than',
-            'complete',
-            'noop',
-        ];
-        super.apply(_.omit(criteria, special), query);
+        const { options, newer_than, older_than, complete, noop, ...basic } = criteria;
+        super.apply(basic, query);
 
-        let params = query.parameters;
-        let conds = query.conditions;
-        if (criteria.options !== undefined) {
-            conds.push(`options @> $${params.push(criteria.options)}`);
+        const params = query.parameters;
+        const conds = query.conditions;
+        if (options !== undefined) {
+            conds.push(`options @> $${params.push(options)}`);
         }
-        if (criteria.newer_than !== undefined) {
-            conds.push(`ctime > $${params.push(criteria.newer_than)}`);
+        if (newer_than !== undefined) {
+            conds.push(`ctime > $${params.push(newer_than)}`);
         }
-        if (criteria.older_than !== undefined) {
-            conds.push(`ctime < $${params.push(criteria.older_than)}`);
+        if (older_than !== undefined) {
+            conds.push(`ctime < $${params.push(older_than)}`);
         }
-        if (criteria.complete !== undefined) {
-            if (criteria.complete) {
+        if (complete !== undefined) {
+            if (complete) {
                 conds.push(`completion = 100`);
             } else {
                 conds.push(`completion <> 100`);
             }
         }
-        if (criteria.noop !== undefined) {
-            if (criteria.noop) {
+        if (noop !== undefined) {
+            if (noop) {
                 conds.push(`completion = 0`);
             } else {
                 conds.push(`completion > 0`);
@@ -140,10 +135,10 @@ class Task extends Data {
      * @return {Promise<Array<Object>>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
             // TODO: access control
-            let row = rows[index];
+            const row = rows[index];
             object.action = row.action;
             object.token = row.token;
             object.user_id = row.user_id;
@@ -213,8 +208,8 @@ class Task extends Data {
      * @return {Promise}
      */
     async createUpdateTrigger(db, schema, triggerName, method, args) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TRIGGER "${triggerName}"
             AFTER UPDATE ON ${table}
             FOR EACH ROW

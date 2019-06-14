@@ -25,8 +25,8 @@ function start(action, options) {
  * @return {Promise<Task|null>}
  */
 async function last(action, options) {
-    let db = await Database.open();
-    let criteria = {
+    const db = await Database.open();
+    const criteria = {
         action,
         options,
         noop: false,
@@ -141,8 +141,8 @@ class TaskLog {
         if (this.noop && !this.failed) {
             return null;
         }
-        let db = await Database.open();
-        let columns = {};
+        const db = await Database.open();
+        const columns = {};
         if (!this.id) {
             columns.action = this.action;
             columns.options = this.options;
@@ -155,7 +155,7 @@ class TaskLog {
         if (this.completion === 100) {
             columns.etime = String('NOW()');
         }
-        let task = await Task.saveOne(db, 'global', columns);
+        const task = await Task.saveOne(db, 'global', columns);
         this.id = task.id;
         this.saved = true;
         this.saveTime = new Date;

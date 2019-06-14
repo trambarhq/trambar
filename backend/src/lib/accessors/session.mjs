@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { Data } from './data.mjs';
 
 class Session extends Data {
@@ -6,15 +5,17 @@ class Session extends Data {
         super();
         this.schema = 'global';
         this.table = 'session';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             user_id: Number,
             handle: String,
             token: String,
             activated: Boolean,
             area: String,
             etime: String,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             user_id: Number,
             handle: String,
             token: String,
@@ -22,7 +23,7 @@ class Session extends Data {
             area: String,
 
             expired: Boolean,
-        });
+        };
         this.version = 3;
     }
 
@@ -35,8 +36,8 @@ class Session extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -90,8 +91,8 @@ class Session extends Data {
     async grant(db, schema) {
         // authorization check is performed through a stored procedure
         // other DB roles don't need direct access to this table
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO auth_role;
         `;
         return db.execute(sql);
@@ -123,9 +124,9 @@ class Session extends Data {
      * @return {Promise<Number|null>}
      */
     async check(db, token, area) {
-        let sql = `SELECT "checkAuthorization"($1, $2) AS user_id`;
-        let rows = await db.query(sql, [ token, area ]);
-        return (rows[0]) ? rows[0].user_id : null;
+        const sql = `SELECT "checkAuthorization"($1, $2) AS user_id`;
+        const [ row ] = await db.query(sql, [ token, area ]);
+        return (row) ? row.user_id : null;
     }
 
     /**
@@ -138,7 +139,7 @@ class Session extends Data {
      * @return {Promise}
      */
     async extend(db, token, days) {
-        let sql = `SELECT "extendAuthorization"($1, $2) AS result`;
+        const sql = `SELECT "extendAuthorization"($1, $2) AS result`;
         await db.query(sql, [ token, days ]);
     }
 
@@ -151,15 +152,13 @@ class Session extends Data {
      * @return {Promise}
      */
     apply(criteria, query) {
-        let special = [
-            'expired',
-        ];
-        super.apply(_.omit(criteria, special), query);
+        const { expired, ...basic } = criteria;
+        super.apply(basic, query);
 
-        let params = query.parameters;
-        let conds = query.conditions;
-        if (criteria.expired !== undefined) {
-            if (criteria.expired) {
+        const params = query.parameters;
+        const conds = query.conditions;
+        if (expired !== undefined) {
+            if (expired) {
                 conds.push(`NOW() >= etime`);
             } else {
                 conds.push(`NOW() < etime`);

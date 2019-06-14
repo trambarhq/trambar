@@ -22,8 +22,8 @@ class ByRole {
      * @return {Promise<Object>}
      */
     async prepareContext(db, schema, stories, listing) {
-        let roles = [];
-        let roleIds = _.filter(_.uniq(_.flatten(_.map(stories, 'role_ids'))));
+        const roles = [];
+        const roleIds = _.filter(_.uniq(_.flatten(_.map(stories, 'role_ids'))));
         for (let roleId of roleIds) {
             let role = this.findCachedRole(roleId);
             if (!role) {
@@ -45,10 +45,10 @@ class ByRole {
      * @return {Number}
      */
     calculateRating(context, story) {
-        let roles = _.filter(context.roles, (role) => {
+        const roles = _.filter(context.roles, (role) => {
             return _.includes(story.role_ids, role.id);
         });
-        let ratings = _.map(roles, (role) => {
+        const ratings = _.map(roles, (role) => {
             return _.get(role, 'settings.rating', 0);
         }, 0);
         return _.sum(ratings);
@@ -76,11 +76,11 @@ class ByRole {
      * @return {Object|null}
      */
     async loadRole(db, roleId) {
-        let criteria = {
+        const criteria = {
             id: roleId,
             deleted: false,
         };
-        let row = await Role.findOne(db, 'global', criteria, 'id, settings');
+        const row = await Role.findOne(db, 'global', criteria, 'id, settings');
         if (row) {
             this.cacheRole(row);
         }
@@ -107,11 +107,11 @@ class ByRole {
      * @return {Object|null}
      */
     findCachedRole(roleId) {
-        let index = _.findIndex(this.roleCache, { id: roleId });
+        const index = _.findIndex(this.roleCache, { id: roleId });
         if (index === -1) {
             return null;
         }
-        let role = this.roleCache[index];
+        const role = this.roleCache[index];
         this.roleCache.splice(index, 1);
         this.roleCache.unshift(role);
         return role;
@@ -123,7 +123,7 @@ class ByRole {
      * @param  {Number} roleId
      */
     clearCachedRole(roleId) {
-        let index = _.findIndex(this.roleCache, { id: roleId });
+        const index = _.findIndex(this.roleCache, { id: roleId });
         if (index === -1) {
             return;
         }

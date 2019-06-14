@@ -8,9 +8,10 @@ class System extends Data {
         super();
         this.schema = 'global';
         this.table = 'system';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             settings: Object,
-        });
+        };
     }
 
     /**
@@ -22,8 +23,8 @@ class System extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -47,8 +48,8 @@ class System extends Data {
      * @return {Promise}
      */
     async grant(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT SELECT ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT SELECT ON ${table} TO client_role;
@@ -87,9 +88,9 @@ class System extends Data {
      * @return {Promise<Array<Object>>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             if (credentials.unrestricted) {
                 object.settings = row.settings;
             } else {

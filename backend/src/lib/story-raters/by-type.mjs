@@ -15,7 +15,7 @@ class ByType {
     }
 
     calculateRating(context, story) {
-        let rating = StoryTypeRatings[story.type] || 0;
+        const rating = StoryTypeRatings[story.type] || 0;
         return rating;
     }
 

@@ -9,12 +9,12 @@ import _ from 'lodash';
  * @return {Object}
  */
 function name(locale, user) {
-    let lang = getLanguageCode(locale);
+    const lang = getLanguageCode(locale);
     let name = pick(locale, user.details.name);
     if (!name) {
         name = _.capitalize(user.username);
     }
-    let strObject = new String(name);
+    const strObject = new String(name);
     strObject.gender = user.details.gender;
     return strObject;
 }
@@ -31,7 +31,7 @@ function name(locale, user) {
 function translate(locale, phrase, ...args) {
     let table = phraseTables[locale];
     if (!table) {
-        let lang = getLanguageCode(locale);
+        const lang = getLanguageCode(locale);
         let module;
         try {
             module = require(`locales/${lang}`);
@@ -40,12 +40,12 @@ function translate(locale, phrase, ...args) {
         }
         let phrases = module.phrases;
         if (phrases instanceof Function) {
-            let country = getCountryCode(locale);
+            const country = getCountryCode(locale);
             phrases = phrases(country);
         }
         table = phraseTables[locale] = phrases;
     }
-    let f = table[phrase];
+    const f = table[phrase];
     if (f === undefined) {
         return phrase;
     }
@@ -60,7 +60,7 @@ function translate(locale, phrase, ...args) {
     }
 }
 
-let phraseTables = {};
+const phraseTables = {};
 
 /**
  * Return a text from a multilingual text object
@@ -73,7 +73,7 @@ let phraseTables = {};
 function pick(locale, versions) {
     let s;
     if (typeof(versions) === 'object') {
-        let lang = getLanguageCode(locale);
+        const lang = getLanguageCode(locale);
         s = versions[lang];
         if (!s) {
             s = _.first(versions);
@@ -99,7 +99,7 @@ function getDefaultLanguageCode(system) {
     return lang;
 }
 
-let serverLanguageCode = (process.env.LANG || 'en').substr(0, 2).toLowerCase();
+const serverLanguageCode = (process.env.LANG || 'en').substr(0, 2).toLowerCase();
 
 /**
  * Extract language code from locale code

@@ -11,22 +11,24 @@ class User extends ExternalData {
         super();
         this.schema = 'global';
         this.table = 'user';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             type: String,
             username: String,
             role_ids: Array(Number),
             requested_project_ids: Array(Number),
             disabled: Boolean,
             settings: Object,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             type: String,
             username: String,
             email: String,
             role_ids: Array(Number),
             requested_project_ids: Array(Number),
             disabled: Boolean,
-        });
+        };
     }
 
     /**
@@ -38,8 +40,8 @@ class User extends ExternalData {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -76,8 +78,8 @@ class User extends ExternalData {
      */
     async grant(db, schema) {
         // TODO revoke INSERT and UPDATE of column 'type'
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT SELECT, UPDATE ON ${table} TO client_role;
@@ -114,15 +116,13 @@ class User extends ExternalData {
      * @param  {Object} query
      */
     apply(criteria, query) {
-        let special = [
-            'email',
-        ];
-        super.apply(_.omit(criteria, special), query);
+        const { email, ...basic } = criteria;
+        super.apply(basic, query);
 
-        let params = query.parameters;
-        let conds = query.conditions;
-        if (criteria.email !== undefined) {
-            conds.push(`details->>'email' = $${params.push(criteria.email)}`);
+        const params = query.parameters;
+        const conds = query.conditions;
+        if (email !== undefined) {
+            conds.push(`details->>'email' = $${params.push(email)}`);
         }
     }
 
@@ -142,10 +142,10 @@ class User extends ExternalData {
         } catch (err) {
             // unique violation
             if (err.code === '23505') {
-                user = _.clone(user);
-                let m = /(.*)(\d+)$/.exec(user.username);
+                user = { ...user };
+                const m = /(.*)(\d+)$/.exec(user.username);
                 if (m) {
-                    let number = parseInt(m[2]);
+                    const number = parseInt(m[2]);
                     user.username = m[1] + (number + 1);
                 } else {
                     user.username += '2';
@@ -169,9 +169,9 @@ class User extends ExternalData {
      * @return {Promise<Array<Object>>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.type = row.type;
             object.username = row.username;
             object.role_ids = row.role_ids;
@@ -187,7 +187,7 @@ class User extends ExternalData {
                 } else {
                     // don't let guests see contact info
                     if (credentials.user.type === 'guest') {
-                        let contactInfo = [
+                        const contactInfo = [
                             'phone',
                             'email',
                             'skype_username',
@@ -220,15 +220,15 @@ class User extends ExternalData {
      * @return {Promise<Object>}
      */
     async importOne(db, schema, userReceived, userBefore, credentials, options) {
-        let row = await super.importOne(db, schema, userReceived, userBefore, credentials, options);
+        const row = await super.importOne(db, schema, userReceived, userBefore, credentials, options);
         if (userBefore && !userBefore.deleted && !_.isEmpty(userReceived.requested_project_ids)) {
             // remove ids of projects that'd accept the user automatically
             // as well as those that can't be joined
-            let projectIDs = userReceived.requested_project_ids;
-            let criteria = { id: projectIDs, deleted: false };
-            let projects = await Project.find(db, schema, criteria, 'id, settings');
-            let pendingProjectIDs = _.filter(projectIDs, (projectID) => {
-                let project = _.find(projects, { id: projectID });
+            const projectIDs = userReceived.requested_project_ids;
+            const criteria = { id: projectIDs, deleted: false };
+            const projects = await Project.find(db, schema, criteria, 'id, settings');
+            const pendingProjectIDs = _.filter(projectIDs, (projectID) => {
+                const project = _.find(projects, { id: projectID });
                 if (this.canJoin(userReceived, project)) {
                     if (this.canJoinAutomatically(userReceived, project)) {
                         return false;
@@ -262,8 +262,8 @@ class User extends ExternalData {
             if (event.id === user.id) {
                 return true;
             } else {
-                let columns = _.keys(event.diff);
-                let publicColumns = _.without(columns, 'settings');
+                const columns = _.keys(event.diff);
+                const publicColumns = _.without(columns, 'settings');
                 if (!_.isEmpty(publicColumns)) {
                     return true;
                 }
@@ -379,14 +379,14 @@ class User extends ExternalData {
      * @return {Promise}
      */
     async updateMemberList(db, schema, usersReceived, usersBefore, usersAfter) {
-        let newMembers = {};
+        const newMembers = {};
         for (let [ index, userReceived ] of usersReceived.entries()) {
             // the project ids removed earlier by import() are the ones that
             // can be joined automatically (or can't be joined at all)
-            let userAfter = usersAfter[index];
-            let projectIDs = _.difference(userReceived.requested_project_ids, userAfter.requested_project_ids);
+            const userAfter = usersAfter[index];
+            const projectIDs = _.difference(userReceived.requested_project_ids, userAfter.requested_project_ids);
             for (let projectID of projectIDs) {
-                let members = newMembers[projectID];
+                const members = newMembers[projectID];
                 if (!members) {
                     members = newMembers[projectID] = [];
                 }
@@ -396,17 +396,17 @@ class User extends ExternalData {
         if (_.isEmpty(newMembers)) {
             return;
         }
-        let projectIDs = _.map(_.keys(newMembers), parseInt);
-        let criteria = { id: projectIDs, deleted: false };
+        const projectIDs = _.map(_.keys(newMembers), parseInt);
+        const criteria = { id: projectIDs, deleted: false };
         // update user_ids column in project table
-        let projects = await Project.find(db, schema, criteria, 'id, user_ids, settings');
+        const projects = await Project.find(db, schema, criteria, 'id, user_ids, settings');
         for (let project of projects) {
             // make sure user can actually join
-            let newProjectMembers = _.filter(newMembers[project.id], (user) => {
+            const newProjectMembers = _.filter(newMembers[project.id], (user) => {
                 return this.canJoin(user, project) && this.canJoinAutomatically(user, project);
             });
-            let newUserIDs = _.map(newProjectMembers, 'id');
-            let projectAfter = {
+            const newUserIDs = _.map(newProjectMembers, 'id');
+            const projectAfter = {
                 id: project.id,
                 user_ids: _.union(project.user_ids, newUserIDs),
             };
@@ -425,9 +425,9 @@ class User extends ExternalData {
      * @return {Promise}
      */
     async updateStoryRoles(db, schema, usersBefore, usersAfter) {
-        let usersWithRoleChanges = _.filter(usersBefore, (userBefore, index) => {
+        const usersWithRoleChanges = _.filter(usersBefore, (userBefore, index) => {
             if (userBefore) {
-                let userAfter = usersAfter[index];
+                const userAfter = usersAfter[index];
                 if (!_.isEmpty(_.xor(userBefore.role_ids, userAfter.role_ids))) {
                     return true;
                 }
@@ -438,9 +438,9 @@ class User extends ExternalData {
         }
 
         // find projects the users belongs to
-        let userIDs = _.map(usersWithRoleChanges, 'id');
-        let criteria = { user_ids: userIDs, deleted: false };
-        let projects = await Project.find(db, schema, criteria, 'name');
+        const userIDs = _.map(usersWithRoleChanges, 'id');
+        const criteria = { user_ids: userIDs, deleted: false };
+        const projects = await Project.find(db, schema, criteria, 'name');
         for (let project of projects) {
             await Story.updateUserRoles(db, project.name, userIDs);
         }
@@ -457,14 +457,14 @@ class User extends ExternalData {
      * @return {Promise}
      */
     async updateContentDeletion(db, schema, usersBefore, usersAfter) {
-        let deletedUsers = _.filter(usersAfter, (userAfter, index) => {
-            let userBefore = usersBefore[index];
+        const deletedUsers = _.filter(usersAfter, (userAfter, index) => {
+            const userBefore = usersBefore[index];
             if (userBefore) {
                 return userAfter.deleted && !userBefore.deleted;
             }
         });
-        let undeletedUsers = _.filter(usersAfter, (userAfter, index) => {
-            let userBefore = usersBefore[index];
+        const undeletedUsers = _.filter(usersAfter, (userAfter, index) => {
+            const userBefore = usersBefore[index];
             if (userBefore) {
                 return !userAfter.deleted && userBefore.deleted;
             }
@@ -474,10 +474,10 @@ class User extends ExternalData {
         }
 
         // go through each project
-        let criteria = { deleted: false };
-        let projects = await Project.find(db, schema, criteria, 'name');
+        const criteria = { deleted: false };
+        const projects = await Project.find(db, schema, criteria, 'name');
         for (let project of projects) {
-            let contentSchema = project.name;
+            const contentSchema = project.name;
             await Story.deleteAssociated(db, contentSchema, { user: deletedUsers });
             await Story.restoreAssociated(db, contentSchema, { user: undeletedUsers });
             await Reaction.deleteAssociated(db, contentSchema, { user: deletedUsers });

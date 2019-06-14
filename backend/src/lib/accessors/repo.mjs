@@ -9,19 +9,21 @@ class Repo extends ExternalData {
         super();
         this.schema = 'global';
         this.table = 'repo';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             type: String,
             name: String,
             user_ids: Array(Number),
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             id: Number,
             deleted: Boolean,
             type: String,
             name: String,
             user_ids: Array(Number),
             server_id: Number,
-        });
+        };
     }
 
     /**
@@ -33,8 +35,8 @@ class Repo extends ExternalData {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -64,8 +66,8 @@ class Repo extends ExternalData {
      * @return {Promise}
      */
     async grant(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT SELECT ON ${table} TO client_role;
         `;
@@ -106,9 +108,9 @@ class Repo extends ExternalData {
      * @return {Promise<Object>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.type = row.type;
             object.name = row.name;
             object.user_ids = row.user_ids;
@@ -146,7 +148,7 @@ class Repo extends ExternalData {
             }
             if (type === 'server') {
                 for (let server of objects) {
-                    let criteria = {
+                    const criteria = {
                         external_object: ExternalDataUtils.createLink(server),
                         deleted: false,
                     };
@@ -172,7 +174,7 @@ class Repo extends ExternalData {
             }
             if (type === 'server') {
                 for (let server of objects) {
-                    let criteria = {
+                    const criteria = {
                         external_object: ExternalDataUtils.createLink(server),
                         deleted: true,
                     };

@@ -14,19 +14,21 @@ class Project extends Data {
         super();
         this.schema = 'global';
         this.table = 'project';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             name: String,
             repo_ids: Array(Number),
             user_ids: Array(Number),
             settings: Object,
             archived: Boolean,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             name: String,
             repo_ids: Array(Number),
             user_ids: Array(Number),
             archived: Boolean,
-        });
+        };
         this.accessControlColumns = {
             user_ids: Array(Number),
             settings: Object,
@@ -42,8 +44,8 @@ class Project extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -74,8 +76,8 @@ class Project extends Data {
      * @return {Promise}
      */
     async grant(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT SELECT ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT SELECT, UPDATE ON ${table} TO client_role;
@@ -137,9 +139,9 @@ class Project extends Data {
      * @return {Promise<Array<Object>>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.name = row.name;
             object.repo_ids = row.repo_ids;
             object.user_ids = row.user_ids;
@@ -168,22 +170,22 @@ class Project extends Data {
      * @return {Promise<Object>}
      */
     async importOne(db, schema, projectReceived, projectBefore, credentials, options) {
-        let row = await super.importOne(db, schema, projectReceived, projectBefore, credentials, options);
+        const row = await super.importOne(db, schema, projectReceived, projectBefore, credentials, options);
         if (projectReceived.repo_ids) {
-            let newRepoIds = _.difference(projectReceived.repo_ids, projectBefore.repo_ids);
+            const newRepoIds = _.difference(projectReceived.repo_ids, projectBefore.repo_ids);
             if (!_.isEmpty(newRepoIds)) {
                 // add users with access to repos to project
-                let repoCriteria = { id: newRepoIds, deleted: false };
-                let repos = await Repo.find(db, schema, repoCriteria, 'user_ids');
-                let userIds = _.uniq(_.flatten(_.map(repos, 'user_ids')));
-                let userCriteria = {
+                const repoCriteria = { id: newRepoIds, deleted: false };
+                const repos = await Repo.find(db, schema, repoCriteria, 'user_ids');
+                const userIds = _.uniq(_.flatten(_.map(repos, 'user_ids')));
+                const userCriteria = {
                     id: userIds,
                     disabled: false,
                     deleted: false,
                 };
-                let users = await User.find(db, schema, userCriteria, 'id');
-                let newUserIds = _.map(users, 'id');
-                let existingUserIds = projectReceived.user_ids || projectBefore.user_ids;
+                const users = await User.find(db, schema, userCriteria, 'id');
+                const newUserIds = _.map(users, 'id');
+                const existingUserIds = projectReceived.user_ids || projectBefore.user_ids;
                 row.user_ids = _.union(existingUserIds, newUserIds);
             }
         }
@@ -241,17 +243,17 @@ class Project extends Data {
      */
     async updateNewMembers(db, schema, projectsReceived, projectsBefore, projectsAfter) {
         // first, obtain ids of projects that new members are added to
-        let newUserMemberships = {}, newMemberIds = [];
+        const newUserMemberships = {}, newMemberIds = [];
         for (let [ index, projectReceived ] of projectsReceived.entries()) {
-            let projectBefore = projectsBefore[index];
-            let projectAfter = projectsAfter[index];
+            const projectBefore = projectsBefore[index];
+            const projectAfter = projectsAfter[index];
             if (projectReceived.user_ids) {
-                let newUserIds = projectAfter.user_ids;
+                const newUserIds = projectAfter.user_ids;
                 if (projectBefore) {
                     newUserIds = _.difference(projectAfter.user_ids, projectBefore.user_ids);
                 }
                 for (let userId of newUserIds) {
-                    let ids = newUserMemberships[userId];
+                    const ids = newUserMemberships[userId];
                     if (ids) {
                         ids.push(projectAfter.id);
                     } else {
@@ -265,8 +267,8 @@ class Project extends Data {
             return;
         }
         // load the users and update requested_project_ids column
-        let criteria = { id: newMemberIds };
-        let users = await User.find(db, schema, criteria, 'id, requested_project_ids');
+        const criteria = { id: newMemberIds };
+        const users = await User.find(db, schema, criteria, 'id, requested_project_ids');
         for (let user of users) {
             user.requested_project_ids = _.difference(user.requested_project_ids, newUserMemberships[user.id]);
             if (_.isEmpty(user.requested_project_ids)) {
@@ -287,9 +289,9 @@ class Project extends Data {
      * @return {Promise<Object>}
      */
     async addMembers(db, schema, projectId, userIds) {
-        let table = this.getTableName(schema);
-        let params = [];
-        let sql = `
+        const table = this.getTableName(schema);
+        const params = [];
+        const sql = `
             UPDATE ${table} SET user_ids = user_ids || $${params.push(userIds)}
             WHERE id = $${params.push(projectId)}
             RETURNING *
@@ -312,12 +314,12 @@ class Project extends Data {
         }
         for (let attempts = 0; attempts < 20; attempts++) {
             try {
-                let table = `"${schema}"."meta"`;
-                let sql = `SELECT signature FROM ${table} LIMIT 1`;
-                let rows = await db.query(sql);
-                if (rows[0]) {
-                    let tokens = [];
-                    tokens.push(rows[0].signature);
+                const table = `"${schema}"."meta"`;
+                const sql = `SELECT signature FROM ${table} LIMIT 1`;
+                const [ row ] = await db.query(sql);
+                if (row) {
+                    const tokens = [];
+                    tokens.push(row.signature);
                     tokens.push(credentials.user.type);
                     if (credentials.project) {
                         if (_.includes(credentials.project.user_ids, credentials.user.id)) {

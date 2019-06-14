@@ -7,17 +7,19 @@ class Statistics extends LiveData {
         super();
         this.schema = 'project';
         this.table = 'statistics';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             type: String,
             filters: Object,
             filters_hash: String,
             sample_count: Number,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             type: String,
             filters_hash: String,
             match_any: Array(Object),
-        });
+        };
     }
 
     /**
@@ -29,8 +31,8 @@ class Statistics extends LiveData {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -78,13 +80,13 @@ class Statistics extends LiveData {
      * @param  {Object} query
      */
     apply(criteria, query) {
-        let special = [ 'filters', 'match_any' ];
-        super.apply(_.omit(criteria, special), query);
+        const { match_any, ...basic } = criteria;
+        super.apply(basic, query);
 
-        let params = query.parameters;
-        let conds = query.conditions;
-        if (criteria.match_any) {
-            let objects = `$${params.push(criteria.match_any)}`;
+        const params = query.parameters;
+        const conds = query.conditions;
+        if (match_any) {
+            const objects = `$${params.push(match_any)}`;
             conds.push(`"matchAny"(filters, ${objects})`);
         }
     }
@@ -102,21 +104,21 @@ class Statistics extends LiveData {
      */
     async find(db, schema, criteria, columns) {
         // autovivify rows when type and filters are specified
-        let type = criteria.type;
-        let filters = criteria.filters;
+        const type = criteria.type;
+        const filters = criteria.filters;
         if (type && filters) {
             if (!(filters instanceof Array)) {
                 filters = [ filters ];
             }
             // calculate hash of filters for quicker look-up
-            let hashes = _.map(filters, hash);
+            const hashes = _.map(filters, hash);
             // key columns
-            let keys = {
+            const keys = {
                 type: type,
                 filters_hash: hashes,
             };
             // properties of rows that are expected
-            let expectedRows = _.map(hashes, (hash, index) => {
+            const expectedRows = _.map(hashes, (hash, index) => {
                 return {
                     type: type,
                     filters_hash: hash,
@@ -142,9 +144,9 @@ class Statistics extends LiveData {
      * @return {Promise<Array<Object>>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.type = row.type;
             object.filters = row.filters;
         }
@@ -186,13 +188,13 @@ class Statistics extends LiveData {
  * @return {String}
  */
 function hash(filters) {
-    let keys = _.sortBy(_.keys(filters));
-    let values = {};
+    const keys = _.sortBy(_.keys(filters));
+    const values = {};
     for (let key of keys) {
         values[key] = filters[key];
     }
-    let text = JSON.stringify(values);
-    let hash = Crypto.createHash('md5').update(text);
+    const text = JSON.stringify(values);
+    const hash = Crypto.createHash('md5').update(text);
     return hash.digest("hex");
 }
 

@@ -6,15 +6,17 @@ import * as StoredProcs from '../stored-procs/functions.mjs';
 class ExternalData extends Data {
     constructor() {
         super();
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             external: Array(Object),
             exchange: Array(Object),
             itime: String,
             etime: String,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             external_object: Object,
-        });
+        };
     }
 
     /**
@@ -28,8 +30,8 @@ class ExternalData extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -54,21 +56,20 @@ class ExternalData extends Data {
      * @param  {Object} query
      */
     apply(criteria, query) {
-        let special = [
-            'external_object',
-        ];
-        super.apply(_.omit(criteria, special), query);
-        let params = query.parameters;
-        let conds = query.conditions;
-        if (criteria.external_object !== undefined) {
+        const { external_object: externalObject, ...basic } = criteria;
+        super.apply(basic, query);
+
+        const params = query.parameters;
+        const conds = query.conditions;
+        if (externalObject !== undefined) {
             // use the same function as the database to generate the id strings
-            let external = [ criteria.external_object ];
-            let serverType = criteria.external_object.type || '';
+            const external = [ externalObject ];
+            const serverType = externalObject.type || '';
             if (serverType && !/^\w+$/.test(serverType)) {
                 throw new Error(`Invalid type: "${serverType}"`);
             }
-            let objectNames = [];
-            for (let [ name, object ] of _.entries(criteria.external_object)) {
+            const objectNames = [];
+            for (let [ name, object ] of _.entries(externalObject)) {
                 if (!/^\w+$/.test(name)) {
                     throw new Error(`Invalid property name: "${name}"`);
                 }
@@ -76,7 +77,7 @@ class ExternalData extends Data {
                     objectNames.push(name);
                 }
             }
-            let idStrings = StoredProcs.externalIdStrings(external, serverType, objectNames);
+            const idStrings = StoredProcs.externalIdStrings(external, serverType, objectNames);
             conds.push(`"externalIdStrings"(external, '${serverType}', '{${objectNames}}'::text[]) && $${params.push(idStrings)}`);
         }
     }
@@ -94,9 +95,9 @@ class ExternalData extends Data {
      * @return {Promise<Object>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             if (row.external.length > 0) {
                 object.external = row.external;
             }
@@ -114,8 +115,8 @@ class ExternalData extends Data {
      * @return {Promise}
      */
     async createChangeTrigger(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TRIGGER "indicateDataChangeOnUpdate"
             BEFORE UPDATE ON ${table}
             FOR EACH ROW
@@ -135,12 +136,12 @@ class ExternalData extends Data {
      * @return {Promise}
      */
     async createNotificationTriggers(db, schema, propNames) {
-        let table = this.getTableName(schema);
-        let args = _.map(propNames, (propName) => {
+        const table = this.getTableName(schema);
+        const args = _.map(propNames, (propName) => {
             // use quotes just in case the name is mixed case
             return `"${propName}"`;
         }).join(', ');
-        let sql = `
+        const sql = `
             CREATE CONSTRAINT TRIGGER "notifyDataChangeOnInsert"
             AFTER INSERT ON ${table} INITIALLY DEFERRED
             FOR EACH ROW

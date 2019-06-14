@@ -58,8 +58,8 @@ class Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -82,8 +82,8 @@ class Data {
      * @return {Promise}
      */
     async grant(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO client_role;
         `;
@@ -111,8 +111,8 @@ class Data {
      * @return {Promise}
      */
     async createChangeTrigger(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TRIGGER "indicateDataChangeOnUpdate"
             BEFORE UPDATE ON ${table}
             FOR EACH ROW
@@ -132,12 +132,12 @@ class Data {
      * @return {Promise}
      */
     async createNotificationTriggers(db, schema, propNames) {
-        let table = this.getTableName(schema);
-        let args = _.map(propNames, (propName) => {
+        const table = this.getTableName(schema);
+        const args = _.map(propNames, (propName) => {
             // use quotes just in case the name is mixed case
             return `"${propName}"`;
         }).join(', ');
-        let sql = `
+        const sql = `
             CREATE CONSTRAINT TRIGGER "notifyDataChangeOnInsert"
             AFTER INSERT ON ${table} INITIALLY DEFERRED
             FOR EACH ROW
@@ -203,8 +203,8 @@ class Data {
      * @param  {Object} query
      */
     apply(criteria, query) {
-        let params = query.parameters;
-        let conds = query.conditions;
+        const params = query.parameters;
+        const conds = query.conditions;
         for (let [ name, type ] of _.entries(this.criteria)) {
             if (criteria.hasOwnProperty(name)) {
                 if (name === 'exclude') {
@@ -213,7 +213,7 @@ class Data {
                     }
                 } else {
                     // assume that none of the column names requires double quotes
-                    let value = criteria[name];
+                    const value = criteria[name];
                     if (type === Array || type instanceof Array) {
                         if (value instanceof Array) {
                             // overlaps
@@ -240,9 +240,9 @@ class Data {
             query.limit = criteria.limit;
         }
         if (typeof(criteria.order) === 'string') {
-            let parts = _.split(criteria.order, /\s+/);
-            let column = parts[0];
-            let dir = _.toUpper(parts[1]);
+            const parts = _.split(criteria.order, /\s+/);
+            const column = parts[0];
+            const dir = _.toUpper(parts[1]);
             if (/^\w+$/.test(column)) {
                 query.order = column;
                 if (dir === 'ASC' || dir === 'DESC') {
@@ -266,8 +266,8 @@ class Data {
         if (!criteria) {
             return [];
         }
-        let table = this.getTableName(schema);
-        let query = {
+        const table = this.getTableName(schema);
+        const query = {
             conditions: [],
             parameters: [],
             columns: columns,
@@ -306,10 +306,9 @@ class Data {
         if (!criteria) {
             return null;
         }
-        criteria = _.clone(criteria);
-        criteria.limit = 1;
-        let rows = await this.find(db, schema, criteria, columns);
-        return rows[0] || null;
+        criteria = { ...criteria, limit: 1 };
+        const [ row ] = await this.find(db, schema, criteria, columns);
+        return row || null;
     }
 
     /**
@@ -322,9 +321,9 @@ class Data {
      * @return {Promise<Array>}
      */
     async update(db, schema, rows) {
-        let results = [];
+        const results = [];
         for (let row of rows) {
-            let result = await this.updateOne(db, schema, row);
+            const result = await this.updateOne(db, schema, row);
             results.push(result);
         }
         return results;
@@ -343,14 +342,14 @@ class Data {
         if (!row) {
             return null;
         }
-        let table = this.getTableName(schema);
-        let assignments = [];
-        let columns = _.keys(this.columns);
-        let parameters = [];
+        const table = this.getTableName(schema);
+        const assignments = [];
+        const columns = _.keys(this.columns);
+        const parameters = [];
         let id = 0;
         for (let name of columns) {
             if (row.hasOwnProperty(name)) {
-                let value = row[name];
+                const value = row[name];
                 if (value !== undefined) {
                     if (name !== 'id') {
                         if (value instanceof String) {
@@ -367,14 +366,14 @@ class Data {
                 }
             }
         }
-        let sql = `
+        const sql = `
             UPDATE ${table}
             SET ${assignments.join(', ')}
             WHERE id = $${parameters.push(id)}
             RETURNING *
         `;
-        let rows = await db.query(sql, parameters);
-        return rows[0] || null;
+        const [ rowAfter ] = await db.query(sql, parameters);
+        return rowAfter || null;
     }
 
     /**
@@ -391,13 +390,13 @@ class Data {
         if (!criteria) {
             return [];
         }
-        let table = this.getTableName(schema);
-        let columns = _.keys(this.columns);
-        let assignments = [];
-        let parameters = [];
+        const table = this.getTableName(schema);
+        const columns = _.keys(this.columns);
+        const assignments = [];
+        const parameters = [];
         for (let name of columns) {
             if (values.hasOwnProperty(name)) {
-                let value = values[name];
+                const value = values[name];
                 if (value !== undefined) {
                     if (value instanceof String) {
                         // a boxed string--just insert it into the query
@@ -408,7 +407,7 @@ class Data {
                 }
             }
         }
-        let query = {
+        const query = {
             conditions: [],
             parameters: parameters,
             columns: '*',
@@ -420,7 +419,7 @@ class Data {
         } else {
             this.apply(criteria, query);
         }
-        let sql = `
+        const sql = `
             UPDATE ${query.table}
             SET ${assignments.join(', ')}
             WHERE ${query.conditions.join(' AND ')}
@@ -442,16 +441,16 @@ class Data {
         if (_.isEmpty(rows)) {
             return [];
         }
-        let table = this.getTableName(schema);
-        let valueSets = [];
-        let parameters = [];
-        let columns = _.keys(this.columns);
-        let columnsPresent = [];
-        let manualID = false;
+        const table = this.getTableName(schema);
+        const valueSets = [];
+        const parameters = [];
+        const columns = _.keys(this.columns);
+        const columnsPresent = [];
+        const manualID = false;
         // see which columns are being set
         for (let row of rows) {
             for (let name of columns) {
-                let value = row[name];
+                const value = row[name];
                 if (value !== undefined) {
                     if (columnsPresent.indexOf(name) === -1) {
                         columnsPresent.push(name);
@@ -464,9 +463,9 @@ class Data {
             }
         }
         for (let row of rows) {
-            let values = [];
+            const values = [];
             for (let name of columnsPresent) {
-                let value = row[name];
+                const value = row[name];
                 if (value !== undefined) {
                     if (value instanceof String) {
                         // a boxed string--just insert it into the query
@@ -482,16 +481,16 @@ class Data {
             }
             valueSets.push(`(${values.join(',')})`);
         }
-        let sql1 = `
+        const sql1 = `
             INSERT INTO ${table} (${columnsPresent.join(', ')})
             VALUES ${valueSets.join(',')}
             RETURNING *
         `;
-        let results = await db.query(sql1, parameters);
+        const results = await db.query(sql1, parameters);
         if (manualID) {
             // update the sequence used for auto-increment primary key
-            let sequence = `"${schema}"."${this.table}_id_seq"`;
-            let sql2 = `
+            const sequence = `"${schema}"."${this.table}_id_seq"`;
+            const sql2 = `
                 SELECT setval('${sequence}', COALESCE((SELECT MAX(id) FROM ${table}), 0));
             `;
             await db.query(sql2);
@@ -512,8 +511,8 @@ class Data {
         if (!row) {
             return null;
         }
-        let rows = await this.insert(db, schema, [ row ]);
-        return rows[0] || null;
+        const [ rowAfter ] = await this.insert(db, schema, [ row ]);
+        return rowAfter || null;
     }
 
     /**
@@ -529,14 +528,14 @@ class Data {
         if (_.isEmpty(rows)) {
             return [];
         }
-        let updates = _.filter(rows, (row) => {
+        const updates = _.filter(rows, (row) => {
             return row.id > 0;
         });
-        let inserts = _.filter(rows, (row) => {
+        const inserts = _.filter(rows, (row) => {
             return !(row.id > 0);
         });
-        let updatedObjects = await this.update(db, schema, updates);
-        let insertedObjects = await this.insert(db, schema, inserts);
+        const updatedObjects = await this.update(db, schema, updates);
+        const insertedObjects = await this.insert(db, schema, inserts);
         let updatedIndex = 0, insertedIndex = 0;
         return _.map(rows, (row) => {
             if (row.id > 0) {
@@ -580,11 +579,11 @@ class Data {
         if (!_.isEmpty(rows)) {
             return [];
         }
-        let table = this.getTableName(schema);
-        let ids = _.map(rows, 'id');
-        let parameters = [ ids ];
-        let bound = '$1';
-        let sql = `
+        const table = this.getTableName(schema);
+        const ids = _.map(rows, 'id');
+        const parameters = [ ids ];
+        const bound = '$1';
+        const sql = `
             DELETE FROM ${table}
             WHERE id = ANY(${bound})
             RETURNING *
@@ -605,8 +604,8 @@ class Data {
         if (!row) {
             return null;
         }
-        let rows = await this.remove(db, schema, [ row ]);
-        return rows[0] || null;
+        const [ rowAfter ] = await this.remove(db, schema, [ row ]);
+        return rowAfter || null;
     }
 
     /**
@@ -622,8 +621,8 @@ class Data {
         if (!criteria) {
             return [];
         }
-        let table = this.getTableName(schema);
-        let query = {
+        const table = this.getTableName(schema);
+        const query = {
             conditions: [],
             parameters: [],
             columns: '*',
@@ -635,7 +634,7 @@ class Data {
         } else {
             this.apply(criteria, query);
         }
-        let sql = `
+        const sql = `
             DELETE FROM ${query.table}
             WHERE ${query.conditions.join(' AND ')}
             RETURNING *
@@ -671,7 +670,7 @@ class Data {
      */
     async export(db, schema, rows, credentials, options) {
         return _.map(rows, (row) => {
-            let object = {
+            const object = {
                 id: row.id,
                 gn: row.gn,
                 details: row.details,
@@ -702,11 +701,11 @@ class Data {
      * @return {Promise<Array>}
      */
     async import(db, schema, objectsReceived, objectsBefore, credentials, options) {
-        let rows = [];
+        const rows = [];
         for (let [ index, objectReceived ] of objectsReceived.entries()) {
-            let objectBefore = objectsBefore[index];
+            const objectBefore = objectsBefore[index];
             this.checkWritePermission(objectReceived, objectBefore, credentials);
-            let row = await this.importOne(db, schema, objectReceived, objectBefore, credentials, options);
+            const row = await this.importOne(db, schema, objectReceived, objectBefore, credentials, options);
             rows.push(row);
         }
         return rows;
@@ -755,18 +754,18 @@ class Data {
      * @return {Promise<Number>}
      */
     async clean(db, schema, interval) {
-        let table = this.getTableName(schema);
-        let sql1 = `
+        const table = this.getTableName(schema);
+        const sql1 = `
             SELECT id FROM ${table}
             WHERE deleted = true
             AND mtime + CAST($1 AS INTERVAL) < NOW()
         `;
-        let rows = await db.query(sql1, [ interval ]);
+        const rows = await db.query(sql1, [ interval ]);
         if (_.isEmpty(rows)) {
             return 0;
         }
-        let sql2 = `DELETE FROM ${table} WHERE id = ANY($1)`;
-        let result = await db.execute(sql2, [ _.map(rows, 'id') ]);
+        const sql2 = `DELETE FROM ${table} WHERE id = ANY($1)`;
+        const result = await db.execute(sql2, [ _.map(rows, 'id') ]);
         return result.rowCount;
     }
 
@@ -781,7 +780,7 @@ class Data {
      * @return {Promise}
      */
     async applyTextSearch(db, schema, search, query) {
-        let ts = parseSearchQuery(search.text);
+        const ts = parseSearchQuery(search.text);
         if (!_.isEmpty(ts.tags)) {
             query.conditions.push(`cardinality(tags) <> 0`);
             query.conditions.push(`"lowerCase"(tags) @> $${query.parameters.push(ts.tags)}`);
@@ -790,38 +789,37 @@ class Data {
             return;
         }
         // obtain languages for which we have indices
-        let languageCodes = await this.getTextSearchLanguages(db, schema);
+        const languageCodes = await this.getTextSearchLanguages(db, schema);
         if (_.isEmpty(languageCodes)) {
             query.conditions.push('false');
             return;
         }
-        let lang = search.lang;
-        let searchText = search.text;
-        let queryText = `$${query.parameters.push(ts.query)}`;
+        const lang = search.lang;
+        const searchText = search.text;
+        const queryText = `$${query.parameters.push(ts.query)}`;
 
         // search query in each language
-        let tsQueries = _.map(languageCodes, (code) => {
+        const tsQueries = _.map(languageCodes, (code) => {
             return `to_tsquery('search_${code}', ${queryText}) AS query_${code}`;
         });
         // text vector in each language
-        let tsVectors = _.map(languageCodes, (code) => {
-            let text = this.getSearchableText(code);
-            let vector = `to_tsvector('search_${code}', ${text})`;
+        const tsVectors = _.map(languageCodes, (code) => {
+            const text = this.getSearchableText(code);
+            const vector = `to_tsvector('search_${code}', ${text})`;
             // give results in the user's language a higher weight
             // A = 1.0, B = 0.4 by default
-            let weight = (code === lang) ? 'A' : 'B';
-            vector = `setweight(${vector}, '${weight}') AS vector_${code}`;
-            return vector;
+            const weight = (code === lang) ? 'A' : 'B';
+            return `setweight(${vector}, '${weight}') AS vector_${code}`;
         });
         // conditions
-        let tsConds = _.map(languageCodes, (code) => {
+        const tsConds = _.map(languageCodes, (code) => {
             return `vector_${code} @@ query_${code}`;
         });
         // search result rankings
-        let tsRanks = _.map(languageCodes, (code) => {
+        const tsRanks = _.map(languageCodes, (code) => {
             return `ts_rank_cd(vector_${code}, query_${code})`;
         });
-        let tsRank = (tsRanks.length > 1) ? `GREATEST(${tsRanks.join(', ')})` : tsRanks[0];
+        const tsRank = (tsRanks.length > 1) ? `GREATEST(${tsRanks.join(', ')})` : tsRanks[0];
         query.columns += `, ${tsRank} AS relevance`;
         query.table += `, ${tsVectors.join(', ')}`;
         query.table += `, ${tsQueries.join(', ')}`;
@@ -849,16 +847,16 @@ class Data {
      * @return {Promise<Array<String>>}
      */
     async getTextSearchLanguages(db, schema) {
-        let languages = _.get(searchLanguages, [ schema, this.table ]);
+        const languages = _.get(searchLanguages, [ schema, this.table ]);
         if (!languages) {
-            let prefix = `${this.table}_search_`;
-            let sql = `
+            const prefix = `${this.table}_search_`;
+            const sql = `
                 SELECT indexname FROM pg_indexes
                 WHERE indexname LIKE '${prefix}%'
             `;
-            let rows = await db.query(sql);
+            const rows = await db.query(sql);
             languages = _.map(rows, (row) => {
-                let name = row['indexname'];
+                const name = row['indexname'];
                 return name.substr(prefix.length);
             });
             _.set(searchLanguages, [ schema, this.table ], languages);
@@ -879,9 +877,9 @@ class Data {
         for (let code of codes) {
             // create language
             await this.createSearchConfigure(db, code);
-            let text = this.getSearchableText(code);
-            let vector = `to_tsvector('search_${code}', ${text})`;
-            let sql = `
+            const text = this.getSearchableText(code);
+            const vector = `to_tsvector('search_${code}', ${text})`;
+            const sql = `
                 CREATE INDEX CONCURRENTLY ${this.table}_search_${code}
                 ON "${schema}"."${this.table}"
                 USING gin((${vector}))
@@ -911,19 +909,19 @@ class Data {
             throw new Error(`Invalid language code: ${code}`);
         }
         // see if configuration exists already
-        let configName = `search_${code}`;
-        let sql1 = `
+        const configName = `search_${code}`;
+        const sql1 = `
             SELECT cfgname FROM pg_catalog.pg_ts_config
             WHERE cfgname = 'search_${code}';
         `;
-        let rows = await db.query(sql1);
+        const rows = await db.query(sql1);
         if (!_.isEmpty(rows)) {
             return;
         }
         // create dictionaries for language first
-        let dicts = await db.createDictionaries(code);
+        const dicts = await db.createDictionaries(code);
         try {
-            let sql2 = `
+            const sql2 = `
                 CREATE TEXT SEARCH CONFIGURATION search_${code} (COPY = pg_catalog.english);
                 ALTER TEXT SEARCH CONFIGURATION search_${code}
                 ALTER MAPPING FOR asciiword, asciihword, hword_asciipart, word, hword, hword_part
@@ -948,9 +946,9 @@ class Data {
      * @return {Promise}
      */
     async createResourceCoalescenceTrigger(db, schema, args) {
-        let table = this.getTableName(schema);
+        const table = this.getTableName(schema);
         // trigger name needs to be smaller than "indicateDataChange" so it runs first
-        let sql = [
+        const sql = [
             `
                 CREATE TRIGGER "coalesceResourcesOnInsert"
                 BEFORE INSERT ON ${table}
@@ -984,11 +982,11 @@ class Data {
                 if (!propName) {
                     propName = 'name';
                 }
-                let criteria = {
+                const criteria = {
                     deleted: false
                 };
                 criteria[propName] = objectBefore[propName];
-                let row = await this.findOne(db, schema, criteria, 'id');
+                const row = await this.findOne(db, schema, criteria, 'id');
                 if (row && row.id !== objectBefore.id) {
                     // change the name to avoid conflict
                     objectReceived[propName] = `old_${this.table}_${objectBefore[propName]}`;
@@ -1009,14 +1007,14 @@ class Data {
      */
     async findCached(db, schema, criteria, columns) {
         // remove old ones
-        let time = new Date;
+        const time = new Date;
         _.remove(this.cachedSearches, (search) => {
-            let elapsed = time - search.time;
+            const elapsed = time - search.time;
             if (elapsed > 5 * 60 * 1000) {
                 return true;
             }
         });
-        let matchingSearch = _.find(this.cachedSearches, (search) => {
+        const matchingSearch = _.find(this.cachedSearches, (search) => {
             if (search.schema === schema) {
                 if (_.isEqual(search.criteria, criteria)) {
                     if (search.columns === search.columns) {
@@ -1028,8 +1026,8 @@ class Data {
         if (matchingSearch) {
             return matchingSearch.results;
         } else {
-            let results = await this.find(db, schema, criteria, columns);
-            let time = new Date;
+            const results = await this.find(db, schema, criteria, columns);
+            const time = new Date;
             if (!this.cachedSearches) {
                 this.cachedSearches = [];
             }
@@ -1048,31 +1046,31 @@ class Data {
     }
 };
 
-let searchLanguages = {};
+const searchLanguages = {};
 
 function parseSearchQuery(text) {
-    let tags = [];
-    let searchWords = [];
-    let tokens = _.split(_.trim(text), /\s+/);
+    const tags = [];
+    const searchWords = [];
+    const tokens = _.split(_.trim(text), /\s+/);
     for (let token of tokens) {
         if (TagScanner.isTag(token)) {
             tags.push(_.toLower(token));
         } else {
-            let prefix = '';
+            const prefix = '';
             if (/^[-!]/.test(token)) {
                 prefix = '!';
             }
-            let suffix = '';
+            const suffix = '';
             if (/\*$/.test(token)) {
                 suffix = ':*';
             }
-            let searchWord = removePunctuations(token);
+            const searchWord = removePunctuations(token);
             if (searchWord) {
                 searchWords.push(prefix + searchWord + suffix);
             }
         }
     }
-    let query = searchWords.join(' & ');
+    const query = searchWords.join(' & ');
     return { tags, query };
 }
 

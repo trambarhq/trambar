@@ -9,7 +9,8 @@ class Reaction extends ExternalData {
         super();
         this.schema = 'project';
         this.table = 'reaction';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             type: String,
             tags: Array(String),
             language_codes: Array(String),
@@ -20,8 +21,9 @@ class Reaction extends ExternalData {
             suppresed: Boolean,
             ptime: String,
             public: Boolean,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             type: String,
             tags: Array(String),
             language_codes: Array(String),
@@ -37,7 +39,7 @@ class Reaction extends ExternalData {
             newer_than: String,
             older_than: String,
             search: Object,
-        });
+        };
         this.accessControlColumns = {
             public: Boolean,
         };
@@ -52,8 +54,8 @@ class Reaction extends ExternalData {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -144,27 +146,22 @@ class Reaction extends ExternalData {
      * @return {Promise}
      */
     async apply(db, schema, criteria, query) {
-        let special = [
-            'time_range',
-            'newer_than',
-            'older_than',
-            'search',
-        ];
-        super.apply(_.omit(criteria, special), query);
+        const { time_range, newer_than, older_than, search, ...basic } = criteria;
+        super.apply(basic, query);
 
-        let params = query.parameters;
-        let conds = query.conditions;
-        if (criteria.time_range !== undefined) {
-            conds.push(`ptime <@ $${params.push(criteria.time_range)}::tsrange`);
+        const params = query.parameters;
+        const conds = query.conditions;
+        if (time_range !== undefined) {
+            conds.push(`ptime <@ $${params.push(time_range)}::tsrange`);
         }
-        if (criteria.newer_than !== undefined) {
-            conds.push(`ptime > $${params.push(criteria.newer_than)}`);
+        if (newer_than !== undefined) {
+            conds.push(`ptime > $${params.push(newer_than)}`);
         }
-        if (criteria.older_than !== undefined) {
-            conds.push(`ptime < $${params.push(criteria.older_than)}`);
+        if (older_than !== undefined) {
+            conds.push(`ptime < $${params.push(older_than)}`);
         }
-        if (criteria.search) {
-            await this.applyTextSearch(db, schema, criteria.search, query);
+        if (search) {
+            await this.applyTextSearch(db, schema, search, query);
         }
     }
 
@@ -180,7 +177,7 @@ class Reaction extends ExternalData {
      * @return {Promise<Object>}
      */
     async importOne(db, schema, reactionReceived, reactionBefore, credentials, options) {
-        let row = await super.importOne(db, schema, reactionReceived, reactionBefore, credentials, options);
+        const row = await super.importOne(db, schema, reactionReceived, reactionBefore, credentials, options);
         // set language_codes
         if (reactionReceived.details) {
             row.language_codes = _.filter(_.keys(reactionReceived.details.text), { length: 2 });
@@ -199,12 +196,12 @@ class Reaction extends ExternalData {
         if (!reactionReceived.id) {
             if (reactionReceived.type === 'like' || reactionReceived.type === 'vote') {
                 // see if there's an existing like or vote
-                let criteria = {
+                const criteria = {
                     type: reactionReceived.type,
                     story_id: reactionReceived.story_id,
                     user_id: reactionReceived.user_id,
                 };
-                let existingRow = await this.findOne(db, schema, criteria, 'id');
+                const existingRow = await this.findOne(db, schema, criteria, 'id');
                 if (existingRow) {
                     // reuse the row--to avoid triggering new notification
                     row.id = existingRow.id;
@@ -228,9 +225,9 @@ class Reaction extends ExternalData {
      * @return {Promise<Object>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.type = row.type;
             object.story_id = row.story_id;
             object.user_id = row.user_id;
@@ -266,7 +263,7 @@ class Reaction extends ExternalData {
      * @return {Promise}
      */
      async associate(db, schema, objects, originals, rows, credentials) {
-         let deletedReactions = _.filter(rows, { deleted: true });
+         const deletedReactions = _.filter(rows, { deleted: true });
          await Notification.deleteAssociated(db, schema, { reaction: deletedReactions });
      }
 
@@ -346,12 +343,12 @@ class Reaction extends ExternalData {
                 continue;
             }
             if (type === 'user') {
-                let userIds = _.map(objects, 'id');
-                let criteria = {
+                const userIds = _.map(objects, 'id');
+                const criteria = {
                     user_id: userIds,
                     deleted: false,
                 };
-                let reactions = await this.updateMatching(db, schema, criteria, { deleted: true });
+                const reactions = await this.updateMatching(db, schema, criteria, { deleted: true });
                 // delete notifications about these reactions as well
                 await Notification.deleteAssociated(db, schema, { reaction: reactions });
             }
@@ -373,14 +370,14 @@ class Reaction extends ExternalData {
                 continue;
             }
             if (type === 'user') {
-                let userIds = _.map(objects, 'id');
-                let criteria = {
+                const userIds = _.map(objects, 'id');
+                const criteria = {
                     user_id: userIds,
                     deleted: true,
                     // don't restore reactions that were manually deleted
                     suppressed: false,
                 };
-                let reactions = await this.updateMatching(db, schema, criteria, { deleted: false });
+                const reactions = await this.updateMatching(db, schema, criteria, { deleted: false });
                 // restore notifications as weel
                 await Notification.restoreAssociated(db, schema, { reaction: reactions });
             }

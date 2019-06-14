@@ -23,7 +23,7 @@ class ByPopularity {
      * @return {Promise<Object>}
      */
     async prepareContext(db, schema, stories, listing) {
-        let popularity = {};
+        const popularity = {};
         for (let story of stories) {
             let statistics = this.findCachedStatistics(schema, story.id)
             if (!statistics) {
@@ -43,9 +43,9 @@ class ByPopularity {
      * @return {Number}
      */
     calculateRating(context, story) {
-        let details = context.popularity[story.id];
-        let rating = _.reduce(details, (total, count, type) => {
-            let reactionRating = ReactionTypeRatings[type] || 0;
+        const details = context.popularity[story.id];
+        const rating = _.reduce(details, (total, count, type) => {
+            const reactionRating = ReactionTypeRatings[type] || 0;
             return total + (reactionRating * count);
         }, 0);
         return rating;
@@ -74,14 +74,14 @@ class ByPopularity {
      * @return {Object|null}
      */
     async loadStatistics(db, schema, storyId) {
-        let criteria = {
+        const criteria = {
             type: 'story-popularity',
             filters: {
                 story_id: storyId
             },
             deleted: false,
         };
-        let row = await Statistics.findOne(db, schema, criteria, 'id, details');
+        const row = await Statistics.findOne(db, schema, criteria, 'id, details');
         if (row) {
             this.cacheStatistics(schema, storyId, row);
         }
@@ -96,7 +96,7 @@ class ByPopularity {
      * @param  {Object} statistics
      */
     cacheStatistics(schema, storyId, statistics) {
-        let entry = { schema, storyId, statistics };
+        const entry = { schema, storyId, statistics };
         this.statisticsCache.unshift(entry);
         if (this.statisticsCache.length > 5000) {
             this.statisticsCache.splice(5000);
@@ -112,11 +112,11 @@ class ByPopularity {
      * @return {Object|null}
      */
     findCachedStatistics(schema, storyId) {
-        let index = _.findIndex(this.statisticsCache, { schema, storyId });
+        const index = _.findIndex(this.statisticsCache, { schema, storyId });
         if (index === -1) {
             return null;
         }
-        let entry = this.statisticsCache[index];
+        const entry = this.statisticsCache[index];
         this.statisticsCache.splice(index, 1);
         this.statisticsCache.unshift(entry);
         return entry.statistics;
@@ -129,7 +129,7 @@ class ByPopularity {
      * @param  {Number} id
      */
     clearCachedStatistics(schema, id) {
-        let index = _.findIndex(this.statisticsCache, (entry) => {
+        const index = _.findIndex(this.statisticsCache, (entry) => {
             if (entry.schema === schema) {
                 if (entry.statistics.id === id) {
                     return true;

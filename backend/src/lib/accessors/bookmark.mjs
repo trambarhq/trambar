@@ -7,20 +7,22 @@ class Bookmark extends Data {
         super();
         this.schema = 'project';
         this.table = 'bookmark';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             story_id: Number,
             user_ids: Array(Number),
             target_user_id: Number,
             hidden: Boolean,
             suppresed: Boolean,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             story_id: Number,
             user_ids: Array(Number),
             target_user_id: Number,
             hidden: Boolean,
             suppressed: Boolean,
-        });
+        };
         this.version = 2;
     }
 
@@ -33,8 +35,8 @@ class Bookmark extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -68,8 +70,8 @@ class Bookmark extends Data {
     async upgrade(db, schema, version) {
         if (version === 2) {
             // adding: hidden, suppressed
-            let table = this.getTableName(schema);
-            let sql = `
+            const table = this.getTableName(schema);
+            const sql = `
                 ALTER TABLE ${table}
                 ADD COLUMN IF NOT EXISTS
                 hidden boolean NOT NULL DEFAULT false;
@@ -115,9 +117,9 @@ class Bookmark extends Data {
      * @return {Promise<Array<Object>>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.story_id = row.story_id;
             object.user_ids = row.user_ids;
             object.target_user_id = row.target_user_id;
@@ -139,24 +141,24 @@ class Bookmark extends Data {
      * @return {Promise<Object>}
      */
     async importOne(db, schema, bookmarkReceived, bookmarkBefore, credentials, options) {
-        let row = await super.importOne(db, schema, bookmarkReceived, bookmarkBefore, credentials);
+        const row = await super.importOne(db, schema, bookmarkReceived, bookmarkBefore, credentials);
         if (bookmarkBefore) {
             if (bookmarkReceived.deleted) {
                 // remove the current user id from list of senders
                 // delete the bookmark only if no one else is
-                let senderIDs = _.without(bookmarkBefore.user_ids, credentials.user.id);
+                const senderIDs = _.without(bookmarkBefore.user_ids, credentials.user.id);
                 row.user_ids = senderIDs;
                 row.deleted = _.isEmpty(senderIDs);
                 row.suppressed = _.isEmpty(senderIDs);
             }
         } else {
             // see if there's a existing bookmark already
-            let criteria = {
+            const criteria = {
                 story_id: bookmarkReceived.story_id,
                 target_user_id: bookmarkReceived.target_user_id,
                 deleted: false,
             };
-            let existingRow = await this.findOne(db, schema, criteria, 'id, user_ids, hidden');
+            const existingRow = await this.findOne(db, schema, criteria, 'id, user_ids, hidden');
             if (existingRow) {
                 // add the user to the list
                 existingRow.user_ids = _.union(existingRow.user_ids, bookmarkReceived.user_ids);
@@ -249,8 +251,8 @@ class Bookmark extends Data {
                 continue;
             }
             if (type === 'story') {
-                let storyIDs = _.map(objects, 'id');
-                let criteria = {
+                const storyIDs = _.map(objects, 'id');
+                const criteria = {
                     story_id: storyIDs,
                     deleted: false,
                     suppressed: false,
@@ -275,8 +277,8 @@ class Bookmark extends Data {
                 continue;
             }
             if (type === 'story') {
-                let storyIds = _.map(objects, 'id');
-                let criteria = {
+                const storyIds = _.map(objects, 'id');
+                const criteria = {
                     story_id: storyIds,
                     deleted: true,
                     // don't restore bookmarks that were manually deleted

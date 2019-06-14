@@ -3,13 +3,13 @@ import AsyncQueue from './common/utils/async-queue.mjs';
 
 class TaskQueue {
     constructor() {
-        let priority = (task) => { return task.priority(); };
+        const priority = (task) => { return task.priority(); };
         this.queue = new AsyncQueue([ priority ], [ 'desc' ]);
         this.periodicTasks = [];
     }
 
     add(task) {
-        let existing = this.queue.find((existing) => {
+        const existing = this.queue.find((existing) => {
             return _.isEqual(existing, task);
         });
         if (!existing) {
@@ -50,7 +50,7 @@ class TaskQueue {
 
     async loop() {
         for (;;) {
-            let task = await this.queue.pull();
+            const task = await this.queue.pull();
             if (!task) {
                 break;
             }

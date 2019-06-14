@@ -5,14 +5,16 @@ import { Data } from './data.mjs';
 class LiveData extends Data {
     constructor() {
         super();
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             atime: String,
             ltime: String,
             dirty: Boolean,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             dirty: Boolean,
-        });
+        };
     }
 
     /**
@@ -26,8 +28,8 @@ class LiveData extends Data {
      * @return {Promise<Boolean>}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -54,8 +56,8 @@ class LiveData extends Data {
      * @return {Promise<Boolean>}
      */
     async createChangeTrigger(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TRIGGER "indicateLiveDataChangeOnUpdate"
             BEFORE UPDATE ON ${table}
             FOR EACH ROW
@@ -75,12 +77,12 @@ class LiveData extends Data {
      * @return {Promise}
      */
     async createNotificationTriggers(db, schema, propNames) {
-        let table = this.getTableName(schema);
-        let args = _.map(propNames, (propName) => {
+        const table = this.getTableName(schema);
+        const args = _.map(propNames, (propName) => {
             // use quotes just in case the name is mixed case
             return `"${propName}"`;
         }).join(', ');
-        let sql = `
+        const sql = `
             CREATE CONSTRAINT TRIGGER "notifyLiveDataChangeOnInsert"
             AFTER INSERT ON ${table} INITIALLY DEFERRED
             FOR EACH ROW
@@ -110,9 +112,9 @@ class LiveData extends Data {
      * @return {Promise<Object>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             if (row.dirty) {
                 object.dirty = true;
             }
@@ -138,22 +140,22 @@ class LiveData extends Data {
      * @return {Promise<Object|null>}
      */
     async lock(db, schema, id, interval, columns) {
-        let table = this.getTableName(schema);
-        let parameters = [ id, interval ];
-        let sql = `
+        const table = this.getTableName(schema);
+        const parameters = [ id, interval ];
+        const sql = `
             UPDATE ${table}
             SET ltime = NOW() + CAST($2 AS INTERVAL)
             WHERE id = $1 AND (ltime IS NULL OR ltime < NOW())
             RETURNING ${columns}
         `;
-        let rows = await db.query(sql, parameters);
-        if (rows[0]) {
+        const [ row ] = await db.query(sql, parameters);
+        if (row) {
             if (!this.locked) {
                 this.locked = [];
             }
             this.locked.push({ schema, id });
         }
-        return rows[0];
+        return row;
     }
 
     /**
@@ -169,17 +171,17 @@ class LiveData extends Data {
      * @return {Promise<Object|null>}
      */
     async unlock(db, schema, id, props, columns) {
-        let table = this.getTableName(schema);
-        let parameters = [ id ];
-        let assignments = [];
+        const table = this.getTableName(schema);
+        const parameters = [ id ];
+        const assignments = [];
         let sql;
         if (props) {
-            let index = parameters.length + 1;
+            const index = parameters.length + 1;
             for (let name in this.columns) {
                 if (name !== 'id') {
-                    let value = props[name];
+                    const value = props[name];
                     if (value !== undefined) {
-                        let bound = '$' + index++;
+                        const bound = '$' + index++;
                         parameters.push(value);
                         assignments.push(`${name} = ${bound}`);
                     }
@@ -198,9 +200,9 @@ class LiveData extends Data {
                 WHERE id = $1 AND ltime >= NOW()
             `;
         }
-        let rows = await db.query(sql, parameters);
+        const [ row ] = await db.query(sql, parameters);
         _.pullAllBy(this.locked, { schema, id });
-        return rows[0] || null;
+        return row || null;
     }
 
     /**
@@ -229,9 +231,9 @@ class LiveData extends Data {
      * @return {Promise}
      */
     async invalidate(db, schema, ids) {
-        let table = this.getTableName(schema);
-        let parameters = [ ids ];
-        let sql = `
+        const table = this.getTableName(schema);
+        const parameters = [ ids ];
+        const sql = `
             UPDATE ${table} SET dirty = true
             WHERE id = ANY($1) RETURNING id, dirty
         `;
@@ -246,11 +248,11 @@ class LiveData extends Data {
      * @param  {Object} row
      */
     touch(db, schema, row) {
-        let now = new Date;
-        let atime = now.toISOString();
+        const now = new Date;
+        const atime = now.toISOString();
         setTimeout(async () => {
             try {
-                let db = await Database.open();
+                const db = await Database.open();
                 await this.updateOne(db, schema, { id: row.id, atime });
             } catch (err) {
                 console.error(err);
@@ -271,22 +273,22 @@ class LiveData extends Data {
      */
     async vivify(db, schema, keys, expectedRows, columns) {
         // we need these columns in order to tell which rows are missing
-        let keyColumns = _.keys(keys);
-        let columnsNeeded = columns + ', ' + keyColumns.join(', ');
-        let criteria = _.extend({ deleted: false }, keys);
-        let existingRows = await super.find(db, schema, criteria, columnsNeeded);
+        const keyColumns = _.keys(keys);
+        const columnsNeeded = columns + ', ' + keyColumns.join(', ');
+        const criteria = { deleted: false, ...keys };
+        const existingRows = await super.find(db, schema, criteria, columnsNeeded);
         // find missing rows
-        let missingRows = [];
+        const missingRows = [];
         for (let expectedRow of expectedRows) {
             // search only by keys
-            let search = _.pick(expectedRow, keyColumns);
+            const search = _.pick(expectedRow, keyColumns);
             if (!_.find(existingRows, search)) {
                 // make row dirty initially
-                let newRow = _.extend({ dirty: true }, expectedRow)
+                const newRow = { dirty: true, ...expectedRow };
                 missingRows.push(newRow);
             }
         }
-        let newRows = await this.insert(db, schema, missingRows);
+        const newRows = await this.insert(db, schema, missingRows);
         return _.concat(newRows.reverse(), existingRows);
     }
 }

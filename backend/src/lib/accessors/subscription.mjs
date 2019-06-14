@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { Data } from './data.mjs';
 import Project from './project.mjs';
 import HTTPError from '../common/errors/http-error.mjs';
@@ -9,7 +8,8 @@ class Subscription extends Data {
         super();
         this.schema = 'global';
         this.table = 'subscription';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             user_id: Number,
             area: String,
             method: String,
@@ -17,15 +17,16 @@ class Subscription extends Data {
             token: String,
             schema: String,
             locale: String,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             user_id: Number,
             area: String,
             method: String,
             relay: String,
             token: String,
             schema: String,
-        });
+        };
     }
 
     /**
@@ -37,8 +38,8 @@ class Subscription extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -89,9 +90,9 @@ class Subscription extends Data {
      * @return {Promise<Array<Object>>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.user_id = row.user_id;
             object.area = row.area;
             object.method = row.method;
@@ -120,19 +121,19 @@ class Subscription extends Data {
      * @return {Promise<Array>}
      */
     async importOne(db, schema, subscriptionReceived, subscriptionBefore, credentials, options) {
-        let row = await super.importOne(db, schema, subscriptionReceived, subscriptionBefore, credentials, options);
+        const row = await super.importOne(db, schema, subscriptionReceived, subscriptionBefore, credentials, options);
         if (subscriptionBefore && subscriptionBefore.deleted) {
             // restore it
             row.deleted = false;
         }
         if (subscriptionReceived.schema !== 'global' && subscriptionReceived.schema !== '*') {
             // don't allow user to subscribe to a project that he has no access to
-            let criteria = {
+            const criteria = {
                 name: subscriptionReceived.schema,
                 deleted: false,
             };
-            let project = await Project.findOne(db, schema, criteria, 'user_ids, settings');
-            let access = ProjectUtils.getUserAccessLevel(project, credentials.user);
+            const project = await Project.findOne(db, schema, criteria, 'user_ids, settings');
+            const access = ProjectUtils.getUserAccessLevel(project, credentials.user);
             if (!access) {
                 throw new HTTPError(400);
             }

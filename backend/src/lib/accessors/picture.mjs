@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import HTTPError from '../common/errors/http-error.mjs';
 import { Data } from './data.mjs';
 import Task from './task.mjs';
@@ -8,15 +7,17 @@ class Picture extends Data {
         super();
         this.schema = 'global';
         this.table = 'picture';
-        _.extend(this.columns, {
+        this.criteria = {
+            ...this.criteria,
             purpose: String,
             user_id: Number,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             purpose: String,
             user_id: Number,
             url: String,
-        });
+        };
     }
 
     /**
@@ -28,8 +29,8 @@ class Picture extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -73,13 +74,13 @@ class Picture extends Data {
      * @param  {Object} query
      */
     apply(criteria, query) {
-        let special = [ 'url' ];
-        super.apply(_.omit(criteria, special), query);
+        const { url, ...basic } = criteria;
+        super.apply(basic, query);
 
-        let params = query.parameters;
-        let conds = query.conditions;
-        if (criteria.url !== undefined) {
-            conds.push(`details->>'url' = $${params.push(criteria.url)}`);
+        const params = query.parameters;
+        const conds = query.conditions;
+        if (url !== undefined) {
+            conds.push(`details->>'url' = $${params.push(url)}`);
         }
     }
 
@@ -96,9 +97,9 @@ class Picture extends Data {
      * @return {Promise<Array<Object>>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.purpose = row.purpose;
             object.user_id = row.user_id;
         }

@@ -13,31 +13,31 @@ class ByDiversity {
     }
 
     async prepareContext(db, schema, stories, listing) {
-        let userCounts = {};
-        let typeCounts = {};
+        const userCounts = {};
+        const typeCounts = {};
         for (let story of stories) {
-            let userId = story.user_ids[0];
-            let type = story.type;
-            let userCount = userCounts[userId] || 0;
-            let typeCount = typeCounts[type] || 0;
+            const userId = story.user_ids[0];
+            const type = story.type;
+            const userCount = userCounts[userId] || 0;
+            const typeCount = typeCounts[type] || 0;
             userCounts[userId] = userCount + 1;
             typeCounts[type] = typeCount + 1;
         }
-        let userPercentages = _.mapValues(userCounts, (count) => {
+        const userPercentages = _.mapValues(userCounts, (count) => {
             return _.round(count * 100 / stories.length);
         });
-        let typePercentages = _.mapValues(typeCounts, (count) => {
+        const typePercentages = _.mapValues(typeCounts, (count) => {
             return _.round(count * 100 / stories.length);
         });
         return { userPercentages, typePercentages };
     }
 
     calculateRating(context, story) {
-        let userId = story.user_ids[0];
-        let type = story.type;
+        const userId = story.user_ids[0];
+        const type = story.type;
         let rating = 0;
-        let typePercentage = context.typePercentages[type];
-        let typeDiversityBonus = _.find(TypeDiversityRatings, (value, key) => {
+        const typePercentage = context.typePercentages[type];
+        const typeDiversityBonus = _.find(TypeDiversityRatings, (value, key) => {
             if (typePercentage <= parseInt(key)) {
                 return true;
             }
@@ -45,8 +45,8 @@ class ByDiversity {
         if (typeDiversityBonus) {
             rating += typeDiversityBonus;
         }
-        let userPercentage = context.userPercentages[userId];
-        let userDiversityBonus = _.find(UserDiversityRatings, (value, key) => {
+        const userPercentage = context.userPercentages[userId];
+        const userDiversityBonus = _.find(UserDiversityRatings, (value, key) => {
             if (userPercentage <= parseInt(key)) {
                 return true;
             }

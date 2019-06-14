@@ -1,4 +1,4 @@
-let listeners = [];
+const listeners = [];
 
 /**
  * Add shutdown listener
@@ -15,7 +15,7 @@ function on(callback) {
  * @param  {Function} callback
  */
 function off(callback) {
-    let index = listeners.indexOf(callback);
+    const index = listeners.indexOf(callback);
     if (index !== -1) {
         listeners.splice(index, 1);
     }
@@ -72,8 +72,7 @@ async function initiate() {
  */
 async function broadcast() {
     while (listeners.length > 0) {
-        let list = listeners;
-        listeners = [];
+        const list = listeners.splice(0);
         for (let callback of list) {
             try {
                 await callback();

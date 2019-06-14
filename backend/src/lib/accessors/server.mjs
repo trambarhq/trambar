@@ -9,17 +9,19 @@ class Server extends Data {
         super();
         this.schema = 'global';
         this.table = 'server';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             type: String,
             name: String,
             disabled: Boolean,
             settings: Object,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             type: String,
             name: String,
             disabled: Boolean,
-        });
+        };
     }
 
     /**
@@ -31,8 +33,8 @@ class Server extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -60,9 +62,9 @@ class Server extends Data {
      * @return {Promise}
      */
     async grant(db, schema) {
-        let table = this.getTableName(schema);
+        const table = this.getTableName(schema);
         // Auth Manager needs to be able to update a server's OAuth tokens
-        let sql = `
+        const sql = `
             GRANT SELECT, UPDATE ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
         `;
@@ -101,9 +103,9 @@ class Server extends Data {
      * @return {Promise<Array<Object>>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.type = row.type;
             object.name = row.name;
             if (credentials.unrestricted || process.env.ADMIN_GUEST_MODE) {
@@ -131,13 +133,13 @@ class Server extends Data {
      * @return {Promise<Object>}
      */
     async importOne(db, schema, serverReceived, serverBefore, credentials, options) {
-        let row = await super.importOne(db, schema, serverReceived, serverBefore, credentials, options);
+        const row = await super.importOne(db, schema, serverReceived, serverBefore, credentials, options);
         if (serverReceived.settings instanceof Object) {
             for (let path of sensitiveSettings) {
                 // restore the original values if these fields are all x's
-                let value = _.get(serverReceived.settings, path);
+                const value = _.get(serverReceived.settings, path);
                 if (/^x+$/.test(value)) {
-                    let originalValue = _.get(serverBefore.settings, path);
+                    const originalValue = _.get(serverBefore.settings, path);
                     _.set(serverReceived.settings, path, originalValue);
                 }
             }
@@ -160,14 +162,14 @@ class Server extends Data {
      * @return {Promise}
      */
      async associate(db, schema, objects, originals, rows, credentials) {
-         let deletedServers = _.filter(rows, (serverAfter, index) => {
-             let serverBefore = originals[index];
+         const deletedServers = _.filter(rows, (serverAfter, index) => {
+             const serverBefore = originals[index];
              if (serverBefore) {
                  return serverAfter.deleted && !serverBefore.deleted;
              }
          });
-         let undeletedServers = _.filter(rows, (serverAfter, index) => {
-             let serverBefore = originals[index];
+         const undeletedServers = _.filter(rows, (serverAfter, index) => {
+             const serverBefore = originals[index];
              if (serverBefore) {
                  return !serverAfter.deleted && serverBefore.deleted;
              }
@@ -210,7 +212,7 @@ class Server extends Data {
     }
 }
 
-let sensitiveSettings = [
+const sensitiveSettings = [
     'api.access_token',
     'api.refresh_token',
     'oauth.client_secret',

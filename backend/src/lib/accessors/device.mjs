@@ -11,19 +11,21 @@ class Device extends Data {
         super();
         this.schema = 'global';
         this.table = 'device';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             type: String,
             details: Object,
             uuid: String,
             user_id: Number,
             session_handle: String,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             type: String,
             uuid: String,
             user_id: Number,
             session_handle: String,
-        });
+        };
         this.version = 2;
     }
 
@@ -36,8 +38,8 @@ class Device extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -66,8 +68,8 @@ class Device extends Data {
      * @return {Promise}
      */
     async grant(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT SELECT, UPDATE ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO client_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
@@ -87,8 +89,8 @@ class Device extends Data {
     async upgrade(db, schema, version) {
         if (version === 2) {
             // make index of session_handle unique
-            let table = this.getTableName(schema);
-            let sql = `
+            const table = this.getTableName(schema);
+            const sql = `
                 DELETE FROM ${table} a USING ${table} b
                 WHERE a.id > b.id AND a.session_handle = b.session_handle;
                 DROP INDEX global.device_session_handle_idx;
@@ -131,9 +133,9 @@ class Device extends Data {
      * @return {Promise<Object>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of _.entries(objects)) {
-            let row = rows[index];
+            const row = rows[index];
             object.user_id = row.user_id;
             object.type = row.type;
             object.session_handle = row.session_handle;
@@ -158,16 +160,16 @@ class Device extends Data {
      * @return {Promise<Array>}
      */
     async importOne(db, schema, deviceReceived, deviceBefore, credentials, options) {
-        let row = await super.importOne(db, schema, deviceReceived, deviceBefore, credentials, options);
+        const row = await super.importOne(db, schema, deviceReceived, deviceBefore, credentials, options);
         if (!deviceReceived.deleted && !deviceReceived.id) {
             // look for an existing record with the same UUID
             if (deviceReceived.user_id && deviceReceived.uuid) {
-                let criteria = {
+                const criteria = {
                     user_id: deviceReceived.user_id,
                     uuid: deviceReceived.uuid,
                     deleted: false
                 };
-                let existingRow = await this.findOne(db, schema, criteria, 'id');
+                const existingRow = await this.findOne(db, schema, criteria, 'id');
                 if (existingRow) {
                     row.id = existingRow.id;
                 }
@@ -226,10 +228,10 @@ class Device extends Data {
  * @return {Promise}
  */
 async function fixDeviceDetails(device) {
-    let type = device.type;
-    let manufacturer = device.details.manufacturer;
-    let model = device.details.name;
-    let displayName = await getDeviceDisplayName(type, manufacturer, model);
+    const type = device.type;
+    const manufacturer = device.details.manufacturer;
+    const model = device.details.name;
+    const displayName = await getDeviceDisplayName(type, manufacturer, model);
     if (displayName) {
         device.details.display_name = displayName;
     }
@@ -281,7 +283,7 @@ async function getDeviceDisplayName(type, manufacturer, model) {
  * @return {Promise<String|undefined>}
  */
 async function getAppleDeviceDisplayName(model) {
-    let name = _.findKey(appleModelNumbers, (regExp) => {
+    const name = _.findKey(appleModelNumbers, (regExp) => {
         return regExp.test(model);
     });
     return name;
@@ -295,7 +297,7 @@ async function getAppleDeviceDisplayName(model) {
  * @return {Promise<String|undefined>}
  */
 async function getWindowsDeviceDisplayName(model) {
-    let name = _.findKey(wpModelNumbers, (regExp) => {
+    const name = _.findKey(wpModelNumbers, (regExp) => {
         return regExp.test(model);
     });
     return name;
@@ -309,18 +311,18 @@ async function getWindowsDeviceDisplayName(model) {
  * @return {Promise<String|undefined>}
  */
 async function getAndroidDeviceDisplayName(manufacturer, model) {
-    let db = await getAndroidDeviceDatabase();
-    let key1 = _.toLower(manufacturer);
-    let key2 = _.toLower(model);
-    let name = _.get(db, [ key1, key2 ]);
+    const db = await getAndroidDeviceDatabase();
+    const key1 = _.toLower(manufacturer);
+    const key2 = _.toLower(model);
+    const name = _.get(db, [ key1, key2 ]);
     if (!name) {
         // name might not match exactly--look for one that's close enough
-        let candidates = [];
+        const candidates = [];
         for (let [ k1, devices ] of _.entries(db)) {
-            let sim1 = StringSimilarity.compareTwoStrings(k1, key1);
+            const sim1 = StringSimilarity.compareTwoStrings(k1, key1);
             if (sim1 >= 0.75) {
                 for (let [ k2, name ] of _.entries(devices)) {
-                    let sim2  = StringSimilarity.compareTwoStrings(k2, key2);
+                    const sim2  = StringSimilarity.compareTwoStrings(k2, key2);
                     if (sim2 >= 0.75) {
                         candidates.push({ name, score: sim1 + sim2 });
                     }
@@ -335,7 +337,7 @@ async function getAndroidDeviceDisplayName(manufacturer, model) {
     return name;
 }
 
-let androidDeviceDatabase = {};
+const androidDeviceDatabase = {};
 
 /**
  * Return Android device name database
@@ -362,17 +364,17 @@ async function getAndroidDeviceDatabase() {
  */
 async function fetchAndroidDeviceDatabase() {
     return new Promise((resolve, reject) => {
-        let db = {};
+        const db = {};
+        const parser = CSVParse({ delimiter: ',' });
         let line = 0;
-        let parser = CSVParse({ delimiter: ',' });
         parser.on('readable', () => {
             let record;
             while(record = parser.read()) {
                 if (line++ > 0) {
-                    let brand = _.toLower(record[0]);
-                    let names = _.split(record[1], /\s,\s/);
-                    let name = _.replace(names[0], /_/g, ' ');
-                    let model = _.toLower(record[3])
+                    const brand = _.toLower(record[0]);
+                    const names = _.split(record[1], /\s,\s/);
+                    const name = _.replace(names[0], /_/g, ' ');
+                    const model = _.toLower(record[3])
                     _.set(db, [ brand, model ], name);
                 }
             }
@@ -383,7 +385,7 @@ async function fetchAndroidDeviceDatabase() {
         parser.on('finish', () => {
             resolve(db);
         });
-        let input = Request('http://storage.googleapis.com/play_public/supported_devices.csv');
+        const input = Request('http://storage.googleapis.com/play_public/supported_devices.csv');
         input.on('err', (err) => {
             reject(err);
         });
@@ -403,10 +405,10 @@ async function updateAndroidDeviceDatabase() {
 
 function findClosest(hash, key) {
     if (hash) {
-        let entry = hash[key];
+        const entry = hash[key];
         if (!entry) {
-            let keys = _.keys(hash);
-            let closestKey = StringSimilarity.findBestMatch(key, keys);
+            const keys = _.keys(hash);
+            const closestKey = StringSimilarity.findBestMatch(key, keys);
             entry = hashs[closestKey];
         }
         return entry;
@@ -418,7 +420,7 @@ if (process.env.POSTGRES_USER !== 'admin_role') {
     setInterval(updateAndroidDeviceDatabase, 7 * 24 * 60 * 60 * 1000);
 }
 
-let appleModelNumbers = {
+const appleModelNumbers = {
     'iPhone': /iPhone1,1/,
     'iPhone 3G': /iPhone1,2/,
     'iPhone 3GS': /iPhone2,1/,
@@ -454,7 +456,7 @@ let appleModelNumbers = {
     'iPad (6th generation)': /iPad7,[56]/,
 };
 
-let wpModelNumbers = {
+const wpModelNumbers = {
     'Lumia 532': /RM\-(1032|1034|1115)/,
     'Lumia 535': /RM\-(1089|1090|1091|1092)/,
     'Lumia 550': /RM\-(1127|1128|1129)/,

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { ExternalData } from './external-data.mjs';
 
 class Commit extends ExternalData {
@@ -6,18 +5,20 @@ class Commit extends ExternalData {
         super();
         this.schema = 'global';
         this.table = 'commit';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             initial_branch: String,
             title_hash: String,
             external: Array(Object),
             exchange: Array(Object),
             itime: String,
             etime: String,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             title_hash: String,
             external_object: Object,
-        });
+        };
     }
 
     /**
@@ -29,8 +30,8 @@ class Commit extends ExternalData {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -60,8 +61,8 @@ class Commit extends ExternalData {
      * @return {Promise}
      */
     async grant(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT SELECT ON ${table} TO client_role;
         `;

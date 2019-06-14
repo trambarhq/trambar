@@ -11,14 +11,16 @@ class Listing extends LiveData {
         super();
         this.schema = 'project';
         this.table = 'listing';
-        _.extend(this.columns, {
+        this.columns = {
+            ...this.columns,
             finalized: Boolean,
             type: String,
             filters: Object,
             filters_hash: String,
             target_user_id: Number,
-        });
-        _.extend(this.criteria, {
+        };
+        this.criteria = {
+            ...this.criteria,
             finalized: Boolean,
             type: String,
             filters: Object,
@@ -26,7 +28,7 @@ class Listing extends LiveData {
             target_user_id: Number,
             match_any: Array(Object),
             has_candidates: Array(Number),
-        });
+        };
     }
 
     /**
@@ -38,8 +40,8 @@ class Listing extends LiveData {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -89,44 +91,40 @@ class Listing extends LiveData {
      * @param  {Object} query
      */
     apply(criteria, query) {
-        let special = [
-            'filters',
-            'match_any',
-            'has_candidates'
-        ];
-        super.apply(_.omit(criteria, special), query);
+        const { filters, match_any, has_candidates, ...basic } = criteria;
+        super.apply(basic, query);
 
-        let params = query.parameters;
-        let conds = query.conditions;
-        if (criteria.match_any) {
-            let objects = `$${params.push(criteria.match_any)}`;
+        const params = query.parameters;
+        const conds = query.conditions;
+        if (match_any) {
+            const objects = `$${params.push(match_any)}`;
             conds.push(`"matchAny"(filters, ${objects})`);
         }
-        if (criteria.has_candidates) {
-            let storyIds = `$${params.push(criteria.has_candidates)}`;
+        if (has_candidates) {
+            const storyIds = `$${params.push(has_candidates)}`;
             conds.push(`"hasCandidates"(details, ${storyIds})`);
         }
     }
 
     async find(db, schema, criteria, columns) {
         // autovivify rows when type and filters are specified
-        let type = criteria.type;
+        const type = criteria.type;
+        const userId = criteria.target_user_id;
         let filters = criteria.filters;
-        let userId = criteria.target_user_id;
         if (type && filters && userId) {
             // calculate hash of filters for quicker look-up
             if (!(filters instanceof Array)) {
                 filters = [ filters ];
             }
-            let hashes = _.map(filters, hash);
+            const hashes = _.map(filters, hash);
             // key columns
-            let keys = {
+            const keys = {
                 type: type,
                 filters_hash: hashes,
                 target_user_id: userId,
             };
             // properties of rows that are expected
-            let expectedRows = _.map(hashes, (hash, index) => {
+            const expectedRows = _.map(hashes, (hash, index) => {
                 return {
                     type: type,
                     filters_hash: hash,
@@ -161,9 +159,9 @@ class Listing extends LiveData {
                 }
             }
         }
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.type = row.type;
             object.target_user_id = row.target_user_id;
             object.filters = row.filters;
@@ -221,7 +219,7 @@ class Listing extends LiveData {
         if (chooseStories(row)) {
             // save the results
             setTimeout(async () => {
-                let db = await Database.open();
+                const db = await Database.open();
                 this.updateOne(db, schema, {
                     id: row.id,
                     details: row.details,
@@ -230,14 +228,14 @@ class Listing extends LiveData {
             }, 50);
         }
         setTimeout(async () => {
-            let db = await Database.open();
+            const db = await Database.open();
             // finalize other listings now for consistency sake
-            let criteria = {
+            const criteria = {
                 type: row.type,
                 target_user_id: row.target_user_id,
                 finalized: false,
             };
-            let otherRows = await this.find(db, schema, criteria, '*')
+            const otherRows = await this.find(db, schema, criteria, '*')
             for (let otherRow of otherRows) {
                 if (otherRow.id !== row.id) {
                     if (chooseStories(otherRow)) {
@@ -262,24 +260,24 @@ class Listing extends LiveData {
  * @return {Boolean}
  */
 function chooseStories(row) {
-    let now = new Date;
-    let limit = _.get(row.filters, 'limit', 100);
-    let retention = _.get(row.filters, 'retention', 24 * HOUR);
-    let newStories = _.get(row.details, 'candidates', []);
-    let oldStories = _.get(row.details, 'stories', []);
-    let backfillingStories = _.get(row.details, 'backfill_candidates', []);
+    const now = new Date;
+    const limit = _.get(row.filters, 'limit', 100);
+    const retention = _.get(row.filters, 'retention', 24 * HOUR);
+    const newStories = _.get(row.details, 'candidates', []);
+    const oldStories = _.get(row.details, 'stories', []);
+    const backfillingStories = _.get(row.details, 'backfill_candidates', []);
 
     // we want to show as many new stories as possible
-    let newStoryCount = newStories.length;
+    const newStoryCount = newStories.length;
     // at the same time, we want to preserve as many old stories as we can
-    let oldStoryCount = oldStories.length;
-    let extra = (oldStoryCount + newStoryCount) - limit;
+    const oldStoryCount = oldStories.length;
+    const extra = (oldStoryCount + newStoryCount) - limit;
     if (extra > 0) {
         // well, something's got to give...
         // remove old stories that were retrieved a while ago
         for (let i = 0; extra > 0 && oldStoryCount > 0; i++) {
-            let oldStory = oldStories[i];
-            let elapsed = getTimeElapsed(oldStory.rtime, now)
+            const oldStory = oldStories[i];
+            const elapsed = getTimeElapsed(oldStory.rtime, now)
             if (elapsed > retention) {
                 extra--;
                 oldStoryCount--;
@@ -289,9 +287,9 @@ function chooseStories(row) {
         }
         if (extra > 0) {
             // still got too many--toss out some of the new ones
-            let newStoryRatio = Math.min(1, newStoryCount / limit);
-            let removalRatio = newStoryRatio * 0.5;
-            let removeNew = Math.min(extra, Math.floor(newStoryCount * removalRatio));
+            const newStoryRatio = Math.min(1, newStoryCount / limit);
+            const removalRatio = newStoryRatio * 0.5;
+            const removeNew = Math.min(extra, Math.floor(newStoryCount * removalRatio));
             // example:
             //
             // if limit = 100 and newStoryCount = 10
@@ -311,7 +309,7 @@ function chooseStories(row) {
 
             if (extra > 0) {
                 // remove additional old stories
-                let removeOld = Math.min(extra, oldStoryCount);
+                const removeOld = Math.min(extra, oldStoryCount);
                 oldStoryCount -= removeOld;
                 extra -= removeOld;
 
@@ -330,15 +328,15 @@ function chooseStories(row) {
         }
         // remember the latest story that was considered (not necessarily going
         // to be included in the list)
-        let latestStory = _.maxBy(newStories, 'btime');
+        const latestStory = _.maxBy(newStories, 'btime');
         if (newStories.length > newStoryCount) {
             newStories = removeStoriesWithLowRating(newStories, row, newStoryCount);
         }
-        let rtime = now.toISOString();
-        let stories = addStories(oldStories, newStories, rtime);
+        const rtime = now.toISOString();
+        const stories = addStories(oldStories, newStories, rtime);
 
         // see if we have the right number of stories
-        let gap = limit - _.size(stories);
+        const gap = limit - _.size(stories);
         if (gap > 0) {
             // backfill the gap
             if (backfillingStories.length > gap) {
@@ -347,7 +345,7 @@ function chooseStories(row) {
             stories = addStories(stories, backfillingStories, rtime);
         }
 
-        let earliestStory = _.minBy(stories, 'btime');
+        const earliestStory = _.minBy(stories, 'btime');
         if (latestStory) {
             row.details.latest = latestStory.btime;
         }
@@ -383,13 +381,13 @@ function addStories(stories, newStories, rtime) {
     for (let story of newStories) {
         // don't need the info used to calculate rating any more
         // just attach the retrieval time
-        let s = {
+        const s = {
             id: story.id,
             btime: story.btime,
             rtime: rtime,
         };
         // insert it in the correct location based on publication or bump time
-        let index = _.sortedIndexBy(stories, s, 'btime');
+        const index = _.sortedIndexBy(stories, s, 'btime');
         stories.splice(index, 0, s);
     }
     return stories;
@@ -407,11 +405,11 @@ function addStories(stories, newStories, rtime) {
  */
 function removeStoriesWithLowRating(stories, listing, desiredLength) {
     // apply retrieval time rating adjustments
-    let context = ByRetrievalTime.createContext(stories, listing);
+    const context = ByRetrievalTime.createContext(stories, listing);
     for (let story of stories) {
         story.rating += ByRetrievalTime.calculateRating(context, story);
     }
-    let storiesByRating = _.orderBy(stories, [ 'rating', 'btime' ], [ 'asc', 'asc' ]);
+    const storiesByRating = _.orderBy(stories, [ 'rating', 'btime' ], [ 'asc', 'asc' ]);
     return _.slice(storiesByRating, stories.length - desiredLength);
 }
 
@@ -424,8 +422,8 @@ function getTimeElapsed(start, end) {
     if (!end) {
         return 0;
     }
-    let s = (typeof(start) === 'string') ? new Date(start) : start;
-    let e = (typeof(end) === 'string') ? new Date(end) : end;
+    const s = (typeof(start) === 'string') ? new Date(start) : start;
+    const e = (typeof(end) === 'string') ? new Date(end) : end;
     return (e - s);
 }
 
@@ -437,13 +435,13 @@ function getTimeElapsed(start, end) {
  * @return {String}
  */
 function hash(filters) {
-    let values = {};
-    let keys = _.sortBy(_.keys(filters));
+    const values = {};
+    const keys = _.sortBy(_.keys(filters));
     for (let key of keys) {
         values[key] = filters[key];
     }
-    let text = JSON.stringify(values);
-    let hash = Crypto.createHash('md5').update(text);
+    const text = JSON.stringify(values);
+    const hash = Crypto.createHash('md5').update(text);
     return hash.digest('hex');
 }
 
