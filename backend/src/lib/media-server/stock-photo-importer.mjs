@@ -9,26 +9,26 @@ import * as CacheFolders from './cache-folders.mjs';
 import * as ImageManager from './image-manager.mjs';
 
 async function importPhotos() {
-    let db = await Database.open();
+    const db = await Database.open();
     await db.need('global');
-    let purposes = [ 'background', 'profile-image', 'project-emblem' ];
+    const purposes = [ 'background', 'profile-image', 'project-emblem' ];
     for (let purpose of purposes) {
-        let folder = Path.resolve(`../media/${purpose}`);
-        let files = await FS.readdirAsync(folder);
+        const folder = Path.resolve(`../media/${purpose}`);
+        const files = await FS.readdirAsync(folder);
         for (let file of files) {
-            let url = `/srv/media/images/${file}`;
-            let pictureCriteria = { purpose, url };
-            let picture = await Picture.findOne(db, 'global', pictureCriteria, 'id');
+            const url = `/srv/media/images/${file}`;
+            const pictureCriteria = { purpose, url };
+            const picture = await Picture.findOne(db, 'global', pictureCriteria, 'id');
             if (picture) {
                 // exists in the database already
                 continue;
             }
 
             // assume the files are already named as their MD5 hash
-            let srcPath = `${folder}/${file}`;
-            let metadata = await ImageManager.getImageMetadata(srcPath);
+            const srcPath = `${folder}/${file}`;
+            const metadata = await ImageManager.getImageMetadata(srcPath);
 
-            let details = {
+            const details = {
                 url,
                 width: metadata.width,
                 height: metadata.height,
@@ -37,7 +37,7 @@ async function importPhotos() {
             picture = { purpose, details };
             await Picture.insertOne(db, 'global', picture);
 
-            let dstPath = `${CacheFolders.image}/${file}`;
+            const dstPath = `${CacheFolders.image}/${file}`;
             try {
                 await FS.statAsync(dstPath);
             } catch (err) {

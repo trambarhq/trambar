@@ -21,44 +21,40 @@ import Story from '../accessors/story.mjs';
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Story>}
+ * @return {Promise<Boolean>}
  */
-async function importEvent(db, system, server, repo, project, author, glEvent) {
+async function processEvent(db, system, server, repo, project, author, glEvent) {
     if (!glEvent.target_id) {
-        return null;
+        return false;
     }
-    let schema = project.name;
-    let repoLink = ExternalDataUtils.findLink(repo, server);
-    let glIssue = await fetchIssue(server, repoLink.project.id, glEvent.target_id);
+    const schema = project.name;
+    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const glIssue = await fetchIssue(server, repoLink.project.id, glEvent.target_id);
     // the story is linked to both the issue and the repo
-    let criteria = {
+    const criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
             issue: { id: glIssue.id }
         }),
     };
-    let story = await Story.findOne(db, schema, criteria, '*');
+    const story = await Story.findOne(db, schema, criteria, '*');
+    const assignments = await AssignmentImporter.findIssueAssignments(db, server, glIssue);
+    const opener = (glEvent.action_name === 'opened') ? author : null;
+    const storyChanges = copyIssueProperties(story, system, server, repo, opener, assignments, glIssue);
+    const storyAfter = (storyChanges) ? await Story.saveOne(db, schema, storyChanges) : story;
     try {
-        let assignments = await AssignmentImporter.findIssueAssignments(db, server, glIssue);
-        let opener = (glEvent.action_name === 'opened') ? author : null;
-        let storyAfter = copyIssueProperties(story, system, server, repo, opener, assignments, glIssue);
-        if (storyAfter !== story) {
-            story = await Story.saveOne(db, schema, storyAfter);
-        }
-        await AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
+        await AssignmentImporter.importAssignments(db, server, project, repo, storyAfter, assignments);
     } catch (err) {
         if (err instanceof AssignmentImporter.ObjectMovedError) {
             // the issue has been moved to a different repo--delete the
             // story if it was imported
-            if (story) {
-                let storyAfter = { id: story.id, deleted: true };
-                await Story.saveOne(db, schema, storyAfter);
-                story = null;
+            if (storyAfter) {
+                await Story.saveOne(db, schema, { id: storyAfter.id, deleted: true });
             }
         } else {
             throw err;
         }
     }
-    return story;
+    return true;
 }
 
 /**
@@ -72,55 +68,55 @@ async function importEvent(db, system, server, repo, project, author, glEvent) {
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Story|false>}
+ * @return {Promise<Story|undefined>}
  */
-async function importHookEvent(db, system, server, repo, project, author, glHookEvent) {
+async function processHookEvent(db, system, server, repo, project, author, glHookEvent) {
     if (glHookEvent.object_attributes.action !== 'update') {
-        return false;
+        return true;
     }
     // construct a glIssue object from data in hook event
-    let repoLink = ExternalDataUtils.findLink(repo, server);
-    let glIssue = _.omit(glHookEvent.object_attributes, 'action');
+    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const glIssue = _.omit(glHookEvent.object_attributes, 'action');
     glIssue.project_id = repoLink.project.id;
     glIssue.labels = _.map(glHookEvent.labels, 'title');
     if (glHookEvent.assignee) {
-        glIssue.assignee = _.clone(glHookEvent.assignee);
-        glIssue.assignee.id = glHookEvent.object_attributes.assignee_id;
+        glIssue.assignee = {
+            ...glHookEvent.assignee,
+            id: glHookEvent.object_attributes.assignee_id,
+        };
     }
 
     // find existing story
-    let schema = project.name;
-    let criteria = {
+    const schema = project.name;
+    const criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
             issue: { id: glIssue.id }
         }),
     };
-    let story = await Story.findOne(db, schema, criteria, '*');
+    const story = await Story.findOne(db, schema, criteria, '*');
     if (!story) {
         throw new Error('Story not found');
     }
-    let assignments = await AssignmentImporter.findIssueAssignments(db, server, glIssue);
+    const assignments = await AssignmentImporter.findIssueAssignments(db, server, glIssue);
     // the author of the hook event isn't the issue's author,
     // hence we're passing null here
-    let opener = null;
-    let storyAfter = copyIssueProperties(story, system, server, repo, opener, assignments, glIssue);
-    if (storyAfter !== story) {
-        story = await Story.updateOne(db, schema, storyAfter);
-    }
+    const opener = null;
+    const storyChanges = copyIssueProperties(story, system, server, repo, opener, assignments, glIssue);
+    const storyAfter = (storyChanges) ? Story.updateOne(db, schema, storyAfter) : story;
     try {
-        await AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
+        await AssignmentImporter.importAssignments(db, server, project, repo, storyAfter, assignments);
     } catch (err) {
         if (err instanceof AssignmentImporter.ObjectMovedError) {
             // the issue has been moved to a different repo--delete the
             // story if it was imported
-            if (story) {
-                let storyAfter = { id: story.id, deleted: true };
-                await Story.saveOne(db, schema, storyAfter);
-                story = null;
+            if (storyAfter) {
+                await Story.saveOne(db, schema, { id: storyAfter.id, deleted: true });
             }
+        } else {
+            throw err;
         }
     }
-    return story;
+    return true;
 }
 
 /**
@@ -142,102 +138,102 @@ async function importHookEvent(db, system, server, repo, project, author, glHook
  * @return {Story}
  */
 function copyIssueProperties(story, system, server, repo, opener, assignments, glIssue) {
-    let descriptionTags = TagScanner.findTags(glIssue.description);
-    let labelTags = _.map(glIssue.labels, (label) => {
+    const descriptionTags = TagScanner.findTags(glIssue.description);
+    const labelTags = _.map(glIssue.labels, (label) => {
         return `#${_.replace(label, /\s+/g, '-')}`;
     });
-    let tags = _.union(descriptionTags, labelTags);
-    let defLangCode = Localization.getDefaultLanguageCode(system);
+    const tags = _.union(descriptionTags, labelTags);
+    const defLangCode = Localization.getDefaultLanguageCode(system);
 
-    let state = glIssue.state;
+    const state = glIssue.state;
     if (state === 'opened') {
         if (story) {
             // GitLab 11 doesn't report a state of reopened anymore
             // derived it based on the previous state
-            let prevState = story.details.state;
+            const prevState = story.details.state;
             if (prevState === 'closed' || prevState === 'reopened') {
                 state = 'reopened';
             }
         }
     }
 
-    let storyAfter = _.cloneDeep(story) || {};
-    ExternalDataUtils.inheritLink(storyAfter, server, repo, {
+    const storyChanges = _.cloneDeep(story) || {};
+    ExternalDataUtils.inheritLink(storyChanges, server, repo, {
         issue: {
             id: glIssue.id,
             number: glIssue.iid,
         }
     });
-    let exported = !!storyAfter.etime;
-    ExternalDataUtils.importProperty(storyAfter, server, 'type', {
+    const exported = !!storyChanges.etime;
+    ExternalDataUtils.importProperty(storyChanges, server, 'type', {
         value: 'issue',
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'tags', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'tags', {
         value: tags,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'language_codes', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'language_codes', {
         value: [ defLangCode ],
         overwrite: 'always',
         ignore: exported,
     });
     if (opener) {
-        ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
+        ExternalDataUtils.importProperty(storyChanges, server, 'user_ids', {
             value: [ opener.id ],
             overwrite: 'always',
             ignore: exported,
         });
-        ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
+        ExternalDataUtils.importProperty(storyChanges, server, 'role_ids', {
             value: opener.role_ids,
             overwrite: 'always',
             ignore: exported,
         });
     }
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.title', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.title', {
         value: glIssue.title,
         overwrite: 'match-previous:title',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.labels', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.labels', {
         value: glIssue.labels,
         overwrite: 'match-previous:labels',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.state', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.state', {
         value: state,
         overwrite: 'always',
         ignore: exported,
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.milestone', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.milestone', {
         value: _.get(glIssue, 'milestone.title'),
         overwrite: 'always',
         ignore: exported,
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'published', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'published', {
         value: true,
         overwrite: 'always',
         ignore: exported,
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'public', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'public', {
         value: !glIssue.confidential,
         overwrite: 'always',
         ignore: exported,
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'ptime', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'ptime', {
         value: Moment(new Date(glIssue.created_at)).toISOString(),
         overwrite: 'always',
         ignore: exported,
     });
-    if (_.isEqual(storyAfter, story)) {
-        return story;
+    if (_.isEqual(storyChanges, story)) {
+        return null;
     }
     if (story) {
-        if (story.details.state !== storyAfter.details.state) {
+        if (story.details.state !== storyChanges.details.state) {
             // bump the story when its state changes
-            storyAfter.btime = Moment().toISOString();
+            storyChanges.btime = Moment().toISOString();
         }
     }
-    storyAfter.itime = new String('NOW()');
-    return storyAfter;
+    storyChanges.itime = new String('NOW()');
+    return storyChanges;
 }
 
 /**
@@ -252,8 +248,8 @@ function copyIssueProperties(story, system, server, repo, opener, assignments, g
 async function fetchIssue(server, glProjectId, glIssueId) {
     // Gitlab wants the issue IID (i.e. issue number), which unfortunately isn't
     // included in the activity log entry
-    let glIssueNumber = await getIssueNumber(server, glProjectId, glIssueId);
-    let url = `/projects/${glProjectId}/issues/${glIssueNumber}`;
+    const glIssueNumber = await getIssueNumber(server, glProjectId, glIssueId);
+    const url = `/projects/${glProjectId}/issues/${glIssueNumber}`;
     return Transport.fetch(server, url);
 }
 
@@ -268,10 +264,10 @@ async function fetchIssue(server, glProjectId, glIssueId) {
  * @return {Promise<Number>}
  */
 async function getIssueNumber(server, glProjectId, glIssueId) {
-    let baseURL = _.get(server, 'settings.oauth.base_url');
+    const baseURL = _.get(server, 'settings.oauth.base_url');
     let issueNumber = _.get(issueNumberCache, [ baseURL, glProjectId, glIssueId ]);
     if (!issueNumber) {
-        let url = `/projects/${glProjectId}/issues`;
+        const url = `/projects/${glProjectId}/issues`;
         await Transport.fetchEach(server, url, {}, (glIssue) => {
             _.set(issueNumberCache, [ baseURL, glProjectId, glIssue.id ], glIssue.iid);
             if (glIssueId === glIssue.id) {
@@ -286,7 +282,7 @@ async function getIssueNumber(server, glProjectId, glIssueId) {
     return issueNumber;
 }
 
-let issueNumberCache = {};
+const issueNumberCache = {};
 
 /**
  * Retrieve issue from Gitlab by issue number
@@ -298,11 +294,11 @@ let issueNumberCache = {};
  * @return {Object}
  */
 async function fetchIssueByNumber(server, glProjectId, glIssueNumber) {
-    let url = `/projects/${glProjectId}/issues/${glIssueNumber}`;
+    const url = `/projects/${glProjectId}/issues/${glIssueNumber}`;
     return Transport.fetch(server, url);
 }
 
 export {
-    importEvent,
-    importHookEvent,
+    processEvent,
+    processHookEvent,
 };

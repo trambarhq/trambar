@@ -23,11 +23,11 @@ class ByRole {
      */
     async prepareContext(db, schema, stories, listing) {
         const roles = [];
-        const roleIds = _.filter(_.uniq(_.flatten(_.map(stories, 'role_ids'))));
-        for (let roleId of roleIds) {
-            let role = this.findCachedRole(roleId);
+        const roleIDs = _.filter(_.uniq(_.flatten(_.map(stories, 'role_ids'))));
+        for (let roleID of roleIDs) {
+            let role = this.findCachedRole(roleID);
             if (!role) {
-                role = await this.loadRole(db, roleId);
+                role = await this.loadRole(db, roleID);
             }
             if (role) {
                 roles.push(role);
@@ -71,13 +71,13 @@ class ByRole {
      * Load role from database, saving it to cache
      *
      * @param  {Database} db
-     * @param  {Number} roleId
+     * @param  {Number} roleID
      *
      * @return {Object|null}
      */
-    async loadRole(db, roleId) {
+    async loadRole(db, roleID) {
         const criteria = {
-            id: roleId,
+            id: roleID,
             deleted: false,
         };
         const row = await Role.findOne(db, 'global', criteria, 'id, settings');
@@ -102,12 +102,12 @@ class ByRole {
     /**
      * Find cached role
      *
-     * @param  {Number} roleId
+     * @param  {Number} roleID
      *
      * @return {Object|null}
      */
-    findCachedRole(roleId) {
-        const index = _.findIndex(this.roleCache, { id: roleId });
+    findCachedRole(roleID) {
+        const index = _.findIndex(this.roleCache, { id: roleID });
         if (index === -1) {
             return null;
         }
@@ -120,10 +120,10 @@ class ByRole {
     /**
      * Remove an entry from cache
      *
-     * @param  {Number} roleId
+     * @param  {Number} roleID
      */
-    clearCachedRole(roleId) {
-        const index = _.findIndex(this.roleCache, { id: roleId });
+    clearCachedRole(roleID) {
+        const index = _.findIndex(this.roleCache, { id: roleID });
         if (index === -1) {
             return;
         }

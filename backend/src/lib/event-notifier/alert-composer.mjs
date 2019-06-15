@@ -21,10 +21,9 @@ function format(system, schema, user, notification, locale) {
 }
 
 function getNotificationText(user, notification, locale) {
-    let name = Localization.name(locale, user);
-    let t = function() {
-        let args = _.concat(locale, arguments);
-        return Localization.translate.apply(null, args);
+    const name = Localization.name(locale, user);
+    const t = function() {
+        return Localization.translate.apply(null, [ locale, ...arguments ]);
     };
     switch (notification.type) {
         case 'like':
@@ -74,8 +73,7 @@ function getNotificationText(user, notification, locale) {
  * @return {String|undefined}
  */
 function getProfileImageURL(user) {
-    let image = _.find(user.details.resources, { type: 'image' });
-    let imageURL;
+    const image = _.find(user.details.resources, { type: 'image' });
     if (image && image.url) {
         // form the URL
         return applyClippingRectangle(image.url, image.clip, 192, 192, 75);
@@ -90,7 +88,7 @@ function getProfileImageURL(user) {
  * @return {String|undefined}
  */
 function getReactionImageURL(reaction) {
-    let res = _.first(reaction.details.resources);
+    const res = _.first(reaction.details.resources);
     if (res) {
         let url;
         switch (res.type) {
@@ -121,9 +119,9 @@ function getReactionImageURL(reaction) {
  * @return {String}
  */
 function applyClippingRectangle(url, clip, width, height, quality) {
-    let filters = [];
+    const filters = [];
     if (clip) {
-        let rect = [
+        const rect = [
             clip.left,
             clip.top,
             clip.width,

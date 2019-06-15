@@ -22,23 +22,24 @@ import Commit from '../accessors/commit.mjs';
  */
 async function importCommit(db, server, repo, glBranch, glCommitID) {
     // first, check if the commit was previously imported
-    let criteria = {
+    const criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
             commit: { id: glCommitID }
         })
     };
-    let commit = await Commit.findOne(db, 'global', criteria, '*');
-    if (!commit) {
-        let repoLink = ExternalDataUtils.findLink(repo, server);
-        let glProjectID = repoLink.project.id;
-
-        console.log(`Retriving commit ${glCommitID}`);
-        let glCommit = await fetchCommit(server, glProjectID, glCommitID);
-        let glDiff = await fetchDiff(server, glProjectID, glCommit.id);
-        let commitNew = copyCommitProperties(null, server, repo, glBranch, glCommit, glDiff);
-        commit = await Commit.insertOne(db, 'global', commitNew);
+    const commit = await Commit.findOne(db, 'global', criteria, '*');
+    if (commit) {
+        return commit;
     }
-    return commit;
+    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const glProjectID = repoLink.project.id;
+
+    console.log(`Retriving commit ${glCommitID}`);
+    const glCommit = await fetchCommit(server, glProjectID, glCommitID);
+    const glDiff = await fetchDiff(server, glProjectID, glCommit.id);
+    const commitNew = copyCommitProperties(null, server, repo, glBranch, glCommit, glDiff);
+    const commitAfter = await Commit.insertOne(db, 'global', commitNew);
+    return commitAfter;
 };
 
 /**
@@ -54,52 +55,52 @@ async function importCommit(db, server, repo, glBranch, glCommitID) {
  * @return {Commit}
  */
 function copyCommitProperties(commit, server, repo, glBranch, glCommit, glDiff) {
-    let changes = countChanges(glDiff);
+    const changes = countChanges(glDiff);
 
-    let commitAfter = _.cloneDeep(commit) || {};
-    ExternalDataUtils.inheritLink(commitAfter, server, repo, {
+    const commitChanges = _.cloneDeep(commit) || {};
+    ExternalDataUtils.inheritLink(commitChanges, server, repo, {
         commit: {
             id: glCommit.id,
             parent_ids: glCommit.parent_ids,
         }
     });
-    ExternalDataUtils.importProperty(commitAfter, server, 'initial_branch', {
+    ExternalDataUtils.importProperty(commitChanges, server, 'initial_branch', {
         value: glBranch,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(commitAfter, server, 'title_hash', {
+    ExternalDataUtils.importProperty(commitChanges, server, 'title_hash', {
         value: hash(glCommit.title),
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(commitAfter, server, 'details.status', {
+    ExternalDataUtils.importProperty(commitChanges, server, 'details.status', {
         value: glCommit.status,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(commitAfter, server, 'details.author_name', {
+    ExternalDataUtils.importProperty(commitChanges, server, 'details.author_name', {
         value: glCommit.author_name,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(commitAfter, server, 'details.author_email', {
+    ExternalDataUtils.importProperty(commitChanges, server, 'details.author_email', {
         value: glCommit.author_email,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(commitAfter, server, 'details.lines', {
+    ExternalDataUtils.importProperty(commitChanges, server, 'details.lines', {
         value: changes.lines,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(commitAfter, server, 'details.files', {
+    ExternalDataUtils.importProperty(commitChanges, server, 'details.files', {
         value: changes.files,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(commitAfter, server, 'ptime', {
+    ExternalDataUtils.importProperty(commitChanges, server, 'ptime', {
         value: Moment(glCommit.committed_date).toISOString(),
         overwrite: 'always',
     });
-    if (_.isEqual(commitAfter, commit)) {
-        return commit;
+    if (_.isEqual(commitChanges, commit)) {
+        return null;
     }
-    commitAfter.itime = new String('NOW()');
-    return commitAfter;
+    commitChanges.itime = new String('NOW()');
+    return commitChanges;
 }
 
 /**
@@ -112,7 +113,7 @@ function copyCommitProperties(commit, server, repo, glBranch, glCommit, glDiff) 
  * @return {Promise<Object>}
  */
 async function fetchCommit(server, glProjectID, glCommitID) {
-    let url = `/projects/${glProjectID}/repository/commits/${glCommitID}`;
+    const url = `/projects/${glProjectID}/repository/commits/${glCommitID}`;
     return Transport.fetch(server, url);
 }
 
@@ -126,7 +127,7 @@ async function fetchCommit(server, glProjectID, glCommitID) {
  * @return {Promise<Object>}
  */
 async function fetchDiff(server, glProjectID, glCommitID) {
-    let url = `/projects/${glProjectID}/repository/commits/${glCommitID}/diff`;
+    const url = `/projects/${glProjectID}/repository/commits/${glCommitID}/diff`;
     return Transport.fetch(server, url);
 }
 
@@ -166,13 +167,13 @@ function parseFileDiff(file) {
  * @param  {Object} glDiff
  */
 function countChanges(glDiff) {
-    let cf = {
+    const cf = {
         added: [],
         deleted: [],
         renamed: [],
         modified: [],
     };
-    let cl = {
+    const cl = {
         added: 0,
         deleted: 0,
         modified: 0,
@@ -180,7 +181,7 @@ function countChanges(glDiff) {
     for (let file of glDiff) {
         // parse diff if there's one
         try {
-            let diff = parseFileDiff(file);
+            const diff = parseFileDiff(file);
             // record file disposition
             if (file.new_file) {
                 cf.added.push(file.new_path);
@@ -208,7 +209,7 @@ function countChanges(glDiff) {
             // count lines added, removed, or modified
             if (diff) {
                 if (diff.additions > 0 && diff.deletions > 0) {
-                    let changes = _.flatten(_.map(diff.chunks, 'changes'));
+                    const changes = _.flatten(_.map(diff.chunks, 'changes'));
                     let deleted = 0;
                     for (let change of changes) {
                         if (change.type === 'del') {
@@ -238,6 +239,9 @@ function countChanges(glDiff) {
             }
         } catch (err) {
             console.log('Error encounter processing diff: ' + err.message);
+            if (process.env.NODE_ENV !== 'production') {
+                console.error(err);
+            }
         }
     }
     return {
@@ -254,7 +258,7 @@ function countChanges(glDiff) {
  * @return {String}
  */
 function hash(text) {
-    let hash = Crypto.createHash('md5').update(text);
+    const hash = Crypto.createHash('md5').update(text);
     return hash.digest("hex");
 }
 

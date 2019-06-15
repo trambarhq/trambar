@@ -19,25 +19,24 @@ import * as Transport from './transport.mjs';
  * @return {Promise}
  */
 async function installServerHooks(host, server, repos, projects) {
-    let taskLog = TaskLog.start('gitlab-hook-install', {
+    const taskLog = TaskLog.start('gitlab-hook-install', {
         server_id: server.id,
         server: server.name,
     });
     try {
-        let list = getRepoProjectPairs(repos, projects);
-        let hookCount = list.length + 1;
-        let added = [];
+        const list = getRepoProjectPairs(repos, projects);
+        const hookCount = list.length + 1;
+        let hookNumber = 1;
 
         // install system hook
         await installSystemHook(host, server);
-        added.push('system');
-        taskLog.report(added.length, hookCount, { added });
+        taskLog.append('added', 'system');
 
         // install project hooks
         for (let { repo, project } of list) {
             await installProjectHook(host, server, repo, project);
-            added.push(repo.name);
-            taskLog.report(added.length, hookCount, { added });
+            taskLog.append('added', repo.name);
+            taskLog.report(hookNumber++, hookCount);
         }
         await taskLog.finish();
     } catch (err) {
@@ -56,25 +55,25 @@ async function installServerHooks(host, server, repos, projects) {
  * @return {Promise}
  */
 async function removeServerHooks(host, server, repos, projects) {
-    let taskLog = TaskLog.start('gitlab-hook-remove', {
+    const taskLog = TaskLog.start('gitlab-hook-remove', {
         server_id: server.id,
         server: server.name,
     });
     try {
-        let list = getRepoProjectPairs(repos, projects);
-        let hookCount = list.length + 1;
-        let deleted = [];
+        const list = getRepoProjectPairs(repos, projects);
+        const hookCount = list.length + 1;
+        let hookNumber = 1;
 
         // remove system hook
         await removeSystemHook(host, server);
-        deleted.push('system');
-        taskLog.report(deleted.length, hookCount, { deleted });
+        taskLog.append('deleted', 'system');
+        taskLog.report(hookNumber++, hookCount);
 
         // remove project hooks
         for (let { repo, project } of list) {
             await removeProjectHook(host, server, repo, project);
-            deleted.push(repo.name);
-            taskLog.report(deleted.length, hookCount, { deleted });
+            taskLog.append('deleted', repo.name);
+            taskLog.report(hookNumber++, hookCount);
         }
         await taskLog.finish();
     } catch (err) {
@@ -87,9 +86,9 @@ async function installSystemHook(host, server) {
         throw HTTPError(400, 'Unable to install hook due to missing server address')
     }
     console.log(`Installing web-hook on server: ${server.name}`);
-    let glHooks = await fetchSystemHooks(server);
-    let url = getSystemHookEndpoint(host, server);
-    let hookProps = getSystemHookProps(url);
+    const glHooks = await fetchSystemHooks(server);
+    const url = getSystemHookEndpoint(host, server);
+    const hookProps = getSystemHookProps(url);
     for (let glHook of glHooks) {
         if (glHook.url === url) {
             console.log(`Removing existing hook: ${glHook.url}`);
@@ -114,12 +113,12 @@ async function installProjectHook(host, server, repo, project) {
         throw HTTPError(400, 'Unable to install hook due to missing server address');
     }
     console.log(`Installing web-hook on repo for project: ${repo.name} -> ${project.name}`);
-    let repoLink = ExternalDataUtils.findLink(repo, server);
-    let glHooks = await fetchProjectHooks(server, repoLink.project.id);
+    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const glHooks = await fetchProjectHooks(server, repoLink.project.id);
 
     // remove existing hooks
-    let url = getProjectHookEndpoint(host, server, repo, project);
-    let hookProps = getProjectHookProps(url);
+    const url = getProjectHookEndpoint(host, server, repo, project);
+    const hookProps = getProjectHookProps(url);
     for (let glHook of glHooks) {
         if (glHook.url === url) {
             console.log(`Removing existing hook: ${glHook.url}`);
@@ -142,9 +141,9 @@ async function removeSystemHook(host, server) {
         return;
     }
     console.log(`Removing web-hook on server: ${server.name}`);
-    let glHooks = await fetchSystemHooks(server);
+    const glHooks = await fetchSystemHooks(server);
     for (let glHook of glHooks) {
-        let url = getSystemHookEndpoint(host, server);
+        const url = getSystemHookEndpoint(host, server);
         if (glHook.url === url) {
             await destroySystemHook(server, glHook);
         }
@@ -166,10 +165,10 @@ async function removeProjectHook(host, server, repo, project) {
         return;
     }
     console.log(`Removing web-hook on repo for project: ${repo.name} -> ${project.name}`);
-    let repoLink = ExternalDataUtils.findLink(repo, server);
-    let glHooks = await fetchProjectHooks(server, repoLink.project.id);
+    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const glHooks = await fetchProjectHooks(server, repoLink.project.id);
     for (let glHook of glHooks) {
-        let url = getProjectHookEndpoint(host, server, repo, project);
+        const url = getProjectHookEndpoint(host, server, repo, project);
         if (glHook.url === url) {
             await destroyProjectHook(server, repoLink.project.id, glHook);
         }
@@ -184,7 +183,7 @@ async function removeProjectHook(host, server, repo, project) {
  * @return {Array<Object>}
  */
 async function fetchSystemHooks(server) {
-    let url = `/hooks`;
+    const url = `/hooks`;
     return Transport.fetchAll(server, url);
 }
 
@@ -197,7 +196,7 @@ async function fetchSystemHooks(server) {
  * @return {Array<Object>}
  */
 async function fetchProjectHooks(server, glProjectID) {
-    let url = `/projects/${glProjectID}/hooks`;
+    const url = `/projects/${glProjectID}/hooks`;
     return Transport.fetchAll(server, url);
 }
 
@@ -210,7 +209,7 @@ async function fetchProjectHooks(server, glProjectID) {
  * @return {Promise<Object>}
  */
 async function createSystemHook(server, glHook) {
-    let url = `/hooks`;
+    const url = `/hooks`;
     return Transport.post(server, url, glHook);
 }
 
@@ -224,7 +223,7 @@ async function createSystemHook(server, glHook) {
  * @return {Promise<Object>}
  */
 async function createProjectHook(server, glProjectID, glHook) {
-    let url = `/projects/${glProjectID}/hooks`;
+    const url = `/projects/${glProjectID}/hooks`;
     return Transport.post(server, url, glHook);
 }
 
@@ -237,7 +236,7 @@ async function createProjectHook(server, glProjectID, glHook) {
  * @return {Promise}
  */
 async function destroySystemHook(server, glHook) {
-    let url = `/hooks/${glHook.id}`;
+    const url = `/hooks/${glHook.id}`;
     return Transport.remove(server, url);
 }
 
@@ -251,7 +250,7 @@ async function destroySystemHook(server, glHook) {
  * @return {Promise}
  */
 async function destroyProjectHook(server, glProjectID, glHook) {
-    let url = `/projects/${glProjectID}/hooks/${glHook.id}`;
+    const url = `/projects/${glProjectID}/hooks/${glHook.id}`;
     return Transport.remove(server, url);
 }
 
@@ -328,8 +327,8 @@ function getProjectHookEndpoint(host, server, repo, project) {
  * @return {Boolean}
  */
 function hasAccessToken(server) {
-    let accessToken = _.get(server, 'settings.api.access_token');
-    let oauthBaseURL = _.get(server, 'settings.oauth.base_url');
+    const accessToken = _.get(server, 'settings.api.access_token');
+    const oauthBaseURL = _.get(server, 'settings.oauth.base_url');
     return (accessToken && oauthBaseURL);
 }
 
@@ -340,8 +339,8 @@ function hasAccessToken(server) {
  * @param  {HTTPRequest} req
  */
 function verifyHookRequest(req) {
-    let tokenReceived = req.headers['x-gitlab-token'];
-    let tokenRequired = getSecretToken();
+    const tokenReceived = req.headers['x-gitlab-token'];
+    const tokenRequired = getSecretToken();
     if (tokenReceived !== tokenRequired) {
         throw new HTTPError(403);
     }
@@ -354,14 +353,14 @@ function verifyHookRequest(req) {
  */
 function getSecretToken() {
     if (!secretToken) {
-        let buffer = Crypto.randomBytes(16);
+        const buffer = Crypto.randomBytes(16);
         secretToken = buffer.toString('hex');
     }
     return secretToken;
 }
 
 function getRepoProjectPairs(repos, projects) {
-    let list = [];
+    const list = [];
     for (let project of projects) {
         for (let repo of repos) {
             if (_.includes(project.repo_ids, repo.id)) {

@@ -23,44 +23,40 @@ import Story from '../accessors/story.mjs';
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Story>}
+ * @return {Promise<Story|undefined>}
  */
-async function importEvent(db, system, server, repo, project, author, glEvent) {
+async function processEvent(db, system, server, repo, project, author, glEvent) {
     if (!glEvent.target_id) {
-        return null;
+        return false;
     }
-    let schema = project.name;
-    let repoLink = ExternalDataUtils.findLink(repo, server);
-    let glMergeRequest = await fetchMergeRequest(server, repoLink.project.id, glEvent.target_id);
+    const schema = project.name;
+    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const glMergeRequest = await fetchMergeRequest(server, repoLink.project.id, glEvent.target_id);
     // the story is linked to both the merge request and the repo
-    let criteria = {
+    const criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
             merge_request: { id: glMergeRequest.id }
         })
     };
-    let story = await Story.findOne(db, schema, criteria, '*');
+    const story = await Story.findOne(db, schema, criteria, '*');
+    const assignments = await AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest);
+    const opener = (glEvent.action_name === 'opened') ? author : null;
+    const storyChanges = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
+    const storyAfter = (storyChanges) ? await Story.saveOne(db, schema, storyAfter) : story;
     try {
-        let assignments = await AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest);
-        let opener = (glEvent.action_name === 'opened') ? author : null;
-        let storyAfter = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
-        if (storyAfter !== story) {
-            story = await Story.saveOne(db, schema, storyAfter);
-        }
-        await AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
+        await AssignmentImporter.importAssignments(db, server, project, repo, storyAfter, assignments);
     } catch (err) {
         if (err instanceof AssignmentImporter.ObjectMovedError) {
             // the merge request has been moved to a different repo--delete the
             // story if it was imported
-            if (story) {
-                let storyAfter = { id: story.id, deleted: true };
-                await Story.saveOne(db, schema, storyAfter);
-                story = null;
+            if (storyAfter) {
+                await Story.saveOne(db, schema, { id: storyAfter.id, deleted: true });
             }
         } else {
             throw err;
         }
     }
-    return story;
+    return true;
 }
 
 /**
@@ -74,43 +70,43 @@ async function importEvent(db, system, server, repo, project, author, glEvent) {
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Story|null>}
+ * @return {Promise}
  */
-async function importHookEvent(db, system, server, repo, project, author, glHookEvent) {
+async function processHookEvent(db, system, server, repo, project, author, glHookEvent) {
     if (glHookEvent.object_attributes.action !== 'update') {
-        return false;
+        return true;
     }
     // construct a glMergeRequest object from data in hook event
-    let repoLink = ExternalDataUtils.findLink(repo, server);
-    let glMergeRequest = _.omit(glHookEvent.object_attributes, 'action');
+    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const glMergeRequest = _.omit(glHookEvent.object_attributes, 'action');
     glMergeRequest.project_id = repoLink.project.id;
     glMergeRequest.labels = _.map(glHookEvent.labels, 'title');
     if (glHookEvent.assignee) {
-        glMergeRequest.assignee = _.clone(glHookEvent.assignee);
-        glMergeRequest.assignee.id = glHookEvent.object_attributes.assignee_id;
+        glMergeRequest.assignee = {
+            ...glHookEvent.assignee,
+            id: glHookEvent.object_attributes.assignee_id,
+        };
     }
 
     // find existing story
-    let schema = project.name;
-    let criteria = {
+    const schema = project.name;
+    const criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
             merge_request: { id: glMergeRequest.id }
         }),
     };
-    let story = await Story.findOne(db, schema, criteria, '*');
+    const story = await Story.findOne(db, schema, criteria, '*');
     if (!story) {
         throw new HTTPError(404, 'Story not found');
     }
-    let assignments = await AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest);
+    const assignments = await AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest);
     // the author of the hook event isn't the merge request's author,
     // hence we're passing null here
-    let opener = null;
-    let storyAfter = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
-    if (storyAfter !== story) {
-        story = await Story.updateOne(db, schema, storyAfter);
-    }
-    let reactions = AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
-    return story;
+    const opener = null;
+    const storyChanges = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
+    const storyAfter = (storyChanges) ? await Story.updateOne(db, schema, storyAfter) : story;
+    await AssignmentImporter.importAssignments(db, server, project, repo, storyAfter, assignments);
+    return true;
 }
 
 /**
@@ -132,83 +128,83 @@ async function importHookEvent(db, system, server, repo, project, author, glHook
  * @return {Story}
  */
 function copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest) {
-    let descriptionTags = TagScanner.findTags(glMergeRequest.description);
-    let labelTags = _.map(glMergeRequest.labels, (label) => {
+    const descriptionTags = TagScanner.findTags(glMergeRequest.description);
+    const labelTags = _.map(glMergeRequest.labels, (label) => {
         return `#${_.replace(label, /\s+/g, '-')}`;
     });
-    let tags = _.union(descriptionTags, labelTags);
-    let defLangCode = Localization.getDefaultLanguageCode(system);
+    const tags = _.union(descriptionTags, labelTags);
+    const defLangCode = Localization.getDefaultLanguageCode(system);
 
-    let storyAfter = _.cloneDeep(story) || {};
-    ExternalDataUtils.inheritLink(storyAfter, server, repo, {
+    const storyChanges = _.cloneDeep(story) || {};
+    ExternalDataUtils.inheritLink(storyChanges, server, repo, {
         merge_request: {
             id: glMergeRequest.id,
             number: glMergeRequest.iid,
         }
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'type', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'type', {
         value: 'merge-request',
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'tags', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'tags', {
         value: tags,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'language_codes', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'language_codes', {
         value: [ defLangCode ],
         overwrite: 'always',
     });
     if (opener) {
-        ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
+        ExternalDataUtils.importProperty(storyChanges, server, 'user_ids', {
             value: [ opener.id ],
             overwrite: 'always',
         });
-        ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
+        ExternalDataUtils.importProperty(storyChanges, server, 'role_ids', {
             value: opener.role_ids,
             overwrite: 'always',
         });
     }
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.state', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.state', {
         value: glMergeRequest.state,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.branch', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.branch', {
         value: glMergeRequest.target_branch,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.source_branch', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.source_branch', {
         value: glMergeRequest.source_branch,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.labels', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.labels', {
         value: glMergeRequest.labels,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.milestone', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.milestone', {
         value: _.get(glMergeRequest, 'milestone.title'),
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.title', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.title', {
         value: glMergeRequest.title,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'published', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'published', {
         value: true,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'public', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'public', {
         value: !glMergeRequest.confidential,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'ptime', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'ptime', {
         value: Moment(new Date(glMergeRequest.created_at)).toISOString(),
         overwrite: 'always',
     });
-    if (_.isEqual(storyAfter, story)) {
-        return story;
+    if (_.isEqual(storyChanges, story)) {
+        return null;
     }
-    storyAfter.itime = new String('NOW()');
-    return storyAfter;
+    storyChanges.itime = new String('NOW()');
+    return storyChanges;
 }
 
 /**
@@ -221,11 +217,11 @@ function copyMergeRequestProperties(story, system, server, repo, opener, assignm
  * @return {Object}
  */
 async function fetchMergeRequest(server, glProjectId, glMergeRequestNumber) {
-    let url = `/projects/${glProjectId}/merge_requests/${glMergeRequestNumber}`;
+    const url = `/projects/${glProjectId}/merge_requests/${glMergeRequestNumber}`;
     return Transport.fetch(server, url);
 }
 
 export {
-    importEvent,
-    importHookEvent,
+    processEvent,
+    processHookEvent,
 };

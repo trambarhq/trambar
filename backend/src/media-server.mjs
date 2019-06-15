@@ -147,7 +147,9 @@ function sendError(res, err) {
     if (!statusCode) {
         // not an expected error
         statusCode = 500;
-        if (process.env.NODE_ENV === 'production') {
+        if (process.env.NODE_ENV !== 'production') {
+            console.error(err);
+        } else {
             message = 'Internal server error';
         }
     }

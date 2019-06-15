@@ -21,23 +21,23 @@ import Reaction from '../accessors/reaction.mjs';
  * @return {Promise<Array<Reaction>>}
  */
 async function importAssignments(db, server, project, repo, story, assignments) {
-    let schema = project.name;
+    const schema = project.name;
     // find existing assignments
-    let criteria = {
+    const criteria = {
         story_id: story.id,
         type: 'assignment',
     };
-    let existingReactions = await Reaction.find(db, schema, criteria, 'user_id');
-    let reactionList = [];
+    const existingReactions = await Reaction.find(db, schema, criteria, 'user_id');
+    const reactionChanges = [];
     for (let assignment of assignments) {
-        let reaction = _.find(existingReactions, { user_id: assignment.user.id });
+        const reaction = _.find(existingReactions, { user_id: assignment.user.id });
         if (!reaction) {
-            let reactionNew = copyAssignmentProperties(null, server, story, assignment);
-            reaction = await Reaction.insertOne(db, schema, reactionNew);
+            const reactionNew = copyAssignmentProperties(null, server, story, assignment);
+            reactionChanges.push(reactionNew);
         }
-        reactionList.push(reaction);
     }
-    return reactionList;
+    const reactionsAfter = await Reaction.insert(db, schema, reactionChanges);
+    return [ ...existingReactions, ...reactionsAfter ];
 }
 
 /**
@@ -50,9 +50,9 @@ async function importAssignments(db, server, project, repo, story, assignments) 
  * @return {Promise<Array<Object>>}
  */
 async function findIssueAssignments(db, server, glIssue) {
-    let glIssueNumber = glIssue.iid;
-    let glProjectID = glIssue.project_id;
-    let glNotes = await fetchIssueNotes(server, glProjectID, glIssueNumber);
+    const glIssueNumber = glIssue.iid;
+    const glProjectID = glIssue.project_id;
+    const glNotes = await fetchIssueNotes(server, glProjectID, glIssueNumber);
     return findAssignmentsFromNotes(db, server, glIssue, glNotes);
 }
 
@@ -66,9 +66,9 @@ async function findIssueAssignments(db, server, glIssue) {
  * @return {Promise<Array<Object>>}
  */
 async function findMergeRequestAssignments(db, server, glMergeRequest) {
-    let glMergeRequestNumber = glMergeRequest.iid;
-    let glProjectID = glMergeRequest.project_id;
-    let glNotes = await fetchMergeRequestNotes(server, glProjectID, glMergeRequestNumber);
+    const glMergeRequestNumber = glMergeRequest.iid;
+    const glProjectID = glMergeRequest.project_id;
+    const glNotes = await fetchMergeRequestNotes(server, glProjectID, glMergeRequestNumber);
     return findAssignmentsFromNotes(db, server, glMergeRequest, glNotes);
 }
 
@@ -83,14 +83,14 @@ async function findMergeRequestAssignments(db, server, glMergeRequest) {
  * @return {Promise<Array<Object>>}
  */
 async function findAssignmentsFromNotes(db, server, glObject, glNotes) {
-    let assignments = [];
+    const assignments = [];
     for (let glNote of glNotes) {
         if (glNote.system) {
             // have to rely on the username since the user id isn't provided
-            let m1 = /^assigned to @(\S+)/.exec(glNote.body);
+            const m1 = /^assigned to @(\S+)/.exec(glNote.body);
             if (m1) {
                 if (_.isEmpty(assignments)) {
-                    let m2 = /unassigned @(\S+)/.exec(glNote.body);
+                    const m2 = /unassigned @(\S+)/.exec(glNote.body);
                     if (m2) {
                         // issue (or merge-request) was created with an assignee
                         assignments.push({
@@ -138,10 +138,10 @@ async function findAssignmentsFromNotes(db, server, glObject, glNotes) {
     }
 
     // find and attach user objects
-    let usernames = _.uniq(_.map(assignments, 'username'));
-    let users = await UserImporter.findUsersByName(db, server, usernames);
+    const usernames = _.uniq(_.map(assignments, 'username'));
+    const users = await UserImporter.findUsersByName(db, server, usernames);
     for (let assignment of assignments) {
-        let usernameIndex = _.indexOf(usernames, assignment.username);
+        const usernameIndex = _.indexOf(usernames, assignment.username);
         assignment.user = users[usernameIndex];
     }
 
@@ -163,39 +163,39 @@ async function findAssignmentsFromNotes(db, server, glObject, glNotes) {
  * @return {Reaction}
  */
 function copyAssignmentProperties(reaction, server, story, assignment) {
-    let reactionAfter = _.cloneDeep(reaction) || {};
-    ExternalDataUtils.inheritLink(reactionAfter, server, story, {
+    const reactionChanges = _.cloneDeep(reaction) || {};
+    ExternalDataUtils.inheritLink(reactionChanges, server, story, {
         note: { id: assignment.id }
     });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'type', {
+    ExternalDataUtils.importProperty(reactionChanges, server, 'type', {
         value: 'assignment',
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'story_id', {
+    ExternalDataUtils.importProperty(reactionChanges, server, 'story_id', {
         value: story.id,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'user_id', {
+    ExternalDataUtils.importProperty(reactionChanges, server, 'user_id', {
         value: assignment.user.id,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'public', {
+    ExternalDataUtils.importProperty(reactionChanges, server, 'public', {
         value: true,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'published', {
+    ExternalDataUtils.importProperty(reactionChanges, server, 'published', {
         value: true,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'ptime', {
+    ExternalDataUtils.importProperty(reactionChanges, server, 'ptime', {
         value: assignment.ctime,
         overwrite: 'always',
     });
-    if (_.isEqual(reactionAfter, reaction)) {
-        return reaction;
+    if (_.isEqual(reactionChanges, reaction)) {
+        return null;
     }
-    reactionAfter.itime = new String('NOW()');
-    return reactionAfter;
+    reactionChanges.itime = new String('NOW()');
+    return reactionChanges;
 }
 
 /**
@@ -208,7 +208,7 @@ function copyAssignmentProperties(reaction, server, story, assignment) {
  * @return {Object}
  */
 async function fetchIssueNotes(server, glProjectID, glIssueNumber) {
-    let url = `/projects/${glProjectID}/issues/${glIssueNumber}/notes`;
+    const url = `/projects/${glProjectID}/issues/${glIssueNumber}/notes`;
     return Transport.fetch(server, url);
 }
 
@@ -222,7 +222,7 @@ async function fetchIssueNotes(server, glProjectID, glIssueNumber) {
  * @return {Object}
  */
 async function fetchMergeRequestNotes(server, glProjectID, glMergeRequestNumber) {
-    let url = `/projects/${glProjectID}/merge_requests/${glMergeRequestNumber}/notes`;
+    const url = `/projects/${glProjectID}/merge_requests/${glMergeRequestNumber}/notes`;
     return Transport.fetch(server, url);
 }
 
@@ -234,9 +234,9 @@ class ObjectMovedError extends Error {
 }
 
 export {
+    importAssignments,
     findIssueAssignments,
     findMergeRequestAssignments,
-    importAssignments,
 
     ObjectMovedError,
 };

@@ -17,12 +17,12 @@ async function getImageMetadata(path) {
         return Sharp(path).metadata();
     } catch (err) {
         // sometimes Sharp can't read a file for some reason
-        let data = await FS.readFileAsync(path);
+        const data = await FS.readFileAsync(path);
         return Sharp(data).metadata();
     }
 }
 
-let sharpOperators = {
+const sharpOperators = {
     background: function(r, g, b, a) {
         this.background(r / 100, g / 100, b / 100, a / 100);
     },
@@ -98,13 +98,13 @@ async function applyFilters(path, filters, format) {
         return applyFiltersToSVGDocument(path, filters);
     } else {
         try {
-            let image = Sharp(path);
+            const image = Sharp(path);
             return applyFiltersToImage(image, filters, format);
         } catch (err) {
             // sometimes Sharp will fail when a file path is given
             // whereas a blob will work
-            let data = await FS.readFileAsync(path);
-            let image = Sharp(data);
+            const data = await FS.readFileAsync(path);
+            const image = Sharp(data);
             return applyFiltersToImage(image, filters, format);
         }
     }
@@ -117,8 +117,8 @@ async function applyFiltersToImage(image, filters, format) {
     };
     image.rotate();
     applyOperators(image, sharpOperators, filters);
-    let quality = image.settings.quality;
-    let lossless = image.settings.lossless;
+    const quality = image.settings.quality;
+    const lossless = image.settings.lossless;
     switch (_.toLower(format)) {
         case 'webp':
             image.webp({ quality, lossless });
@@ -136,7 +136,7 @@ async function applyFiltersToImage(image, filters, format) {
 }
 
 // current implementation is fairly limited
-let svgOperators = {
+const svgOperators = {
     crop: function(left, top, width, height) {
         this.crop = { left, top, width, height };
     },
@@ -165,19 +165,19 @@ async function applyFiltersToSVGDocument(path, filters) {
         return FS.readFileAsync(path);
     }
     // parse the XML doc
-    let xml = await FS.readFileAsync(path, 'utf-8');
-    let parser = new DOMParser;
-    let doc = parser.parseFromString(xml);
-    let svg = doc.getElementsByTagName('svg')[0];
+    const xml = await FS.readFileAsync(path, 'utf-8');
+    const parser = new DOMParser;
+    const doc = parser.parseFromString(xml);
+    const svg = doc.getElementsByTagName('svg')[0];
     if (svg) {
         // see what changes are needed
-        let params = {};
+        const params = {};
         applyOperators(params, svgOperators, filters);
 
         // get the dimensions first
-        let width = parseFloat(svg.getAttribute('width')) || 0;
-        let height = parseFloat(svg.getAttribute('height')) || 0;
-        let viewBoxString = svg.getAttribute('viewBox');
+        const width = parseFloat(svg.getAttribute('width')) || 0;
+        const height = parseFloat(svg.getAttribute('height')) || 0;
+        const viewBoxString = svg.getAttribute('viewBox');
         let viewBox;
         if (viewBoxString) {
             viewBox = _.map(_.split(viewBoxString, /\s+/), (s) => {
@@ -205,9 +205,9 @@ async function applyFiltersToSVGDocument(path, filters) {
         }
 
         if (params.crop) {
-            let vbScaleX = viewBox[2] / width;
-            let vbScaleY = viewBox[3] / height;
-            let vbPrecision = Math.max(0, Math.round(3 - Math.log10(viewBox[2])));
+            const vbScaleX = viewBox[2] / width;
+            const vbScaleY = viewBox[3] / height;
+            const vbPrecision = Math.max(0, Math.round(3 - Math.log10(viewBox[2])));
             width = params.crop.width;
             height = params.crop.height;
             viewBox[0] = _.round(params.crop.left * vbScaleX + viewBox[0], vbPrecision);
@@ -232,8 +232,8 @@ async function applyFiltersToSVGDocument(path, filters) {
         svg.setAttribute('viewBox', _.join(viewBox, ' '));
     }
 
-    let serializer = new XMLSerializer;
-    let newXML = serializer.serializeToString(doc);
+    const serializer = new XMLSerializer;
+    const newXML = serializer.serializeToString(doc);
     return Buffer.from(newXML, 'utf-8');
 }
 
@@ -246,15 +246,17 @@ async function applyFiltersToSVGDocument(path, filters) {
  */
 function applyOperators(target, operators, filters) {
     for (let filter of _.split(filters, /[ +]/)) {
-        let cmd = '', args = [];
-        let regExp = /(\D+)(\d*)/g, m;
+        let cmd = '';
+        const args = [];
+        const regExp = /(\D+)(\d*)/g;
+        let m;
         while(m = regExp.exec(filter)) {
             if (!cmd) {
                 cmd = m[1];
             } else {
                 // ignore the delimiter
             }
-            let arg = parseInt(m[2]);
+            const arg = parseInt(m[2]);
             if (arg === arg) {
                 args.push(arg);
             }
@@ -278,18 +280,18 @@ function applyOperators(target, operators, filters) {
  * @param {String} dstPath
  */
 async function addJPEGDescription(description, dstPath) {
-    let buffer = await FS.readFileAsync(dstPath);
-    let data = buffer.toString('binary');
-    let zeroth = {};
+    const buffer = await FS.readFileAsync(dstPath);
+    const data = buffer.toString('binary');
+    const zeroth = {};
     zeroth[Piexif.ImageIFD.ImageDescription] = description;
     zeroth[Piexif.ImageIFD.XResolution] = [96, 1];
     zeroth[Piexif.ImageIFD.YResolution] = [96, 1];
     zeroth[Piexif.ImageIFD.Software] = 'PhantomJS';
     zeroth[Piexif.ImageIFD.DateTime] = Moment().format('YYYY:MM:DD HH:mm:ss');
-    let exifObj = { '0th': zeroth };
-    let exifbytes = Piexif.dump(exifObj);
-    let newData = Piexif.insert(exifbytes, data);
-    let newBuffer = new Buffer(newData, 'binary');
+    const exifObj = { '0th': zeroth };
+    const exifbytes = Piexif.dump(exifObj);
+    const newData = Piexif.insert(exifbytes, data);
+    const newBuffer = new Buffer(newData, 'binary');
     return FS.writeFileAsync(dstPath, newBuffer);
 }
 
@@ -301,10 +303,10 @@ async function addJPEGDescription(description, dstPath) {
  * @return {Promise<String>}
  */
 async function getJPEGDescription(path) {
-    let buffer = await FS.readFileAsync(path);
-    let data = buffer.toString('binary');
-    let exifObj = Piexif.load(data);
-    let description = _.get(exifObj, [ '0th', Piexif.ImageIFD.ImageDescription ], '');
+    const buffer = await FS.readFileAsync(path);
+    const data = buffer.toString('binary');
+    const exifObj = Piexif.load(data);
+    const description = _.get(exifObj, [ '0th', Piexif.ImageIFD.ImageDescription ], '');
     return description;
 }
 

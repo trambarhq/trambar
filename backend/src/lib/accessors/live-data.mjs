@@ -176,7 +176,7 @@ class LiveData extends Data {
         const assignments = [];
         let sql;
         if (props) {
-            const index = parameters.length + 1;
+            let index = parameters.length + 1;
             for (let name in this.columns) {
                 if (name !== 'id') {
                     const value = props[name];

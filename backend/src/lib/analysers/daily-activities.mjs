@@ -39,19 +39,17 @@ class DailyActivities {
 
     async generate(db, schema, filters) {
         // apply fixed filters
-        let criteria = _.clone(this.fixedFilters.story);
-        // then apply per-row filters
-        _.assign(criteria, _.omit(filters, 'timezone'));
+        const { tz_offset, ...basic } = filters;
+        const criteria = { ...this.fixedFilters.story, ...basic };
 
         // load the stories
-        let rows = await Story.find(db, schema, criteria, 'type, tags, ptime');
-        let tzOffset = _.get(filters, 'tz_offset', 0);
-        let activities = {};
+        const rows = await Story.find(db, schema, criteria, 'type, tags, ptime');
+        const activities = {};
         for (let row of rows) {
             // get the date, taking into consideration the timezone requested
-            let date = Moment(row.ptime).utcOffset(tzOffset).format('YYYY-MM-DD');
+            const date = Moment(row.ptime).utcOffset(tz_offset || 0).format('YYYY-MM-DD');
             // count both story types and tags
-            let keys = _.concat(row.type, row.tags);
+            const keys = _.concat(row.type, row.tags);
             for (let key of keys) {
                 let counts = activities[date];
                 if (!counts) {

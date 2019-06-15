@@ -30,11 +30,9 @@ class StoryDateRange {
 
     async generate(db, schema, filters) {
         // apply fixed filters
-        let criteria = _.clone(this.fixedFilters.story);
-        // then apply per-row filters
-        _.assign(criteria, filters);
-        let columns = 'MIN(ptime), MAX(ptime), COUNT(ptime)';
-        let row = await Story.findOne(db, schema, criteria, columns);
+        const criteria = { ...this.fixedFilters.story, ...filters };
+        const columns = 'MIN(ptime), MAX(ptime), COUNT(ptime)';
+        const row = await Story.findOne(db, schema, criteria, columns);
         return {
             details: {
                 start_time: _.get(row, 'min', ''),

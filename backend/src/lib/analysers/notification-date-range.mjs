@@ -25,12 +25,9 @@ class NotificationDateRange {
     }
 
     async generate(db, schema, filters) {
-        // apply fixed filters
-        let criteria = _.clone(this.fixedFilters.notification);
-        // then apply per-row filters
-        _.assign(criteria, filters);
-        let columns = 'MIN(ctime), MAX(ctime), COUNT(ctime)';
-        let row = await Notification.findOne(db, schema, criteria, columns);
+        const criteria = { ...this.fixedFilters.notification, ...filters };
+        const columns = 'MIN(ctime), MAX(ctime), COUNT(ctime)';
+        const row = await Notification.findOne(db, schema, criteria, columns);
         return {
             details: {
                 start_time: _.get(row, 'min', ''),

@@ -20,28 +20,26 @@ import Story from '../accessors/story.mjs';
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Story>}
+ * @return {Promise<Boolean>}
  */
-async function importEvent(db, system, server, repo, project, author, glEvent) {
+async function processEvent(db, system, server, repo, project, author, glEvent) {
     if (!glEvent.target_id) {
         // milestone was deleted
-        return null;
+        return false;
     }
-    let schema = project.name;
-    let repoLink = ExternalDataUtils.findLink(repo, server);
-    let glMilestone = await fetchMilestone(server, repoLink.project.id, glEvent.target_id);
+    const schema = project.name;
+    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const glMilestone = await fetchMilestone(server, repoLink.project.id, glEvent.target_id);
     // the story is linked to both the issue and the repo
-    let criteria = {
+    const criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
             milestone: { id: glMilestone.id }
         }),
     };
-    let story = await Story.findOne(db, schema, criteria, '*');
-    let storyAfter = copyMilestoneProperties(story, system, server, repo, author, glMilestone);
-    if (storyAfter !== story) {
-        story = await Story.saveOne(db, schema, storyAfter);
-    }
-    return story;
+    const story = await Story.findOne(db, schema, criteria, '*');
+    const storyChanges = copyMilestoneProperties(story, system, server, repo, author, glMilestone);
+    const storyAfter = (storyChanges) ? await Story.saveOne(db, schema, storyChanges) : story;
+    return true;
 }
 
 /**
@@ -53,43 +51,44 @@ async function importEvent(db, system, server, repo, project, author, glEvent) {
  * @param  {Repo} repo
  * @param  {Project} project
  *
- * @return {Promise<Array>}
+ * @return {Promise<Boolean>}
  */
 async function updateMilestones(db, system, server, repo, project) {
-    let storyList = [];
-    let schema = project.name;
-    let repoLink = ExternalDataUtils.findLink(repo, server);
+    const schema = project.name;
+    const repoLink = ExternalDataUtils.findLink(repo, server);
     // find milestone stories
-    let criteria = {
+    const criteria = {
         type: 'milestone',
         external_object: repoLink,
         deleted: false,
     };
-    let stories = await Story.find(db, schema, criteria, '*');
+    const stories = await Story.find(db, schema, criteria, '*');
     // fetch milestones from GitLab
-    let glMilestones = await fetchMilestones(server, repoLink.project.id);
+    const glMilestones = await fetchMilestones(server, repoLink.project.id);
     // delete ones that no longer exists
+    let deleteCount = 0, updateCount = 0;
     for (let story of stories) {
-        let storyLink = ExternalDataUtils.findLink(story, server);
+        const storyLink = ExternalDataUtils.findLink(story, server);
         if (!_.some(glMilestones, { id: storyLink.milestone.id })) {
             await Story.updateOne(db, schema, { id: story.id, deleted: true });
+            deleteCount++;
         }
     }
     for (let glMilestone of glMilestones) {
-        let story = _.find(stories, (story) => {
+        const story = _.find(stories, (story) => {
             return !!ExternalDataUtils.findLink(story, server, {
                 milestone: { id: glMilestone.id }
             });
         });
         if (story) {
-            let storyAfter = copyMilestoneProperties(story, system, server, repo, null, glMilestone);
-            if (storyAfter !== story) {
-                story = await Story.updateOne(db, schema, storyAfter);
+            const storyChanges = copyMilestoneProperties(story, system, server, repo, null, glMilestone);
+            if (storyChanges) {
+                await Story.updateOne(db, schema, storyAfter);
+                updateCount++;
             }
-            storyList.push(story);
         }
     }
-    return storyList;
+    return (deleteCount + updateCount > 0);
 }
 
 /**
@@ -105,56 +104,56 @@ async function updateMilestones(db, system, server, repo, project) {
  * @return {Story}
  */
 function copyMilestoneProperties(story, system, server, repo, author, glMilestone) {
-    let descriptionTags = TagScanner.findTags(glMilestone.description);
-    let defLangCode = Localization.getDefaultLanguageCode(system);
+    const descriptionTags = TagScanner.findTags(glMilestone.description);
+    const defLangCode = Localization.getDefaultLanguageCode(system);
 
-    let storyAfter = _.cloneDeep(story) || {};
-    ExternalDataUtils.inheritLink(storyAfter, server, repo, {
+    const storyChanges = _.cloneDeep(story) || {};
+    ExternalDataUtils.inheritLink(storyChanges, server, repo, {
         milestone: { id: glMilestone.id }
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'type', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'type', {
         value: 'milestone',
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'tags', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'tags', {
         value: descriptionTags,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'language_codes', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'language_codes', {
         value: [ defLangCode ],
         overwrite: 'always',
     });
     if (author) {
-        ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
+        ExternalDataUtils.importProperty(storyChanges, server, 'user_ids', {
             value: [ author.id ],
             overwrite: 'always',
         });
-        ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
+        ExternalDataUtils.importProperty(storyChanges, server, 'role_ids', {
             value: author.role_ids,
             overwrite: 'always',
         });
     }
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.title', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.title', {
         value: glMilestone.title,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'public', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'public', {
         value: true,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'published', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'published', {
         value: true,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'ptime', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'ptime', {
         value: Moment(glMilestone.created_at).toISOString(),
         overwrite: 'always',
     });
-    if (_.isEqual(storyAfter, story)) {
-        return story;
+    if (_.isEqual(storyChanges, story)) {
+        return null;
     }
-    storyAfter.itime = new String('NOW()');
-    return storyAfter;
+    storyChanges.itime = new String('NOW()');
+    return storyChanges;
 }
 
 /**
@@ -167,7 +166,7 @@ function copyMilestoneProperties(story, system, server, repo, author, glMileston
  * @return {Promise<Object>}
  */
 async function fetchMilestone(server, glProjectId, glMilestoneId) {
-    let url = `/projects/${glProjectId}/milestones/${glMilestoneId}`;
+    const url = `/projects/${glProjectId}/milestones/${glMilestoneId}`;
     return Transport.fetch(server, url);
 }
 
@@ -180,11 +179,11 @@ async function fetchMilestone(server, glProjectId, glMilestoneId) {
  * @return {Promise<Array<Object>>}
  */
 async function fetchMilestones(server, glProjectId) {
-    let url = `/projects/${glProjectId}/milestones`;
+    const url = `/projects/${glProjectId}/milestones`;
     return Transport.fetchAll(server, url);
 }
 
 export {
-    importEvent,
+    processEvent,
     updateMilestones,
 };

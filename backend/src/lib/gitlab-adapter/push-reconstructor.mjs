@@ -18,14 +18,14 @@ import * as CommitImporter from './commit-importer.mjs';
  * @return {Promise<Object>}
  */
 async function reconstructPush(db, server, repo, type, branch, headID, tailID, count) {
-    let commits = await importCommits(db, server, repo, branch, headID, tailID, count);
-    let chain = getCommitChain(commits, headID, branch);
+    const commits = await importCommits(db, server, repo, branch, headID, tailID, count);
+    const chain = getCommitChain(commits, headID, branch);
     // merge changes of commits
-    let lines = mergeLineChanges(chain);
-    let files = mergeFileChanges(chain);
+    const lines = mergeLineChanges(chain);
+    const files = mergeFileChanges(chain);
     // see if the commits were initially pushed into a different branch
-    let fromBranches = findSourceBranches(commits, branch);
-    let commitIDs = _.keys(commits);
+    const fromBranches = findSourceBranches(commits, branch);
+    const commitIDs = _.keys(commits);
     return { headID, tailID, commitIDs, lines, files, type, branch, fromBranches };
 }
 
@@ -43,7 +43,7 @@ async function reconstructPush(db, server, repo, type, branch, headID, tailID, c
  * @return {Promise<Object<Commits>>}
  */
 async function importCommits(db, server, repo, branch, headID, tailID, count) {
-    let taskLog = TaskLog.start('gitlab-push-import', {
+    const taskLog = TaskLog.start('gitlab-push-import', {
         server_id: server.id,
         server: server.name,
         repo_id: repo.id,
@@ -51,29 +51,28 @@ async function importCommits(db, server, repo, branch, headID, tailID, count) {
         branch: branch,
     });
     try {
-        let queue = [ headID ];
-        let commits = {};
-        let commitIDs = [];
+        const queue = [ headID ];
+        const commits = {};
+        let commitCount = count;
+        let commitNumber = 0;
         while (queue.length > 0) {
-            let commitID = queue.shift();
+            const commitID = queue.shift();
             if (commits[commitID] || commitID === tailID) {
                 continue;
             }
-            let commit = await CommitImporter.importCommit(db, server, repo, branch, commitID);
+            const commit = await CommitImporter.importCommit(db, server, repo, branch, commitID);
             commits[commitID] = commit;
-            commitIDs.push(commitID);
             // add parents to queue
-            let parentIDs = getParentIDs(commit);
+            const parentIDs = getParentIDs(commit);
             for (let parentID of parentIDs) {
                 queue.push(parentID);
             }
 
-            let retrieved = commitIDs.length;
-            let total = count;
-            if (retrieved + queue.length > total) {
-                total = retrieved + queue.length;
+            if (commitNumber + queue.length > commitCount) {
+                commitCount = commitNumber + queue.length;
             }
-            taskLog.report(retrieved, total, { added: commitIDs });
+            taskLog.append('added', commitID);
+            taskLog.report(commitNumber++, commitCount);
         }
         await taskLog.finish();
         return commits;
@@ -84,13 +83,13 @@ async function importCommits(db, server, repo, branch, headID, tailID, count) {
 }
 
 function mergeLineChanges(chain) {
-    let pl = {
+    const pl = {
         added: 0,
         deleted: 0,
         modified: 0,
     };
     for (let commit of chain) {
-        let cl = commit.details.lines;
+        const cl = commit.details.lines;
         if (cl) {
             pl.added += cl.added;
             pl.deleted += cl.deleted;
@@ -101,14 +100,14 @@ function mergeLineChanges(chain) {
 }
 
 function mergeFileChanges(chain) {
-    let pf = {
+    const pf = {
         added: [],
         deleted: [],
         modified: [],
         renamed: [],
     };
     for (let commit of chain) {
-        let cf = commit.details.files;
+        const cf = commit.details.files;
         if (cf) {
             for (let path of cf.added) {
                 if (!_.includes(pf.added, path)) {
@@ -151,7 +150,7 @@ function mergeFileChanges(chain) {
 }
 
 function findSourceBranches(commits, branch) {
-    let list = [];
+    const list = [];
     for (let commit of _.values(commits)) {
         if (commit.initial_branch !== branch) {
             if (!_.includes(list, commit.initial_branch)) {
@@ -171,9 +170,9 @@ function findSourceBranches(commits, branch) {
  * @return {Array<String>}
  */
 function getParentIDs(commit) {
-    let commitLink = _.find(commit.external, { type: 'gitlab' });
-    let commitID = commitLink.commit.id;
-    let parentIDs = commitLink.commit.parent_ids;
+    const commitLink = _.find(commit.external, { type: 'gitlab' });
+    const commitID = commitLink.commit.id;
+    const parentIDs = commitLink.commit.parent_ids;
     // sanity check
     if (_.includes(parentIDs, commitID)) {
         parentIDs = _.without(parentIDs, commitID);
@@ -191,12 +190,12 @@ function getParentIDs(commit) {
  * @return {Array<Commit>}
  */
 function getCommitChain(commits, headID, branch) {
-    let chain = [];
+    const chain = [];
     let id = headID;
     do {
-        let commit = commits[id];
+        const commit = commits[id];
         if (commit) {
-            let parentIDs = getParentIDs(commit);
+            const parentIDs = getParentIDs(commit);
             id = parentIDs[0];
             // include only commits that are checked directly into branch
             if (commit.initial_branch === branch) {

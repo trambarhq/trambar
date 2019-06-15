@@ -30,15 +30,12 @@ class StoryPopularity {
     }
 
     async generate(db, schema, filters) {
-        // apply fixed filters
-        let criteria = _.clone(this.fixedFilters.reaction);
-        // then apply per-row filters
-        _.assign(criteria, filters);
+        const criteria = { ...this.fixedFilters.reaction, ...filters };
 
         // load the reactions
-        let rows = await Reaction.find(db, schema, criteria, 'type');
+        const rows = await Reaction.find(db, schema, criteria, 'type');
         // count by type
-        let counts = {};
+        const counts = {};
         for (let row of rows) {
             counts[row.type] = (counts[row.type] || 0) + 1;
         }

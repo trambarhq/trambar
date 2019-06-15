@@ -10,8 +10,8 @@ import * as CacheFolders from './cache-folders.mjs';
 import * as FileManager from './file-manager.mjs';
 import * as ImageManager from './image-manager.mjs';
 
-let transcodingJobs = [];
-let encodingProfiles = [
+const transcodingJobs = [];
+const encodingProfiles = [
     {
         type: 'video',
         name: '1000kbps',
@@ -73,8 +73,8 @@ function findTranscodingJob(jobID) {
  * @return {Promise<Object>}
  */
 async function startTranscodingJob(srcPath, type, jobID) {
-    let profiles = _.filter(encodingProfiles, { type });
-    let job = {
+    const profiles = _.filter(encodingProfiles, { type });
+    const job = {
         id: jobID,
         type: type,
         destination: CacheFolders[type],
@@ -87,9 +87,8 @@ async function startTranscodingJob(srcPath, type, jobID) {
     };
     for (let profile of profiles) {
         // see if the destination file exists already
-        let dstPath = `${job.destination}/${job.id}.${profile.name}.${profile.format}`;
-        let outputFile = _.clone(profile);
-        outputFile.path = dstPath;
+        const dstPath = `${job.destination}/${job.id}.${profile.name}.${profile.format}`;
+        const outputFile = { ...profile, path: dstPath };
         job.outputFiles.push(outputFile);
 
         try {
@@ -102,7 +101,7 @@ async function startTranscodingJob(srcPath, type, jobID) {
             }
         } catch (err) {
             // launch an instance of FFmpeg to create the file
-            let ffmpeg = await spawnFFmpeg(srcPath, dstPath, profile);
+            const ffmpeg = await spawnFFmpeg(srcPath, dstPath, profile);
             outputFile.ffmpeg = ffmpeg;
             outputFile.ffmpegPromise = new Promise((resolve, reject) => {
                 ffmpeg.once('exit', (code) => {
@@ -149,16 +148,16 @@ async function startTranscodingJob(srcPath, type, jobID) {
         await probeFile(job.inputFile);
         job.totalDuration = job.inputFile.duration;
 
-        let re = /out_time_ms=(.*)/;
+        const re = /out_time_ms=(.*)/;
         for (let outputFile of job.outputFiles) {
             if (outputFile.ffmpeg) {
                 outputFile.processedDuration = 0;
 
-                let rl = Readline.createInterface({ input: outputFile.ffmpeg.stdout });
+                const rl = Readline.createInterface({ input: outputFile.ffmpeg.stdout });
                 rl.on('line', (line) => {
-                    let m = re.exec(line);
+                    const m = re.exec(line);
                     if (m) {
-                        let outTime = parseInt(m[1]);
+                        const outTime = parseInt(m[1]);
                         outputFile.processedDuration = outTime / 1000;
                         calculateProgress(job);
                     }
@@ -179,7 +178,7 @@ async function startTranscodingJob(srcPath, type, jobID) {
  * @return {Promise}
  */
 async function probeFile(file) {
-    let info = await probeMediaFile(file.path)
+    const info = await probeMediaFile(file.path)
     _.assign(file, info);
 }
 
@@ -193,8 +192,8 @@ async function probeFile(file) {
  * @return {Promise}
  */
 async function renameFile(file, match, replacement) {
-    let tempPath = file.path;
-    let permPath = _.replace(tempPath, match, replacement);
+    const tempPath = file.path;
+    const permPath = _.replace(tempPath, match, replacement);
     await FileManager.moveFile(tempPath, permPath);
     file.path = permPath;
 }
@@ -225,8 +224,7 @@ async function awaitTranscodingJob(job) {
 
         // wait for MD5 hash
         await job.md5HashPromise;
-        let hash = job.md5Hash.read().toString('hex');
-        job.inputFile.hash
+        const hash = job.md5Hash.read().toString('hex');
 
         // get metadata of the input file, now that we have the whole thing
         await probeFile(job.inputFile);
@@ -247,30 +245,30 @@ async function awaitTranscodingJob(job) {
  * @return {Promise}
  */
 async function awaitPosterGeneration(job) {
-    let posterFile = job.posterFile;
+    const { posterFile } = job;
     if (!posterFile) {
         throw new Error('Poster generation not requested');
     }
 
-    let dstFolder = posterFile.temporaryFolder;
+    const dstFolder = posterFile.temporaryFolder;
     try {
         // wait for ffmpeg to exit
         await posterFile.ffmpegPromise;
 
         // scan dstFolder for files
-        let names = await FS.readdirAsync(dstFolder);
+        const names = await FS.readdirAsync(dstFolder);
         let largestFile;
         for (let name of names) {
-            let path = `${dstFolder}/${name}`;
-            let stat = await FS.statAsync(path);
+            const path = `${dstFolder}/${name}`;
+            const stat = await FS.statAsync(path);
             if (!largestFile || stat.size > largestFile.size) {
                 largestFile = { path, size: stat.size };
             }
         }
         if (largestFile) {
             // obtain metadata nad move file into image cache folder
-            let meta = await ImageManager.getImageMetadata(largestFile.path);
-            let imagePath = await FileManager.preserveFile(largestFile, null, CacheFolders.image);
+            const meta = await ImageManager.getImageMetadata(largestFile.path);
+            const imagePath = await FileManager.preserveFile(largestFile, null, CacheFolders.image);
             posterFile.path = imagePath;
             posterFile.width = meta.width;
             posterFile.height = meta.height;
@@ -278,9 +276,9 @@ async function awaitPosterGeneration(job) {
     } finally {
         // delete the folder, along with any remaining files
         try {
-            let names = await FS.readdirAsync(dstFolder);
+            const names = await FS.readdirAsync(dstFolder);
             for (let name of names) {
-                let path = `${dstFolder}/${name}`;
+                const path = `${dstFolder}/${name}`;
                 await FS.unlinkAsync(path);
             }
             await FS.rmdirAsync(dstFolder);
@@ -298,7 +296,7 @@ async function awaitPosterGeneration(job) {
  */
 function transcodeSegment(job, file) {
     if (!job.closed) {
-        let inputStream = FS.createReadStream(file.path);
+        const inputStream = FS.createReadStream(file.path);
         job.queue.push(inputStream);
         job.totalByteCount += file.size;
         job.lastSegmentTime = new Date;
@@ -309,7 +307,7 @@ function transcodeSegment(job, file) {
     if (job.posterFile && job.posterFile.ffmpeg) {
         // handle poster generation in separate quene so process isn't slowed
         // down by back pressure from transcoding
-        let inputStream = FS.createReadStream(file.path);
+        const inputStream = FS.createReadStream(file.path);
         job.posterQueue.push(inputStream);
         if (!job.workingOnPoster) {
             processNextStreamSegmentForPoster(job);
@@ -352,7 +350,7 @@ function endTranscodingJob(job, abort) {
  * @param  {Object} job
  */
 function processNextStreamSegment(job) {
-    let inputStream = job.queue.shift();
+    const inputStream = job.queue.shift();
     if (inputStream && !job.aborted) {
         job.working = true;
         // save contents of the original file
@@ -400,7 +398,7 @@ function processNextStreamSegment(job) {
  * @param  {Object} job
  */
 function processNextStreamSegmentForPoster(job) {
-    let inputStream = job.posterQueue.shift();
+    const inputStream = job.posterQueue.shift();
     if (inputStream && !job.aborted) {
         job.workingOnPoster = true;
         inputStream.pipe(job.posterFile.ffmpeg.stdin, { end: false });
@@ -429,7 +427,7 @@ function calculateProgress(job) {
             progress = Math.round(job.processedByteCount / job.totalByteCount * 100);
         }
     } else {
-        let durations = [];
+        const durations = [];
         for (let outputFile of job.outputFiles) {
             if (outputFile.ffmpeg) {
                 durations.push(outputFile.processedDuration);
@@ -446,8 +444,8 @@ function calculateProgress(job) {
             job.progress = progress;
             if (job.onProgress) {
                 // don't report that frequently
-                let now = new Date;
-                let elapsed = (job.lastProgressTime) ? now - job.lastProgressTime : Infinity;
+                const now = new Date;
+                const elapsed = (job.lastProgressTime) ? now - job.lastProgressTime : Infinity;
                 if (elapsed > 5000 || progress === 100) {
                     job.onProgress({ type: 'progress', target: job });
                     job.lastProgressTime = now;
@@ -465,9 +463,9 @@ function calculateProgress(job) {
  * @return {Promise}
  */
 async function requestPosterGeneration(job) {
-    let srcPath = (job.streaming) ? null : job.inputFile.path;
-    let dstPath = `${job.destination}/${job.id}.screencaps/%d.jpg`;
-    let dstFolder = Path.dirname(dstPath);
+    const srcPath = (job.streaming) ? null : job.inputFile.path;
+    const dstPath = `${job.destination}/${job.id}.screencaps/%d.jpg`;
+    const dstFolder = Path.dirname(dstPath);
 
     // create temporary folder for holding thumbnail images
     try {
@@ -478,14 +476,14 @@ async function requestPosterGeneration(job) {
         }
     }
 
-    let profile = {
+    const profile = {
         screenCap: {
             quality: 2,
             count: 3
         }
     };
-    let posterFile = {};
-    let ffmpeg = spawnFFmpeg(srcPath, dstPath, profile);
+    const posterFile = {};
+    const ffmpeg = spawnFFmpeg(srcPath, dstPath, profile);
     if (ffmpeg.stdin) {
         // we expect ffmpeg to drop the connection as soon as it has enough data
         ffmpeg.stdin.once('error', (err) => {
@@ -519,9 +517,9 @@ async function requestPosterGeneration(job) {
  * @return {ChildProcess}
  */
 function spawnFFmpeg(srcPath, dstPath, profile) {
-    let cmd = 'ffmpeg';
-    let args = [], arg = Array.prototype.push.bind(args);
-    let options = {
+    const cmd = 'ffmpeg';
+    const args = [], arg = Array.prototype.push.bind(args);
+    const options = {
         stdio: [ 'inherit', 'inherit', 'inherit' ]
     };
 
@@ -554,19 +552,19 @@ function spawnFFmpeg(srcPath, dstPath, profile) {
         arg('-ac', profile.audioChannels);
     }
     if (profile.maximum) {
-        let w = profile.maximum.width;
-        let h = profile.maximum.height;
-        let a = _.round(w / h, 3);
+        const w = profile.maximum.width;
+        const h = profile.maximum.height;
+        const a = _.round(w / h, 3);
         // if actual aspect ratio is great than w/h, scale = width:-2
         // if actual aspect ratio is less than w/h, scale = -2:height
         //
         // -2 ensures the automatic dimension is divisible by 2
-        let scale = `'if(gt(a,${a}),min(iw,${w}),-2)':'if(gt(a,${a}),-2,min(ih,${h}))'`;
+        const scale = `'if(gt(a,${a}),min(iw,${w}),-2)':'if(gt(a,${a}),-2,min(ih,${h}))'`;
         arg('-vf', `scale=${scale}`);
     }
     if (profile.screenCap) {
-        let count = profile.screenCap.count || 1;
-        let quality = profile.screenCap.quality || 5;
+        const count = profile.screenCap.count || 1;
+        const quality = profile.screenCap.quality || 5;
         arg('-vf', `select='eq(pict_type,I)'`);
         arg('-vsync', 'vfr');
         arg('-vframes', count);
@@ -585,9 +583,9 @@ function spawnFFmpeg(srcPath, dstPath, profile) {
  * @return {Object}
  */
 async function probeMediaFile(srcPath) {
-    let output = await new Promise((resolve, reject) => {
-        let cmd = `ffprobe`;
-        let args = [], arg = Array.prototype.push.bind(args);
+    const output = await new Promise((resolve, reject) => {
+        const cmd = `ffprobe`;
+        const args = [], arg = Array.prototype.push.bind(args);
         arg('-print_format', 'json');
         arg('-show_streams');
         arg(srcPath);
@@ -596,13 +594,13 @@ async function probeMediaFile(srcPath) {
             resolve(!err ? stdout : null);
         });
     });
-    let info = {};
+    const info = {};
     if (output) {
-        let dump = JSON.parse(output);
-        let videoStream = _.find(dump.streams, { codec_type: 'video' });
-        let audioStream = _.find(dump.streams, { codec_type: 'audio' });
+        const dump = JSON.parse(output);
+        const videoStream = _.find(dump.streams, { codec_type: 'video' });
+        const audioStream = _.find(dump.streams, { codec_type: 'audio' });
         if (videoStream) {
-            let rotation = 0;
+            const rotation = 0;
             if (videoStream.side_data_list) {
                 for (let item of videoStream.side_data_list) {
                     if (typeof(item.rotation) === 'number') {
@@ -633,8 +631,8 @@ async function probeMediaFile(srcPath) {
 setInterval(() => {
     for (let job of transcodingJobs) {
         if (job.streaming && !job.closed) {
-            let now = new Date;
-            let elapsed = now - job.lastSegmentTime;
+            const now = new Date;
+            const elapsed = now - job.lastSegmentTime;
             if (elapsed > 60 * 60 * 1000) {
                 endTranscodingJob(job, true);
             }

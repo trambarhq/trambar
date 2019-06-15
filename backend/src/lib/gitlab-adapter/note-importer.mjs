@@ -23,19 +23,17 @@ import Reaction from '../accessors/reaction.mjs';
  * @param  {Object} glEvent
  * @param  {Object} glHookEvent
  *
- * @return {Promise<Story|null>}
+ * @return {Promise<Boolean>}
  */
-async function importEvent(db, system, server, repo, project, author, glEvent, glHookEvent) {
+async function processEvent(db, system, server, repo, project, author, glEvent, glHookEvent) {
     switch (_.toLower(glEvent.note.noteable_type)) {
         case 'issue':
-            return importIssueNote(db, system, server, repo, project, author, glEvent);
+            return processIssueNoteEvent(db, system, server, repo, project, author, glEvent);
         case 'mergerequest':
         case 'merge_request':
-            return importMergeRequestNote(db, system, server, repo, project, author, glEvent);
+            return processMergeRequestNoteEvent(db, system, server, repo, project, author, glEvent);
         case 'commit':
-            return importCommitNote(db, system, server, repo, project, author, glEvent, glHookEvent);
-        default:
-            return null;
+            return processCommitNoteEvent(db, system, server, repo, project, author, glEvent, glHookEvent);
     }
 }
 
@@ -50,23 +48,22 @@ async function importEvent(db, system, server, repo, project, author, glEvent, g
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Story|null>}
+ * @return {Promise<Boolean>}
  */
-async function importIssueNote(db, system, server, repo, project, author, glEvent) {
-    let schema = project.name;
-    let criteria = {
+async function processIssueNoteEvent(db, system, server, repo, project, author, glEvent) {
+    const schema = project.name;
+    const criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
             issue: { id: glEvent.note.noteable_id }
         })
     };
-    let story = await Story.findOne(db, schema, criteria, '*');
+    const story = await Story.findOne(db, schema, criteria, '*');
     if (!story) {
-        console.log('Story not found');
-        return null;
+        return false;
     }
-    let reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
-    await Reaction.insertOne(db, schema, reactioNew);
-    return story;
+    const reactionNew = copyEventProperties(null, system, server, story, author, glEvent);
+    await Reaction.insertOne(db, schema, reactionNew);
+    return true;
 }
 
 /**
@@ -80,22 +77,22 @@ async function importIssueNote(db, system, server, repo, project, author, glEven
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Story|null>}
+ * @return {Promise<Boolean>}
  */
-async function importMergeRequestNote(db, system, server, repo, project, author, glEvent) {
-    let schema = project.name;
-    let criteria = {
+async function processMergeRequestNoteEvent(db, system, server, repo, project, author, glEvent) {
+    const schema = project.name;
+    const criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
             merge_request: { id: glEvent.note.noteable_id }
         })
     };
-    let story = await Story.findOne(db, schema, criteria, '*');
+    const story = await Story.findOne(db, schema, criteria, '*');
     if (!story) {
-        throw new HTTPError(404, 'Story not found');
+        return false;
     }
-    let reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
-    await Reaction.insertOne(db, schema, reactioNew);
-    return story;
+    const reactionNew = copyEventProperties(null, system, server, story, author, glEvent);
+    await Reaction.insertOne(db, schema, reactionNew);
+    return true;
 }
 
 /**
@@ -109,28 +106,28 @@ async function importMergeRequestNote(db, system, server, repo, project, author,
  * @param  {Object} glEvent
  * @param  {Object} glHookEvent
  *
- * @return {Promise<Story|null>}
+ * @return {Promise<Boolean>}
  */
-async function importCommitNote(db, system, server, repo, project, author, glEvent, glHookEvent) {
+async function processCommitNoteEvent(db, system, server, repo, project, author, glEvent, glHookEvent) {
     // need to find the commit id first, since Gitlab doesn't include it
     // in the activity log entry
-    let commitID = await findCommitID(db, server, repo, glEvent, glHookEvent);
+    const commitID = await findCommitID(db, server, repo, glEvent, glHookEvent);
     if (!commitID) {
-        throw new HTTPError(404, 'Commit not found');
+        return false;
     }
-    let schema = project.name;
-    let criteria = {
+    const schema = project.name;
+    const criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
             commit: { id: commitID }
         })
     };
-    let story = await Story.findOne(db, schema, criteria, '*');
+    const story = await Story.findOne(db, schema, criteria, '*');
     if (!story) {
-        throw new HTTPError(404, 'Story not found');
+        return false;
     }
-    let reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
-    await Reaction.insertOne(db, schema, reactioNew);
-    return story;
+    const reactionNew = copyEventProperties(null, system, server, story, author, glEvent);
+    await Reaction.insertOne(db, schema, reactionNew);
+    return false;
 }
 
 /**
@@ -149,22 +146,22 @@ async function findCommitID(db, server, repo, glEvent, glHookEvent) {
         // the object sent through the hook has the commit id
         // we can use that when we're responding to a call from Gitlab
         if (glHookEvent.object_attributes.id === glEvent.note.id) {
-            let commitID = glHookEvent.object_attributes.commit_id;
+            const commitID = glHookEvent.object_attributes.commit_id;
             return commitID;
         }
     }
 
-    let criteria = {
+    const criteria = {
         title_hash: hash(glEvent.target_title),
         external_object: ExternalDataUtils.findLink(repo, server),
     };
-    let commits = await Commit.find(db, 'global', criteria, '*');
+    const commits = await Commit.find(db, 'global', criteria, '*');
     for (let commit of commits) {
-        let commitLink = ExternalDataUtils.findLink(commit, server);
-        let commitID = commitLink.commit.id;
-        let projectID = commitLink.project.id;
-        let glNotes = await fetchCommitNotes(server, projectID, commitID);
-        let found = _.some(glNotes, (glNote) => {
+        const commitLink = ExternalDataUtils.findLink(commit, server);
+        const commitID = commitLink.commit.id;
+        const projectID = commitLink.project.id;
+        const glNotes = await fetchCommitNotes(server, projectID, commitID);
+        const found = _.some(glNotes, (glNote) => {
             if (glNote.note === glEvent.note.body) {
                 return true;
             }
@@ -189,40 +186,40 @@ async function findCommitID(db, server, repo, glEvent, glHookEvent) {
  * @return {Reaction}
  */
 function copyEventProperties(reaction, system, server, story, author, glNote) {
-    let defLangCode = Localization.getDefaultLanguageCode(system);
-    let reactionAfter = _.cloneDeep(reaction) || {};
-    ExternalDataUtils.inheritLink(reactionAfter, server, story, {
+    const defLangCode = Localization.getDefaultLanguageCode(system);
+    const reactionChanges = _.cloneDeep(reaction) || {};
+    ExternalDataUtils.inheritLink(reactionChanges, server, story, {
         note: { id: _.get(glNote, 'note.id') }
     });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'type', {
+    ExternalDataUtils.importProperty(reactionChanges, server, 'type', {
         value: 'note',
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'story_id', {
+    ExternalDataUtils.importProperty(reactionChanges, server, 'story_id', {
         value: story.id,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'user_id', {
+    ExternalDataUtils.importProperty(reactionChanges, server, 'user_id', {
         value: author.id,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'public', {
+    ExternalDataUtils.importProperty(reactionChanges, server, 'public', {
         value: true,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'published', {
+    ExternalDataUtils.importProperty(reactionChanges, server, 'published', {
         value: true,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'ptime', {
+    ExternalDataUtils.importProperty(reactionChanges, server, 'ptime', {
         value: Moment(glNote.created_at).toISOString(),
         overwrite: 'always',
     });
-    if (_.isEqual(reactionAfter, reaction)) {
-        return reaction;
+    if (_.isEqual(reactionChanges, reaction)) {
+        return null;
     }
-    reactionAfter.itime = new String('NOW()');
-    return reactionAfter;
+    reactionChanges.itime = new String('NOW()');
+    return reactionChanges;
 }
 
 /**
@@ -236,7 +233,7 @@ function copyEventProperties(reaction, system, server, story, author, glNote) {
  * @return {Promise<Array<Object>>}
  */
 async function fetchCommitNotes(server, glProjectID, glCommitID) {
-    let url = `/projects/${glProjectID}/repository/commits/${glCommitID}/comments`;
+    const url = `/projects/${glProjectID}/repository/commits/${glCommitID}/comments`;
     return Transport.fetchAll(server, url);
 }
 
@@ -248,10 +245,10 @@ async function fetchCommitNotes(server, glProjectID, glCommitID) {
  * @return {String}
  */
 function hash(text) {
-    let hash = Crypto.createHash('md5').update(text);
+    const hash = Crypto.createHash('md5').update(text);
     return hash.digest("hex");
 }
 
 export {
-    importEvent,
+    processEvent,
 };

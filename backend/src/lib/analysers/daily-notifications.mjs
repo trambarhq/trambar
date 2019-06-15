@@ -32,20 +32,17 @@ class DailyNotifications {
     }
 
     async generate(db, schema, filters) {
-        // apply fixed filters
-        let criteria = _.clone(this.fixedFilters.notification);
-        // then apply per-row filters
-        _.assign(criteria, _.omit(filters, 'timezone'));
+        const { timezone, ...basic } = filters;
+        const criteria = { ...this.fixedFilters.notification, ...basic };
 
         // load the notifications
-        let rows = await Notification.find(db, schema, criteria, 'type, ctime');
-        let timezone = _.get(filters, 'timezone', 'GMT');
+        const rows = await Notification.find(db, schema, criteria, 'type, ctime');
 
-        let notifications = {};
+        const notifications = {};
         for (let row of rows) {
             // get the date, taking into consideration the timezone requested
-            let date = Moment(row.ctime).tz(timezone).format('YYYY-MM-DD');
-            let counts = notifications[date];
+            const date = Moment(row.ctime).tz(timezone || 'GMT').format('YYYY-MM-DD');
+            const counts = notifications[date];
             if (!counts) {
                 counts = notifications[date] = {};
             }

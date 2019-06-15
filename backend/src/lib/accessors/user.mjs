@@ -127,7 +127,7 @@ class User extends ExternalData {
     }
 
     /**
-     * Insert row, appending a number if a username conflict occurs
+     * Save a row, appending a number if a username conflict occurs
      *
      * @param  {Database} db
      * @param  {String} schema
@@ -135,10 +135,10 @@ class User extends ExternalData {
      *
      * @return {Promise<Object>}
      */
-    async insertUnique(db, schema, user) {
+    async saveUnique(db, schema, user) {
         // this doesn't work within a transaction
         try {
-            return this.insertOne(db, schema, user);
+            return this.saveOne(db, schema, user);
         } catch (err) {
             // unique violation
             if (err.code === '23505') {
@@ -150,7 +150,7 @@ class User extends ExternalData {
                 } else {
                     user.username += '2';
                 }
-                return this.insertUnique(db, schema, user);
+                return this.saveUnique(db, schema, user);
             }
             throw err;
         }

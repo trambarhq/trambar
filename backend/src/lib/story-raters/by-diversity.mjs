@@ -16,11 +16,11 @@ class ByDiversity {
         const userCounts = {};
         const typeCounts = {};
         for (let story of stories) {
-            const userId = story.user_ids[0];
+            const userID = story.user_ids[0];
             const type = story.type;
-            const userCount = userCounts[userId] || 0;
+            const userCount = userCounts[userID] || 0;
             const typeCount = typeCounts[type] || 0;
-            userCounts[userId] = userCount + 1;
+            userCounts[userID] = userCount + 1;
             typeCounts[type] = typeCount + 1;
         }
         const userPercentages = _.mapValues(userCounts, (count) => {
@@ -33,7 +33,7 @@ class ByDiversity {
     }
 
     calculateRating(context, story) {
-        const userId = story.user_ids[0];
+        const userID = story.user_ids[0];
         const type = story.type;
         let rating = 0;
         const typePercentage = context.typePercentages[type];
@@ -45,7 +45,7 @@ class ByDiversity {
         if (typeDiversityBonus) {
             rating += typeDiversityBonus;
         }
-        const userPercentage = context.userPercentages[userId];
+        const userPercentage = context.userPercentages[userID];
         const userDiversityBonus = _.find(UserDiversityRatings, (value, key) => {
             if (userPercentage <= parseInt(key)) {
                 return true;

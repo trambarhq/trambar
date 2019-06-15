@@ -105,7 +105,7 @@ class Statistics extends LiveData {
     async find(db, schema, criteria, columns) {
         // autovivify rows when type and filters are specified
         const type = criteria.type;
-        const filters = criteria.filters;
+        let filters = criteria.filters;
         if (type && filters) {
             if (!(filters instanceof Array)) {
                 filters = [ filters ];

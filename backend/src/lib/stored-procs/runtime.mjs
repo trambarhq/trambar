@@ -284,6 +284,8 @@ export {
     sendCleanNotification,
     matchObject,
     matchScalars,
+    matchTimeRanges,
+    parseRange,
     externalIdStrings,
     transferProps,
     broadcastLogMessage,

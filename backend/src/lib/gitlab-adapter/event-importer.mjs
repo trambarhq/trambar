@@ -27,26 +27,26 @@ import Story from '../accessors/story.mjs';
  * @param  {Project} project
  * @param  {Object} glHookEvent
  *
- * @return {Promise}
+ * @return {Promise<Boolean>}
  */
-async function importEvents(db, system, server, repo, project, glHookEvent) {
-    let options = {
+async function processNewEvents(db, system, server, repo, project, glHookEvent) {
+    const options = {
         server_id: server.id,
         repo_id: repo.id,
         project_id: project.id,
     };
-    let lastTask = await TaskLog.last('gitlab-event-import', options);
-    let lastEventTime = _.get(lastTask, 'details.last_event_time');
-    let repoLink = ExternalDataUtils.findLink(repo, server);
-    let url = `/projects/${repoLink.project.id}/events`;
-    let params = { sort: 'asc' };
+    const lastTask = await TaskLog.last('gitlab-event-import', options);
+    const lastEventTime = _.get(lastTask, 'details.last_event_time');
+    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const url = `/projects/${repoLink.project.id}/events`;
+    const params = { sort: 'asc' };
     if (lastEventTime) {
-        // after only supports a date for some reason
+        // the GitLab API's 'after' param only supports a date for some reason
         // need to start one day back to ensure all events are fetched
-        let dayBefore = Moment(lastEventTime).subtract(1, 'day');
+        const dayBefore = Moment(lastEventTime).subtract(1, 'day');
         params.after = dayBefore.format('YYYY-MM-DD');
     }
-    let taskLog = TaskLog.start('gitlab-event-import', {
+    const taskLog = TaskLog.start('gitlab-event-import', {
         server_id: server.id,
         server: server.name,
         repo_id: repo.id,
@@ -54,48 +54,46 @@ async function importEvents(db, system, server, repo, project, glHookEvent) {
         project_id: project.id,
         project: project.name,
     });
-    let added = [];
+    const now = Moment();
     let firstEventAge;
-    let processedEventTime;
-    let now = Moment();
+    let processedEventCount = 0;
     try {
         await Transport.fetchEach(server, url, params, async (glEvent, index, total) => {
-            let ctime = glEvent.created_at;
+            const ctime = glEvent.created_at;
             if (lastEventTime) {
                 if (ctime <= lastEventTime) {
                     return;
                 }
             }
-            let nom = index;
+            let nom = index + 1;
             let denom = total;
             if (!total) {
                 // when the number of events is not yet known, use the event
                 // time to calculate progress
-                let eventAge = now.diff(ctime);
+                const eventAge = now.diff(ctime);
                 if (firstEventAge === undefined) {
                     firstEventAge = eventAge;
                 }
                 nom = (firstEventAge - eventAge);
                 denom = firstEventAge;
             }
-            taskLog.report(nom, denom, { added, last_event_time: processedEventTime });
-            let story = await importEvent(db, system, server, repo, project, glEvent, glHookEvent);
-            if (story) {
-                added.push(glEvent.action_name);
-                processedEventTime = ctime;
+            const result = await processEvent(db, system, server, repo, project, glEvent, glHookEvent);
+            if (result) {
+                processedEventCount++;
+                taskLog.append('added', glEvent.action_name);
             }
-            if (total) {
-                taskLog.report(nom + 1, denom, { added, last_event_time: processedEventTime });
-            }
+            taskLog.set('last_event_time', ctime);
+            taskLog.report(nom, denom);
         });
         await taskLog.finish();
     } catch (err) {
         await taskLog.abort(err);
     }
+    return (processedEventCount > 0);
 }
 
 /**
- * Import an activity log entry, creating a story or updating an existing one
+ * Process an activity log entry, creating a story or updating an existing one
  *
  * @param  {Database} db
  * @param  {System} system
@@ -105,20 +103,19 @@ async function importEvents(db, system, server, repo, project, glHookEvent) {
  * @param  {Object} glEvent
  * @param  {Object} glHookEvent
  *
- * @return {Promise<Story|null>}
+ * @return {Promise<Boolean>}
  */
-async function importEvent(db, system, server, repo, project, glEvent, glHookEvent) {
+async function processEvent(db, system, server, repo, project, glEvent, glHookEvent) {
     try {
-        let importer = getEventImporter(glEvent);
+        const importer = getEventImporter(glEvent);
         if (!importer) {
-            return null;
+            return false;
         }
-        let author = await UserImporter.findUser(db, server, glEvent.author);
+        const author = await UserImporter.importUser(db, server, glEvent.author);
         if (!author) {
-            return null;
+            return false;
         }
-        let story = await importer.importEvent(db, system, server, repo, project, author, glEvent, glHookEvent);
-        return story;
+        return importer.processEvent(db, system, server, repo, project, author, glEvent, glHookEvent);
     } catch (err) {
         if (err.statusCode === 404) {
             console.error(err)
@@ -129,7 +126,7 @@ async function importEvent(db, system, server, repo, project, glEvent, glHookEve
 }
 
 /**
- * Import a hook event, updating a story usually--a story is created here only
+ * Process a hook event, updating a story usually--a story is created here only
  * if the event wouldn't have an entry in the activity log
  *
  * @param  {Database} db
@@ -139,22 +136,25 @@ async function importEvent(db, system, server, repo, project, glEvent, glHookEve
  * @param  {Project} project
  * @param  {Object} glHookEvent
  *
- * @return {Promise<Story|false|null>}
+ * @return {Promise}
  */
-async function importHookEvent(db, system, server, repo, project, glHookEvent) {
+async function processHookEvent(db, system, server, repo, project, glHookEvent) {
+    const importer = getHookEventImporter(glHookEvent);
+    if (!importer) {
+        return false;
+    }
     try {
-        let importer = getHookEventImporter(glHookEvent);
-        if (!importer) {
-            // not handled
+        const author = await UserImporter.importUser(db, server, glHookEvent.user);
+        if (!author) {
             return false;
         }
-        let author = await UserImporter.findUser(db, server, glHookEvent.user);
-        if (!author) {
-            return null;
-        }
-        return importer.importHookEvent(db, system, server, repo, project, author, glHookEvent);
+        return importer.processHookEvent(db, system, server, repo, project, author, glHookEvent);
     } catch (err) {
-        console.error(err);
+        if (err.statusCode === 404) {
+            console.error(err)
+        } else {
+            throw err;
+        }
     }
 }
 
@@ -166,7 +166,7 @@ async function importHookEvent(db, system, server, repo, project, glHookEvent) {
  * @return {Object}
  */
 function getEventImporter(glEvent) {
-    let targetType = normalizeToken(glEvent.target_type);
+    const targetType = normalizeToken(glEvent.target_type);
     switch (targetType) {
         case 'issue': return IssueImporter;
         case 'milestone': return MilestoneImporter;
@@ -175,7 +175,7 @@ function getEventImporter(glEvent) {
         case 'note': return NoteImporter;
     }
 
-    let actionName = normalizeToken(glEvent.action_name);
+    const actionName = normalizeToken(glEvent.action_name);
     switch (actionName) {
         case 'created':
         case 'imported': return RepoImporter;
@@ -203,7 +203,7 @@ function getEventImporter(glEvent) {
  * @return {Object}
  */
 function getHookEventImporter(glHookEvent) {
-    let objectKind = normalizeToken(glHookEvent.object_kind);
+    const objectKind = normalizeToken(glHookEvent.object_kind);
     switch (objectKind) {
         case 'wiki_page': return WikiImporter;
         case 'issue': return IssueImporter;
@@ -219,6 +219,6 @@ function normalizeToken(s) {
 }
 
 export {
-    importEvents,
-    importHookEvent,
+    processNewEvents,
+    processHookEvent,
 };

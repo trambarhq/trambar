@@ -69,21 +69,21 @@ class ByPopularity {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Number} storyId
+     * @param  {Number} storyID
      *
      * @return {Object|null}
      */
-    async loadStatistics(db, schema, storyId) {
+    async loadStatistics(db, schema, storyID) {
         const criteria = {
             type: 'story-popularity',
             filters: {
-                story_id: storyId
+                story_id: storyID
             },
             deleted: false,
         };
         const row = await Statistics.findOne(db, schema, criteria, 'id, details');
         if (row) {
-            this.cacheStatistics(schema, storyId, row);
+            this.cacheStatistics(schema, storyID, row);
         }
         return row;
     }
@@ -92,11 +92,11 @@ class ByPopularity {
      * Save statistics to cache
      *
      * @param  {String} schema
-     * @param  {Number} storyId
+     * @param  {Number} storyID
      * @param  {Object} statistics
      */
-    cacheStatistics(schema, storyId, statistics) {
-        const entry = { schema, storyId, statistics };
+    cacheStatistics(schema, storyID, statistics) {
+        const entry = { schema, storyID, statistics };
         this.statisticsCache.unshift(entry);
         if (this.statisticsCache.length > 5000) {
             this.statisticsCache.splice(5000);
@@ -107,12 +107,12 @@ class ByPopularity {
      * Find cached statistics
      *
      * @param  {String} schema
-     * @param  {Number} storyId
+     * @param  {Number} storyID
      *
      * @return {Object|null}
      */
-    findCachedStatistics(schema, storyId) {
-        const index = _.findIndex(this.statisticsCache, { schema, storyId });
+    findCachedStatistics(schema, storyID) {
+        const index = _.findIndex(this.statisticsCache, { schema, storyID });
         if (index === -1) {
             return null;
         }

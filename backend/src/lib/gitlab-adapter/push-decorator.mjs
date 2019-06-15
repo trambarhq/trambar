@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Path from 'path';
 import Request from 'request';
 import Ignore from 'ignore';
-import MarkGor from 'mark-gor/lib/parser.js';
+import MarkGorParser from 'mark-gor/lib/parser.js';
 import HTTPError from '../common/errors/http-error.mjs';
 import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
 
@@ -23,18 +23,21 @@ const isTrambar = /(^|\/).trambar\//;
  */
 async function retrieveDescriptions(server, repo, push, defLang) {
     try {
-        let cxt = await createDescriptionContext(server, repo, push, defLang);
-        let components = await findMatchingComponents(cxt, push);
+        const cxt = await createDescriptionContext(server, repo, push, defLang);
+        const components = await findMatchingComponents(cxt, push);
         return _.map(components, (component) => {
             return _.pick(component, 'text', 'image', 'icon')
         });
     } catch (err) {
         console.log(`Unable to retrieve descriptions: ${err.message}`);
+        if (process.env.NODE_ENV !== 'production') {
+            console.error(err);
+        }
         return [];
     }
 }
 
-let descriptionContexts = [];
+const descriptionContexts = [];
 
 /**
  * Create a description context, retrieving descriptions from server if
@@ -81,7 +84,7 @@ async function createDescriptionContext(server, repo, push, defLang) {
  * @param  {Push} push
  */
 function inheritPreviousContext(cxt, push) {
-    let prev = _.find(descriptionContexts, (prev) => {
+    const prev = _.find(descriptionContexts, (prev) => {
         if (prev.server.id === cxt.server.id) {
             if (prev.repo.id === cxt.repo.id) {
                 if (prev.defaultLanguageCode === cxt.defaultLanguageCode) {
@@ -97,7 +100,7 @@ function inheritPreviousContext(cxt, push) {
     }
 
     // copy descriptors from previous context unless files has changed
-    let fileChanges = _.filter(_.concat(
+    const fileChanges = _.filter(_.concat(
         push.files.deleted,
         push.files.modified,
         _.map(push.files.renamed, 'before')
@@ -110,14 +113,14 @@ function inheritPreviousContext(cxt, push) {
 
     // copy folder listing from previous context unless files in them have
     // been added, removed, or renamed
-    let fileMovements = _.filter(_.concat(
+    const fileMovements = _.filter(_.concat(
         push.files.added,
         push.files.deleted,
         _.map(push.files.renamed, 'before'),
         _.map(push.files.renamed, 'after')
     ));
-    let folderChanges = _.uniq(_.map(fileMovements, (path) => {
-        let dir = Path.dirname(path);
+    const folderChanges = _.uniq(_.map(fileMovements, (path) => {
+        const dir = Path.dirname(path);
         if (dir === '.') {
             dir = '';
         }
@@ -139,14 +142,14 @@ function inheritPreviousContext(cxt, push) {
  * @return {Array<Component>}
  */
 function findMatchingComponents(cxt, push) {
-    let fileChanges = _.filter(_.concat(
+    const fileChanges = _.filter(_.concat(
         push.files.added,
         push.files.deleted,
         push.files.modified,
         _.map(push.files.renamed, 'before'),
         _.map(push.files.renamed, 'after')
     ));
-    let matching = [];
+    const matching = [];
     for (let path of fileChanges) {
         for (let descriptor of _.values(cxt.descriptors)) {
             if (!_.includes(matching, descriptor)) {
@@ -171,7 +174,7 @@ function matchDescriptor(path, descriptor) {
     if (descriptor.matching) {
         if (isInFolder(path, descriptor.folderPath)) {
             if (!isTrambar.test(path)) {
-                let relativePath = Path.relative(descriptor.folderPath, path);
+                const relativePath = Path.relative(descriptor.folderPath, path);
                 if (descriptor.matching(relativePath)) {
                     return true;
                 }
@@ -180,7 +183,7 @@ function matchDescriptor(path, descriptor) {
     }
     if (descriptor.matchingRelative) {
         if (!isTrambar.test(path)) {
-            let relativePath = Path.relative(descriptor.folderPath, path);
+            const relativePath = Path.relative(descriptor.folderPath, path);
             if (descriptor.matchingRelative(relativePath)) {
                 return true;
             }
@@ -188,7 +191,7 @@ function matchDescriptor(path, descriptor) {
     }
     if (descriptor.matchingTrambar) {
         if (isTrambar.test(path)) {
-            let relativePath = Path.relative(descriptor.folderPath, path);
+            const relativePath = Path.relative(descriptor.folderPath, path);
             if (descriptor.matchingTrambar(relativePath)) {
                 return true;
             }
@@ -198,7 +201,7 @@ function matchDescriptor(path, descriptor) {
 }
 
 function isInFolder(filePath, folderPath) {
-    let len = folderPath.length;
+    const len = folderPath.length;
     if (len === 0) {
         return true;
     }
@@ -220,20 +223,16 @@ function isInFolder(filePath, folderPath) {
  * @return {Promise}
  */
 async function loadDescriptor(cxt, folderPath, filePath) {
-    let descriptor = cxt.descriptors[filePath];
+    const descriptor = cxt.descriptors[filePath];
     if (descriptor) {
         return;
     }
-    let info = await parseDescriptorFile(cxt, filePath);
-    let rules = info.rules;
-    let name = _.replace(Path.basename(filePath), /\.\w+$/, '');
-    if (!rules) {
-        // implict rule: match <filename>.*
-        rules = [ `${name}.*` ];
-    }
-    let image = await importImage(cxt, folderPath, info.icon);
-    let id = `${folderPath}/${name}`;
-    let component = new Component(id, info.descriptions, image);
+    const info = await parseDescriptorFile(cxt, filePath);
+    const name = _.replace(Path.basename(filePath), /\.\w+$/, '');
+    const rules = info.rules || [ `${name}.*` ];    // implict rule: match <filename>.*
+    const image = await importImage(cxt, folderPath, info.icon);
+    const id = `${folderPath}/${name}`;
+    const component = new Component(id, info.descriptions, image);
     cxt.descriptors[filePath] = new Descriptor(name, folderPath, rules, component);
 }
 
@@ -247,8 +246,8 @@ async function loadDescriptor(cxt, folderPath, filePath) {
  */
 async function loadDescriptors(cxt, folderPath) {
     // scan .trambar folder
-    let tfPath = Path.join(folderPath, '.trambar');
-    let tfRecords = await scanFolder(cxt, tfPath);
+    const tfPath = Path.join(folderPath, '.trambar');
+    const tfRecords = await scanFolder(cxt, tfPath);
     for (let record of tfRecords) {
         if (record.type === 'blob') {
             if (/\.md$/.test(record.name)) {
@@ -257,7 +256,7 @@ async function loadDescriptors(cxt, folderPath) {
         }
     }
     // recurse into subfolders
-    let records = await scanFolder(cxt, folderPath);
+    const records = await scanFolder(cxt, folderPath);
     for (let record of records) {
         if (record.type === 'tree') {
             // .trambar folder cannot be nested
@@ -278,23 +277,23 @@ async function loadDescriptors(cxt, folderPath) {
  * @return {Promise<Object>}
  */
 async function parseDescriptorFile(cxt, path) {
-    let file = await retrieveFile(cxt, path);
-    let text = getFileContents(file, 'utf-8');
-    let parser = new MarkGor.Parser;
-    let tokens = parser.parse(text);
+    const file = await retrieveFile(cxt, path);
+    const text = getFileContents(file, 'utf-8');
+    const parser = new MarkGorParser;
+    const tokens = parser.parse(text);
 
-    let languageTokens = {};
-    let defaultLanguageTokens = [];
-    let currentLanguageTokens = defaultLanguageTokens;
-    let fileMatchDefinitions = [];
+    const languageTokens = {};
+    const defaultLanguageTokens = [];
+    const currentLanguageTokens = defaultLanguageTokens;
+    const fileMatchDefinitions = [];
     let icon = null;
 
     for (let token of tokens) {
         if (token.type === 'heading') {
-            let cap = _.trim(token.captured);
-            let m = /^#\s*([a-z]{2})\b/.exec(cap);
+            const cap = _.trim(token.captured);
+            const m = /^#\s*([a-z]{2})\b/.exec(cap);
             if (m) {
-                let code = m[1];
+                const code = m[1];
                 languageTokens[code] = currentLanguageTokens = [];
                 continue;
             }
@@ -314,9 +313,9 @@ async function parseDescriptorFile(cxt, path) {
     if (!languageTokens[cxt.defaultLanguageCode]) {
         languageTokens[cxt.defaultLanguageCode] = defaultLanguageTokens;
     }
-    let descriptions = _.mapValues(languageTokens, (tokens) => {
-        let fragments = _.map(tokens, 'captured');
-        let text = fragments.join('');
+    const descriptions = _.mapValues(languageTokens, (tokens) => {
+        const fragments = _.map(tokens, 'captured');
+        const text = fragments.join('');
         return _.trim(text);
     });
     let rules = null;
@@ -343,10 +342,10 @@ async function scanFolder(cxt, folderPath) {
     }
     try {
         console.log(`Scanning ${folderPath || '[ROOT]'}`);
-        let repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
-        let projectID = repoLink.project.id;
-        let url = `projects/${projectID}/repository/tree`;
-        let query = {
+        const repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
+        const projectID = repoLink.project.id;
+        const url = `projects/${projectID}/repository/tree`;
+        const query = {
             path: folderPath,
             ref: cxt.headID,
         };
@@ -376,11 +375,11 @@ async function retrieveFile(cxt, filePath) {
         throw new Error(`Not in .trambar folder: ${filePath}`);
     }
     console.log(`Retrieving file: ${filePath}`);
-    let repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
-    let projectID = repoLink.project.id;
-    let pathEncoded = encodeURIComponent(filePath);
-    let url = `/projects/${projectID}/repository/files/${pathEncoded}`;
-    let query = { ref: cxt.headID };
+    const repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
+    const projectID = repoLink.project.id;
+    const pathEncoded = encodeURIComponent(filePath);
+    const url = `/projects/${projectID}/repository/files/${pathEncoded}`;
+    const query = { ref: cxt.headID };
     return Transport.fetch(cxt.server, url, query);
 }
 
@@ -392,9 +391,9 @@ async function retrieveFile(cxt, filePath) {
  * @return {Buffer|String}
  */
 function getFileContents(file, encoding) {
-    let buffer = Buffer.from(file.content, 'base64');
+    const buffer = Buffer.from(file.content, 'base64');
     if (encoding) {
-        let text = buffer.toString(encoding);
+        const text = buffer.toString(encoding);
         if (text.indexOf('<<<<<<<') !== -1) {
             // fix accidentally checked-in git conflicts
             text = text.replace(gitConflicts, '$2');
@@ -425,13 +424,13 @@ async function importImage(cxt, folderPath, url) {
             // absolute URL
             return url;
         }
-        let tfPath = Path.join(folderPath, '.trambar');
-        let imageName = url;
+        const tfPath = Path.join(folderPath, '.trambar');
+        const imageName = url;
         if (/^\.\//.test(imageName)) {
             imageName = imageName.substr(2);
         }
-        let imagePath = `${tfPath}/${imageName}`;
-        let file = await retrieveFile(cxt, imagePath);
+        const imagePath = `${tfPath}/${imageName}`;
+        const file = await retrieveFile(cxt, imagePath);
         return file;
     } catch (err) {
         return;
@@ -447,8 +446,8 @@ async function importImage(cxt, folderPath, url) {
  */
 async function updateImage(file) {
     return new Promise((resolve, reject) => {
-        let buffer = getFileContents(file);
-        let options = {
+        const buffer = getFileContents(file);
+        const options = {
             json: true,
             url: 'http://media_server/srv/internal/import',
             formData: {
@@ -485,7 +484,7 @@ function parseFnmatchRules(rules) {
     if (_.isEmpty(rules)) {
         return null;
     }
-    let ignoreEngine = Ignore().add(rules);
+    const ignoreEngine = Ignore().add(rules);
     return (path) => {
         return ignoreEngine.ignores(path);
     };
@@ -498,9 +497,9 @@ class Descriptor {
         this.component = component;
         this.rules = rules;
 
-        let hierarchicalRules = [];
-        let relativeRules = [];
-        let trambarRules = [];
+        const hierarchicalRules = [];
+        const relativeRules = [];
+        const trambarRules = [];
         for (let rule of rules) {
             if (rule) {
                 if (isTrambar.test(rule)) {
@@ -530,7 +529,7 @@ class Component {
         } else if (typeof(image) === 'string' && image) {
             if (/^fa:\/\//.test(image)) {
                 // special Font-Awesome URL fa://
-                let parts = _.split(image.substr(5), '/');
+                const parts = _.split(image.substr(5), '/');
                 this.icon = {
                     class: parts[0],
                     backgroundColor: parts[1] || null,

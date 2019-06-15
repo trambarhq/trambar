@@ -20,10 +20,10 @@ import Story from '../accessors/story.mjs';
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Story>}
+ * @return {Promise<Boolean>}
  */
-async function importEvent(db, system, server, repo, project, author, glEvent) {
-    let schema = project.name;
+async function processEvent(db, system, server, repo, project, author, glEvent) {
+    const schema = project.name;
     let branch, headID, tailID, type, count;
     if (glEvent.push_data) {
         // version 10
@@ -34,7 +34,7 @@ async function importEvent(db, system, server, repo, project, author, glEvent) {
         count = glEvent.push_data.commit_count;
     } else if (glEvent.data) {
         // version 9
-        let refParts = _.split(glEvent.data.ref, '/');
+        const refParts = _.split(glEvent.data.ref, '/');
         branch = _.last(refParts);
         type = /^tags$/.test(refParts[1]) ? 'tag' : 'branch';
         headID = glEvent.data.after;
@@ -46,12 +46,13 @@ async function importEvent(db, system, server, repo, project, author, glEvent) {
         count = glEvent.data.total_commits_count;
     }
     // retrieve all commits in the push
-    let push = await PushReconstructor.reconstructPush(db, server, repo, type, branch, headID, tailID, count);
+    const push = await PushReconstructor.reconstructPush(db, server, repo, type, branch, headID, tailID, count);
     // look for component descriptions
-    let languageCode = Localization.getDefaultLanguageCode(system);
-    let components = await PushDecorator.retrieveDescriptions(server, repo, push, languageCode);
-    let storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
-    return Story.insertOne(db, schema, storyNew);
+    const languageCode = Localization.getDefaultLanguageCode(system);
+    const components = await PushDecorator.retrieveDescriptions(server, repo, push, languageCode);
+    const storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
+    await Story.insertOne(db, schema, storyNew);
+    return true;
 }
 
 /**
@@ -91,75 +92,75 @@ function copyPushProperties(story, system, server, repo, author, push, component
     } else {
         storyType = 'push';
     }
-    let defLangCode = Localization.getDefaultLanguageCode(system);
+    const defLangCode = Localization.getDefaultLanguageCode(system);
 
-    let storyAfter = _.cloneDeep(story) || {};
-    ExternalDataUtils.inheritLink(storyAfter, server, repo, {
+    const storyChanges = _.cloneDeep(story) || {};
+    ExternalDataUtils.inheritLink(storyChanges, server, repo, {
         commit: { ids: push.commitIDs }
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'type', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'type', {
         value: storyType,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'language_codes', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'language_codes', {
         value: [ defLangCode ],
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'user_ids', {
         value: [ author.id ],
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'role_ids', {
         value: author.role_ids,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.commit_before', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.commit_before', {
         value: push.tailID || undefined,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.commit_after', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.commit_after', {
         value: push.headID,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.lines', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.lines', {
         value: _.pickBy(push.lines),    // don't include 0's
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.files', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.files', {
         value: _.pickBy(_.mapValues(push.files, 'length')),
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.components', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.components', {
         value: components,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.branch', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.branch', {
         value: push.branch,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.from_branches', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'details.from_branches', {
         value: !_.isEmpty(push.fromBranches) ? push.fromBranches : undefined,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'public', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'public', {
         value: true,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'published', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'published', {
         value: true,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'ptime', {
+    ExternalDataUtils.importProperty(storyChanges, server, 'ptime', {
         value: Moment(glEvent.created_at).toISOString(),
         overwrite: 'always',
     });
-    if (_.isEqual(storyAfter, story)) {
-        return story;
+    if (_.isEqual(storyChanges, story)) {
+        return null;
     }
-    storyAfter.itime = new String('NOW()');
-    return storyAfter;
+    storyChanges.itime = new String('NOW()');
+    return storyChanges;
 }
 
 export {
-    importEvent,
+    processEvent,
 };

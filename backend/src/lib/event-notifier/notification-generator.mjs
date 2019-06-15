@@ -31,8 +31,8 @@ async function generate(db, events) {
     events = _.filter(events, (event) => {
         if (event.table === 'story' || event.table === 'reaction') {
             // see if event is old (created during initial import, for instance)
-            let now = Moment();
-            let elapsed = now - Moment(event.current.ptime);
+            const now = Moment();
+            const elapsed = now - Moment(event.current.ptime);
             if (elapsed > 5 * 60 * 1000) {
                 return false;
             }
@@ -40,17 +40,17 @@ async function generate(db, events) {
         return true;
     });
 
-    let userCriteria = { deleted: false, disabled: false };
-    let users = await User.findCached(db, 'global', userCriteria, '*');
-    let savedNotifications = [];
+    const userCriteria = { deleted: false, disabled: false };
+    const users = await User.findCached(db, 'global', userCriteria, '*');
+    const savedNotifications = [];
 
     for (let event of events) {
-        let entries = [];
+        const entries = [];
         for (let f of notificationGeneratingFunctions) {
-            let list = await f(db, event);
+            const list = await f(db, event);
             for (let entry of list) {
-                let notification = entry.notification;
-                let user = _.find(users, { id: notification.target_user_id });
+                const notification = entry.notification;
+                const user = _.find(users, { id: notification.target_user_id });
                 // see if user wants to receive the notification
                 if (checkUserPreference(user, notification)) {
                     entries.push(entry)
@@ -58,11 +58,11 @@ async function generate(db, events) {
             }
         }
         // save the notification
-        let schemas = _.uniq(_.map(entries, 'schema'));
+        const schemas = _.uniq(_.map(entries, 'schema'));
         for (let schema of schemas) {
-            let entriesForSchema = _.filter(entries, { schema });
-            let notifications = _.map(entries, 'notification');
-            let saved = await Notification.save(db, schema, notifications);
+            const entriesForSchema = _.filter(entries, { schema });
+            const notifications = _.map(entries, 'notification');
+            const saved = await Notification.save(db, schema, notifications);
             for (let notification of saved) {
                 savedNotifications.push(notification);
             }
@@ -71,7 +71,7 @@ async function generate(db, events) {
     return savedNotifications;
 }
 
-let notificationGeneratingFunctions = [
+const notificationGeneratingFunctions = [
     generateCoauthoringNotifications,
     generateStoryPublicationNotifications,
     generateReactionPublicationNotifications,
@@ -101,20 +101,20 @@ async function generateCoauthoringNotifications(db, event) {
     if (event.current.type === 'issue' || event.current.type === 'merge-request') {
         return [];
     }
-    let newCoauthorIDs = getNewCoauthorIds(event);
+    const newCoauthorIDs = getNewCoauthorIDs(event);
     if (_.isEmpty(newCoauthorIDs)) {
         return [];
     }
-    let schema = event.schema;
-    let notificationType = 'coauthor';
-    let storyId = event.id;
-    let leadAuthorId = event.current.user_ids[0];
-    let entries = _.map(newCoauthorIDs, (coauthorID) => {
+    const schema = event.schema;
+    const notificationType = 'coauthor';
+    const storyID = event.id;
+    const leadAuthorID = event.current.user_ids[0];
+    const entries = _.map(newCoauthorIDs, (coauthorID) => {
         return {
             notification: {
                 type: notificationType,
-                story_id: storyId,
-                user_id: leadAuthorId,
+                story_id: storyID,
+                user_id: leadAuthorID,
                 target_user_id: coauthorID,
             },
             schema,
@@ -135,21 +135,21 @@ async function generateStoryPublicationNotifications(db, event) {
     if (!isPublishing(event, 'story')) {
         return [];
     }
-    let schema = event.schema;
+    const schema = event.schema;
     // every story type generates the a notification of the same type
-    let notificationType = event.current.type;
-    let storyId = event.id;
-    let leadAuthorId = event.current.user_ids[0];
+    const notificationType = event.current.type;
+    const storyID = event.id;
+    const leadAuthorID = event.current.user_ids[0];
     // notify (potentially) all active users
-    let userCriteria = { deleted: false, disabled: false };
-    let users = await User.findCached(db, 'global', userCriteria, '*');
-    let details = await getStoryPublicationDetails(db, schema, storyId, notificationType);
-    let entries = _.map(users, (user) => {
+    const userCriteria = { deleted: false, disabled: false };
+    const users = await User.findCached(db, 'global', userCriteria, '*');
+    const details = await getStoryPublicationDetails(db, schema, storyID, notificationType);
+    const entries = _.map(users, (user) => {
         return {
             notification: {
                 type: notificationType,
-                story_id: storyId,
-                user_id: leadAuthorId,
+                story_id: storyID,
+                user_id: leadAuthorID,
                 target_user_id: user.id,
                 details
             },
@@ -164,20 +164,20 @@ async function generateStoryPublicationNotifications(db, event) {
  *
  * @param  {Database} db
  * @param  {String} schema
- * @param  {Number} storyId
+ * @param  {Number} storyID
  * @param  {String} notificationType
  *
  * @return {Promise<Object|undefined>}
  */
-async function getStoryPublicationDetails(db, schema, storyId, notificationType) {
+async function getStoryPublicationDetails(db, schema, storyID, notificationType) {
     switch (notificationType) {
         case 'push':
         case 'merge':
         case 'branch':
         case 'tag':
             // need addition info from story object not contained in event
-            let criteria = { id: storyId };
-            let story = await Story.findOne(db, schema, criteria, 'details');
+            const criteria = { id: storyID };
+            const story = await Story.findOne(db, schema, criteria, 'details');
             return { branch: story.details.branch };
     }
 }
@@ -194,15 +194,15 @@ async function generateReactionPublicationNotifications(db, event) {
     if (!isPublishing(event, 'reaction')) {
         return [];
     }
-    let schema = event.schema;
+    const schema = event.schema;
     // every reaction type generates the a notification of the same type
-    let notificationType = event.current.type;
-    let reactionId = event.id;
-    let storyId = event.current.story_id;
-    let respondentId = event.current.user_id;
+    const notificationType = event.current.type;
+    const reactionID = event.id;
+    const storyID = event.current.story_id;
+    const respondentID = event.current.user_id;
     // notify the author(s) of the story reacted to
-    let criteria = { id: storyId };
-    let story = await Story.findOne(db, schema, criteria, 'type, user_ids');
+    const criteria = { id: storyID };
+    const story = await Story.findOne(db, schema, criteria, 'type, user_ids');
     let details;
     switch (notificationType) {
         // like and comment requires the story type since they're applicable to all stories
@@ -214,14 +214,14 @@ async function generateReactionPublicationNotifications(db, event) {
             details = { story_type: story.type };
             break;
     }
-    let entries = _.map(story.user_ids, (authorId) => {
+    const entries = _.map(story.user_ids, (authorID) => {
         return {
             notification: {
                 type: notificationType,
-                story_id: storyId,
-                reaction_id: reactionId,
-                user_id: respondentId,
-                target_user_id: authorId,
+                story_id: storyID,
+                reaction_id: reactionID,
+                user_id: respondentID,
+                target_user_id: authorID,
                 details
             },
             schema,
@@ -245,25 +245,25 @@ async function generateBookmarkNotifications(db, event) {
     if (event.current.hidden) {
         return [];
     }
-    let senderIdsBefore = event.previous.user_ids;
-    let senderIdsAfter = event.current.user_ids;
-    if (!_.isEmpty(senderIdsBefore) || _.isEmpty(senderIdsAfter)) {
+    const senderIDsBefore = event.previous.user_ids;
+    const senderIDsAfter = event.current.user_ids;
+    if (!_.isEmpty(senderIDsBefore) || _.isEmpty(senderIDsAfter)) {
         return [];
     }
-    let senderId = _.first(senderIdsAfter);
-    let schema = event.schema;
-    let notificationType = 'bookmark';
-    let storyId = event.current.story_id;
-    let targetUserId = event.current.target_user_id;
-    let criteria = { id: storyId, deleted: false };
-    let stories = await Story.find(db, schema, criteria, 'type');
-    let entries = _.map(stories, (story) => {
+    const senderID = _.first(senderIDsAfter);
+    const schema = event.schema;
+    const notificationType = 'bookmark';
+    const storyID = event.current.story_id;
+    const targetUserID = event.current.target_user_id;
+    const criteria = { id: storyID, deleted: false };
+    const stories = await Story.find(db, schema, criteria, 'type');
+    const entries = _.map(stories, (story) => {
         return {
             notification: {
                 type: notificationType,
-                story_id: storyId,
-                user_id: senderId,
-                target_user_id: targetUserId,
+                story_id: storyID,
+                user_id: senderID,
+                target_user_id: targetUserID,
                 details: {
                     story_type: story.type
                 },
@@ -295,40 +295,40 @@ async function generateUserMentionNotifications(db, event) {
         // consider only the ones that were added
         relevantTags = getNewTags(event);
     }
-    let relevantUserTags = _.filter(relevantTags, (tag) => {
+    const relevantUserTags = _.filter(relevantTags, (tag) => {
         return (tag.charAt(0) === '@');
     });
     if (_.isEmpty(relevantUserTags)) {
         return [];
     }
-    let schema = event.schema;
-    let notificationType = 'mention';
-    let storyId = event.current.story_id;
-    let reactionId;
-    let authorId;
+    const schema = event.schema;
+    const notificationType = 'mention';
+    const storyID = event.current.story_id;
+    let reactionID;
+    let authorID;
     let details;
     if (event.table === 'story') {
-        storyId = event.id;
-        authorId = event.current.user_ids[0];
+        storyID = event.id;
+        authorID = event.current.user_ids[0];
         details = { story_type: event.current.type };
     } else if (event.table === 'reaction') {
-        reactionId = event.id;
-        storyId = event.current.story_id;
-        authorId = event.current.user_id;
+        reactionID = event.id;
+        storyID = event.current.story_id;
+        authorID = event.current.user_id;
         details = { reaction_type: event.current.type };
     }
-    let userCriteria = { deleted: false, disabled: false };
-    let users = await User.findCached(db, 'global', userCriteria, '*');
-    let mentionedUsers = _.filter(users, (user) => {
+    const userCriteria = { deleted: false, disabled: false };
+    const users = await User.findCached(db, 'global', userCriteria, '*');
+    const mentionedUsers = _.filter(users, (user) => {
         return _.includes(relevantUserTags, `@${_.toLower(user.username)}`);
     });
-    let entries = _.map(mentionedUsers, (user) => {
+    const entries = _.map(mentionedUsers, (user) => {
         return {
             notification: {
                 type: notificationType,
-                story_id: storyId,
-                reaction_id: reactionId,
-                user_id: authorId,
+                story_id: storyID,
+                reaction_id: reactionID,
+                user_id: authorID,
                 target_user_id: user.id,
                 details,
             },
@@ -348,19 +348,19 @@ async function generateUserMentionNotifications(db, event) {
  * @return {Array<Object>}
  */
 async function generateJoinRequestNotifications(db, event) {
-    let newProjectIds = getNewRequestedProjectIds(event);
-    if (_.isEmpty(newProjectIds)) {
+    const newProjectIDs = getNewRequestedProjectIDs(event);
+    if (_.isEmpty(newProjectIDs)) {
         return [];
     }
-    let notificationType = 'join-request';
-    let userId = event.id;
-    let projectCriteria = { id: newProjectIds, deleted: false };
-    let projects = await Project.find(db, 'global', projectCriteria, 'id, name');
-    let userCriteria = {};
-    let users = await User.findCached(db, 'global', criteria, '*');
-    let admins = _.filter(users, { type: 'admin' });
-    let entryLists = _.map(projects, (project) => {
-        let details = {
+    const notificationType = 'join-request';
+    const userID = event.id;
+    const projectCriteria = { id: newProjectIDs, deleted: false };
+    const projects = await Project.find(db, 'global', projectCriteria, 'id, name');
+    const userCriteria = {};
+    const users = await User.findCached(db, 'global', criteria, '*');
+    const admins = _.filter(users, { type: 'admin' });
+    const entryLists = _.map(projects, (project) => {
+        const details = {
             project_name: project.name,
             project_id: project.id,
         };
@@ -368,7 +368,7 @@ async function generateJoinRequestNotifications(db, event) {
             return {
                 notification: {
                     type: 'join-request',
-                    user_id: userId,
+                    user_id: userID,
                     target_user_id: admin.id,
                     details
                 },
@@ -376,7 +376,7 @@ async function generateJoinRequestNotifications(db, event) {
             };
         });
     });
-    let entries = _.flatten(entryLists);
+    const entries = _.flatten(entryLists);
     return entries;
 }
 
@@ -428,11 +428,11 @@ function isPublishing(event, table) {
  *
  * @return {Array<Number>}
  */
-function getNewCoauthorIds(event) {
+function getNewCoauthorIDs(event) {
     if (isModifying(event, 'story')) {
         if (event.diff.user_ids) {
-            let coauthorIDsBefore = _.slice(event.previous.user_ids, 1);
-            let coauthorIDsAfter = _.slice(event.current.user_ids, 1);
+            const coauthorIDsBefore = _.slice(event.previous.user_ids, 1);
+            const coauthorIDsAfter = _.slice(event.current.user_ids, 1);
             return _.difference(coauthorIDsAfter, coauthorIDsBefore);
         }
     }
@@ -448,8 +448,8 @@ function getNewCoauthorIds(event) {
  */
 function getNewTags(event) {
     if (event.diff.tags) {
-        let tagsBefore = event.previous.tags;
-        let tagsAfter = event.current.tags;
+        const tagsBefore = event.previous.tags;
+        const tagsAfter = event.current.tags;
         return _.difference(tagsAfter, tagsBefore);
     }
     return [];
@@ -462,12 +462,12 @@ function getNewTags(event) {
  *
  * @return {Array<String>}
  */
-function getNewRequestedProjectIds(event) {
+function getNewRequestedProjectIDs(event) {
     if (isModifying(event, 'user')) {
         if (event.diff.requested_project_ids) {
-            let projectIdsBefore = event.previous.requested_project_ids;
-            let projectIdsAfter = event.current.requested_project_ids;
-            return _.difference(projectIdsAfter, projectIdsBefore);
+            const projectIDsBefore = event.previous.requested_project_ids;
+            const projectIDsAfter = event.current.requested_project_ids;
+            return _.difference(projectIDsAfter, projectIDsBefore);
         }
     }
 }
@@ -481,8 +481,8 @@ function getNewRequestedProjectIds(event) {
  * @return {Boolean}
  */
 function checkUserPreference(user, notification) {
-    let name = _.snakeCase(notification.type);
-    let settingValue = _.get(user, `settings.notification.${name}`);
+    const name = _.snakeCase(notification.type);
+    const settingValue = _.get(user, `settings.notification.${name}`);
     if (settingValue) {
         // user never receives notification from himself
         if (notification.user_id === notification.target_user_id) {

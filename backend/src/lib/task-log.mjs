@@ -49,7 +49,7 @@ class TaskLog {
 
         this.id = undefined;
         this.completion = undefined;
-        this.details = undefined;
+        this.details = {};
         this.noop = true;
         this.saved = false;
         this.saving = false;
@@ -75,26 +75,49 @@ class TaskLog {
     }
 
     /**
+     * Set details about task
+     *
+     * @param  {path} current
+     * @param  {Number} total
+     */
+    set(path, value) {
+        _.set(this.details, path, value);
+        this.noop = false;
+        this.saved = false;
+    }
+
+    /**
+     * Add an item to details
+     *
+     * @param  {path} current
+     * @param  {Number} total
+     */
+    append(path, item) {
+        const array = _.get(this.details, path, []);
+        array.push(item);
+        this.set(path, array);
+    }
+
+    /**
      * Record progress of task
      *
      * @param  {Number} current
      * @param  {Number} total
-     * @param  {Object|undefined} details
      */
-    report(current, total, details) {
+    report(current, total) {
         this.completion = (total > 0) ? Math.round(current / total * 100) : 0;
-        this.details = details;
         this.noop = false;
         this.saved = false;
 
-        let now = new Date;
+        // initiate autosave
+        const now = new Date;
         if (!this.saveTimeout || !this.saveTime || (now - this.saveTime) < 5000) {
             clearTimeout(this.saveTimeout);
             this.saveTimeout = setTimeout(() => {
                 this.save();
             }, 1500);
         }
-    };
+    }
 
     /**
      * Record that the task is done
@@ -111,7 +134,7 @@ class TaskLog {
         clearTimeout(this.saveTimeout);
         Shutdown.off(this.shutdownListener);
         return this.save();
-    };
+    }
 
     /**
      * Record that the task failed to finish, probably due to an error
@@ -122,7 +145,7 @@ class TaskLog {
      */
     async abort(err) {
         this.error = err;
-        this.details = _.clone(this.details) || {};
+        this.details = { ...this.details };
         this.details.error = _.pick(err, 'message', 'stack', 'code', 'statusCode', 'reason');
         this.failed = true;
         this.saved = false;
@@ -130,7 +153,7 @@ class TaskLog {
         Shutdown.off(this.shutdownListener);
         console.error(err);
         return this.save();
-    };
+    }
 
     /**
      * Preserved any unsaved progress info
