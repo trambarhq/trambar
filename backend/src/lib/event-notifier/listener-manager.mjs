@@ -5,7 +5,7 @@ import CORS from 'cors';
 import BodyParser from 'body-parser';
 import HTTP from 'http';
 import SockJS from 'sockjs';
-import Request from 'request';
+import CrossFetch from 'cross-fetch';
 import Crypto from 'crypto'; Bluebird.promisifyAll(Crypto);
 import XML2JS from 'xml2js';
 import HTTPError from '../common/errors/http-error.mjs';
@@ -470,60 +470,32 @@ function handleSignatureValidation(req, res) {
  * @return {Promise<Object>}
  */
 async function post(url, payload) {
-    let canceled = false;
-    let attempts = 1;
-    let delayInterval = 500;
-    while (true) {
-        try {
-            const options = {
-                json: true,
-                body: payload,
-                method: 'post',
-                url,
-            };
-            return attempt(options);
-        } catch (err) {
-            if (err instanceof HTTPError) {
-                if (err.statusCode === 429) {
-                    // being rate-limited
-                    delayInterval = 60 * 1000;
-                } else if (err.statusCode >= 400 && err.statusCode <= 499) {
-                    // something else
-                    throw err;
-                }
-            }
-            if (attempts < 10) {
-                await Bluebird.delay(delayInterval);
-                attempts++;
-                delayInterval *= 2;
-            } else {
-                throw err;
-            }
-        }
-    }
-}
+    const method = 'post';
+    const headers = { 'Content-Type': 'application/json' };
+    const body = JSON.stringify(payload);
 
-/**
- * Perform a HTTP request
- *
- * @param  {Object} options
- *
- * @return {Promise<Object>}
- */
-async function attempt(options) {
-    const body = await new Promise((resolve, reject) => {
-        Request(options, (err, resp, body) => {
-            if (!err && resp && resp.statusCode >= 400) {
-                err = new HTTPError(resp.statusCode);
-            }
-            if (!err) {
-                resolve(body);
+    let delayInterval = 500;
+    let chances = 10;
+    while (chances-- >= 0) {
+        const response = await CrossFetch(url, { method, headers, body });
+        const { status } = response;
+        if (status >= 200 && status <= 299) {
+            if (status === 204) {
+                return null;
             } else {
-                reject(err);
+                const json = await response.json();
+                return json;
             }
-        });
-    });
-    return body;
+        } else if (status === 429) {
+            // being rate-limited
+            await Bluebird.delay(60 * 1000);
+        } else if ((status >= 400 && status <= 499) || chances === 0) {
+            // throw if it's 4xx or we've tried enough times
+            throw new HTTPError(status);
+        }
+        await Bluebird.delay(delayInterval);
+        delayInterval *= 2;
+    }
 }
 
 class Listener {

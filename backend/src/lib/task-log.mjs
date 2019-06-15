@@ -106,7 +106,6 @@ class TaskLog {
      */
     report(current, total) {
         this.completion = (total > 0) ? Math.round(current / total * 100) : 0;
-        this.noop = false;
         this.saved = false;
 
         // initiate autosave

@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Bluebird from 'bluebird';
-import Request from 'request';
+import QueryString from 'querystring';
+import CrossFetch from 'cross-fetch';
 import Path from 'path';
 import HTTPError from '../common/errors/http-error.mjs';
 import Database from '../database.mjs';
@@ -32,8 +33,8 @@ async function fetch(server, uri, query) {
  * @return {Promise<Object>}
  */
 async function fetchAll(server, uri, query) {
-    let objectList = [];
-    let pageQuery = _.extend({
+    const objectList = [];
+    const pageQuery = _.extend({
         page: 1,
         per_page: PAGE_SIZE
     }, query);
@@ -69,7 +70,7 @@ async function fetchAll(server, uri, query) {
  * @return {Promise}
  */
 async function fetchEach(server, uri, query, callback) {
-    let pageQuery = _.extend({
+    const pageQuery = _.extend({
         page: 1,
         per_page: PAGE_SIZE
     }, query);
@@ -114,7 +115,7 @@ async function fetchEach(server, uri, query, callback) {
  * @return {Promise<Object>}
  */
 async function post(server, uri, payload, userID) {
-    let token = await impersonate(server, userID);
+    const token = await impersonate(server, userID);
     return request(server, uri, 'post', undefined, payload, token);
 }
 
@@ -130,7 +131,7 @@ async function post(server, uri, payload, userID) {
  * @return {Promise<Object>}
  */
 async function put(server, uri, payload, userID) {
-    let token = await impersonate(server, userID);
+    const token = await impersonate(server, userID);
     return request(server, uri, 'put', undefined, payload, token);
 }
 
@@ -144,7 +145,7 @@ async function put(server, uri, payload, userID) {
  * @return {Promise}
  */
 async function remove(server, uri, userID) {
-    let token = await impersonate(server, userID);
+    const token = await impersonate(server, userID);
     return request(server, uri, 'delete', undefined, undefined, token);
 }
 
@@ -162,23 +163,25 @@ async function impersonate(server, userID) {
     if (!userID) {
         return;
     }
-    let ui = userImpersonations[userID];
-    if (!ui) {
-        // delete old impersonation tokens first
-        let existingUIs = await getImpersonations(server, userID);
-        for (let existingUI of existingUIs) {
-            if (existingUI.name === 'trambar') {
-                await deleteImpersonations(server, userID, existingUI);
-            }
-        }
-        let impersonationProps = {
-            name: 'trambar',
-            scopes: [ 'api' ],
-        };
-        ui = await createImpersonation(server, userID, impersonationProps);
-        userImpersonations[userID] = ui;
+    const cachedUI = userImpersonations[userID];
+    if (cachedUI) {
+        return cachedUI;
     }
-    return ui.token;
+
+    // delete old impersonation tokens first
+    const existingUIs = await getImpersonations(server, userID);
+    for (let existingUI of existingUIs) {
+        if (existingUI.name === 'trambar') {
+            await deleteImpersonations(server, userID, existingUI);
+        }
+    }
+    const impersonationProps = {
+        name: 'trambar',
+        scopes: [ 'api' ],
+    };
+    const newUI = await createImpersonation(server, userID, impersonationProps);
+    userImpersonations[userID] = newUI;
+    return newUI.token;
 }
 
 /**
@@ -190,8 +193,8 @@ async function impersonate(server, userID) {
  * @return {Promise<Array<Object>>}
  */
 async function getImpersonations(server, userID) {
-    let url = `/users/${userID}/impersonation_tokens`;
-    let query = { state: 'active' };
+    const url = `/users/${userID}/impersonation_tokens`;
+    const query = { state: 'active' };
     return fetch(server, url, query);
 }
 
@@ -205,7 +208,7 @@ async function getImpersonations(server, userID) {
  * @return {Promise}
  */
 async function deleteImpersonations(server, userID, ui) {
-    let url = `/users/${userID}/impersonation_tokens/${ui.id}`;
+    const url = `/users/${userID}/impersonation_tokens/${ui.id}`;
     return remove(server, url);
 }
 
@@ -219,7 +222,7 @@ async function deleteImpersonations(server, userID, ui) {
  * @return {Promise<Object>}
  */
 async function createImpersonation(server, userID, props) {
-    let url = `/users/${userID}/impersonation_tokens`;
+    const url = `/users/${userID}/impersonation_tokens`;
     return post(server, url, props);
 }
 
@@ -231,13 +234,13 @@ async function createImpersonation(server, userID, props) {
  * @return {Promise<server>}
  */
 async function refresh(server) {
-    let payload = {
+    const payload = {
         grant_type: 'refresh_token',
         refresh_token: server.settings.api.refresh_token,
         client_id: server.settings.oauth.client_id,
         client_secret: server.settings.oauth.client_secret,
     };
-    let options = {
+    const options = {
         json: true,
         body: payload,
         baseURL: server.settings.oauth.base_url,
@@ -268,7 +271,7 @@ async function updateAccessTokens(server, response) {
     return server;
 }
 
-let unreachableLocations = [];
+const unreachableLocations = [];
 
 /**
  * Perform a HTTP request, using either a user impersonation token or the OAuth
@@ -286,85 +289,53 @@ let unreachableLocations = [];
  * @return {Promise<Object>}
  */
 async function request(server, uri, method, query, payload, userToken) {
-    let baseURL = _.trimEnd(server.settings.oauth.base_url, '/') + '/api/v4';
-    let oauthToken = server.settings.api.access_token;
-    let headers;
+    const qs = QueryString.stringify(query);
+    const baseURL = _.trimEnd(server.settings.oauth.base_url, '/') + '/api/v4';
+    const url = baseURL + uri + (qs ? '?' + qs : '');
+    const oauthToken = server.settings.api.access_token;
+    const headers = { 'Content-Type': 'application/json' };
     if (userToken) {
-        headers = { 'Private-Token': userToken };
+        headers['Private-Token'] = userToken;
     } else if (oauthToken) {
-        headers = { Authorization: `Bearer ${oauthToken}` };
+        headers['Authorization'] = `Bearer ${oauthToken}`;
     } else {
         throw new HTTPError(401);
     }
-    let options = {
-        json: true,
-        qs: query,
-        body: payload,
-        baseUrl: baseURL,
-        uri,
-        method,
-        headers,
-    };
-    let attempts = 1;
+    const body = (payload instanceof Object) ? JSON.stringify(payload) : undefined;
+
     let delayInterval = 500;
-    while(true) {
-        try {
-            let body = await attempt(options);
+    let chances = _.includes(unreachableLocations, baseURL) ? 1 : 5;
+    while (chances-- > 0) {
+        const response = await CrossFetch(url, { method, headers, body });
+        const { status } = response;
+        if (status >= 200 && status <= 299) {
             _.pull(unreachableLocations, baseURL);
-            return body;
-        } catch (err) {
-            if (err instanceof HTTPError) {
-                if (err.statusCode >= 400 && err.statusCode <= 499) {
-                    if (err.statusCode === 401 || err.statusCode === 467) {
-                        if (!userToken) {
-                            // refresh access token
-                            server = await refresh(server, err);
-                            // then try the request again
-                            return request(serverAfter, uri, method, query, payload);
-                        }
-                    }
-                    throw err;
-                }
-            }
-            let unreachable = _.includes(unreachableLocations, baseURL);
-            if (unreachable) {
-                throw err;
-            } else if (attempts >= 5) {
-                unreachableLocations.push(baseURL);
-                throw err;
+            if (status === 204) {
+                return null;
             } else {
-                // try again after a delay
-                await Bluebird.delay(delayInterval);
-                attempts++;
-                console.log(`Attempting to access ${uri} at ${baseURL} (${attempts}/5)...`);
-                delayInterval *= 2;
+                const json = await response.json();
+                return json;
+            }
+        } else {
+            if (status === 401 || status === 467) {
+                if (!userToken) {
+                    // refresh access token
+                    const serverAfter = await refresh(server, err);
+                    // then try the request again
+                    return request(serverAfter, uri, method, query, payload);
+                }
+            } else if (status === 429) {
+                await Bluebird.delay(5000);
+            } else if ((status >= 400 && status <= 499) || chances === 0) {
+                if (!_.includes(unreachableLocations, baseURL)) {
+                    unreachableLocations.push(baseURL);
+                }
+                throw new HTTPError(status);
             }
         }
+        await Bluebird.delay(delayInterval);
+        delayInterval *= 2;
     }
-}
-
-/**
- * Perform a HTTP request
- *
- * @param  {Object} options
- *
- * @return {Promise<Object>}
- */
-async function attempt(options) {
-    return new Promise((resolve, reject) => {
-        Request(options, (err, resp, body) => {
-            if (resp && resp.statusCode >= 400) {
-                let reason = (body) ? body.error : undefined;
-                err = new HTTPError(resp.statusCode, { reason });
-                console.log(resp.statusCode, options);
-            }
-            if (!err) {
-                resolve(body);
-            } else {
-                reject(err);
-            }
-        });
-    });
 }
 
 export {

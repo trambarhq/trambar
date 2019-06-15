@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Path from 'path';
-import Request from 'request';
 import Ignore from 'ignore';
 import MarkGorParser from 'mark-gor/lib/parser.js';
 import HTTPError from '../common/errors/http-error.mjs';
@@ -435,41 +434,6 @@ async function importImage(cxt, folderPath, url) {
     } catch (err) {
         return;
     }
-}
-
-/**
- * Upload file to media server
- *
- * @param  {Object} file
- *
- * @return {Promise<Object|undefined>}
- */
-async function updateImage(file) {
-    return new Promise((resolve, reject) => {
-        const buffer = getFileContents(file);
-        const options = {
-            json: true,
-            url: 'http://media_server/srv/internal/import',
-            formData: {
-                file: {
-                    value: buffer,
-                    options: {
-                        filename: file.file_name,
-                    }
-                },
-            },
-        };
-        Request.post(options, (err, resp, body) => {
-            if (!err && resp && resp.statusCode >= 400) {
-                err = new HTTPError(resp.statusCode);
-            }
-            if (!err) {
-                resolve(body);
-            } else {
-                resolve();
-            }
-        });
-    });
 }
 
 /**

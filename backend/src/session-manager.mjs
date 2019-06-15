@@ -7,7 +7,7 @@ import Passport from 'passport';
 import Crypto from 'crypto'; Bluebird.promisifyAll(Crypto);
 import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Moment from 'moment';
-import Request from 'request';
+import CrossFetch from 'cross-fetch';
 import HtpasswdJS from 'htpasswd-js';
 import HTTPError from './lib/common/errors/http-error.mjs';
 import Database from './lib/database.mjs';
@@ -1106,31 +1106,30 @@ function toSimpleLatin(s) {
  * @return {Promise<Object>}
  */
 async function retrieveProfileImage(profile) {
-    let url = profile.avatarURL;
-    if (!url) {
-        url = _.get(profile.photos, '0.value') || _.get(profile.avatarURL);
+    let avatarURL = profile.avatarURL || profile.avatarUrl;
+    if (!avatarURL) {
+        avatarURL = _.get(profile.photos, '0.value');
     }
-    if (!url) {
-        url = profile.avatarUrl;
-    }
-    if (!url) {
+    if (!avatarURL) {
         return null;
     }
-    let options = {
-        json: true,
-        url: 'http://media_server/srv/internal/import',
-        body: { url },
-    };
-    return new Promise((resolve, reject) => {
-        Request.post(options, (err, resp, body) => {
-            if (!err) {
-                resolve(body);
-            } else {
-                console.log('Unable to retrieve profile image: ' + url);
-                resolve(null);
-            }
-        });
-    });
+    const url = 'http://media_server/srv/internal/import';
+    const method = 'post';
+    const headers = { 'Content-Type': 'application/json' };
+    const body = JSON.stringify({ url: avatarURL });
+    try {
+        const response = await CrossFetch(url, { method, headers, body });
+        const { status } = response;
+        if (status === 200) {
+            const info = await response.json();
+            return info;
+        } else {
+            throw new HTTPError(status);
+        }
+    } catch (err) {
+        console.log('Unable to retrieve profile image: ' + avatarURL);
+        return null;
+    }
 }
 
 /**

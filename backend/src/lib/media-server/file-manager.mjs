@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Bluebird from 'bluebird'
 import FS from 'fs'; Bluebird.promisifyAll(FS);
-import Request from 'request';
+import CrossFetch from 'cross-fetch';
 import Crypto from 'crypto';
 import { PassThrough } from 'stream';
 import HTTPError from '../common/errors/http-error.mjs';
@@ -95,15 +95,10 @@ async function hashFile(srcPath) {
  */
 async function downloadFile(url, dstFolder) {
     const previousDownload = await recallDownload(url, dstFolder);
-    const headers = await getRetrievalHeaders(previousDownload, dstFolder);
-    const request = Request.get({ url, headers });
-    const passThru = new PassThrough;
-    const response = await new Promise((resolve, reject) => {
-        request.once('response', resolve);
-        request.once('error', reject);
-        request.pipe(passThru);
-    });
-    if (response.statusCode === 200) {
+    const headers = getRetrievalHeaders(previousDownload, dstFolder);
+    const response = await CrossFetch(url, { headers });
+    const { status } = response;
+    if (status === 200) {
         // stream contents into temp file
         const tempPath = makeTempPath(dstFolder, url);
         const tempFile = FS.createWriteStream(tempPath);
@@ -117,8 +112,10 @@ async function downloadFile(url, dstFolder) {
             md5Hash.once('readable', resolve);
             md5Hash.once('error', reject);
         });
+        const passThru = new PassThrough;
         passThru.pipe(md5Hash);
         passThru.pipe(tempFile);
+        response.body.pipe(passThru);
         await Promise.all([ tempFilePromise, md5HashPromise ]);
 
         // rename file to its MD5 hash
@@ -127,14 +124,12 @@ async function downloadFile(url, dstFolder) {
         await moveFile(tempPath, dstPath);
         await rememberDownload(url, dstFolder, hash, response.headers);
         return dstPath;
-    } else if (response.statusCode === 204) {
+    } else if (status === 204) {
         return null;
-    } else if (response.statusCode === 304) {
+    } else if (status === 304) {
         return previousDownload.path;
-    } else if (response.statusCode >= 400) {
-        throw new HTTPError(response.statusCode);
-    } else {
-        throw new HTTPError(500);
+    } else if (status >= 400) {
+        throw new HTTPError(status);
     }
 }
 

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Request from 'request';
+import CrossFetch from 'cross-fetch';
 import CSVParse from 'csv-parse';
 import ToUTF8 from 'to-utf-8'
 import StringSimilarity from 'string-similarity';
@@ -337,7 +337,7 @@ async function getAndroidDeviceDisplayName(manufacturer, model) {
     return name;
 }
 
-const androidDeviceDatabase = {};
+let androidDeviceDatabase = null;
 
 /**
  * Return Android device name database
@@ -363,8 +363,9 @@ async function getAndroidDeviceDatabase() {
  * @return {Promise<Object>}
  */
 async function fetchAndroidDeviceDatabase() {
-    return new Promise((resolve, reject) => {
-        const db = {};
+    const response = await CrossFetch('http://storage.googleapis.com/play_public/supported_devices.csv');
+    const db = {};
+    await new Promise((resolve, reject) => {
         const parser = CSVParse({ delimiter: ',' });
         let line = 0;
         parser.on('readable', () => {
@@ -379,18 +380,12 @@ async function fetchAndroidDeviceDatabase() {
                 }
             }
         });
-        parser.on('error', (err) => {
-            reject(err);
-        });
-        parser.on('finish', () => {
-            resolve(db);
-        });
-        const input = Request('http://storage.googleapis.com/play_public/supported_devices.csv');
-        input.on('err', (err) => {
-            reject(err);
-        });
-        input.pipe(ToUTF8()).pipe(parser);
+        parser.on('error', reject);
+        parser.on('finish', resolve);
+
+        response.body.pipe(ToUTF8()).pipe(parser);
     });
+    return db;
 }
 
 /**
@@ -415,9 +410,11 @@ function findClosest(hash, key) {
     }
 }
 
-if (process.env.POSTGRES_USER !== 'admin_role') {
-    setTimeout(updateAndroidDeviceDatabase, 1000);
-    setInterval(updateAndroidDeviceDatabase, 7 * 24 * 60 * 60 * 1000);
+if (process.env.NODE_ENV === 'production') {
+    if (process.env.POSTGRES_USER !== 'admin_role') {
+        setTimeout(updateAndroidDeviceDatabase, 1000);
+        setInterval(updateAndroidDeviceDatabase, 7 * 24 * 60 * 60 * 1000);
+    }
 }
 
 const appleModelNumbers = {

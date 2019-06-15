@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import Request from 'request';
+import CrossFetch from 'cross-fetch';
 import * as TaskLog from '../task-log.mjs';
 import * as Localization from '../localization.mjs';
 import HTTPError from '../common/errors/http-error.mjs';
@@ -399,32 +399,31 @@ async function fetchUserByName(server, username) {
  * @return {Promise<Object|null>}
  */
 async function findProfileImage(glUser) {
-    const url = glUser.avatar_url;
-    if (!url) {
+    const avatarURL = glUser.avatar_url;
+    if (!avatarURL) {
         return null;
     }
-    console.log(`Retrieving profile image: ${url}`);
-    const options = {
-        json: true,
-        url: 'http://media_server/srv/internal/import',
-        body: { url },
-    };
-    return new Promise((resolve, reject) => {
-        Request.post(options, (err, resp, body) => {
-            if (!err && resp && resp.statusCode >= 400) {
-                err = new HTTPError(resp.statusCode);
-            }
-            if (!err) {
-                resolve(body);
-            } else {
-                console.log('Unable to retrieve profile image: ' + url);
-                if (process.env.NODE_ENV !== 'production') {
-                    console.error(err);
-                }
-                resolve(null);
-            }
-        });
-    });
+
+    const url = 'http://media_server/srv/internal/import';
+    const method = 'post';
+    const headers = { 'Content-Type': 'application/json' };
+    const body = JSON.stringify({ url: avatarURL });
+    try {
+        const response = await CrossFetch(url, { method, headers, body });
+        const { status } = response;
+        if (status === 200) {
+            const info = await response.json();
+            return info;
+        } else {
+            throw new HTTPError(status);
+        }
+    } catch (err) {
+        console.log('Unable to retrieve profile image: ' + url);
+        if (process.env.NODE_ENV !== 'production') {
+            console.error(err);
+        }
+        return null;
+    }
 }
 
 export {
