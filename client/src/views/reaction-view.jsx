@@ -135,6 +135,7 @@ function ReactionView(props) {
                 case 'note':
                     if (UserUtils.canAccessRepo(currentUser, repo)) {
                         switch (story.type) {
+                            case 'branch':
                             case 'push':
                             case 'merge':
                                 url = RepoUtils.getCommitNoteURL(repo, reaction);
