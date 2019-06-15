@@ -54,7 +54,7 @@ class TaskImportRepoEvents extends BasicTask {
         if (system, repo, project, server) {
             // make sure the project-specific schema exists
             await db.need(project.name);
-            await EventImporter.processNewEvents(db, system, server, repo, project);
+            await EventImporter.processNewEvents(db, system, server, repo, project, this.glHookEvent);
         }
     }
 }

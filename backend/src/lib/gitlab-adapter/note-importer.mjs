@@ -126,6 +126,11 @@ async function processCommitNoteEvent(db, system, server, repo, project, author,
         return false;
     }
     const reactionNew = copyEventProperties(null, system, server, story, author, glEvent);
+    // link to a particular commit (whereas the story could be linked to multiple)
+    const link = ExternalDataUtils.findLink(reactionNew, server);
+    if (link.commit.ids instanceof Array) {
+        link.commit = { id: commitID };
+    }
     await Reaction.insertOne(db, schema, reactionNew);
     return false;
 }
