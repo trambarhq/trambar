@@ -113,8 +113,11 @@ class TaskLog {
         const now = new Date;
         if (!this.saveTimeout || !this.saveTime || (now - this.saveTime) < 5000) {
             clearTimeout(this.saveTimeout);
-            this.saveTimeout = setTimeout(() => {
-                this.save();
+            this.saveTimeout = setTimeout(async () => {
+                await this.save();
+                if (this.completion < 100) {
+                    this.log(`${this.completion}%`);
+                }
             }, 1500);
         }
     }
@@ -133,7 +136,8 @@ class TaskLog {
         this.saved = false;
         clearTimeout(this.saveTimeout);
         Shutdown.off(this.shutdownListener);
-        return this.save();
+        await this.save();
+        this.log('finished');
     }
 
     /**
@@ -152,7 +156,8 @@ class TaskLog {
         clearTimeout(this.saveTimeout);
         Shutdown.off(this.shutdownListener);
         console.error(err);
-        return this.save();
+        await this.save();
+        this.log('aborted');
     }
 
     /**
@@ -183,18 +188,10 @@ class TaskLog {
         this.saved = true;
         this.saveTime = new Date;
         this.saveTimeout = 0;
+    }
 
-        let state = ''
-        if (this.completion < 100) {
-            if (this.failed) {
-                state = 'aborted';
-            } else {
-                state = `${this.completion}%`;
-            }
-        } else {
-            state = 'finished';
-        }
-        console.log(`[${this.id || 'NOP'}] ${this.action}: ${state}`);
+    log(status) {
+        console.log(`[${this.id || 'NOP'}] ${this.action}: ${status}`);
     }
 }
 
