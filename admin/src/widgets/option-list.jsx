@@ -58,10 +58,7 @@ function OptionList(props) {
         }
         const classNames = [ 'option' ];
         if (selected) {
-            classNames.push('fixed');
-            if (!readOnly) {
-                classNames.push('selected');
-            }
+            classNames.push(readOnly ? 'fixed' : 'selected');
         }
         let badge;
         if (!readOnly) {
