@@ -263,15 +263,15 @@ function chooseStories(row) {
     const now = new Date;
     const limit = _.get(row.filters, 'limit', 100);
     const retention = _.get(row.filters, 'retention', 24 * HOUR);
-    const newStories = _.get(row.details, 'candidates', []);
-    const oldStories = _.get(row.details, 'stories', []);
-    const backfillingStories = _.get(row.details, 'backfill_candidates', []);
+    let newStories = _.get(row.details, 'candidates', []);
+    let oldStories = _.get(row.details, 'stories', []);
+    let backfillingStories = _.get(row.details, 'backfill_candidates', []);
 
     // we want to show as many new stories as possible
-    const newStoryCount = newStories.length;
+    let newStoryCount = newStories.length;
     // at the same time, we want to preserve as many old stories as we can
-    const oldStoryCount = oldStories.length;
-    const extra = (oldStoryCount + newStoryCount) - limit;
+    let oldStoryCount = oldStories.length;
+    let extra = (oldStoryCount + newStoryCount) - limit;
     if (extra > 0) {
         // well, something's got to give...
         // remove old stories that were retrieved a while ago

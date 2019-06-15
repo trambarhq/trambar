@@ -14,7 +14,7 @@ function Scrollable(props) {
     }
     const containerProps = {
         ...props,
-        className: className.join(' ')
+        className: classNames.join(' ')
     };
     return <div {...containerProps}>{children}</div>;
 }
