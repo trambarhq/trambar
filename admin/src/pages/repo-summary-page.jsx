@@ -45,17 +45,16 @@ async function RepoSummaryPage(props) {
 
     function render() {
         const sprops = { system, repo, project, statistics };
-        return <RepoSummaryPageSync {...sprops} {...props} />;
+        show(<RepoSummaryPageSync {...sprops} {...props} />);
     }
 }
 
-async function RepoSummaryPage(props) {
+function RepoSummaryPageSync(props) {
     const { system, repo, project, statistics } = props;
     const { database, route, env, editing } = props;
     const { t, p } = env.locale;
     const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !editing;
-    const [ show ] = useProgress();
     const draft = useDraftBuffer({
         original: repo,
         reset: readOnly,
@@ -63,7 +62,7 @@ async function RepoSummaryPage(props) {
     const [ error, run ] = useErrorCatcher();
     const [ problems, reportProblems ] = useValidation();
     const [ confirmationRef, confirm ] = useConfirmation();
-    const warnDataLoss = useDataLossWarning()
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const handleEditClick = useListener((evt) => {
         route.push({ editing: true });
@@ -102,6 +101,7 @@ async function RepoSummaryPage(props) {
 
     const { changed } = draft;
     const title = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
+    console.log(env);
     return (
         <div className="repo-summary-page">
             {renderButtons()}
