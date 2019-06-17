@@ -9,6 +9,7 @@ import CrossFetch from 'cross-fetch';
 import Crypto from 'crypto'; Bluebird.promisifyAll(Crypto);
 import XML2JS from 'xml2js';
 import HTTPError from '../common/errors/http-error.mjs';
+import * as TaskLog from '../task-log.mjs';
 import * as Shutdown from '../shutdown.mjs';
 
 // accessors
@@ -125,19 +126,35 @@ async function send(db, messages) {
  */
 async function sendToWebsockets(db, messages) {
     const desiredMessages = await filterWebsocketMessages(messages);
-    for (let message of desiredMessages) {
-        // dispatch web-socket messages
-        const listener = message.listener;
-        const subscription = listener.subscription;
-        const socket = _.find(sockets, { token: subscription.token });
-        if (socket) {
-            const messageType = _.first(_.keys(message.body));
-            console.log(`Sending message (${messageType}) to socket ${socket.token} (${listener.user.username})`);
-            socket.write(JSON.stringify(message.body));
-        } else {
-            subscription.deleted = true;
-            await Subscription.updateOne(db, 'global', subscription);
+    if (_.isEmpty(desiredMessages)) {
+        return;
+    }
+    const taskLog = TaskLog.start('websocket-notify', {
+        saving: false,
+        preserving: true,
+    });
+    try {
+        const messageCount = _.size(desiredMessages);
+        let messageNumber = 1;
+        for (let message of desiredMessages) {
+            // dispatch web-socket messages
+            const listener = message.listener;
+            const subscription = listener.subscription;
+            const socket = _.find(sockets, { token: subscription.token });
+            if (socket) {
+                const messageType = _.first(_.keys(message.body));
+                taskLog.describe(`sending ${messageType} to websocket: ${listener.user.username}`);
+                socket.write(JSON.stringify(message.body));
+                taskLog.append('sent', listener.user.username);
+            } else {
+                subscription.deleted = true;
+                await Subscription.updateOne(db, 'global', subscription);
+            }
+            taskLog.report(messageNumber++, messageCount);
         }
+        await taskLog.finish();
+    } catch (err) {
+        await taskLog.abort(err);
     }
 }
 
@@ -173,54 +190,63 @@ async function sendToPushRelays(db, messages) {
     // selected after subscriptions were created
     const messagesByRelay = _.entries(_.groupBy(desiredMessages, 'listener.subscription.relay'));
     for (let [ relay, messages ] of messagesByRelay) {
-        // merge identifical messages
-        const messagesByJSON = {};
-        const subscriptions = [];
-        for (let message of messages) {
-            const subscription = message.listener.subscription;
-            const json = JSON.stringify(message.body);
-            const m = messagesByJSON[json];
-            if (m) {
-                if (!_.includes(m.tokens, subscription.token)) {
-                    m.tokens.push(subscription.token);
-                }
-                if (!_.includes(m.methods, subscription.method)) {
-                    m.methods.push(subscription.method);
-                }
-            } else {
-                m = messagesByJSON[json] = {
-                    body: message.body,
-                    tokens: [ subscription.token ],
-                    methods: [ subscription.method ],
-                    address: message.address,
-                };
-            }
-            if (!_.includes(subscriptions, subscription)) {
-                subscriptions.push(subscription);
-            }
-        }
-        const pushMessages = _.map(messagesByJSON, (message) => {
-            return packagePushMessage(message);
+        const taskLog = TaskLog.start('push-notify', {
+            saving: false,
+            preserving: true,
+            relay,
         });
-        const url = `${relay}/dispatch`;
-        const payload = {
-            address: _.get(messages, [ 0, 'address' ]),
-            signature,
-            messages: pushMessages
-        };
-        const result = await post(url, payload);
-        const errors = result.errors;
-        if (!_.isEmpty(errors)) {
-            console.error(errors);
-        }
-
-        // delete subscriptions that are no longer valid
-        const expiredTokens = result.invalid_tokens;
-        for (let subscription of subscriptions) {
-            if (_.includes(expiredTokens, subscription.token)) {
-                subscription.deleted = true;
-                await Subscription.updateOne(db, 'global', subscription);
+        try {
+            // merge identifical messages
+            const messagesByJSON = {};
+            const subscriptions = [];
+            for (let message of messages) {
+                const subscription = message.listener.subscription;
+                const json = JSON.stringify(message.body);
+                const m = messagesByJSON[json];
+                if (m) {
+                    if (!_.includes(m.tokens, subscription.token)) {
+                        m.tokens.push(subscription.token);
+                    }
+                    if (!_.includes(m.methods, subscription.method)) {
+                        m.methods.push(subscription.method);
+                    }
+                } else {
+                    m = messagesByJSON[json] = {
+                        body: message.body,
+                        tokens: [ subscription.token ],
+                        methods: [ subscription.method ],
+                        address: message.address,
+                    };
+                }
+                if (!_.includes(subscriptions, subscription)) {
+                    subscriptions.push(subscription);
+                }
+                taskLog.append('sent', message.listener.user.username);
             }
+            const pushMessages = _.map(messagesByJSON, (message) => {
+                return packagePushMessage(message);
+            });
+            const url = `${relay}/dispatch`;
+            const payload = {
+                address: _.get(messages, [ 0, 'address' ]),
+                signature,
+                messages: pushMessages
+            };
+            taskLog.describe(`sending payload: ${pushMessages.length} message(s)`);
+            const result = await post(url, payload);
+            const errors = result.errors;
+
+            // delete subscriptions that are no longer valid
+            const expiredTokens = result.invalid_tokens;
+            for (let subscription of subscriptions) {
+                if (_.includes(expiredTokens, subscription.token)) {
+                    subscription.deleted = true;
+                    await Subscription.updateOne(db, 'global', subscription);
+                }
+            }
+            await taskLog.finish();
+        } catch (err) {
+            await taskLog.abort(err);
         }
     }
 }

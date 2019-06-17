@@ -23,6 +23,7 @@
     "esm": "^3.2.22",
     "express": "^4.16.4",
     "file-type": "^11.0.0",
+    "gnu-tools": "git+https://github.com/paroga/node-gnu-tools.git",
     "htpasswd-js": "^1.0.2",
     "ignore": "^5.1.1",
     "jsDAV": "^0.3.4",

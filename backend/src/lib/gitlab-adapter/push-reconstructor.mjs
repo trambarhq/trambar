@@ -44,6 +44,8 @@ async function reconstructPush(db, server, repo, type, branch, headID, tailID, c
  */
 async function importCommits(db, server, repo, branch, headID, tailID, count) {
     const taskLog = TaskLog.start('gitlab-push-import', {
+        saving: true,
+        preserving: true,
         server_id: server.id,
         server: server.name,
         repo_id: repo.id,
@@ -60,6 +62,7 @@ async function importCommits(db, server, repo, branch, headID, tailID, count) {
             if (commits[commitID] || commitID === tailID) {
                 continue;
             }
+            taskLog.describe(`importing commit: ${commitID}`);
             const commit = await CommitImporter.importCommit(db, server, repo, branch, commitID);
             commits[commitID] = commit;
             // add parents to queue

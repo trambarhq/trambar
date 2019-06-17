@@ -3,6 +3,7 @@ import Path from 'path';
 import Ignore from 'ignore';
 import MarkGorParser from 'mark-gor/lib/parser.js';
 import HTTPError from '../common/errors/http-error.mjs';
+import * as TaskLog from '../task-log.mjs';
 import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
@@ -21,19 +22,11 @@ const isTrambar = /(^|\/).trambar\//;
  * @return {Promise<Array<Object>>}
  */
 async function retrieveDescriptions(server, repo, push, defLang) {
-    try {
-        const cxt = await createDescriptionContext(server, repo, push, defLang);
-        const components = await findMatchingComponents(cxt, push);
-        return _.map(components, (component) => {
-            return _.pick(component, 'text', 'image', 'icon')
-        });
-    } catch (err) {
-        console.log(`Unable to retrieve descriptions: ${err.message}`);
-        if (process.env.NODE_ENV !== 'production') {
-            console.error(err);
-        }
-        return [];
-    }
+    const cxt = await createDescriptionContext(server, repo, push, defLang);
+    const components = findMatchingComponents(cxt, push);
+    return _.map(components, (component) => {
+        return _.pick(component, 'text', 'image', 'icon')
+    });
 }
 
 const descriptionContexts = [];
@@ -67,8 +60,22 @@ async function createDescriptionContext(server, repo, push, defLang) {
         return cxt;
     }
     cxt = new Context(server, repo, push.headID, defLang);
-    inheritPreviousContext(cxt, push);
-    await loadDescriptors(cxt, '');
+    cxt.taskLog = TaskLog.start('gitlab-description-retrieve', {
+        saving: false,
+        preserving: false,
+        server_id: server.id,
+        server: server.name,
+        repo_id: repo_id,
+        repo: repo.name,
+    });
+    try {
+        inheritPreviousContext(cxt, push);
+        await loadDescriptors(cxt, '');
+        await cxt.taskLog.finish();
+    } catch (err) {
+        await cxt.taskLog.abort(err);
+    }
+    cxt.taskLog = undefined;
     descriptionContexts.unshift(cxt);
     if (descriptionContexts.length > 1000) {
         descriptionContexts.splice(1000);
@@ -340,7 +347,7 @@ async function scanFolder(cxt, folderPath) {
         return listing;
     }
     try {
-        console.log(`Scanning ${folderPath || '[ROOT]'}`);
+        cxt.taskLog.describe(`scanning ${folderPath || '[ROOT]'}`);
         const repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
         const projectID = repoLink.project.id;
         const url = `projects/${projectID}/repository/tree`;
@@ -373,7 +380,8 @@ async function retrieveFile(cxt, filePath) {
     if (!isTrambar.test(filePath)) {
         throw new Error(`Not in .trambar folder: ${filePath}`);
     }
-    console.log(`Retrieving file: ${filePath}`);
+
+    cxt.taskLog.describe(`retrieving file: ${filePath}`);
     const repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
     const projectID = repoLink.project.id;
     const pathEncoded = encodeURIComponent(filePath);

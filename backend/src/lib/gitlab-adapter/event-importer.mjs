@@ -30,12 +30,11 @@ import Story from '../accessors/story.mjs';
  * @return {Promise<Boolean>}
  */
 async function processNewEvents(db, system, server, repo, project, glHookEvent) {
-    const options = {
+    const lastTask = await TaskLog.last('gitlab-event-import', {
         server_id: server.id,
         repo_id: repo.id,
         project_id: project.id,
-    };
-    const lastTask = await TaskLog.last('gitlab-event-import', options);
+    });
     const lastEventTime = _.get(lastTask, 'details.last_event_time');
     const repoLink = ExternalDataUtils.findLink(repo, server);
     const url = `/projects/${repoLink.project.id}/events`;
@@ -47,6 +46,8 @@ async function processNewEvents(db, system, server, repo, project, glHookEvent) 
         params.after = dayBefore.format('YYYY-MM-DD');
     }
     const taskLog = TaskLog.start('gitlab-event-import', {
+        saving: true,
+        preserving: true,
         server_id: server.id,
         server: server.name,
         repo_id: repo.id,
@@ -78,12 +79,12 @@ async function processNewEvents(db, system, server, repo, project, glHookEvent) 
                 denom = firstEventAge;
             }
             const result = await processEvent(db, system, server, repo, project, glEvent, glHookEvent);
-            if (result) {
-                processedEventCount++;
-                taskLog.append('added', glEvent.action_name);
-            }
+            taskLog.append(result ? 'added' : 'ignored', glEvent.action_name);
             taskLog.set('last_event_time', ctime);
             taskLog.report(nom, denom);
+            if (result) {
+                processedEventCount++;
+            }
         });
         await taskLog.finish();
     } catch (err) {
@@ -190,9 +191,11 @@ function getEventImporter(glEvent) {
         case 'pushed_new':
         case 'pushed_to': return PushImporter;
     }
-    console.warn(`Unknown event: target_type = ${targetType}, action_name = ${actionName}`);
-    console.log(glEvent);
-    console.log('*****************************************')
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`Unknown event: target_type = ${targetType}, action_name = ${actionName}`);
+        console.log(glEvent);
+        console.log('******************************************************')
+    }
 }
 
 /**

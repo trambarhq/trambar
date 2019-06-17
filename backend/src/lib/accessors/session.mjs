@@ -70,7 +70,6 @@ class Session extends Data {
      */
     async upgrade(db, schema, version) {
         if (version === 3) {
-            console.log('upgrade');
             await this.createNotificationTriggers(db, schema, [
                 'deleted',
                 'user_id',

@@ -22,6 +22,8 @@ import Story from '../accessors/story.mjs';
  */
 async function importRepositories(db, server) {
     const taskLog = TaskLog.start('gitlab-repo-import', {
+        saving: true,
+        preserving: true,
         server_id: server.id,
         server: server.name,
     });
@@ -49,6 +51,8 @@ async function importRepositories(db, server) {
         const repoCount = glRepos.length;
         let repoNumber = 1;
         for (let glRepo of glRepos) {
+            taskLog.describe(`importing GitLab repo: ${glRepo.name}`);
+
             const glLabels = await fetchLabels(server, glRepo.id);
             const glUsers = await fetchMembers(server, glRepo.id);
 

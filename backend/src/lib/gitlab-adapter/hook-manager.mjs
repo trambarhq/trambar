@@ -20,6 +20,8 @@ import * as Transport from './transport.mjs';
  */
 async function installServerHooks(host, server, repos, projects) {
     const taskLog = TaskLog.start('gitlab-hook-install', {
+        saving: true,
+        preserving: true,
         server_id: server.id,
         server: server.name,
     });
@@ -29,11 +31,14 @@ async function installServerHooks(host, server, repos, projects) {
         let hookNumber = 1;
 
         // install system hook
+        taskLog.describe(`installing system hook`);
         await installSystemHook(host, server);
         taskLog.append('added', 'system');
+        taskLog.report(hookNumber++, hookCount);
 
         // install project hooks
         for (let { repo, project } of list) {
+            taskLog.describe(`installing repo hook: ${repo.name}`);
             await installProjectHook(host, server, repo, project);
             taskLog.append('added', repo.name);
             taskLog.report(hookNumber++, hookCount);
@@ -56,6 +61,8 @@ async function installServerHooks(host, server, repos, projects) {
  */
 async function removeServerHooks(host, server, repos, projects) {
     const taskLog = TaskLog.start('gitlab-hook-remove', {
+        saving: true,
+        preserving: true,
         server_id: server.id,
         server: server.name,
     });
@@ -65,12 +72,14 @@ async function removeServerHooks(host, server, repos, projects) {
         let hookNumber = 1;
 
         // remove system hook
+        taskLog.describe(`removing system hook`);
         await removeSystemHook(host, server);
         taskLog.append('deleted', 'system');
         taskLog.report(hookNumber++, hookCount);
 
         // remove project hooks
         for (let { repo, project } of list) {
+            taskLog.describe(`removing repo hook: ${repo.name}`);
             await removeProjectHook(host, server, repo, project);
             taskLog.append('deleted', repo.name);
             taskLog.report(hookNumber++, hookCount);
@@ -85,13 +94,11 @@ async function installSystemHook(host, server) {
     if (!host) {
         throw HTTPError(400, 'Unable to install hook due to missing server address')
     }
-    console.log(`Installing web-hook on server: ${server.name}`);
     const glHooks = await fetchSystemHooks(server);
     const url = getSystemHookEndpoint(host, server);
     const hookProps = getSystemHookProps(url);
     for (let glHook of glHooks) {
         if (glHook.url === url) {
-            console.log(`Removing existing hook: ${glHook.url}`);
             await destroySystemHook(server, glHook);
         }
     }
@@ -112,7 +119,6 @@ async function installProjectHook(host, server, repo, project) {
     if (!host) {
         throw HTTPError(400, 'Unable to install hook due to missing server address');
     }
-    console.log(`Installing web-hook on repo for project: ${repo.name} -> ${project.name}`);
     const repoLink = ExternalDataUtils.findLink(repo, server);
     const glHooks = await fetchProjectHooks(server, repoLink.project.id);
 
@@ -121,7 +127,6 @@ async function installProjectHook(host, server, repo, project) {
     const hookProps = getProjectHookProps(url);
     for (let glHook of glHooks) {
         if (glHook.url === url) {
-            console.log(`Removing existing hook: ${glHook.url}`);
             await destroyProjectHook(server, repoLink.project.id, glHook);
         }
     }
@@ -140,7 +145,6 @@ async function removeSystemHook(host, server) {
     if (!host) {
         return;
     }
-    console.log(`Removing web-hook on server: ${server.name}`);
     const glHooks = await fetchSystemHooks(server);
     for (let glHook of glHooks) {
         const url = getSystemHookEndpoint(host, server);
@@ -164,7 +168,6 @@ async function removeProjectHook(host, server, repo, project) {
     if (!host) {
         return;
     }
-    console.log(`Removing web-hook on repo for project: ${repo.name} -> ${project.name}`);
     const repoLink = ExternalDataUtils.findLink(repo, server);
     const glHooks = await fetchProjectHooks(server, repoLink.project.id);
     for (let glHook of glHooks) {

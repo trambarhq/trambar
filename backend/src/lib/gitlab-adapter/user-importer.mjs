@@ -26,6 +26,8 @@ import User from '../accessors/user.mjs';
  */
 async function importUsers(db, server) {
     const taskLog = TaskLog.start('gitlab-user-import', {
+        saving: true,
+        preserving: true,
         server_id: server.id,
         server: server.name,
     });
@@ -59,6 +61,7 @@ async function importUsers(db, server) {
         const userCount = glUsers.length;
         let userNumber = 1;
         for (let [ index, glUser ] of glUsers.entries()) {
+            taskLog.describe(`importing GitLab user:  ${glUser.username}`);
             // import profile image
             const image = await findProfileImage(glUser);
             // find existing user
@@ -418,10 +421,6 @@ async function findProfileImage(glUser) {
             throw new HTTPError(status);
         }
     } catch (err) {
-        console.log('Unable to retrieve profile image: ' + url);
-        if (process.env.NODE_ENV !== 'production') {
-            console.error(err);
-        }
         return null;
     }
 }

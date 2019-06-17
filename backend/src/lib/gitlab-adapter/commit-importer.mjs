@@ -33,8 +33,6 @@ async function importCommit(db, server, repo, glBranch, glCommitID) {
     }
     const repoLink = ExternalDataUtils.findLink(repo, server);
     const glProjectID = repoLink.project.id;
-
-    console.log(`Retriving commit ${glCommitID}`);
     const glCommit = await fetchCommit(server, glProjectID, glCommitID);
     const glDiff = await fetchDiff(server, glProjectID, glCommit.id);
     const commitNew = copyCommitProperties(null, server, repo, glBranch, glCommit, glDiff);
@@ -238,7 +236,6 @@ function countChanges(glDiff) {
                 }
             }
         } catch (err) {
-            console.log('Error encounter processing diff: ' + err.message);
             if (process.env.NODE_ENV !== 'production') {
                 console.error(err);
             }
