@@ -19,7 +19,6 @@
     "cross-fetch": "^3.0.4",
     "csv-parse": "^4.4.1",
     "dnscache": "^1.0.2",
-    "esm": "^3.2.22",
     "express": "^4.16.4",
     "file-type": "^11.0.0",
     "gnu-tools": "git+https://github.com/paroga/node-gnu-tools.git",

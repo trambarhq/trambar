@@ -5,7 +5,7 @@ const listeners = [];
  *
  * @param  {Function} callback
  */
-function on(callback) {
+function addListener(callback) {
     listeners.push(callback);
 }
 
@@ -14,7 +14,7 @@ function on(callback) {
  *
  * @param  {Function} callback
  */
-function off(callback) {
+function removeListener(callback) {
     const index = listeners.indexOf(callback);
     if (index !== -1) {
         listeners.splice(index, 1);
@@ -90,8 +90,8 @@ process.on('uncaughtException', function(err) {
 });
 
 export {
-    on,
-    off,
+    addListener,
+    removeListener,
     initiate,
     close,
 };

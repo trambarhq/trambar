@@ -79,7 +79,7 @@ class TaskLog {
                 }
             }
         };
-        Shutdown.on(this.shutdownListener);
+        Shutdown.addListener(this.shutdownListener);
     }
 
     /**
@@ -151,7 +151,7 @@ class TaskLog {
         this.saved = false;
         this.endTime = Moment();
         clearTimeout(this.saveTimeout);
-        Shutdown.off(this.shutdownListener);
+        Shutdown.removeListener(this.shutdownListener);
         await this.save();
         if (this.preserving || this.error || !this.noop) {
             this.output(true);
@@ -175,8 +175,7 @@ class TaskLog {
         this.saved = false;
         this.endTime = Moment();
         clearTimeout(this.saveTimeout);
-        Shutdown.off(this.shutdownListener);
-        console.error(err);
+        Shutdown.removeListener(this.shutdownListener);
         await this.save();
         this.output(true);
     }

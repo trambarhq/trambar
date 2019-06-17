@@ -451,7 +451,7 @@ function getAccessor(schema, table) {
 
 if ('file://' + process.argv[1] === import.meta.url) {
     start();
-    Shutdown.on(stop);
+    Shutdown.addListener(stop);
 }
 
 export {
