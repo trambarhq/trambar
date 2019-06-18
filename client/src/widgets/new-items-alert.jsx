@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
-import { usePrevious } from 'relaks';
+import { useLastAcceptable } from 'relaks';
 import ReactDOM from 'react-dom';
 
 // custom hooks
@@ -17,10 +17,9 @@ import './new-items-alert.scss';
  */
 function NewItemsAlert(props) {
     const { url, children, onClick } = props;
-    const previousChildren = usePrevious(children, !!url);
     const [ container, setContainer ] = useState(null);
     const show = useAfterglow(!!url, 500);
-    const contents = (url) ? children : previousChildren;
+    const contents = useLastAcceptable(children, !(show && !url));
 
     useEffect(() => {
         if (show) {

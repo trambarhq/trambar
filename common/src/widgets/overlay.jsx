@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { usePrevious } from 'relaks';
+import { useLastAcceptable } from 'relaks';
 import ReactDOM from 'react-dom';
 import { useListener } from 'relaks';
 
@@ -14,8 +14,7 @@ function Overlay(props) {
     const [ container, setContainer ] = useState(null);
     const [ rendering, setRendering ] = useState(show);
     const [ transitioning, setTransitioning ] = useState(false);
-    const previousChildren = usePrevious(children, show);
-    const contents = (show) ? children : previousChildren;
+    const contents = useLastAcceptable(children, !(rendering && !show));
 
     const handleClick = useListener((evt) => {
         if (evt.button !== 0) {
