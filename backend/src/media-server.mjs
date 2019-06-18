@@ -11,8 +11,8 @@ import DNSCache from 'dnscache';
 import FileType from 'file-type';
 
 import Database from './lib/database.mjs';
-import Task from './lib/accessors/task.mjs';
 import HTTPError from './lib/common/errors/http-error.mjs';
+import * as TaskLog from './lib/task-log.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
 
 import * as CacheFolders from './lib/media-server/cache-folders.mjs';
@@ -241,32 +241,38 @@ async function handleClipartRequest(req, res) {
  */
 async function handleImageUpload(req, res) {
     try {
-        let schema = req.params.schema;
-        let token = req.query.token;
-        let file = req.file;
-        let sourceURL = req.body.url;
-        let taskID = await checkTaskToken(schema, token, 'add-image');
-        let imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
-        if (!imagePath) {
-            throw new HTTPError(400);
+        const schema = req.params.schema;
+        const token = req.query.token;
+        const taskLog = await TaskLog.obtain(schema, token, 'add-image');
+        try {
+            const file = req.file;
+            const sourceURL = req.body.url;
+            taskLog.describe('copying file');
+            const imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
+            if (!imagePath) {
+                throw new HTTPError(400);
+            }
+
+            // save image metadata into the task object
+            // a PostgreSQL stored-proc will then transfer that into objects
+            // that contains the token
+            taskLog.describe('extracting metadata from image');
+            const metadata = await ImageManager.getImageMetadata(imagePath);
+            const url = getFileURL(imagePath);
+            taskLog.merge({
+                url,
+                format: metadata.format,
+                width: metadata.width,
+                height: metadata.height,
+                title: metadata.title,
+            });
+            let result = { url };
+            sendJSON(res, result);
+            await taskLog.finish('main');
+        } catch (err) {
+            await taskLog.abort(err);
+            throw err;
         }
-
-        // save image metadata into the task object
-        // a PostgreSQL stored-proc will then transfer that into objects
-        // that contains the token
-        let metadata = ImageManager.getImageMetadata(imagePath);
-        let url = getFileURL(imagePath);
-        let details = {
-            url: url,
-            format: metadata.format,
-            width: metadata.width,
-            height: metadata.height,
-            title: metadata.title,
-        };
-        await saveTaskOutcome(schema, taskID, 'main', details);
-
-        let result = { url };
-        sendJSON(res, result);
     } catch (err) {
         sendError(res, err);
     }
@@ -279,16 +285,21 @@ async function handleImageUpload(req, res) {
  * @param  {Response} res
  */
 async function handleImageImport(req, res) {
+    const taskLog = TaskLog.start('image-import', {
+        saving: false,
+        preserving: true,
+    });
     try {
-        let file = req.file;
-        let sourceURL = req.body.url;
-        let imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
+        const file = req.file;
+        const sourceURL = req.body.url;
+        taskLog.describe(`downloading ${sourceURL}`);
+        const imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
         if (!imagePath) {
             throw new HTTPError(400);
         }
 
-        let metadata = await ImageManager.getImageMetadata(imagePath);
-        let result = {
+        const metadata = await ImageManager.getImageMetadata(imagePath);
+        const result = {
             type: 'image',
             url: getFileURL(imagePath),
             format: metadata.format,
@@ -296,8 +307,11 @@ async function handleImageImport(req, res) {
             height: metadata.height,
         };
         sendJSON(res, result);
+        taskLog.merge(result);
+        await taskLog.finish();
     } catch (err) {
         sendError(res, err);
+        await taskLog.abort(err);
     }
 }
 
@@ -349,45 +363,51 @@ async function handleAudioPoster(req, res) {
  */
 async function handleMediaUpload(req, res, type) {
     try {
-        let schema = req.params.schema;
-        let token = req.query.token;
-        let streamID = req.body.stream;
-        let file = req.file;
-        let sourceURL = req.body.url;
-        let generatePoster = !!req.body.generate_poster;
-        let taskID = await checkTaskToken(schema, token, `add-${type}`);
+        const schema = req.params.schema;
+        const token = req.query.token;
+        const streamID = req.body.stream;
+        const file = req.file;
+        const sourceURL = req.body.url;
+        const generatePoster = !!req.body.generate_poster;
+        const taskLog = await TaskLog.obtain(schema, token, `add-${type}`);
         let result;
 
-        if (streamID) {
-            // handle streaming upload--transcoding job has been created already
-            let job = VideoManager.findTranscodingJob(streamID);
-            if (!job) {
-                throw new HTTPError(404);
-            }
-            monitorTranscodingJob(schema, taskID, job);
-            result = {};
-        } else {
-            // transcode an uploaded file--move it into cache folder first
-            let dstFolder = CacheFolders[type];
-            let mediaPath = await FileManager.preserveFile(file, sourceURL, dstFolder);
-            if (!mediaPath) {
-                throw new HTTPError(400);
-            }
-
-            let url = getFileURL(mediaPath);
-            // create the transcoding job, checking if it exists already on
-            // the off-chance the same file is uploaded twice at the same time
-            let jobID = Path.basename(mediaPath);
-            if (!VideoManager.findTranscodingJob(jobID)) {
-                let job = await VideoManager.startTranscodingJob(mediaPath, type, jobID);
-                if (generatePoster) {
-                    await VideoManager.requestPosterGeneration(job);
+        try {
+            if (streamID) {
+                // handle streaming upload--transcoding job has been created already
+                const job = VideoManager.findTranscodingJob(streamID);
+                if (!job) {
+                    throw new HTTPError(404);
                 }
-                monitorTranscodingJob(schema, taskID, job);
+                monitorTranscodingJob(job, taskLog);
+                result = {};
+            } else {
+                // transcode an uploaded file--move it into cache folder first
+                taskLog.describe('copying file');
+                const dstFolder = CacheFolders[type];
+                const mediaPath = await FileManager.preserveFile(file, sourceURL, dstFolder);
+                if (!mediaPath) {
+                    throw new HTTPError(400);
+                }
+
+                const url = getFileURL(mediaPath);
+                // create the transcoding job, checking if it exists already on
+                // the off-chance the same file is uploaded twice at the same time
+                const jobID = Path.basename(mediaPath);
+                if (!VideoManager.findTranscodingJob(jobID)) {
+                    const job = await VideoManager.startTranscodingJob(mediaPath, type, jobID);
+                    if (generatePoster) {
+                        await VideoManager.requestPosterGeneration(job);
+                    }
+                    monitorTranscodingJob(job, taskLog);
+                }
+                result = { url };
             }
-            result = { url };
+            sendJSON(res, result);
+        } catch (err) {
+            await taskLog.abort(err);
+            throw err;
         }
-        sendJSON(res, result);
     } catch (err) {
         sendError(res, err);
     }
@@ -396,28 +416,49 @@ async function handleMediaUpload(req, res, type) {
 /**
  * Monitor a transcoding job, saving progress into a task object
  *
- * @param  {String} schema
- * @param  {Number} taskID
  * @param  {Object} job
+ * @param  {TaskLog} taskLog
  */
-function monitorTranscodingJob(schema, taskID, job) {
+async function monitorTranscodingJob(job, taskLog) {
     // monitor transcoding progress
-    job.onProgress = (evt) => {
-        let progress = evt.target.progress;
-        console.log('Progress: ', progress + '%');
-        saveTaskProgress(schema, taskID, progress);
-    };
+    job.onProgress = (evt) => { taskLog.report(evt.target.progress) };
+
+    // wait for poster to be generated
+    if (job.posterFile) {
+        taskLog.describe(`generating poster`);
+        await VideoManager.awaitPosterGeneration(job);
+        if (!job.aborted) {
+            taskLog.merge({
+                poster_url: getFileURL(job.posterFile.path),
+                width: job.posterFile.width,
+                height: job.posterFile.height,
+            });
+            await taskLog.finish('poster');
+        } else {
+            await taskLog.abort(new Error('Transcoding aborted'));
+        }
+    }
 
     // wait for transcoding to finish
-    let monitorMedia = async () => {
-        await VideoManager.awaitTranscodingJob(job);
-        if (job.aborted) {
-            return;
-        }
+    taskLog.describe(`transcoding ${job.type}`);
+    await VideoManager.awaitTranscodingJob(job);
+    if (!job.aborted) {
         // save URL and information about available version to task object
         // (doing so transfer these properties into details.resources of
         // object that has the Task object's token as payload_token)
-        let details = {
+        const versions = _.map(job.outputFiles, (outputFile) => {
+            return {
+                name: outputFile.name,
+                width: outputFile.width,
+                height: outputFile.height,
+                bitrates: {
+                    video: outputFile.videoBitrate,
+                    audio: outputFile.audioBitrate,
+                },
+                format: outputFile.format,
+            };
+        });
+        taskLog.merge({
             url: getFileURL(job.inputFile.path),
             duration: job.inputFile.duration,
             width: job.inputFile.width,
@@ -426,39 +467,12 @@ function monitorTranscodingJob(schema, taskID, job) {
                 video: job.inputFile.videoBitrate,
                 audio: job.inputFile.audioBitrate,
             },
-            versions: _.map(job.outputFiles, (outputFile) => {
-                return {
-                    name: outputFile.name,
-                    width: outputFile.width,
-                    height: outputFile.height,
-                    bitrates: {
-                        video: outputFile.videoBitrate,
-                        audio: outputFile.audioBitrate,
-                    },
-                    format: outputFile.format,
-                };
-            }),
-        };
-        await saveTaskOutcome(schema, taskID, 'main', details);
-    };
-    // wait for poster to be generated
-    let monitorPoster = async () => {
-        if (job.posterFile) {
-            await VideoManager.awaitPosterGeneration(job);
-            if (job.aborted) {
-                return;
-            }
-            let details = {
-                poster_url: getFileURL(job.posterFile.path),
-                width: job.posterFile.width,
-                height: job.posterFile.height,
-            };
-            await saveTaskOutcome(schema, taskID, 'poster', details);
-        }
-    };
-
-    monitorMedia();
-    monitorPoster();
+            versions,
+        });
+        await taskLog.finish('main');
+    } else {
+        await taskLog.abort(new Error('Transcoding aborted'));
+    }
 }
 
 /**
@@ -469,27 +483,30 @@ function monitorTranscodingJob(schema, taskID, job) {
  */
 async function handleMediaPoster(req, res, type) {
     try {
-        let schema = req.params.schema;
-        let token = req.query.token;
-        let streamID = req.body.stream;
-        let file = req.file;
-        let sourceURL = req.body.url;
-        let taskID = await checkTaskToken(schema, token, `add-${type}`);
-        let imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
-        if (!imagePath) {
-            throw new HTTPError(400);
+        const schema = req.params.schema;
+        const token = req.query.token;
+        const taskLog = await TaskLog.obtain(schema, token, `add-${type}`);
+        try {
+            const streamID = req.body.stream;
+            const file = req.file;
+            const sourceURL = req.body.url;
+            let imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
+            if (!imagePath) {
+                throw new HTTPError(400);
+            }
+            const url = getFileURL(imagePath);
+            const metadata = await ImageManager.getImageMetadata(imagePath);
+            sendJSON(res, { url });
+
+            taskLog.merge({
+                poster_url: url,
+                width: metadata.width,
+                height: metadata.height,
+            });
+            await taskLog.finish('poster');
+        } catch (err) {
+            await taskLog.abort(err);
         }
-
-        let url = getFileURL(imagePath);
-        let metadata = await ImageManager.getImageMetadata(imagePath);
-        let details = {
-            poster_url: url,
-            width: metadata.width,
-            height: metadata.height,
-        };
-        await saveTaskOutcome(schema, taskID, 'poster', details);
-
-        sendJSON(res, { url });
     } catch (err) {
         sendError(res, err);
     }
@@ -540,78 +557,6 @@ async function handleStream(req, res) {
     } catch (err) {
         sendError(res, err);
     }
-}
-
-/**
- * Throw an 403 exception if a task token isn't valid
- *
- * @param  {String} schema
- * @param  {String} token
- * @param  {String} action
- *
- * @return {Promise<Number>}
- */
-async function checkTaskToken(schema, token, action) {
-    let db = await Database.open();
-    let task = await Task.findOne(db, schema, { token }, 'id, action');
-    if (!task || task.action !== action) {
-        throw new HTTPError(403);
-    }
-    return task.id;
-}
-
-/**
- * Update progress of a task, indirectly modifying rows in other tables via
- * database triggers
- *
- * @param  {String} schema
- * @param  {Number} taskID
- * @param  {Number} completion
- *
- * @return {Promise}
- */
-async function saveTaskProgress(schema, taskID, completion) {
-    let db = await Database.open();
-    let params = [ completion, taskID ];
-    let table = Task.getTableName(schema);
-    let sql = `
-        UPDATE ${table} SET
-        completion = $1
-        WHERE id = $2
-    `;
-    await db.execute(sql, params);
-}
-
-/**
- * Update task object with results when it's done
- *
- * @param  {String} schema
- * @param  {Number} taskID
- * @param  {Object} details
- *
- * @return {Promise}
- */
-async function saveTaskOutcome(schema, taskID, part, details) {
-    let db = await Database.open();
-    let params = [ details, taskID ];
-    let table = Task.getTableName(schema);
-    // merge in new details
-    let detailsAfter = `details || $1`;
-    // set the part to true
-    let optionsAfter = `options || '{ "${part}": true }'`;
-    // set etime to NOW() when there're no more false value
-    let etimeAfter = `CASE WHEN "hasFalse"(${optionsAfter}) THEN null ELSE NOW() END`;
-    // set completion to 100 when there're no more false value in options
-    let completionAfter = `CASE WHEN "hasFalse"(${optionsAfter}) THEN completion ELSE 100 END`;
-    let sql = `
-        UPDATE ${table} SET
-        details = ${detailsAfter},
-        options = ${optionsAfter},
-        etime = ${etimeAfter},
-        completion = ${completionAfter}
-        WHERE id = $2
-    `;
-    await db.execute(sql, params);
 }
 
 /**

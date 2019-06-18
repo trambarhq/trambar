@@ -3,6 +3,7 @@ import Moment from 'moment';
 import Database from './database.mjs';
 import * as RevertibleConsole from './revertible-console.mjs';
 import * as Shutdown from './shutdown.mjs';
+import HTTPError from './common/errors/http-error.mjs';
 
 import Task from './accessors/task.mjs';
 
@@ -16,6 +17,39 @@ import Task from './accessors/task.mjs';
  */
 function start(action, options) {
     return new TaskLog(action, options);
+}
+
+const taskLogHash = {};
+
+/**
+ * Obtain a task that was created earlier
+ *
+ * @param  {String} schema
+ * @param  {String} token
+ * @param  {String} action
+ *
+ * @return {TaskLog}
+ */
+async function obtain(schema, token, action) {
+    const db = await Database.open();
+    const task = await Task.findOne(db, schema, { token }, 'id, options, action');
+    if (!task || task.action !== action) {
+        throw new HTTPError(403);
+    }
+    const loadedTaskLog = _.get(taskLogHash, [ schema, token ]);
+    if (loadedTaskLog) {
+        return loadedTaskLog;
+    }
+    const newTaskLog = new TaskLog(action, {
+        saving: true,
+        preserving: true,
+        schema,
+        token,
+        id: task.id,
+        multiparts: task.options,
+    });
+    _.set(taskLogHash, [ schema, token ], newTaskLog);
+    return newTaskLog;
 }
 
 /**
@@ -35,7 +69,7 @@ async function last(action, options) {
         order: 'id DESC',
         limit: 1,
     };
-    return Task.findOne(db, 'global', criteria, '*');
+    return Task.findOne(db, this.schema, criteria, '*');
 }
 
 class TaskLog {
@@ -46,20 +80,24 @@ class TaskLog {
      * @constructor
      */
     constructor(action, options) {
-        const { preserving, saving, ...taskOptions } = options;
+        const { preserving, saving, schema, id, token, multiparts, ...taskOptions } = options;
         this.action = action;
         this.options = taskOptions;
         this.preserving = preserving;
         this.saving = saving;
+        this.schema = schema || 'global';
+        this.id = id;
+        this.token = token;
+        this.multiparts = multiparts;
 
-        this.id = undefined;
         this.completion = undefined;
         this.details = {};
         this.noop = true;
         this.saved = false;
-        this.saving = false;
         this.error = null;
         this.startTime = Moment();
+        this.finished = false;
+        this.aborted = false;
         this.endTime = undefined;
         this.saveTime = null;
         this.saveTimeout = 0;
@@ -69,10 +107,9 @@ class TaskLog {
         this.shutdownListener = () => {
             if (!this.noop) {
                 if (!this.saved) {
-                    if (this.completion !== 100) {
+                    if (!this.finished || !this.aborted) {
                         this.error = new Error('Interrupted by shutdown');
-                        this.details.error = _.pick(this.error, 'message');
-                        this.failed = true;
+                        this.aborted = true;
                     }
                     clearTimeout(this.saveTimeout);
                     return this.save();
@@ -90,6 +127,17 @@ class TaskLog {
      */
     set(path, value) {
         _.set(this.details, path, value);
+        this.noop = false;
+        this.saved = false;
+    }
+
+    /**
+     * Merge in task details
+     *
+     * @param  {Object} values
+     */
+    merge(values) {
+        _.assign(this.details, values);
         this.noop = false;
         this.saved = false;
     }
@@ -123,6 +171,9 @@ class TaskLog {
      * @param  {Number} total
      */
     report(current, total) {
+        if (total === undefined) {
+            total = 100;
+        }
         this.completion = (total > 0) ? Math.round(current / total * 100) : 0;
         this.saved = false;
         this.output(false);
@@ -140,23 +191,38 @@ class TaskLog {
     /**
      * Record that the task is done
      *
+     * @param  {String} part
+     *
      * @return {Promise}
      */
-    async finish() {
-        if (this.completion === 100 && this.saved) {
-            // already has the right values
-            return null;
+    async finish(part) {
+        if (this.aborted && this.finished) {
+            return;
         }
-        this.completion = 100;
+        if (this.multiparts) {
+            if (_.has(this.multiparts, part)) {
+                this.multiparts[part] = true;
+                if (_.every(this.multiparts)) {
+                    this.finished = true;
+                    this.completion = 100;
+                }
+            }
+        } else {
+            this.finished = true;
+            this.completion = 100;
+        }
         this.saved = false;
         this.endTime = Moment();
         clearTimeout(this.saveTimeout);
         Shutdown.removeListener(this.shutdownListener);
         await this.save();
         if (this.preserving || this.error || !this.noop) {
-            this.output(true);
+            this.output(this.finished);
         } else {
             RevertibleConsole.revert();
+        }
+        if (this.finished) {
+            _.unset(taskLogHash, [ this.schema, this.token ]);
         }
     }
 
@@ -168,16 +234,18 @@ class TaskLog {
      * @return {Promise}
      */
     async abort(err) {
+        if (this.aborted && this.finished) {
+            return;
+        }
         this.error = err;
-        this.details = { ...this.details };
-        this.details.error = _.pick(err, 'message', 'stack', 'code', 'statusCode', 'reason');
-        this.failed = true;
+        this.aborted = true;
         this.saved = false;
         this.endTime = Moment();
         clearTimeout(this.saveTimeout);
         Shutdown.removeListener(this.shutdownListener);
         await this.save();
         this.output(true);
+        _.unset(taskLogHash, [ this.schema, this.token ]);
     }
 
     /**
@@ -189,7 +257,7 @@ class TaskLog {
         if (!this.saving) {
             return null;
         }
-        if (this.noop && !this.failed) {
+        if (this.noop) {
             return null;
         }
         const db = await Database.open();
@@ -201,13 +269,21 @@ class TaskLog {
             columns.id = this.id;
         }
         columns.completion = this.completion;
-        columns.details  = this.details;
-        columns.failed = this.failed;
-        if (this.completion === 100) {
+        if (this.error) {
+            const errorProps = _.pick(this.error, 'message', 'stack', 'code', 'statusCode', 'reason');
+            columns.details = { ...this.details, error: errorProps };
+        } else {
+            columns.details  = this.details;
+        }
+        if (this.multiparts) {
+            columns.options = this.multiparts;
+        }
+        columns.failed = this.aborted;
+        if (this.finished) {
             columns.etime = String('NOW()');
         }
-        const task = await Task.saveOne(db, 'global', columns);
-        this.id = task.id;
+        const taskAfter = await Task.saveOne(db, this.schema, columns);
+        this.id = taskAfter.id;
         this.saved = true;
         this.saveTime = Moment();
         this.saveTimeout = 0;
@@ -223,7 +299,7 @@ class TaskLog {
         RevertibleConsole.write(`[${stime}] ${this.action}${options} - ${status}`);
         const lines = this.formatDescription();
         for (let [ index, line ] of lines.entries()) {
-            if (index === lines.length - 1) {
+            if (index === 0) {
                 RevertibleConsole.write(`[${etime}]     ${line}`);
             } else {
                 RevertibleConsole.write(` ${blank}      ${line}`);
@@ -235,13 +311,13 @@ class TaskLog {
     }
 
     formatStatus() {
-        if (this.failed) {
+        if (this.aborted) {
             return 'ERROR';
-        } else if (this.completion === 100) {
+        } else if (this.finished) {
             return (this.noop) ? 'NOOP' : 'DONE';
         } else {
             if (this.completion === undefined) {
-                return 'RUNNING';
+                return 'BUSY';
             } else {
                 return this.completion + '%';
             }
@@ -255,12 +331,18 @@ class TaskLog {
                 pairs.push(`${name}: ${value}`);
             }
         }
-        return (pairs.length > 0) ? ` (${pairs.join(', ')})` : '';
+        if (pairs.length > 0) {
+            return ` (${pairs.join(', ')})`;
+        } else if (this.token) {
+            return ` (token: ${this.token})`;
+        } else {
+            return '';
+        }
     }
 
     formatDescription() {
         let lines = [];
-        if (this.failed) {
+        if (this.aborted) {
             if (this.error) {
                 if (process.env.NODE_ENV === 'production') {
                     lines = this.error.message;
@@ -268,15 +350,19 @@ class TaskLog {
                     lines = this.error.stack;
                 }
             }
-        } else if (this.completion === 100) {
+        } else if (this.finished) {
             const keys = _.sortBy(_.keys(this.details));
             for (let key of keys) {
                 const value = this.details[key];
-                if (value instanceof Array) {
-                    lines.push(`${key}: ${value.join(', ')}`);
-                } else {
-                    lines.push(`${key}: ${value}`);
-                }
+                const items = (value instanceof Array) ? value : [ value ];
+                const list = _.map(items, (item) => {
+                    if (item instanceof Object) {
+                        return '{…}';
+                    } else {
+                        return item;
+                    }
+                });
+                lines.push(`${key}: ${list.join(', ')}`);
             }
         } else {
             if (this.description) {
@@ -292,5 +378,6 @@ class TaskLog {
 
 export {
     start,
+    obtain,
     last,
 };
