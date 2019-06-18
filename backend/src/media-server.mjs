@@ -22,7 +22,7 @@ import * as VideoManager from './lib/media-server/video-manager.mjs';
 import * as StockPhotoImporter from './lib/media-server/stock-photo-importer.mjs';
 
 let server;
-let cacheControl = {
+const cacheControl = {
     image: 'max-age=2592000, immutable',
     video: 'max-age=86400',
     audio: 'max-age=86400',
@@ -36,8 +36,8 @@ async function start() {
     await StockPhotoImporter.importPhotos();
 
     // start up Express
-    let app = Express();
-    let upload = Multer({ dest: '/var/tmp' });
+    const app = Express();
+    const upload = Multer({ dest: '/var/tmp' });
     app.use(CORS());
     app.use(BodyParser.json());
     app.set('json spaces', 2);
@@ -110,7 +110,7 @@ function sendFile(res, buffer, mimeType, cc) {
  * @return {Promise}
  */
 async function sendStaticFile(res, path, cc, filename) {
-    let info = await getFileType(path);
+    const info = await getFileType(path);
     res.type(info.mime);
     if (cc) {
         res.set('Cache-Control', cc);
@@ -119,15 +119,15 @@ async function sendStaticFile(res, path, cc, filename) {
         res.set('Content-disposition', `attachment; filename=${filename}`);
     }
     try {
-        let stat = await FS.lstatAsync(path);
+        const stat = await FS.lstatAsync(path);
         if (stat.isSymbolicLink()) {
             // serve file through Express if it's a symlink, since it's probably
             // pointing to a file that only exist in this Docker container
             res.sendFile(path);
         } else {
             // ask Nginx to server the file
-            let relPath = path.substr(CacheFolders.root.length + 1);
-            let uri = `/srv/static_media/${relPath}`;
+            const relPath = path.substr(CacheFolders.root.length + 1);
+            const uri = `/srv/static_media/${relPath}`;
             res.set('X-Accel-Redirect', uri).end();
         }
     } catch (err) {
@@ -164,18 +164,18 @@ function sendError(res, err) {
  */
 async function handleImageFiltersRequest(req, res) {
     try {
-        let hash = req.params.hash;
-        let filename = req.params.filename;
-        let m = /([^.]*?)(\.(.+))?$/i.exec(filename);
+        const hash = req.params.hash;
+        const filename = req.params.filename;
+        const m = /([^.]*?)(\.(.+))?$/i.exec(filename);
         if (!m) {
             throw new HTTPError(400, 'Invalid filename');
         }
-        let filters = m[1], format = m[3];
+        const filters = m[1], format = m[3];
         if (!format || format === 'jpg') {
             format = 'jpeg';
         }
-        let path = `${CacheFolders.image}/${hash}`;
-        let buffer = await ImageManager.applyFilters(path, filters, format);
+        const path = `${CacheFolders.image}/${hash}`;
+        const buffer = await ImageManager.applyFilters(path, filters, format);
         sendFile(res, buffer, format, cacheControl.image);
     } catch (err) {
         sendError(res, err);
@@ -189,7 +189,7 @@ async function handleImageFiltersRequest(req, res) {
  * @param  {Response} res
  */
 async function handleImageOriginalRequest(req, res) {
-    let path = `${CacheFolders.image}/${req.params.filename}`;
+    const path = `${CacheFolders.image}/${req.params.filename}`;
     await sendStaticFile(res, path, cacheControl.video);
 }
 
@@ -200,7 +200,7 @@ async function handleImageOriginalRequest(req, res) {
  * @param  {Response} res
  */
 async function handleVideoRequest(req, res) {
-    let path = `${CacheFolders.video}/${req.params.filename}`;
+    const path = `${CacheFolders.video}/${req.params.filename}`;
     await sendStaticFile(res, path, cacheControl.video);
 }
 
@@ -211,7 +211,7 @@ async function handleVideoRequest(req, res) {
  * @param  {Response} res
  */
 async function handleAudioRequest(req, res) {
-    let path = `${CacheFolders.audio}/${req.params.filename}`;
+    const path = `${CacheFolders.audio}/${req.params.filename}`;
     await sendStaticFile(res, path, cacheControl.audio);
 }
 
@@ -223,8 +223,8 @@ async function handleAudioRequest(req, res) {
  */
 async function handleClipartRequest(req, res) {
     try {
-        let path = Path.resolve(`../media/cliparts/${req.params.filename}`);
-        let info = await getFileType(path);
+        const path = Path.resolve(`../media/cliparts/${req.params.filename}`);
+        const info = await getFileType(path);
         res.type(info.mime);
         res.set('Cache-Control', 'max-age=86400');
         res.sendFile(path);
@@ -266,7 +266,7 @@ async function handleImageUpload(req, res) {
                 height: metadata.height,
                 title: metadata.title,
             });
-            let result = { url };
+            const result = { url };
             sendJSON(res, result);
             await taskLog.finish('main');
         } catch (err) {
@@ -490,7 +490,7 @@ async function handleMediaPoster(req, res, type) {
             const streamID = req.body.stream;
             const file = req.file;
             const sourceURL = req.body.url;
-            let imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
+            const imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
             if (!imagePath) {
                 throw new HTTPError(400);
             }
@@ -520,11 +520,11 @@ async function handleMediaPoster(req, res, type) {
  */
 async function handleStream(req, res) {
     try {
-        let jobID = req.query.id;
-        let file = req.file;
-        let abort = !!req.body.abort;
-        let chunk = parseInt(req.body.chunk);
-        let generatePoster = !!req.body.generate_poster;
+        const jobID = req.query.id;
+        const file = req.file;
+        const abort = !!req.body.abort;
+        const chunk = parseInt(req.body.chunk);
+        const generatePoster = !!req.body.generate_poster;
 
         let job = VideoManager.findTranscodingJob(jobID);
         if (chunk === 0) {
@@ -535,7 +535,7 @@ async function handleStream(req, res) {
                 throw new HTTPError(400);
             }
             // create the job
-            let type = _.first(_.split(file.mimetype, '/'));
+            const type = _.first(_.split(file.mimetype, '/'));
             if (type !== 'video' && type !== 'audio') {
                 throw new HTTPError(400);
             }
@@ -567,12 +567,12 @@ async function handleStream(req, res) {
  * @return {Promise<Object>}
  */
 async function getFileType(path) {
-    let fd = await FS.openAsync(path, 'r');
+    const fd = await FS.openAsync(path, 'r');
     try {
-        let len = 1024;
-        let buffer = Buffer.alloc(len);
+        const len = 1024;
+        const buffer = Buffer.alloc(len);
         await FS.readAsync(fd, buffer, 0, len, 0);
-        let info = FileType(buffer);
+        const info = FileType(buffer);
         if (!info) {
             info = {
                 ext: undefined,

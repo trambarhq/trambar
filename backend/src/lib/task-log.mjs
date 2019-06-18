@@ -327,9 +327,13 @@ class TaskLog {
     formatOptions() {
         const pairs = [];
         for (let [ name, value ] of _.entries(this.options)) {
-            if (!/_id$/.test(name)) {
-                pairs.push(`${name}: ${value}`);
+            if (/_id$/.test(name)) {
+                // don't list the id if a name is provided
+                if (this.options[name.slice(0, -3)]) {
+                    continue;
+                }
             }
+            pairs.push(`${name}: ${value}`);
         }
         if (pairs.length > 0) {
             return ` (${pairs.join(', ')})`;
