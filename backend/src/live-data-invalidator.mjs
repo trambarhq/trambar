@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import FS from 'fs';
 import Database from './lib/database.mjs';
+import * as TaskLog from './lib/task-log.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
 
 // accessors
@@ -40,15 +41,15 @@ let database;
 
 async function start() {
     // use persistent connection since we need to listen to events
-    let db = database = await Database.open(true);
+    const db = database = await Database.open(true);
     await db.need('global');
     // get list of tables that the analyers make use of and listen for
     // changes in them
-    let statsSources = _.uniq(_.flatten(_.map(Analysers, 'sourceTables')));
+    const statsSources = _.uniq(_.flatten(_.map(Analysers, 'sourceTables')));
     await db.listen(statsSources, 'change', handleDatabaseChangesAffectingStatistics);
 
     // listings, meanwhile, are derived from story and statistics
-    let listingSources = [ 'story', 'statistics' ];
+    const listingSources = [ 'story', 'statistics' ];
     await db.listen(listingSources, 'change', handleDatabaseChangesAffectingListings);
 }
 
@@ -67,8 +68,8 @@ async function handleDatabaseChangesAffectingStatistics(events) {
         });
     }
     // process the events for each schema separately
-    let db = this;
-    let eventsBySchema = _.entries(_.groupBy(events, 'schema'));
+    const db = this;
+    const eventsBySchema = _.entries(_.groupBy(events, 'schema'));
     for (let [ schema, schemaEvents ] of eventsBySchema) {
         await invalidateStatistics(db, schema, schemaEvents);
     }
@@ -82,8 +83,8 @@ async function handleDatabaseChangesAffectingListings(events) {
         });
     }
     // process the events for each schema separately
-    let db = this;
-    let eventsBySchema = _.entries(_.groupBy(events, 'schema'));
+    const db = this;
+    const eventsBySchema = _.entries(_.groupBy(events, 'schema'));
     for (let [ schema, schemaEvents ] of eventsBySchema) {
         await invalidateListings(db, schema, schemaEvents);
     }
@@ -92,18 +93,32 @@ async function handleDatabaseChangesAffectingListings(events) {
 /**
  * Mark statistics impacted by database changes as dirty
  *
- * @param  {[type]} db
- * @param  {[type]} schema
- * @param  {[type]} events
+ * @param  {Database} db
+ * @param  {String} schema
+ * @param  {Array<Object>} events
  *
- * @return {[type]}
+ * @return {Promise}
  */
 async function invalidateStatistics(db, schema, events) {
-    let ids = await findStatisticsImpactedByDatabaseChanges(db, schema, events);
-    let idChunks = _.chunk(ids, 20);
-    for (let idChunk of idChunks) {
-        console.log(`Invalidating statistics in ${schema}: ${idChunk.join(', ')}`)
-        await Statistics.invalidate(db, schema, idChunk);
+    const taskLog = TaskLog.start('statistics-invalidate', {
+        saving: false,
+        preserving: true,
+        project: schema,
+    });
+    try {
+        taskLog.describe(`searching for rows impacted`);
+        const ids = await findStatisticsImpactedByDatabaseChanges(db, schema, events);
+        const idChunks = _.chunk(ids, 20);
+        taskLog.describe(`updating rows`);
+        for (let idChunk of idChunks) {
+            await Statistics.invalidate(db, schema, idChunk);
+        }
+        if (!_.isEmpty(ids)) {
+            taskLog.set('invalidated', ids);
+        }
+        await taskLog.finish();
+    } catch (err) {
+        await taskLog.abort(err);
     }
 }
 
@@ -117,20 +132,20 @@ async function invalidateStatistics(db, schema, events) {
  * @return {Promise<Array<Number>>}
  */
 async function findStatisticsImpactedByDatabaseChanges(db, schema, events) {
-    let impactedRows = [];
+    const impactedRows = [];
     for (let analyser of Analysers) {
         for (let table of analyser.sourceTables) {
-            let filteredColumnMappings = analyser.filteredColumns[table];
-            let filteredColumns = _.values(filteredColumnMappings);
-            let depedentColumns = analyser.depedentColumns[table];
-            let fixedFilterValues = analyser.fixedFilters[table];
+            const filteredColumnMappings = analyser.filteredColumns[table];
+            const filteredColumns = _.values(filteredColumnMappings);
+            const depedentColumns = analyser.depedentColumns[table];
+            const fixedFilterValues = analyser.fixedFilters[table];
 
             // filter out events that won't cause a change in the stats
-            let relevantEvents = _.filter(events, (event) => {
+            const relevantEvents = _.filter(events, (event) => {
                 if (event.table !== table) {
                     return false;
                 }
-                let changedColumns = _.keys(event.diff);
+                const changedColumns = _.keys(event.diff);
                 return _.some(changedColumns, (column) => {
                     if (_.includes(filteredColumns, column)) {
                         // the change could affect whether the object is included or not
@@ -143,14 +158,14 @@ async function findStatisticsImpactedByDatabaseChanges(db, schema, events) {
                     if (!fixedFilterValues) {
                         return true;
                     }
-                    let requiredValue = fixedFilterValues[column];
+                    const requiredValue = fixedFilterValues[column];
                     if (requiredValue !== undefined) {
                         // see if there's a change in whether the object meets the
                         // fixed filter's condition
-                        let valueBefore = event.previous[column];
-                        let valueAfter = event.current[column];
-                        let conditionMetBefore = (valueBefore === requiredValue);
-                        let conditionMetAfter = (valueAfter === requiredValue);
+                        const valueBefore = event.previous[column];
+                        const valueAfter = event.current[column];
+                        const conditionMetBefore = (valueBefore === requiredValue);
+                        const conditionMetAfter = (valueAfter === requiredValue);
                         if (conditionMetBefore !== conditionMetAfter) {
                             return true;
                         }
@@ -159,25 +174,25 @@ async function findStatisticsImpactedByDatabaseChanges(db, schema, events) {
             });
 
             // extract the before and after values of the rows
-            let sourceRowsBefore = extractPreviousValues(relevantEvents, filteredColumns);
-            let sourceRowsAfter = extractCurrentValues(relevantEvents, filteredColumns);
-            let sourceRows = _.concat(sourceRowsBefore, sourceRowsAfter);
+            const sourceRowsBefore = extractPreviousValues(relevantEvents, filteredColumns);
+            const sourceRowsAfter = extractCurrentValues(relevantEvents, filteredColumns);
+            const sourceRows = _.concat(sourceRowsBefore, sourceRowsAfter);
             if (!_.isEmpty(sourceRows)) {
                 // stored the value under the filter name, as required by the
                 // stored proc matchAny()
-                let matchingObjects = _.map(sourceRows, (row) => {
+                const matchingObjects = _.map(sourceRows, (row) => {
                     return _.mapValues(filteredColumnMappings, (column, filter) => {
                         return row[column];
                     });
                 });
 
                 // find statistics rows that cover these objects
-                let criteria = {
+                const criteria = {
                     type: analyser.type,
                     match_any: matchingObjects,
                     dirty: false,
                 };
-                let rows = await Statistics.find(db, schema, criteria, 'id, sample_count, atime');
+                const rows = await Statistics.find(db, schema, criteria, 'id, sample_count, atime');
                 for (let row of rows) {
                     impactedRows.push(row);
                 }
@@ -185,8 +200,8 @@ async function findStatisticsImpactedByDatabaseChanges(db, schema, events) {
         }
     }
     // return stats with fewer data points first, since they change more rapidly
-    let orderedRows = _.orderBy(impactedRows, [ 'sample_count', 'atime' ], [ 'asc', 'desc' ]);
-    let ids = _.map(orderedRows, 'id');
+    const orderedRows = _.orderBy(impactedRows, [ 'sample_count', 'atime' ], [ 'asc', 'desc' ]);
+    const ids = _.map(orderedRows, 'id');
     return ids;
 }
 
@@ -200,13 +215,27 @@ async function findStatisticsImpactedByDatabaseChanges(db, schema, events) {
  * @return {Promise}
  */
 async function invalidateListings(db, schema, events) {
-    let ids1 = await findListingsImpactedByStoryChanges(db, schema, events);
-    let ids2 = await findListingsImpactedByStatisticsChange(db, schema, events);
-    let ids = _.concat(ids1, ids2);
-    let idChunks = _.chunk(ids, 20);
-    for (let idChunk of idChunks) {
-        console.log(`Invalidating story listings in ${schema}: ${idChunk.join(', ')}`)
-        await Listing.invalidate(db, schema, idChunk);
+    const taskLog = TaskLog.start('listing-invalidate', {
+        saving: false,
+        preserving: true,
+        project: schema,
+    });
+    try {
+        taskLog.describe('searching for rows impacted');
+        const ids1 = await findListingsImpactedByStoryChanges(db, schema, events);
+        const ids2 = await findListingsImpactedByStatisticsChange(db, schema, events);
+        const ids = _.concat(ids1, ids2);
+        const idChunks = _.chunk(ids, 20);
+        taskLog.describe(`updating rows`);
+        for (let idChunk of idChunks) {
+            await Listing.invalidate(db, schema, idChunk);
+        }
+        if (!_.isEmpty(ids)) {
+            taskLog.set('invalidated', ids);
+        }
+        await taskLog.finish();
+    } catch (err) {
+        await taskLog.abort(err);
     }
 }
 
@@ -221,7 +250,7 @@ async function invalidateListings(db, schema, events) {
  */
 async function findListingsImpactedByStoryChanges(db, schema, events) {
     // these columns determines whether a story is included in a listing or not
-    let filteredColumnMappings = {
+    const filteredColumnMappings = {
         published: 'published',
         ready: 'ready',
         public: 'public',
@@ -229,17 +258,17 @@ async function findListingsImpactedByStoryChanges(db, schema, events) {
         user_ids: 'user_ids',
         role_ids: 'role_ids',
     };
-    let filteredColumns = _.values(filteredColumnMappings);
+    const filteredColumns = _.values(filteredColumnMappings);
     // columns that affects rating
-    let ratingColumns = _.uniq(_.flatten(_.map(StoryRaters, 'columns')));
+    const ratingColumns = _.uniq(_.flatten(_.map(StoryRaters, 'columns')));
     // columns that affects order (hence whether it'd be excluded by the LIMIT clause)
-    let orderingColumns = [ 'btime' ];
-    let relevantEvents = _.filter(events, (event) => {
+    const orderingColumns = [ 'btime' ];
+    const relevantEvents = _.filter(events, (event) => {
         if (event.table === 'story') {
             // only stories that are published (or have just been unpublished)
             // can impact listings
             if (event.current.published || event.diff.pubished) {
-                let changedColumns = _.keys(event.diff);
+                const changedColumns = _.keys(event.diff);
                 return _.some(changedColumns, (column) => {
                     if (_.includes(filteredColumns, column)) {
                         return true;
@@ -254,26 +283,26 @@ async function findListingsImpactedByStoryChanges(db, schema, events) {
     });
     // a listing gets updated if a changed row matches its criteria currently
     // or previously
-    let storiesBefore = extractPreviousValues(relevantEvents, filteredColumns);
-    let storiesAfter = extractCurrentValues(relevantEvents, filteredColumns);
-    let stories = _.concat(storiesBefore, storiesAfter);
+    const storiesBefore = extractPreviousValues(relevantEvents, filteredColumns);
+    const storiesAfter = extractCurrentValues(relevantEvents, filteredColumns);
+    const stories = _.concat(storiesBefore, storiesAfter);
     if (_.isEmpty(stories)) {
         return [];
     }
-    let matchingObjects = _.map(stories, (row) => {
+    const matchingObjects = _.map(stories, (row) => {
         return _.mapValues(filteredColumnMappings, (column, filter) => {
             return row[column];
         });
     });
     // find listing rows that cover these stories
-    let listingCriteria = {
+    const listingCriteria = {
         match_any: matchingObjects,
         dirty: false,
     };
-    let rows = await Listing.find(db, schema, listingCriteria, 'id, atime');
+    const rows = await Listing.find(db, schema, listingCriteria, 'id, atime');
     // return listings that have been accessed recently first
-    let orderedRows = _.orderBy(rows, [ 'atime' ], [ 'desc' ]);
-    let ids = _.map(orderedRows, 'id');
+    const orderedRows = _.orderBy(rows, [ 'atime' ], [ 'desc' ]);
+    const ids = _.map(orderedRows, 'id');
     return ids;
 }
 
@@ -288,7 +317,7 @@ async function findListingsImpactedByStoryChanges(db, schema, events) {
  */
 async function findListingsImpactedByStatisticsChange(db, schema, events) {
     // only story-popularity is used
-    let relevantEvents = _.filter(events, (event) => {
+    const relevantEvents = _.filter(events, (event) => {
         if (event.table === 'statistics') {
             if (event.current.type === 'story-popularity') {
                 return true;
@@ -296,19 +325,19 @@ async function findListingsImpactedByStatisticsChange(db, schema, events) {
         }
     });
     // change object for Statistics contains the row's filters
-    let storyIDs = _.map(relevantEvents, (event) => {
+    const storyIDs = _.map(relevantEvents, (event) => {
         return event.current.filters.story_id;
     });
     if (_.isEmpty(storyIDs)) {
         return [];
     }
-    let listingCriteria = {
+    const listingCriteria = {
         has_candidates: storyIDs,
         dirty: false,
     };
-    let rows = await Listing.find(db, schema, listingCriteria, 'id, atime');
-    let orderedRows = _.orderBy(rows, [ 'atime' ], [ 'desc' ]);
-    let ids = _.map(orderedRows, 'id');
+    const rows = await Listing.find(db, schema, listingCriteria, 'id, atime');
+    const orderedRows = _.orderBy(rows, [ 'atime' ], [ 'desc' ]);
+    const ids = _.map(orderedRows, 'id');
     return ids;
 }
 
@@ -325,7 +354,7 @@ async function findListingsImpactedByStatisticsChange(db, schema, events) {
 function extractCurrentValues(events, columns) {
     return _.filter(_.map(events, (event) => {
         if (event.op !== 'DELETE') {
-            let row = event.current;
+            const row = event.current;
             return _.pick(row, columns);
         }
     }));
@@ -342,13 +371,13 @@ function extractPreviousValues(events, columns) {
     return _.filter(_.map(events, (event) => {
         if (event.op !== 'INSERT') {
             // include row only when the request columns have changed
-            let changed = _.some(columns, (column) => {
+            const changed = _.some(columns, (column) => {
                 return event.diff[column];
             });
             if (changed) {
                 // event.previous only contains properties that differ from the
                 // current values--reconstruct the row
-                let row = _.assign({}, event.current, event.previous);
+                const row = _.assign({}, event.current, event.previous);
                 return _.pick(row, columns);
             }
         }
