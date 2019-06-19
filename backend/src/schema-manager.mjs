@@ -1,35 +1,14 @@
 import _ from 'lodash';
+import './lib/common/utils/lodash-extra.mjs';
 import Bluebird from 'bluebird';
 import Moment from 'moment';
 import Crypto from 'crypto'; Bluebird.promisifyAll(Crypto);
 import Database from './lib/database.mjs';
 import * as TaskLog from './lib/task-log.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
-import './lib/common/utils/lodash-extra.mjs';
+import * as Accessors from './lib/schema-manager/accessors.mjs';
 
-// global accessors
-import Commit from './lib/accessors/commit.mjs';
-import Device from './lib/accessors/device.mjs';
-import Picture from './lib/accessors/picture.mjs';
 import Project from './lib/accessors/project.mjs';
-import Repo from './lib/accessors/repo.mjs';
-import Role from './lib/accessors/role.mjs';
-import Server from './lib/accessors/server.mjs';
-import Session from './lib/accessors/session.mjs';
-import Subscription from './lib/accessors/subscription.mjs';
-import System from './lib/accessors/system.mjs';
-import User from './lib/accessors/user.mjs';
-
-// project accessors
-import Bookmark from './lib/accessors/bookmark.mjs';
-import Listing from './lib/accessors/listing.mjs';
-import Reaction from './lib/accessors/reaction.mjs';
-import Statistics from './lib/accessors/statistics.mjs';
-import Story from './lib/accessors/story.mjs';
-
-// appear in both
-import Notification from './lib/accessors/notification.mjs';
-import Task from './lib/accessors/task.mjs';
 
 import TaskQueue from './lib/task-queue.mjs';
 import {
@@ -94,9 +73,9 @@ async function start() {
     }
 
     taskQueue = new TaskQueue;
-    taskQueue.schedule(new PeriodicTaskClearMessageQueue());
-    taskQueue.schedule(new PeriodicTaskCollectGarbage(globalAccessors, projectAccessors));
-    taskQueue.schedule(new PeriodicTaskReportSchemaSize());
+    taskQueue.schedule(new PeriodicTaskClearMessageQueue);
+    taskQueue.schedule(new PeriodicTaskCollectGarbage);
+    taskQueue.schedule(new PeriodicTaskReportSchemaSize);
     await taskQueue.start();
 }
 
@@ -263,31 +242,6 @@ async function upgradeDatabase(db) {
     return globalChanged || _.some(projectChanged);
 }
 
-const globalAccessors = [
-    Commit,
-    Device,
-    Notification,
-    Picture,
-    Project,
-    Repo,
-    Role,
-    Server,
-    Session,
-    Subscription,
-    System,
-    Task,
-    User,
-];
-const projectAccessors = [
-    Bookmark,
-    Listing,
-    Notification,
-    Reaction,
-    Statistics,
-    Story,
-    Task,
-];
-
 /**
  * Upgrade schema if necessary
  *
@@ -297,7 +251,7 @@ const projectAccessors = [
  * @return {Promise<Boolean>}
  */
 async function upgradeSchema(db, schema) {
-    const accessors = (schema === 'global') ? globalAccessors : projectAccessors;
+    const accessors = Accessors.get(schema);
     const currentVersion = await getSchemaVersion(db, schema);
     const latestVersion = _.max(_.map(accessors, 'version'));
     const jumps = _.range(currentVersion, latestVersion);
@@ -356,7 +310,7 @@ async function createSchema(db, schema) {
         }
 
         taskLog.describe(`creating tables`);
-        const accessors = (schema === 'global') ? globalAccessors : projectAccessors;
+        const accessors = Accessors.get(schema);
         for (let accessor of accessors) {
             await accessor.create(db, schema);
             taskLog.append('created', accessor.table);

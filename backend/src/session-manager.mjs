@@ -419,6 +419,7 @@ async function handleOAuthActivationRequest(req, res, done) {
  * @param  {Function}  done
  */
 async function handleOAuthDeauthorizationRequest(req, res, done) {
+    const taskLog = TaskLog.start('oauth-access-deauthorize');
     try {
         const provider = req.params.provider;
         const signedRequest = req.body.signed_request;
@@ -440,17 +441,22 @@ async function handleOAuthDeauthorizationRequest(req, res, done) {
                 }
             }
         }
+        let user;
         if (payload) {
-            return detachExternalAccount(matchingServer, payload.user_id);
+            user = await detachExternalAccount(matchingServer, payload.user_id);
         } else {
             if (lastError) {
                 throw lastError;
             }
         }
         sendJSON(res, { status: 'ok' });
+        if (user) {
+            taskLog.set('user', user.username);
+        }
+        await taskLog.finish();
     } catch (err) {
-        console.error(err);
         sendErrorJSON(res, err);
+        await taskLog.abort(err);
     }
 }
 
@@ -870,7 +876,11 @@ async function findMatchingUser(server, account) {
                 reason: 'existing-users-only',
             });
         }
-        const image = await retrieveProfileImage(profile);
+        let image;
+        try {
+            image = await retrieveProfileImage(profile);
+        } catch (err){
+        }
         const userNew = copyUserProperties(null, server, image, profile);
         if (userNew.disabled) {
             // don't create disabled user
@@ -1142,18 +1152,13 @@ async function retrieveProfileImage(profile) {
     const method = 'post';
     const headers = { 'Content-Type': 'application/json' };
     const body = JSON.stringify({ url: avatarURL });
-    try {
-        const response = await CrossFetch(url, { method, headers, body });
-        const { status } = response;
-        if (status === 200) {
-            const info = await response.json();
-            return info;
-        } else {
-            throw new HTTPError(status);
-        }
-    } catch (err) {
-        console.log('Unable to retrieve profile image: ' + avatarURL);
-        return null;
+    const response = await CrossFetch(url, { method, headers, body });
+    const { status } = response;
+    if (status === 200) {
+        const info = await response.json();
+        return info;
+    } else {
+        throw new HTTPError(status);
     }
 }
 
@@ -1170,12 +1175,11 @@ async function retrieveProfileImage(profile) {
 async function updateProfileImage(db, user, server, profile) {
     try {
         const image = await retrieveProfileImage(profile);
-        const userAfter = copyUserProperties(user, server, image, profile);
-        if(!_.isEqual(userAfter, user)) {
-            await User.updateOne(db, 'global', userAfter);
+        const userChanges = copyUserProperties(user, server, image, profile);
+        if(userChanges) {
+            await User.updateOne(db, 'global', userChanges);
         }
     } catch (err) {
-        console.error(err);
     }
 }
 

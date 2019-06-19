@@ -251,12 +251,8 @@ class LiveData extends Data {
         const now = new Date;
         const atime = now.toISOString();
         setTimeout(async () => {
-            try {
-                const db = await Database.open();
-                await this.updateOne(db, schema, { id: row.id, atime });
-            } catch (err) {
-                console.error(err);
-            }
+            const db = await Database.open();
+            await this.updateOne(db, schema, { id: row.id, atime });
         }, 20);
     }
 

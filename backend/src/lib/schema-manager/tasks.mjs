@@ -3,11 +3,14 @@ import Moment from 'moment';
 import Database from '../database.mjs';
 import { PeriodicTask } from '../task-queue.mjs';
 import * as TaskLog from '../task-log.mjs';
+import * as Accessors from './accessors.mjs';
 
 import Project from '../accessors/project.mjs';
 
 const MIN = 60 * 1000;
 const HOUR = 60 * MIN;
+
+const DEFAULT_GARBAGE_PRESERVATION = (process.env.NODE_ENV === 'production') ? '2 WEEKS' : '1 HOUR';
 
 class PeriodicTaskClearMessageQueue extends PeriodicTask {
     delay(initial) {
@@ -23,23 +26,13 @@ class PeriodicTaskClearMessageQueue extends PeriodicTask {
 }
 
 class PeriodicTaskCollectGarbage extends PeriodicTask {
-    constructor(globalAccessors, projectAccessors) {
+    constructor() {
         super();
         this.lastGCTime = 0;
-        this.globalAccessors = globalAccessors;
-        this.projectAccessors = projectAccessors;
     }
 
     delay(initial) {
         return (initial) ? 0 : 10 * MIN;
-    }
-
-    getAccessors(schema) {
-        if (schema === 'global') {
-            return this.globalAccessors;
-        } else {
-            return this.projectAccessors;
-        }
     }
 
     shouldRun() {
@@ -67,7 +60,7 @@ class PeriodicTaskCollectGarbage extends PeriodicTask {
         const taskLog = TaskLog.start('garbage-collect');
         try {
             const db = await Database.open();
-            const preservation = process.env.GARBAGE_PRESERVATION || '1 MINUTE';
+            const preservation = process.env.GARBAGE_PRESERVATION || DEFAULT_GARBAGE_PRESERVATION;
             const projects = await Project.find(db, 'global', { deleted: false }, 'name');
             const schemas = [ 'global', ..._.map(projects, 'name') ];
             let total = 0;
@@ -77,7 +70,7 @@ class PeriodicTaskCollectGarbage extends PeriodicTask {
                     continue;
                 }
                 let schemaTotal = 0;
-                const accessors = this.getAccessors(schema);
+                const accessors = Accessors.get(schema);
                 for (let accessor of accessors) {
                     const table = accessor.getTableName(schema);
                     taskLog.describe(`cleaning ${table}`);

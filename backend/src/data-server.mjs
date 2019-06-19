@@ -7,29 +7,14 @@ import Moment from 'moment';
 import './lib/common/utils/lodash-extra.mjs';
 import Database from './lib/database.mjs';
 import HTTPError from './lib/common/errors/http-error.mjs';
+import * as TaskLog from './lib/task-log.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
 import * as ProjectUtils from './lib/common/objects/utils/project-utils.mjs';
+import * as Accessors from './lib/data-server/accessors.mjs';
 
-// global accessors
-import Device from './lib/accessors/device.mjs';
-import Picture from './lib/accessors/picture.mjs';
 import Project from './lib/accessors/project.mjs';
-import Repo from './lib/accessors/repo.mjs';
-import Role from './lib/accessors/role.mjs';
-import Server from './lib/accessors/server.mjs';
 import Session from './lib/accessors/session.mjs';
-import Subscription from './lib/accessors/subscription.mjs';
-import System from './lib/accessors/system.mjs';
 import User from './lib/accessors/user.mjs';
-
-// project-specific accessors
-import Bookmark from './lib/accessors/bookmark.mjs';
-import Listing from './lib/accessors/listing.mjs';
-import Notification from './lib/accessors/notification.mjs';
-import Reaction from './lib/accessors/reaction.mjs';
-import Statistics from './lib/accessors/statistics.mjs';
-import Story from './lib/accessors/story.mjs';
-import Task from './lib/accessors/task.mjs';
 
 const SESSION_LIFETIME_ADMIN = 1;
 const SESSION_LIFETIME_CLIENT = 30;
@@ -103,7 +88,6 @@ function sendError(res, err) {
                 break;
             default:
                 // not an expected error
-                console.error(err);
                 statusCode = 500;
                 if (process.env.NODE_ENV === 'production') {
                     message = 'Internal server error';
@@ -121,16 +105,20 @@ function sendError(res, err) {
  * @param  {Response} res
  */
 async function handleSignature(req, res) {
+    const schema = req.params.schema;
+    const params = req.body;
+    const taskLog = TaskLog.start('signature-retrieve', { schema });
     try {
-        const schema = req.params.schema;
-        const params = req.body;
         const db = await Database.open();
         const userID = await checkAuthorization(db, params.auth_token);
         const credentials = await fetchCredentials(db, userID, schema);
         const signature = await Project.getSignature(db, schema, credentials);
         sendResponse(res, { signature });
+        taskLog.set('signature', signature);
+        await taskLog.finish();
     } catch (err) {
         sendError(res, err);
+        await taskLog.abort(err);
     }
 }
 
@@ -141,10 +129,11 @@ async function handleSignature(req, res) {
  * @param  {Response} res
  */
 async function handleDiscovery(req, res) {
+    const params = req.body || req.query;
+    const schema = req.params.schema;
+    const table = req.params.table;
+    const taskLog = TaskLog.start('object-discover', { schema, table });
     try {
-        const params = req.body || req.query;
-        const schema = req.params.schema;
-        const table = req.params.table;
         const db = await Database.open();
         const userID = await checkAuthorization(db, params.auth_token);
         const credentials = await fetchCredentials(db, userID, schema);
@@ -200,8 +189,11 @@ async function handleDiscovery(req, res) {
             gns: _.map(viewableRows, 'gn'),
         };
         sendResponse(res, result);
+        taskLog.set('count', _.size(viewableRows));
+        await taskLog.finish();
     } catch (err) {
         sendError(res, err);
+        await taskLog.abort(err);
     }
 }
 
@@ -212,10 +204,11 @@ async function handleDiscovery(req, res) {
  * @param  {Response} res
  */
 async function handleRetrieval(req, res) {
+    const params = req.body || req.query;
+    const schema = req.params.schema;
+    const table = req.params.table;
+    const taskLog = TaskLog.start('object-retrieve', { schema, table });
     try {
-        const params = req.body || req.query;
-        const schema = req.params.schema;
-        const table = req.params.table;
         const db = await Database.open();
         const userID = await checkAuthorization(db, params.auth_token)
         const credentials = await fetchCredentials(db, userID, schema);
@@ -257,8 +250,11 @@ async function handleRetrieval(req, res) {
         // export the row, trimming out sensitive data
         const result = await accessor.export(db, schema, viewableRows, credentials, options);
         sendResponse(res, result);
+        taskLog.set('count', _.size(result));
+        await taskLog.finish();
     } catch (err) {
         sendError(res, err);
+        await taskLog.abort(err);
     }
 }
 
@@ -269,10 +265,11 @@ async function handleRetrieval(req, res) {
  * @param  {Response} res
  */
 async function handleStorage(req, res) {
+    const params = req.body;
+    const schema = req.params.schema;
+    const table = req.params.table;
+    const taskLog = TaskLog.start('object-store', { schema, table });
     try {
-        const params = req.body;
-        const schema = req.params.schema;
-        const table = req.params.table;
         const objects = params.objects;
         // make sure objects are such
         if (!_.isArray(objects) || _.isEmpty(objects)) {
@@ -326,6 +323,7 @@ async function handleStorage(req, res) {
 
                 const result = await accessor.export(db, schema, savedRows, credentials, options);
                 sendResponse(res, result);
+                taskLog.set('count', _.size(rows));
             } catch (err) {
                 // roll back changes
                 await db.rollback();
@@ -334,8 +332,10 @@ async function handleStorage(req, res) {
         } finally {
             db.close();
         }
+        await taskLog.finish();
     } catch (err) {
         sendError(res, err);
+        await taskLog.abort(err);
     }
 }
 
@@ -410,28 +410,6 @@ async function fetchCredentials(db, userID, schema) {
     return { user, project, area, unrestricted, access };
 }
 
-const globalAccessors = [
-    Device,
-    Picture,
-    Project,
-    Repo,
-    Role,
-    Server,
-    Subscription,
-    System,
-    Task,
-    User,
-];
-const projectAccessors = [
-    Bookmark,
-    Listing,
-    Notification,
-    Reaction,
-    Statistics,
-    Story,
-    Task,
-];
-
 /**
  * Return appropriate accessor for schema and table
  *
@@ -441,7 +419,7 @@ const projectAccessors = [
  * @return {Accessor}
  */
 function getAccessor(schema, table) {
-    const accessors = (schema === 'global') ? globalAccessors : projectAccessors;
+    const accessors = Accessors.get(schema);
     const accessor = _.find(accessors, { table });
     if (!accessor) {
         throw new HTTPError(404);

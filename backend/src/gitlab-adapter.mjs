@@ -4,7 +4,12 @@ import Express from 'express';
 import BodyParser from 'body-parser';
 import DNSCache from 'dnscache';
 import Database from './lib/database.mjs';
+import * as TaskLog from './lib/task-log.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
+
+import Project from './lib/accessors/project.mjs';
+import Repo from './lib/accessors/repo.mjs';
+import Server from './lib/accessors/server.mjs';
 
 import * as HookManager from './lib/gitlab-adapter/hook-manager.mjs';
 
@@ -94,26 +99,22 @@ function handleDatabaseChanges(events) {
         if (event.action === 'DELETE') {
             continue;
         }
-        try {
-            switch (event.table) {
-                case 'server':
-                    handleServerChangeEvent(event);
-                    break;
-                case 'project':
-                    handleProjectChangeEvent(event);
-                    break;
-                case 'story':
-                    handleStoryChangeEvent(event);
-                    break;
-                case 'system':
-                    handleSystemChangeEvent(event);
-                    break;
-                case 'task':
-                    handleTaskChangeEvent(event);
-                    break;
-            }
-        } catch (err) {
-            console.error(err);
+        switch (event.table) {
+            case 'server':
+                handleServerChangeEvent(event);
+                break;
+            case 'project':
+                handleProjectChangeEvent(event);
+                break;
+            case 'story':
+                handleStoryChangeEvent(event);
+                break;
+            case 'system':
+                handleSystemChangeEvent(event);
+                break;
+            case 'task':
+                handleTaskChangeEvent(event);
+                break;
         }
     }
 }
@@ -245,11 +246,16 @@ function handleSystemChangeEvent(event) {
  * @return {Promise}
  */
 async function handleSystemHookCallback(req, res) {
+    const serverID = parseInt(req.params.serverID);
+    const taskLog = TaskLog.start('system-event-handle', {
+        server_id: serverID,
+        server: getServerName(serverID)
+    });
     try {
         HookManager.verifyHookRequest(req);
 
-        let glHookEvent = req.body;
-        let serverID = parseInt(req.params.serverID);
+        const glHookEvent = req.body;
+        let task;
         switch (glHookEvent.event_name) {
             case 'project_create':
             case 'project_destroy':
@@ -258,15 +264,20 @@ async function handleSystemHookCallback(req, res) {
             case 'project_update':
             case 'user_add_to_team':
             case 'user_remove_from_team':
-                taskQueue.add(new TaskImportRepos(serverID));
+                task = new TaskImportRepos(serverID);
                 break;
             case 'user_create':
             case 'user_destroy':
-                taskQueue.add(new TaskImportUsers(serverID));
+                task = new TaskImportUsers(serverID);
                 break;
         }
+        if (task) {
+            taskQueue.add(task);
+            taskLog.merge(glHookEvent);
+        }
+        await taskLog.finish();
     } catch (err) {
-        console.error(err);
+        await taskLog.abort(err);
     } finally {
         res.end();
     }
@@ -281,19 +292,47 @@ async function handleSystemHookCallback(req, res) {
  * @return {Promise}
  */
 async function handleProjectHookCallback(req, res) {
+    const serverID = parseInt(req.params.serverID);
+    const repoID = parseInt(req.params.repoID);
+    const projectID = parseInt(req.params.projectID);
+    const taskLog = TaskLog.start('repo-event-handle', {
+        server_id: serverID,
+        server: getServerName(serverID),
+        repo_id: repoID,
+        repo: getRepoName(repoID),
+        project_id: projectID,
+        project: getProjectName(projectID),
+    });
     try {
         HookManager.verifyHookRequest(req);
 
-        let glHookEvent = req.body;
-        let serverID = parseInt(req.params.serverID);
-        let repoID = parseInt(req.params.repoID);
-        let projectID = parseInt(req.params.projectID);
+        const glHookEvent = req.body;
         taskQueue.add(new TaskImportProjectHookEvent(repoID, projectID, glHookEvent));
+        taskLog.merge(glHookEvent);
+        await taskLog.finish();
     } catch (err) {
-        console.error(err);
+        await taskLog.abort(err);
     } finally {
         res.end();
     }
+}
+
+function getServerName(serverID) {
+    const db = Database.open();
+    const server = Server.find(db, 'global', { id: serverID }, 'name');
+    return _.get(server, 'name', '');
+}
+
+function getRepoName(repoID) {
+    const db = Database.open();
+    const repo = Repo.find(db, 'global', { id: repoID }, 'name');
+    return _.get(repo, 'name', '');
+}
+
+function getProjectName(projectID) {
+    const db = Database.open();
+    const project = Project.find(db, 'global', { id: projectID }, 'name');
+    return _.get(project, 'name', '');
 }
 
 if ('file://' + process.argv[1] === import.meta.url) {

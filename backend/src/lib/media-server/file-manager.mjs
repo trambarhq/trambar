@@ -196,25 +196,21 @@ function makeTempPath(dstFolder, url, ext) {
  * @return {Promise}
  */
 async function rememberDownload(url, dstFolder, hash, headers) {
+    const etag = headers['etag'];
+    const mtime = headers['last-modified'];
+    const type = headers['content-type'];
+    const size = parseInt(headers['content-length']);
+    const info = { url, hash, type, size, etag, mtime };
+    const json = JSON.stringify(info, undefined, 2);
+    const folder = `${dstFolder}/.url`;
     try {
-        const etag = headers['etag'];
-        const mtime = headers['last-modified'];
-        const type = headers['content-type'];
-        const size = parseInt(headers['content-length']);
-        const info = { url, hash, type, size, etag, mtime };
-        const json = JSON.stringify(info, undefined, 2);
-        const folder = `${dstFolder}/.url`;
-        try {
-            await FS.statAsync(folder);
-        } catch (err) {
-            await FS.mkdirAsync(folder);
-        }
-        const urlHash = md5(url);
-        const path = `${dstFolder}/.url/${urlHash}`;
-        return FS.writeFileAsync(path, json);
+        await FS.statAsync(folder);
     } catch (err) {
-        console.error(err);
+        await FS.mkdirAsync(folder);
     }
+    const urlHash = md5(url);
+    const path = `${dstFolder}/.url/${urlHash}`;
+    return FS.writeFileAsync(path, json);
 }
 
 /**

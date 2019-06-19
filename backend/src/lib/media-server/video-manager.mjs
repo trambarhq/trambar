@@ -275,16 +275,12 @@ async function awaitPosterGeneration(job) {
         }
     } finally {
         // delete the folder, along with any remaining files
-        try {
-            const names = await FS.readdirAsync(dstFolder);
-            for (let name of names) {
-                const path = `${dstFolder}/${name}`;
-                await FS.unlinkAsync(path);
-            }
-            await FS.rmdirAsync(dstFolder);
-        } catch (err) {
-            console.error(err);
+        const names = await FS.readdirAsync(dstFolder);
+        for (let name of names) {
+            const path = `${dstFolder}/${name}`;
+            await FS.unlinkAsync(path);
         }
+        await FS.rmdirAsync(dstFolder);
     }
 }
 

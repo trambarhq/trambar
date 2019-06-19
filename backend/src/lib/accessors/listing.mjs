@@ -333,7 +333,7 @@ function chooseStories(row) {
             newStories = removeStoriesWithLowRating(newStories, row, newStoryCount);
         }
         const rtime = now.toISOString();
-        const stories = addStories(oldStories, newStories, rtime);
+        let stories = addStories(oldStories, newStories, rtime);
 
         // see if we have the right number of stories
         const gap = limit - _.size(stories);

@@ -117,9 +117,7 @@ async function processEvent(db, system, server, repo, project, glEvent, glHookEv
         }
         return importer.processEvent(db, system, server, repo, project, author, glEvent, glHookEvent);
     } catch (err) {
-        if (err.statusCode === 404) {
-            console.error(err)
-        } else {
+        if (err.statusCode !== 404) {
             throw err;
         }
     }
@@ -150,9 +148,7 @@ async function processHookEvent(db, system, server, repo, project, glHookEvent) 
         }
         return importer.processHookEvent(db, system, server, repo, project, author, glHookEvent);
     } catch (err) {
-        if (err.statusCode === 404) {
-            console.error(err)
-        } else {
+        if (err.statusCode !== 404) {
             throw err;
         }
     }

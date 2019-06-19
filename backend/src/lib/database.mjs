@@ -12,7 +12,6 @@ const config = {
 
 const pool = new PgPool(config);
 pool.on('error', (err) => {
-    console.error(err.message);
     poolCheckPromise = null;
 });
 
@@ -65,7 +64,6 @@ class Database {
                     }
                     return;
                 } catch (err) {
-                    console.error(err);
                     await Bluebird.delay(1000);
                 }
             }
@@ -99,9 +97,11 @@ class Database {
         } catch (err) {
             if (err.message === 'Connection terminated') {
                 await this.connect();
-                return this.client.query(sql, parameters);
+                return this.execute(sql, parameters);
             } else {
-                logError(err, sql, parameters);
+                if (process.env.NODE_ENV !== 'production' && typeof(err.code) === 'string') {
+                    err.query = { sql, parameters };
+                }
                 throw err;
             }
         }
@@ -167,7 +167,6 @@ class Database {
                     return;
                 }
             } catch (err) {
-                console.error(err);
                 lastError = err;
             }
             await Bluebird.delay(500);
@@ -286,11 +285,7 @@ class Database {
         const events = listener.queue;
         listener.queue = [];
         listener.timeout = 0;
-        try {
-            listener.callback.call(this, events);
-        } catch(err) {
-            console.error(err.message);
-        }
+        listener.callback.call(this, events);
     }
 
     async updateJavaScriptRuntime() {
@@ -419,30 +414,6 @@ Database.open = async function(exclusive) {
     await db.connect();
     return db;
 };
-
-function logError(err, sql, parameters) {
-    if (process.env.NODE_ENV !== 'production' && typeof(err.code) === 'string') {
-        let programmingError;
-        switch (err.code.substr(0, 2)) {
-            case '42':
-                programmingError = 'A syntax error or rule violation was encountered';
-                break;
-            case '22':
-                programmingError = 'A data conversion error was encountered';
-                break;
-        }
-        if (programmingError) {
-            // syntax error
-            console.log(programmingError);
-            console.log('SQL statement:');
-            console.log(sql);
-            console.log('----------------------------------------');
-            console.log('Parameters:');
-            console.log(parameters || {});
-            console.log('----------------------------------------');
-        }
-    }
-}
 
 const BIGINT_OID = 20;
 const TIMESTAMPTZ_OID = 1184
