@@ -213,8 +213,43 @@ class Database {
      */
     async functionExists(fname) {
         const sql = `SELECT 1 FROM pg_proc WHERE proname = $1;`;
-        const rows = await this.query(sql, [ fname ]);
-        return !!rows[0];
+        const [ rows ] = await this.query(sql, [ fname ]);
+        return !!row;
+    }
+
+    /**
+     * Return list of all schemas
+     *
+     * @param  {String} schema
+     *
+     * @return {Promise<Array<String>>}
+     */
+    async getSchemaNames() {
+        const sql = `
+            SELECT nspname FROM pg_catalog.pg_namespace
+            WHERE nspname NOT IN ('pg_catalog', 'information_schema')
+            AND nspname NOT LIKE 'pg_toast%'
+            AND nspname NOT LIKE 'pg_temp%'
+        `;
+        const rows = await this.query(sql);
+        return rows.map((row) => row.nspname);
+    }
+
+    /**
+     * Return the size of a database schema (in bytes)
+     *
+     * @param  {String} schema
+     *
+     * @return {Promise<Number>}
+     */
+    async getSchemaSize(schema) {
+        const sql = `
+            SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)))::BIGINT as size
+            FROM pg_tables
+            WHERE schemaname = $1
+        `;
+        const [ row ] = await this.query(sql, [ schema ]);
+        return row.size;
     }
 
     async processNotification(listener, msg) {
