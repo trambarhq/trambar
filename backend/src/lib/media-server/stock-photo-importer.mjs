@@ -13,10 +13,7 @@ async function importPhotos() {
     const db = await Database.open();
     await db.need('global');
     const purposes = [ 'background', 'profile-image', 'project-emblem' ];
-    const taskLog = TaskLog.start('stock-photo-import', {
-        saving: false,
-        preserving: true
-    });
+    const taskLog = TaskLog.start('stock-photo-import');
     try {
         for (let purpose of purposes) {
             const folder = Path.resolve(`../media/${purpose}`);

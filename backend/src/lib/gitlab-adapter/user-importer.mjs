@@ -27,7 +27,6 @@ import User from '../accessors/user.mjs';
 async function importUsers(db, server) {
     const taskLog = TaskLog.start('gitlab-user-import', {
         saving: true,
-        preserving: true,
         server_id: server.id,
         server: server.name,
     });

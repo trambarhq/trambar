@@ -285,10 +285,7 @@ async function handleImageUpload(req, res) {
  * @param  {Response} res
  */
 async function handleImageImport(req, res) {
-    const taskLog = TaskLog.start('image-import', {
-        saving: false,
-        preserving: true,
-    });
+    const taskLog = TaskLog.start('image-import');
     try {
         const file = req.file;
         const sourceURL = req.body.url;

@@ -45,7 +45,6 @@ async function reconstructPush(db, server, repo, type, branch, headID, tailID, c
 async function importCommits(db, server, repo, branch, headID, tailID, count) {
     const taskLog = TaskLog.start('gitlab-push-import', {
         saving: true,
-        preserving: true,
         server_id: server.id,
         server: server.name,
         repo_id: repo.id,

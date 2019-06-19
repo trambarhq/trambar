@@ -21,7 +21,6 @@ import * as Transport from './transport.mjs';
 async function installServerHooks(host, server, repos, projects) {
     const taskLog = TaskLog.start('gitlab-hook-install', {
         saving: true,
-        preserving: true,
         server_id: server.id,
         server: server.name,
     });
@@ -62,7 +61,6 @@ async function installServerHooks(host, server, repos, projects) {
 async function removeServerHooks(host, server, repos, projects) {
     const taskLog = TaskLog.start('gitlab-hook-remove', {
         saving: true,
-        preserving: true,
         server_id: server.id,
         server: server.name,
     });

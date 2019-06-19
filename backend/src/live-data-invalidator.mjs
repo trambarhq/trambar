@@ -100,11 +100,7 @@ async function handleDatabaseChangesAffectingListings(events) {
  * @return {Promise}
  */
 async function invalidateStatistics(db, schema, events) {
-    const taskLog = TaskLog.start('statistics-invalidate', {
-        saving: false,
-        preserving: true,
-        project: schema,
-    });
+    const taskLog = TaskLog.start('statistics-invalidate', { project: schema });
     try {
         taskLog.describe(`searching for rows impacted`);
         const ids = await findStatisticsImpactedByDatabaseChanges(db, schema, events);
@@ -215,11 +211,7 @@ async function findStatisticsImpactedByDatabaseChanges(db, schema, events) {
  * @return {Promise}
  */
 async function invalidateListings(db, schema, events) {
-    const taskLog = TaskLog.start('listing-invalidate', {
-        saving: false,
-        preserving: true,
-        project: schema,
-    });
+    const taskLog = TaskLog.start('listing-invalidate', { project: schema });
     try {
         taskLog.describe('searching for rows impacted');
         const ids1 = await findListingsImpactedByStoryChanges(db, schema, events);

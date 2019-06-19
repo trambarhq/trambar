@@ -23,7 +23,6 @@ import Story from '../accessors/story.mjs';
 async function importRepositories(db, server) {
     const taskLog = TaskLog.start('gitlab-repo-import', {
         saving: true,
-        preserving: true,
         server_id: server.id,
         server: server.name,
     });

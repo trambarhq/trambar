@@ -129,10 +129,7 @@ async function sendToWebsockets(db, messages) {
     if (_.isEmpty(desiredMessages)) {
         return;
     }
-    const taskLog = TaskLog.start('websocket-notify', {
-        saving: false,
-        preserving: true,
-    });
+    const taskLog = TaskLog.start('websocket-notify');
     try {
         const messageCount = _.size(desiredMessages);
         let messageNumber = 1;
@@ -190,11 +187,7 @@ async function sendToPushRelays(db, messages) {
     // selected after subscriptions were created
     const messagesByRelay = _.entries(_.groupBy(desiredMessages, 'listener.subscription.relay'));
     for (let [ relay, messages ] of messagesByRelay) {
-        const taskLog = TaskLog.start('push-notify', {
-            saving: false,
-            preserving: true,
-            relay,
-        });
+        const taskLog = TaskLog.start('push-notify', { relay });
         try {
             // merge identifical messages
             const messagesByJSON = {};

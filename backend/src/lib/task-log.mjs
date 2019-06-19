@@ -16,7 +16,7 @@ import Task from './accessors/task.mjs';
  * @return {TaskLog}
  */
 function start(action, options) {
-    return new TaskLog(action, options);
+    return new TaskLog(action, options || {});
 }
 
 const taskLogHash = {};
@@ -42,10 +42,7 @@ async function obtain(schema, token, action) {
     }
     const newTaskLog = new TaskLog(action, {
         saving: true,
-        preserving: true,
-        schema,
-        token,
-        id: task.id,
+        database: { schema, id, token },
         multiparts: task.options,
     });
     _.set(taskLogHash, [ schema, token ], newTaskLog);
@@ -80,15 +77,15 @@ class TaskLog {
      * @constructor
      */
     constructor(action, options) {
-        const { preserving, saving, schema, id, token, multiparts, ...taskOptions } = options;
+        const { clearing, saving, multiparts, database, ...taskOptions } = options;
         this.action = action;
         this.options = taskOptions;
-        this.preserving = preserving;
+        this.clearing = clearing;
         this.saving = saving;
-        this.schema = schema || 'global';
-        this.id = id;
-        this.token = token;
         this.multiparts = multiparts;
+        this.schema = (database) ? database.schema : 'global';
+        this.id = (database) ? database.id : undefined;
+        this.token = (database) ? database.token : undefined;
 
         this.completion = undefined;
         this.details = {};
@@ -216,13 +213,17 @@ class TaskLog {
         clearTimeout(this.saveTimeout);
         Shutdown.removeListener(this.shutdownListener);
         await this.save();
-        if (this.preserving || this.error || !this.noop) {
-            this.output(this.finished);
-        } else {
-            RevertibleConsole.revert();
-        }
         if (this.finished) {
-            _.unset(taskLogHash, [ this.schema, this.token ]);
+            if (!this.clearing || this.error || !this.noop) {
+                this.output(true);
+            } else {
+                RevertibleConsole.revert();
+            }
+            if (this.token) {
+                _.unset(taskLogHash, [ this.schema, this.token ]);
+            }
+        } else {
+            this.output(false);
         }
     }
 
@@ -245,7 +246,9 @@ class TaskLog {
         Shutdown.removeListener(this.shutdownListener);
         await this.save();
         this.output(true);
-        _.unset(taskLogHash, [ this.schema, this.token ]);
+        if (this.token) {
+            _.unset(taskLogHash, [ this.schema, this.token ]);
+        }
     }
 
     /**
@@ -290,19 +293,19 @@ class TaskLog {
     }
 
     output(commit) {
-        const stime = this.startTime.toISOString();
-        const etime = (this.endTime || Moment()).toISOString();
-        const blank = _.repeat(' ', etime.length);
+        const stime = `[${this.startTime.toISOString()}]`;
+        const etime = `[${(this.endTime || Moment()).toISOString()}]`;
+        const blank = _.repeat('·', etime.length);
         RevertibleConsole.revert();
         const status = this.formatStatus();
         const options = this.formatOptions();
-        RevertibleConsole.write(`[${stime}] ${this.action}${options} - ${status}`);
+        RevertibleConsole.write(`${stime} ${this.action}${options} - ${status}`);
         const lines = this.formatDescription();
         for (let [ index, line ] of lines.entries()) {
-            if (index === 0) {
-                RevertibleConsole.write(`[${etime}]     ${line}`);
+            if (index === lines.length - 1) {
+                RevertibleConsole.write(`${etime}     ${line}`);
             } else {
-                RevertibleConsole.write(` ${blank}      ${line}`);
+                RevertibleConsole.write(`${blank}     ${line}`);
             }
         }
         if (commit) {

@@ -47,7 +47,6 @@ async function processNewEvents(db, system, server, repo, project, glHookEvent) 
     }
     const taskLog = TaskLog.start('gitlab-event-import', {
         saving: true,
-        preserving: true,
         server_id: server.id,
         server: server.name,
         repo_id: repo.id,

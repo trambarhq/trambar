@@ -61,8 +61,7 @@ async function createDescriptionContext(server, repo, push, defLang) {
     }
     cxt = new Context(server, repo, push.headID, defLang);
     cxt.taskLog = TaskLog.start('gitlab-description-retrieve', {
-        saving: false,
-        preserving: false,
+        clearing: true,
         server_id: server.id,
         server: server.name,
         repo_id: repo_id,

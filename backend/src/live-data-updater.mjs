@@ -146,11 +146,7 @@ function handleStoryChanges(events) {
 async function queueDirtyStatistics(db) {
     const schemas = await getProjectSchemas(db);
     for (let schema of schemas) {
-        const taskLog = TaskLog.start('statistics-queue', {
-            saving: false,
-            preserving: true,
-            project: schema,
-        });
+        const taskLog = TaskLog.start('statistics-queue', { project: schema });
         try {
             const criteria = { dirty: true, order: 'sample_count' };
             const rows = await Statistics.find(db, schema, criteria, 'id, atime');
@@ -175,11 +171,7 @@ async function queueDirtyStatistics(db) {
 async function queueDirtyListings(db) {
     const schemas = await getProjectSchemas(db);
     for (let schema of schemas) {
-        const taskLog = TaskLog.start('listing-queue', {
-            saving: false,
-            preserving: true,
-            project: schema,
-        });
+        const taskLog = TaskLog.start('listing-queue', { project: schema });
         try {
             const criteria = { dirty: true };
             const rows = await Listing.find(db, schema, criteria, 'id, atime');
@@ -259,8 +251,6 @@ function haltStatisticsQueue() {
  */
 async function updateStatistics(schema, id) {
     const taskLog = TaskLog.start('statistics-update', {
-        saving: false,
-        preserving: true,
         project: schema,
         statistics_id: id,
     });
@@ -346,8 +336,6 @@ function haltListingQueue() {
  */
 async function updateListing(schema, id) {
     const taskLog = TaskLog.start('list-update', {
-        saving: false,
-        preserving: true,
         project: schema,
         listing_id: id,
     });
