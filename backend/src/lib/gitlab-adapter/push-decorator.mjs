@@ -64,7 +64,7 @@ async function createDescriptionContext(server, repo, push, defLang) {
         clearing: true,
         server_id: server.id,
         server: server.name,
-        repo_id: repo_id,
+        repo_id: repo.id,
         repo: repo.name,
     });
     try {

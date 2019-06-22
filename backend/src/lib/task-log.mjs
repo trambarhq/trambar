@@ -66,7 +66,7 @@ async function last(action, options) {
         order: 'id DESC',
         limit: 1,
     };
-    return Task.findOne(db, this.schema, criteria, '*');
+    return Task.findOne(db, 'global', criteria, '*');
 }
 
 class TaskLog {

@@ -11,6 +11,7 @@ import * as RepoImporter from './repo-importer.mjs';
 import * as UserImporter from './user-importer.mjs';
 import * as MilestoneImporter from './milestone-importer.mjs';
 import * as IssueExporter from './issue-exporter.mjs';
+import * as WikiImporter from './wiki-importer.mjs';
 
 // accessors
 import Project from '../accessors/project.mjs';
@@ -19,6 +20,7 @@ import Server from '../accessors/server.mjs';
 import Story from '../accessors/story.mjs';
 import System from '../accessors/system.mjs';
 import Task from '../accessors/task.mjs';
+import Wiki from '../accessors/wiki.mjs';
 
 const MIN = 60 * 1000;
 
@@ -216,6 +218,69 @@ class TaskImportProjectHookEvent extends BasicTask {
                 // scan the activity log if the event wasn't handled
                 queue.add(new TaskImportRepoEvents(this.repoID, this.projectID, this.glHookEvent));
             }
+
+            if (glHookEvent.object_kind === 'wiki_page') {
+                // update wikis
+                queue.add(new TaskImportWikis(this.repoID, this.projectID));
+            }
+        }
+    }
+}
+
+class TaskImportWikis extends BasicTask {
+    constructor(repoID, projectID) {
+        super();
+        this.repoID = repoID;
+        this.projectID = projectID;
+    }
+
+    async run() {
+        const db = await Database.open();
+        const system = await getSystem(db);
+        const repo = await getRepo(db, this.repoID);
+        const project = await getProject(db, this.projectID);
+        const server = await getRepoServer(db, repo);
+        if (system && server && repo && project) {
+            await WikiImporter.importWikis(db, system, server, repo, project);
+        }
+    }
+}
+
+class TaskReimportWiki extends BasicTask {
+    constructor(schema, wikiID) {
+        super();
+        this.schema = schema;
+        this.wikiID = wikiID;
+    }
+
+    async run() {
+        const db = await Database.open();
+        const system = await getSystem(db);
+        const project = await getProjectByName(db, this.schema);
+        const wiki = await getWiki(db, this.schema, this.wikiID);
+        const repo = await getWikiRepo(db, wiki);
+        const server = await getRepoServer(db, repo);
+        if (system && server && repo && project) {
+            await WikiImporter.importWikis(db, system, server, repo, project);
+        }
+    }
+}
+
+class TaskRemoveWikis extends BasicTask {
+    constructor(repoID, projectID) {
+        super();
+        this.repoID = repoID;
+        this.projectID = projectID;
+    }
+
+    async run() {
+        const db = await Database.open();
+        const system = await getSystem(db);
+        const repo = await getRepo(db, this.repoID);
+        const project = await getProject(db, this.projectID);
+        const server = await getRepoServer(db, repo);
+        if (system && server && repo && project) {
+            await WikiImporter.removeWikis(db, system, server, repo, project);
         }
     }
 }
@@ -356,6 +421,22 @@ class PeriodicTaskImportUsers extends PeriodicTask {
         const servers = await getServers(db);
         for (let server of servers) {
             queue.add(new TaskImportUsers(server.id));
+        }
+    }
+}
+
+class PeriodicTaskImportWikis extends PeriodicTask {
+    delay(initial) {
+        return (initial) ? 0 : 60 * MIN;
+    }
+
+    async run(queue) {
+        const db = await Database.open();
+        const projects = await getProjects(db);
+        for (let project of projects) {
+            for (let repoID of project.repo_ids) {
+                queue.add(new TaskImportWikis(repoID, project.id));
+            }
         }
     }
 }
@@ -533,7 +614,30 @@ async function getStory(db, schema, storyID) {
         id: storyID,
         deleted: false,
     };
-    return Story.find(db, schema, criteria, '*');
+    return Story.findOne(db, schema, criteria, '*');
+}
+
+async function getWiki(db, schema, wikiID) {
+    const criteria = {
+        id: wikiID,
+        deleted: false,
+    };
+    return Wiki.findOne(db, schema, criteria, '*');
+}
+
+async function getWikiRepo(db, wiki) {
+    if (wiki) {
+        const wikiLink = ExternalDataUtils.findLinkByRelations(wiki, 'wiki');
+        if (wikiLink) {
+            const repoLink = _.omit(wikiLink, 'wiki');
+            const criteria = {
+                external_object: repoLink,
+                deleted: false,
+            };
+            return Repo.findOne(db, 'global', criteria, '*');
+        }
+    }
+    return null;
 }
 
 async function getExportTask(db, schema, story) {
@@ -576,6 +680,9 @@ export {
     TaskInstallProjectHook,
     TaskRemoveProjectHook,
     TaskImportProjectHookEvent,
+    TaskImportWikis,
+    TaskReimportWiki,
+    TaskRemoveWikis,
     TaskUpdateMilestones,
     TaskExportStory,
     TaskReexportStory,
@@ -583,6 +690,7 @@ export {
     PeriodicTaskMaintainHooks,
     PeriodicTaskImportRepos,
     PeriodicTaskImportUsers,
+    PeriodicTaskImportWikis,
     PeriodicTaskImportRepoEvents,
     PeriodicTaskUpdateMilestones,
     PeriodicTaskRetryFailedExports,

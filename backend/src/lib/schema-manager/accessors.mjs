@@ -17,6 +17,7 @@ import Listing from '../accessors/listing.mjs';
 import Reaction from '../accessors/reaction.mjs';
 import Statistics from '../accessors/statistics.mjs';
 import Story from '../accessors/story.mjs';
+import Wiki from '../accessors/wiki.mjs';
 
 // appear in both
 import Notification from '../accessors/notification.mjs';
@@ -45,6 +46,7 @@ const projectAccessors = [
     Statistics,
     Story,
     Task,
+    Wiki,
 ];
 
 function get(schema) {

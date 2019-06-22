@@ -25,6 +25,9 @@ import {
     TaskInstallProjectHook,
     TaskRemoveProjectHook,
     TaskImportProjectHookEvent,
+    TaskImportWikis,
+    TaskReimportWiki,
+    TaskRemoveWikis,
     TaskUpdateMilestones,
     TaskExportStory,
     TaskReexportStory,
@@ -32,6 +35,7 @@ import {
     PeriodicTaskMaintainHooks,
     PeriodicTaskImportRepos,
     PeriodicTaskImportUsers,
+    PeriodicTaskImportWikis,
     PeriodicTaskImportRepoEvents,
     PeriodicTaskUpdateMilestones,
     PeriodicTaskRetryFailedExports,
@@ -44,11 +48,11 @@ let taskQueue;
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
 async function start() {
-    let db = database = await Database.open(true);
+    const db = database = await Database.open(true);
     await db.need('global');
 
     // listen for Webhook invocation
-    let app = Express();
+    const app = Express();
     app.use(BodyParser.json());
     app.set('json spaces', 2);
     app.post('/srv/gitlab/hook/:serverID', handleSystemHookCallback);
@@ -56,22 +60,24 @@ async function start() {
     server = app.listen(80);
 
     // listen for database change events
-    let tables = [
+    const tables = [
         'project',
         'server',
         'story',
         'system',
         'task',
+        'wiki',
     ];
     await db.listen(tables, 'change', handleDatabaseChanges, 100);
 
     taskQueue = new TaskQueue;
-    taskQueue.schedule(new PeriodicTaskMaintainHooks());
-    taskQueue.schedule(new PeriodicTaskImportRepos());
-    taskQueue.schedule(new PeriodicTaskImportUsers());
-    taskQueue.schedule(new PeriodicTaskImportRepoEvents());
-    taskQueue.schedule(new PeriodicTaskUpdateMilestones());
-    taskQueue.schedule(new PeriodicTaskRetryFailedExports());
+    taskQueue.schedule(new PeriodicTaskMaintainHooks);
+    taskQueue.schedule(new PeriodicTaskImportRepos);
+    taskQueue.schedule(new PeriodicTaskImportUsers);
+    taskQueue.schedule(new PeriodicTaskImportWikis);
+    taskQueue.schedule(new PeriodicTaskImportRepoEvents);
+    taskQueue.schedule(new PeriodicTaskUpdateMilestones);
+    taskQueue.schedule(new PeriodicTaskRetryFailedExports);
     await taskQueue.start();
 }
 
@@ -96,7 +102,7 @@ async function stop() {
  */
 function handleDatabaseChanges(events) {
     for (let event of events) {
-        if (event.action === 'DELETE') {
+        if (event.op === 'DELETE') {
             continue;
         }
         switch (event.table) {
@@ -115,6 +121,9 @@ function handleDatabaseChanges(events) {
             case 'task':
                 handleTaskChangeEvent(event);
                 break;
+            case 'wiki':
+                handleWikiChangeEvent(event);
+                break;
         }
     }
 }
@@ -125,8 +134,8 @@ function handleDatabaseChanges(events) {
  * @param  {Object} event
  */
 function handleServerChangeEvent(event) {
-    let serverID = event.id;
-    let disabled = event.current.deleted || event.current.disabled;
+    const serverID = event.id;
+    const disabled = event.current.deleted || event.current.disabled;
     if (event.diff.settings) {
         if (!disabled) {
             taskQueue.add(new TaskImportRepos(serverID));
@@ -150,21 +159,23 @@ function handleServerChangeEvent(event) {
  */
 function handleProjectChangeEvent(event) {
     if (event.diff.archived || event.diff.deleted || event.diff.repo_ids) {
-        let projectID = event.id;
-        let archivedAfter = event.current.archived;
-        let archivedBefore = (event.diff.archived) ? event.previous.archived : archivedAfter;
-        let deletedAfter = event.current.deleted;
-        let deletedBefore = (event.diff.deleted) ? event.previous.deleted : deletedAfter;
-        let repoIDsAfter = event.current.repo_ids;
-        let repoIDsBefore = (event.diff.repo_ids) ? event.previous.repo_ids : repoIDsAfter;
+        const projectID = event.id;
+        const archivedAfter = event.current.archived;
+        const archivedBefore = (event.diff.archived) ? event.previous.archived : archivedAfter;
+        const deletedAfter = event.current.deleted;
+        const deletedBefore = (event.diff.deleted) ? event.previous.deleted : deletedAfter;
+        const repoIDsAfter = event.current.repo_ids;
+        const repoIDsBefore = (event.diff.repo_ids) ? event.previous.repo_ids : repoIDsAfter;
         for (let repoID of _.union(repoIDsAfter, repoIDsBefore)) {
-            let connectedBefore = !archivedBefore && !deletedBefore && _.includes(repoIDsBefore, repoID);
-            let connectedAfter = !archivedAfter && !deletedAfter && _.includes(repoIDsAfter, repoID);
+            const connectedBefore = !archivedBefore && !deletedBefore && _.includes(repoIDsBefore, repoID);
+            const connectedAfter = !archivedAfter && !deletedAfter && _.includes(repoIDsAfter, repoID);
             // remove or restore hooks
             if (connectedBefore && !connectedAfter) {
                 taskQueue.add(new TaskRemoveProjectHook(repoID, projectID));
+                taskQueue.add(new TaskRemoveWikis(repoID, projectID));
             } else if (!connectedBefore && connectedAfter) {
                 taskQueue.add(new TaskImportRepoEvents(repoID, projectID));
+                taskQueue.add(new TaskImportWikis(repoID, projectID));
                 taskQueue.add(new TaskInstallProjectHook(repoID, projectID));
             }
         }
@@ -190,12 +201,12 @@ function handleStoryChangeEvent(event) {
     } else if (!event.diff.details) {
         return;
     }
-    let storyID = event.id;
+    const storyID = event.id;
     taskQueue.add(new TaskReexportStory(storyID));
 }
 
 /**
- * copy contents from story to issue tracker
+ * Copy contents from story to issue tracker
  *
  * @param  {Object} event
  */
@@ -212,9 +223,23 @@ function handleTaskChangeEvent(event) {
     if (event.current.deleted) {
         return;
     }
-    let schema = event.schema;
-    let taskID = event.id;
+    const schema = event.schema;
+    const taskID = event.id;
     taskQueue.add(new TaskExportStory(schema, taskID));
+}
+
+/**
+ * Reimport wikis when page selection changes
+ *
+ * @param  {Object} event
+ */
+function handleWikiChangeEvent(event) {
+    if (event.op !== 'UPDATE' || !event.diff.chosen) {
+        return;
+    }
+    const schema = event.schema;
+    const wikiID = event.id;
+    taskQueue.add(new TaskReimportWiki(schema, wikiID));
 }
 
 /**
@@ -224,8 +249,8 @@ function handleTaskChangeEvent(event) {
  */
 function handleSystemChangeEvent(event) {
     if (event.diff.settings) {
-        let hostBefore = (event.previous.settings) ? event.previous.settings.address : '';
-        let hostAfter = event.current.settings.address;
+        const hostBefore = (event.previous.settings) ? event.previous.settings.address : '';
+        const hostAfter = event.current.settings.address;
         if (hostBefore !== hostAfter) {
             if (hostBefore) {
                 taskQueue.add(new TaskRemoveHooks(hostBefore));
@@ -247,9 +272,10 @@ function handleSystemChangeEvent(event) {
  */
 async function handleSystemHookCallback(req, res) {
     const serverID = parseInt(req.params.serverID);
+    const serverName = await getServerName(serverID);
     const taskLog = TaskLog.start('system-event-handle', {
         server_id: serverID,
-        server: getServerName(serverID)
+        server: serverName,
     });
     try {
         HookManager.verifyHookRequest(req);
@@ -293,15 +319,18 @@ async function handleSystemHookCallback(req, res) {
  */
 async function handleProjectHookCallback(req, res) {
     const serverID = parseInt(req.params.serverID);
+    const serverName = await getServerName(serverID);
     const repoID = parseInt(req.params.repoID);
+    const repoName = await getRepoName(repoID);
     const projectID = parseInt(req.params.projectID);
+    const projectName = await getProjectName(projectID);
     const taskLog = TaskLog.start('repo-event-handle', {
         server_id: serverID,
-        server: getServerName(serverID),
+        server: serverName,
         repo_id: repoID,
-        repo: getRepoName(repoID),
+        repo: repoName,
         project_id: projectID,
-        project: getProjectName(projectID),
+        project: projectName,
     });
     try {
         HookManager.verifyHookRequest(req);
@@ -317,21 +346,21 @@ async function handleProjectHookCallback(req, res) {
     }
 }
 
-function getServerName(serverID) {
-    const db = Database.open();
-    const server = Server.find(db, 'global', { id: serverID }, 'name');
+async function getServerName(serverID) {
+    const db = await Database.open();
+    const server = await Server.findOne(db, 'global', { id: serverID }, 'name');
     return _.get(server, 'name', '');
 }
 
-function getRepoName(repoID) {
-    const db = Database.open();
-    const repo = Repo.find(db, 'global', { id: repoID }, 'name');
+async function getRepoName(repoID) {
+    const db = await Database.open();
+    const repo = await Repo.findOne(db, 'global', { id: repoID }, 'name');
     return _.get(repo, 'name', '');
 }
 
-function getProjectName(projectID) {
-    const db = Database.open();
-    const project = Project.find(db, 'global', { id: projectID }, 'name');
+async function getProjectName(projectID) {
+    const db = await Database.open();
+    const project = await Project.findOne(db, 'global', { id: projectID }, 'name');
     return _.get(project, 'name', '');
 }
 

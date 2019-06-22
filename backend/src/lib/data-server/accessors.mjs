@@ -17,6 +17,7 @@ import Reaction from '../accessors/reaction.mjs';
 import Statistics from '../accessors/statistics.mjs';
 import Story from '../accessors/story.mjs';
 import Task from '../accessors/task.mjs';
+import Wiki from '../accessors/wiki.mjs';
 
 const globalAccessors = [
     Device,
@@ -38,6 +39,7 @@ const projectAccessors = [
     Statistics,
     Story,
     Task,
+    Wiki,
 ];
 
 function get(schema) {
