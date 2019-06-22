@@ -2,56 +2,12 @@ import _ from 'lodash';
 import JsDAV from 'jsDAV';
 import JsDAVLocksBackendFS from 'jsDAV/lib/DAV/plugins/locks/fs.js';
 import JsDAVPromise from 'jsdav-promise/es6.js'; const { File, Collection, Conflict } = JsDAVPromise;
-
 import Database from './lib/database.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
+import * as Accessors from './lib/schema-manager/accessors.mjs';
 
-// accessors
-import Commit from './lib/accessors/commit.mjs';
-import Device from './lib/accessors/device.mjs';
-import Picture from './lib/accessors/picture.mjs';
 import Project from './lib/accessors/project.mjs';
-import Repo from './lib/accessors/repo.mjs';
-import Role from './lib/accessors/role.mjs';
-import Server from './lib/accessors/server.mjs';
-import Session from './lib/accessors/session.mjs';
-import Subscription from './lib/accessors/subscription.mjs';
-import System from './lib/accessors/system.mjs';
-import User from './lib/accessors/user.mjs';
 
-import Bookmark from './lib/accessors/bookmark.mjs';
-import Listing from './lib/accessors/listing.mjs';
-import Reaction from './lib/accessors/reaction.mjs';
-import Statistics from './lib/accessors/statistics.mjs';
-import Story from './lib/accessors/story.mjs';
-
-import Notification from './lib/accessors/notification.mjs';
-import Task from './lib/accessors/task.mjs';
-
-const globalAccessors = [
-    Commit,
-    Device,
-    Notification,
-    Picture,
-    Project,
-    Repo,
-    Role,
-    Server,
-    Session,
-    Subscription,
-    System,
-    Task,
-    User,
-];
-let projectAccessors = [
-    Bookmark,
-    Listing,
-    Notification,
-    Reaction,
-    Statistics,
-    Story,
-    Task,
-];
 let server;
 let db;
 
@@ -92,11 +48,11 @@ class SchemaFolder extends Collection {
         this.name = schema;
         this.path = `/${schema}`;
         this.schema = schema;
-        this.accessors = (schema === 'global') ? globalAccessors : projectAccessors;
+        this.accessors = Accessors.get(schema);
     }
 
     async getChildrenAsync() {
-        let children = [];
+        const children = [];
         for (let accessor of this.accessors) {
             children.push(new TableFolder(this.schema, accessor.table));
         }
@@ -111,18 +67,17 @@ class TableFolder extends Collection {
         this.path = `/${schema}/${table}`;
         this.schema = schema;
         this.table = table;
-        let accessors = (schema === 'global') ? globalAccessors : projectAccessors;
-        this.accessor = _.find(accessors, { table });
+        this.accessor = _.find(Accessors.get(schema), { table });
     }
 
     async createFileAsync(name, data, type) {
-        let text = data.toString();
-        let object = (text) ? JSON.parse(text) : {};
-        let m = /^(\d+)\.json$/.exec(name);
+        const text = data.toString();
+        const object = (text) ? JSON.parse(text) : {};
+        const m = /^(\d+)\.json$/.exec(name);
         if (!m) {
             throw new Conflict;
         }
-        let id = parseInt(m[1]);
+        const id = parseInt(m[1]);
         if (object.id) {
             if (object.id !== id) {
                 throw new Conflict;
@@ -130,7 +85,7 @@ class TableFolder extends Collection {
         } else {
             object.id = id;
         }
-        let row = await this.accessor.findOne(db, this.schema, { id, deleted: false }, `id`);
+        const row = await this.accessor.findOne(db, this.schema, { id, deleted: false }, `id`);
         if (row) {
             throw new Conflict;
         }
@@ -139,12 +94,12 @@ class TableFolder extends Collection {
     }
 
     async getChildAsync(name) {
-        let id = parseInt(name);
+        const id = parseInt(name);
         if (id !== id) {
             // NaN
             return null;
         }
-        let row = await this.accessor.findOne(db, this.schema, { id, deleted: false }, `id`);
+        const row = await this.accessor.findOne(db, this.schema, { id, deleted: false }, `id`);
         if (row) {
             let filename = row.id + '.json';
             return new RowFile(this.schema, this.table, row.id, filename);
@@ -154,10 +109,10 @@ class TableFolder extends Collection {
     }
 
     async getChildrenAsync() {
-        let children = [];
-        let rows = await this.accessor.find(db, this.schema, { deleted: false }, `id`);
+        const children = [];
+        const rows = await this.accessor.find(db, this.schema, { deleted: false }, `id`);
         for (let row of rows) {
-            let filename = row.id + '.json';
+            const filename = row.id + '.json';
             children.push(new RowFile(this.schema, this.table, row.id, filename));
         }
         return children;
@@ -172,24 +127,23 @@ class RowFile extends File {
         this.id = id;
         this.schema = schema;
         this.table = table;
-        let accessors = (schema === 'global') ? globalAccessors : projectAccessors;
-        this.accessor = _.find(accessors, { table });
+        this.accessor = _.find(Accessors.get(schema), { table });
     }
 
     async getAsync() {
-        let row = await this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, '*');
-        let props = _.omit(row, 'ctime', 'mtime', 'gn', 'deleted');
-        let text = JSON.stringify(props, undefined, 2);
+        const row = await this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, '*');
+        const props = _.omit(row, 'ctime', 'mtime', 'gn', 'deleted');
+        const text = JSON.stringify(props, undefined, 2);
         return new Buffer(text);
     }
 
     async putAsync(data, type) {
-        let text = data.toString();
-        let props = JSON.parse(text);
+        const text = data.toString();
+        const props = JSON.parse(text);
         if (props.id !== this.id) {
             throw new Error('Cannot change id');
         }
-        let row = await this.accessor.updateOne(db, this.schema, props);
+        const row = await this.accessor.updateOne(db, this.schema, props);
         return !!row;
     }
 
@@ -203,7 +157,7 @@ class RowFile extends File {
     }
 
     async getSizeAsync() {
-        let buffer = await this.getAsync();
+        const buffer = await this.getAsync();
         return buffer.length;
     }
 
@@ -212,7 +166,7 @@ class RowFile extends File {
     }
 
     async getLastModifiedAsync() {
-        let row = await this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, 'mtime');
+        const row = await this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, 'mtime');
         return row.mtime;
     }
 }
