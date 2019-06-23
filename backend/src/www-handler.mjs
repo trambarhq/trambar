@@ -11,8 +11,12 @@ import DNSCache from 'dnscache';
 import Database from './lib/database.mjs';
 import * as TaskLog from './lib/task-log.mjs'
 import * as Shutdown from './lib/shutdown.mjs';
+import HTTPError from './lib/common/errors/http-error.mjs';
+import * as ExternalDataUtils from './lib/common/objects/utils/external-data-utils.mjs';
 
 import Project from './lib/accessors/project.mjs';
+import Repo from './lib/accessors/repo.mjs';
+import Wiki from './lib/accessors/wiki.mjs';
 
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
@@ -33,8 +37,9 @@ async function start() {
     app.use(redirectToProject);
     app.use('/', Express.static(clientFolder, staticFileOptions));
     app.use('/admin', Express.static(adminFolder, staticFileOptions));
-    app.get('/srv/www/:schema/wiki/:slug?', handleWikiRequest);
-    app.get('/srv/www/:schema/excel/:name?', handleExcelRequest);
+    app.get('/srv/www/:schema/wiki/:repoName/:slug', handleWikiRequest);
+    app.get('/srv/www/:schema/wiki/:slug', handleWikiRequest);
+    app.get('/srv/www/:schema/excel/:name', handleExcelRequest);
     app.get('/srv/www/:schema/*', handlePageRequest);
     app.use(handleError);
 
@@ -58,8 +63,9 @@ async function start() {
     // listen for database change events
     const tables = [
         'project',
+        'wiki',
     ];
-    await db.listen(tables, 'change', handleDatabaseChanges, 100);
+    await db.listen(tables, 'change', handleDatabaseChanges, 500);
 }
 
 async function stop() {
@@ -79,13 +85,32 @@ function handleError(err, req, res, next) {
 }
 
 async function handleWikiRequest(req, res, next) {
-    const { schema, slug } = req.params;
-    const taskLog = TaskLog.start('excel-request-handle', {
+    const { schema, repoName, slug } = req.params;
+    const taskLog = TaskLog.start('wiki-request-handle', {
         project: schema,
     });
     try {
-        res.json({ schema, slug });
+        const db = await Database.open();
+        const criteria = { slug, public: true, deleted: false };
+        if (repoName) {
+            // check repo association when repo name is given
+            const repo = await Repo.findOne(db, 'global', { name: repoName }, 'external');
+            if (!repo) {
+                throw new HTTPError(404);
+            }
+            const repoLink = ExternalDataUtils.findLinkByRelations(repo, 'repo');
+            criteria.external_object = repoLink;
+        }
+        const wiki = await Wiki.findOne(db, schema, criteria, 'details');
+        if (!wiki) {
+            throw new HTTPError(404);
+        }
+        res.type('text').send(wiki.details.content);
         taskLog.set('slug', slug);
+        if (repoName) {
+            taskLog.set('repo', repoName);
+        }
+        controlCache(res);
         await taskLog.finish();
     } catch (err) {
         await taskLog.abort(err);
@@ -105,6 +130,30 @@ async function handleExcelRequest(req, res, next) {
     } catch (err) {
         await taskLog.abort(err);
         next(err);
+    }
+}
+
+const defaultCacheControl = {
+    'public': true,
+    'max-age': 0,
+    's-maxage': 60,
+    'must-revalidate': true,
+    'proxy-revalidate': true,
+};
+
+function controlCache(res, override, etag) {
+    const params = { ...defaultCacheControl, ...override };
+    const items = [];
+    for (let [ name, value ] of _.entries(params)) {
+        if (typeof(value) === 'number') {
+            items.push(`${name}=${value}`);
+        } else if (value === true) {
+            items.push(name);
+        }
+    }
+    res.set({ 'Cache-Control': items.join() });
+    if (etag) {
+        res.set({ 'ETag': etag });
     }
 }
 
@@ -168,6 +217,9 @@ function handleDatabaseChanges(events) {
         switch (event.table) {
             case 'project':
                 updateDomainNameTable(db);
+                break;
+            case 'wiki':
+                // TODO: invalidate Nginx cache
                 break;
         }
     }
