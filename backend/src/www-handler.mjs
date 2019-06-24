@@ -11,16 +11,11 @@ import DNSCache from 'dnscache';
 import Database from './lib/database.mjs';
 import * as TaskLog from './lib/task-log.mjs'
 import * as Shutdown from './lib/shutdown.mjs';
-import HTTPError from './lib/common/errors/http-error.mjs';
-import * as ExternalDataUtils from './lib/common/objects/utils/external-data-utils.mjs';
 
-import * as ExcelParser from './lib/www-handler/excel-parser.mjs';
 import * as ExcelRetriever from './lib/www-handler/excel-retriever.mjs';
+import * as WikiRetriever from './lib/www-handler/wiki-retriever.mjs';
 
 import Project from './lib/accessors/project.mjs';
-import Repo from './lib/accessors/repo.mjs';
-import Spreadsheet from './lib/accessors/spreadsheet.mjs';
-import Wiki from './lib/accessors/wiki.mjs';
 
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
@@ -44,6 +39,7 @@ async function start() {
     app.get('/srv/www/:schema/wiki/:repoName/:slug', handleWikiRequest);
     app.get('/srv/www/:schema/wiki/:slug', handleWikiRequest);
     app.get('/srv/www/:schema/excel/:name', handleExcelRequest);
+    app.get('/srv/www/:schema/:type(images|video|audio)/*', handleMediaRequest);
     app.get('/srv/www/:schema/*', handlePageRequest);
     app.use(handleError);
 
@@ -91,72 +87,23 @@ function handleError(err, req, res, next) {
 
 async function handleWikiRequest(req, res, next) {
     const { schema, repoName, slug } = req.params;
-    const taskLog = TaskLog.start('wiki-request-handle', {
-        project: schema,
-    });
     try {
-        const db = await Database.open();
-        const criteria = { slug, public: true, deleted: false };
-        if (repoName) {
-            // check repo association when repo name is given
-            const repo = await Repo.findOne(db, 'global', { name: repoName }, 'external');
-            if (!repo) {
-                throw new HTTPError(404);
-            }
-            const repoLink = ExternalDataUtils.findLinkByRelations(repo, 'repo');
-            criteria.external_object = repoLink;
-        }
-        const wiki = await Wiki.findOne(db, schema, criteria, 'details');
-        if (!wiki) {
-            throw new HTTPError(404);
-        }
-        res.type('text').send(wiki.details.content);
-        taskLog.set('slug', slug);
-        if (repoName) {
-            taskLog.set('repo', repoName);
-        }
+        const wiki = await WikiRetriever.retrieve(schema, repoName, slug);
         controlCache(res);
-        await taskLog.finish();
+        res.type('text').send(wiki.details.content);
     } catch (err) {
-        await taskLog.abort(err);
         next(err);
     }
 }
 
 async function handleExcelRequest(req, res, next) {
     const { schema, name } = req.params;
-    const taskLog = TaskLog.start('excel-request-handle', {
-        project: schema,
-    });
+    const { redirected } = req;
     try {
-        const db = await Database.open();
-        const criteria = { name, deleted: false };
-        let spreadsheet = await Spreadsheet.findOne(db, schema, criteria, '*');
-        if (!spreadsheet) {
-            throw new HTTPError(404);
-        }
-        let changed = false;
-        taskLog.describe(`retreiving ${spreadsheet.url}`);
-        const buffer = await ExcelRetriever.fetch(spreadsheet);
-        if (buffer) {
-            taskLog.describe(`parsing Excel file`);
-            const { etag, type } = buffer;
-            const data = await ExcelParser.parse(buffer);
-            const spreadsheetChanges = {
-                id: spreadsheet.id,
-                details: { type, data },
-                etag,
-            };
-            spreadsheet = await Spreadsheet.updateOne(db, schema, spreadsheetChanges);
-            changed = true;
-        }
+        const spreadsheet = await ExcelRetriever.retrieve(schema, name, !!redirected);
         controlCache(res, { 's-maxage': 5 }, spreadsheet.etag);
-        res.json(spreadsheet.details.data);
-        taskLog.set('name', name);
-        taskLog.set('changed', changed);
-        await taskLog.finish();
+        res.type('text').send(spreadsheet.details.data);
     } catch (err) {
-        await taskLog.abort(err);
         next(err);
     }
 }
@@ -188,15 +135,20 @@ function controlCache(res, override, etag) {
 async function handlePageRequest(req, res, next) {
     const { schema } = req.params;
     const path = req.url;
-    const taskLog = TaskLog.start('page-request-handle', {
-        project: schema,
-    });
     try {
         res.json({ schema, path });
-        taskLog.set('path', path);
-        await taskLog.finish();
     } catch (err) {
-        await taskLog.abort(err);
+        next(err);
+    }
+}
+
+async function handleMediaRequest(req, res, next) {
+    const path = req.params[0];
+    const type = req.params.type;
+    try {
+        const uri = `/srv/media/${type}/${path}`;
+        res.set('X-Accel-Redirect', uri).end();
+    } catch (err) {
         next(err);
     }
 }
@@ -227,6 +179,7 @@ function redirectToProject(req, res, next) {
     const schema = projectDomainMap[host];
     if (schema) {
         req.url = `/srv/www/${schema}${req.url}`;
+        req.redirected = true;
     }
     next();
 }
