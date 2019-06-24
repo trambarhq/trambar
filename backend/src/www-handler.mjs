@@ -14,8 +14,12 @@ import * as Shutdown from './lib/shutdown.mjs';
 import HTTPError from './lib/common/errors/http-error.mjs';
 import * as ExternalDataUtils from './lib/common/objects/utils/external-data-utils.mjs';
 
+import * as ExcelParser from './lib/www-handler/excel-parser.mjs';
+import * as ExcelRetriever from './lib/www-handler/excel-retriever.mjs';
+
 import Project from './lib/accessors/project.mjs';
 import Repo from './lib/accessors/repo.mjs';
+import Spreadsheet from './lib/accessors/spreadsheet.mjs';
 import Wiki from './lib/accessors/wiki.mjs';
 
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
@@ -63,6 +67,7 @@ async function start() {
     // listen for database change events
     const tables = [
         'project',
+        'spreadsheet',
         'wiki',
     ];
     await db.listen(tables, 'change', handleDatabaseChanges, 500);
@@ -124,8 +129,31 @@ async function handleExcelRequest(req, res, next) {
         project: schema,
     });
     try {
-        res.json({ schema, slug });
+        const db = await Database.open();
+        const criteria = { name, deleted: false };
+        let spreadsheet = await Spreadsheet.findOne(db, schema, criteria, '*');
+        if (!spreadsheet) {
+            throw new HTTPError(404);
+        }
+        let changed = false;
+        taskLog.describe(`retreiving ${spreadsheet.url}`);
+        const buffer = await ExcelRetriever.fetch(spreadsheet);
+        if (buffer) {
+            taskLog.describe(`parsing Excel file`);
+            const { etag, type } = buffer;
+            const data = await ExcelParser.parse(buffer);
+            const spreadsheetChanges = {
+                id: spreadsheet.id,
+                details: { type, data },
+                etag,
+            };
+            spreadsheet = await Spreadsheet.updateOne(db, schema, spreadsheetChanges);
+            changed = true;
+        }
+        controlCache(res, { 's-maxage': 5 }, spreadsheet.etag);
+        res.json(spreadsheet.details.data);
         taskLog.set('name', name);
+        taskLog.set('changed', changed);
         await taskLog.finish();
     } catch (err) {
         await taskLog.abort(err);
@@ -217,6 +245,9 @@ function handleDatabaseChanges(events) {
         switch (event.table) {
             case 'project':
                 updateDomainNameTable(db);
+                break;
+            case 'spreadsheet':
+                // TODO: invalidate Nginx cache
                 break;
             case 'wiki':
                 // TODO: invalidate Nginx cache

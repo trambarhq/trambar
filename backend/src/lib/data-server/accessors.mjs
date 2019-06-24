@@ -14,6 +14,7 @@ import Bookmark from '../accessors/bookmark.mjs';
 import Listing from '../accessors/listing.mjs';
 import Notification from '../accessors/notification.mjs';
 import Reaction from '../accessors/reaction.mjs';
+import Spreadsheet from '../accessors/spreadsheet.mjs';
 import Statistics from '../accessors/statistics.mjs';
 import Story from '../accessors/story.mjs';
 import Task from '../accessors/task.mjs';
@@ -36,6 +37,7 @@ const projectAccessors = [
     Listing,
     Notification,
     Reaction,
+    Spreadsheet,
     Statistics,
     Story,
     Task,
