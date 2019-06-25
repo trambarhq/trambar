@@ -4,6 +4,7 @@ import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as ProjectSaver from 'common/objects/savers/project-saver.mjs';
 import * as ProjectSettings from 'common/objects/settings/project-settings.mjs';
+import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 
@@ -154,7 +155,7 @@ function ProjectSummaryPageSync(props) {
 
     warnDataLoss(draft.changed);
 
-    const title = p(draft.get('details.title')) || draft.get('name');
+    const title = ProjectUtils.getDisplayName(draft.current, env);
     return (
         <div className="project-summary-page">
             {renderButtons()}

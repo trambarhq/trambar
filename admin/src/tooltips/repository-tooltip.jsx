@@ -27,9 +27,7 @@ function RepositoryTooltip(props) {
         return (
             <div className="item" key={repo.id}>
                 <a href={url}>
-                    <i className={`fa fa-${iconName}`}/>
-                    {' '}
-                    {name}
+                    <i className={`fa fa-${iconName}`}/> {name}
                 </a>
             </div>
         );

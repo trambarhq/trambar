@@ -4,6 +4,7 @@ import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as RoleSaver from 'common/objects/savers/role-saver.mjs';
+import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 // widgets
@@ -205,7 +206,7 @@ function RoleListPageSync(props) {
         if (!role) {
             return <TH id="title">{t('table-heading-title')}</TH>;
         } else {
-            const title = p(role.details.title) || role.name || '-';
+            const title = RoleUtils.getDisplayName(role, env) || '-';
             let url, badge;
             if (selection.shown) {
                 // add a badge next to the name if we're disabling or
@@ -268,12 +269,11 @@ const filterRoles = memoizeWeak(null, function(roles) {
 });
 
 const sortRoles = memoizeWeak(null, function(roles, users, env, sort) {
-    const { p } = env.locale;
     const columns = _.map(sort.columns, (column) => {
         switch (column) {
             case 'title':
                 return (role) => {
-                    return p(role.details.title)
+                    return _.toLower(RoleUtils.getDisplayName(role, env));
                 };
             case 'users':
                 return (role) => {

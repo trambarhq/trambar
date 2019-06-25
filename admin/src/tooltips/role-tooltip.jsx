@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
+import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';
@@ -16,13 +17,13 @@ function RoleTooltip(props) {
         return null;
     }
     const list = _.map(roles, (role, i) => {
-        const title = p(role.details.title) || role.name;
+        const name = RoleUtils.getDisplayName(role, env);
         const url = route.find('role-summary-page', {
             roleID: role.id,
         });
         return (
             <div className="item" key={role.id}>
-                <a href={disabled ? undefined : url}>{title}</a>
+                <a href={disabled ? undefined : url}>{name}</a>
             </div>
         );
     });

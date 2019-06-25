@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';
@@ -29,12 +30,11 @@ function UserTooltip(props) {
                 userID: user.id,
             });
         }
+        const name = UserUtils.getDisplayName(user, env);
         return (
             <div className="item" key={user.id}>
                 <a href={url}>
-                    <ProfileImage user={user} env={env} />
-                    {' '}
-                    {user.details.name}
+                    <ProfileImage user={user} env={env} /> {name}
                 </a>
             </div>
         );

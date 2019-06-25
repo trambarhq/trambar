@@ -5,6 +5,7 @@ import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 import { UserTypes } from 'common/objects/types/user-types.mjs';
 import * as UserSettings from 'common/objects/settings/user-settings.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
@@ -211,6 +212,7 @@ function UserSummaryPageSync(props) {
 
     warnDataLoss(draft.changed);
 
+    const name = UserUtils.getDisplayName(draft.current, env);
     return (
         <div className="user-summary-page">
             {renderButtons()}

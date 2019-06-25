@@ -2,10 +2,15 @@ import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import Relaks, { useProgress } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
+import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
+import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
+import * as ServerUtils from 'common/objects/utils/server-utils.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
 import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
@@ -123,7 +128,7 @@ async function NavigationTree(props) {
         const page = 'project-summary-page';
         let label, children;
         if (project) {
-            label = p(project.details.title) || project.name || '-';
+            label = ProjectUtils.getDisplayName(project, env) || '-';
             children = [
                 getMemberListNode(level + 1),
                 getRepoListNode(level + 1),
@@ -149,7 +154,7 @@ async function NavigationTree(props) {
         const page = 'member-summary-page';
         let label
         if (user) {
-            label = p(user.details.name) || user.username || '-';
+            label = UserUtils.getDisplayName(user, env) ||  '-';
         } else if (userID === 'new') {
             label = <i>{t('nav-member-new')}</i>;
         } else {
@@ -171,7 +176,7 @@ async function NavigationTree(props) {
         const page = 'repo-summary-page';
         let label;
         if (repo) {
-            label = p(repo.details.title) || repo.name || '-';
+            label = RepoUtils.getDisplayName(repo, env) || '-';
         } else {
             return null;
         }
@@ -191,7 +196,7 @@ async function NavigationTree(props) {
         const page = 'user-summary-page';
         let label;
         if (user && !project) {
-            label = p(user.details.name) || user.username || '-';
+            label = UserUtils.getDisplayName(user, env) ||  '-';
         } else if (userID === 'new' && !project) {
             label = <i>{t('nav-user-new')}</i>;
         } else {
@@ -213,7 +218,7 @@ async function NavigationTree(props) {
         const page = 'role-summary-page';
         let label;
         if (role) {
-            label = p(role.details.title) || role.name || '-';
+            label = RoleUtils.getDisplayName(role, env) || '-';
         } else if (roleID === 'new') {
             label = <i>{t('nav-role-new')}</i>;
         } else {
@@ -235,10 +240,7 @@ async function NavigationTree(props) {
         const page = 'server-summary-page';
         let label;
         if (server) {
-            label = p(server.details.title);
-            if (!label) {
-                label = (server.type) ? t(`server-type-${server.type}`) : '-';
-            }
+            label = ServerUtils.getDisplayName(server, env);
         } else if (serverID === 'new') {
             label = <i>{t('nav-server-new')}</i>;
         } else {

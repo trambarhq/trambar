@@ -7,7 +7,9 @@ import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as ProjectSaver from 'common/objects/savers/project-saver.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as RepoSaver from 'common/objects/savers/repo-saver.mjs';
+import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
+import * as ServerUtils from 'common/objects/utils/server-utils.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 
 // widgets
@@ -335,20 +337,16 @@ function RepoListPageSync(props) {
 }
 
 const sortRepos = memoizeWeak(null, function(repos, servers, statistics, env, sort) {
-    const { t, p } = env.locale;
     const columns = _.map(sort.columns, (column) => {
         switch (column) {
             case 'title':
                 return (repo) => {
-                    return p(repo.details.title) || repo.name;
+                    return _.toLower(RepoUtils.getDisplayName(repo, env));
                 };
             case 'server':
                 return (repo) => {
                     let server = findServer(servers, repo);
-                    if (server)  {
-                        return p(server.details.title) || t(`server-type-${server.type}`);
-                    }
-                    return '';
+                    return _.toLower(ServerUtils.getDisplayName(server, env));
                 };
             case 'issue_tracker':
                 return 'details.issues_enabled';

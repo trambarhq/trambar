@@ -4,6 +4,7 @@ import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as RepoSaver from 'common/objects/savers/repo-saver.mjs';
+import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 
@@ -100,7 +101,7 @@ function RepoSummaryPageSync(props) {
     warnDataLoss(draft.changed);
 
     const { changed } = draft;
-    const title = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
+    const title = RepoUtils.getDisplayName(repo, env);
     return (
         <div className="repo-summary-page">
             {renderButtons()}

@@ -4,9 +4,12 @@ import React, { useState, useRef } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
+import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as UserSaver from 'common/objects/savers/user-saver.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 import UserTypes from 'common/objects/types/user-types.mjs';
 
 // widgets
@@ -218,7 +221,7 @@ function UserListPageSync(props) {
         if (!user) {
             return <TH id="name">{t('table-heading-name')}</TH>;
         } else {
-            const name = p(user.details.name);
+            const name = UserUtils.getDisplayName(user, env);
             let url, badge;
             if (selection.shown) {
                 if (selection.isAdding(user)) {
@@ -336,12 +339,11 @@ function UserListPageSync(props) {
 }
 
 const sortUsers = memoizeWeak(null, function(users, roles, projects, env, sort) {
-    const { p } = env.locale;
     const columns = _.map(sort.columns, (column) => {
         switch (column) {
             case 'name':
                 return (user) => {
-                    return p(user.details.name);
+                    return _.toLower(UserUtils.getDisplayName(user, env));
                 };
             case 'username':
                 return (user) => {
@@ -357,7 +359,7 @@ const sortUsers = memoizeWeak(null, function(users, roles, projects, env, sort) 
                     if (!role0) {
                         return '';
                     }
-                    return p(role0.details.title) || role0.name;
+                    return _.toLower(RoleUtils.getDisplayName(role0, env));
                 };
             case 'projects':
                 return (user) => {
@@ -365,7 +367,7 @@ const sortUsers = memoizeWeak(null, function(users, roles, projects, env, sort) 
                     if (!project0) {
                         return '';
                     }
-                    return p(project0.details.title) || project0.name;
+                    return _.toLower(ProjectUtils.getDisplayName(project0, env));
                 };
             case 'email':
                 return 'details.email';

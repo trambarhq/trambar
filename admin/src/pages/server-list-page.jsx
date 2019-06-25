@@ -5,6 +5,7 @@ import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
 import * as ServerSaver from 'common/objects/savers/server-saver.mjs';
+import * as ServerUtils from 'common/objects/utils/server-utils.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 // widgets
@@ -212,7 +213,7 @@ function ServerListPageSync(props) {
         if (!server) {
             return <TH id="title">{t('table-heading-title')}</TH>;
         } else {
-            const title = p(server.details.title) || t(`server-type-${server.type}`);
+            const title = ServerUtils.getDisplayName(server, env);
             let url, badge;
             if (selection.shown) {
                 if (selection.isAdding(server)) {
@@ -307,12 +308,11 @@ const filterServers = memoizeWeak(null, function(servers) {
 });
 
 const sortServers = memoizeWeak(null, function(servers, users, env, sort) {
-    const { t, p } = env.locale;
     const columns = _.map(sort.columns, (column) => {
         switch (column) {
             case 'title':
                 return (server) => {
-                    return p(server.details.title) || t(`server-type-${server.type}`);
+                    return _.toLower(ServerUtils.getDisplayName(server, env));
                 };
             case 'type':
                 return (server) => {

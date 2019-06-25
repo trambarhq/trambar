@@ -4,6 +4,7 @@ import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as RoleSaver from 'common/objects/savers/role-saver.mjs';
+import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as UserSaver from 'common/objects/savers/user-saver.mjs';
@@ -156,7 +157,7 @@ function RoleSummaryPageSync(props) {
 
     warnDataLoss(draft.changed || userSelection.changed);
 
-    const title = p(draft.get('details.title')) || draft.get('name');
+    const title = RoleUtils.getDisplayName(draft.current, env);
     return (
         <div className="role-summary-page">
             {renderButtons()}

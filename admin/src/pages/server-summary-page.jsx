@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
+import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
 import * as ServerSaver from 'common/objects/savers/server-saver.mjs';
+import * as ServerUtils from 'common/objects/utils/server-utils.mjs';
 import { ServerTypes, IntegratedServerTypes } from 'common/objects/types/server-types.mjs';
 import * as ServerSettings from 'common/objects/settings/server-settings.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
@@ -251,11 +253,7 @@ function ServerSummaryPageSync(props) {
 
     warnDataLoss(draft.changed);
 
-    let title = p(draft.get('details.title'));
-    const type = draft.get('type');
-    if (!title && type) {
-        title = t(`server-type-${type}`);
-    }
+    const title = ServerUtils.getDisplayName(draft.current, env);
     return (
         <div className="server-summary-page">
             {renderButtons()}
@@ -902,10 +900,9 @@ const oauthImportOptions = [
 ];
 
 function getRoleOptions(roles, env) {
-    const { p } = env.locale;
     const sorted = sortRoles(roles, env);
     const options = _.map(sorted, (role) => {
-        const name = p(role.details.title) || p.name;
+        const name = RoleUtils.getDisplayName(role, env);
         return {
             name: `role-${role.id}`,
             value: role.id,
@@ -921,9 +918,8 @@ function getRoleOptions(roles, env) {
 }
 
 const sortRoles = memoizeWeak(null, function(roles, env) {
-    const { p } = env.locale;
     const name = (role) => {
-        return p(role.details.title) || role.name;
+        return RoleUtils.getDisplayName(role, env);
     };
     return _.sortBy(roles, name);
 });

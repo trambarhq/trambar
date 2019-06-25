@@ -6,6 +6,7 @@ import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as ProjectSaver from 'common/objects/savers/project-saver.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 
 // widgets
@@ -239,7 +240,7 @@ function MemberListPageSync(props) {
         if (!user) {
             return <TH id="name">{t('table-heading-name')}</TH>;
         } else {
-            const name = p(user.details.name);
+            const name = UserUtils.getDisplayName(user, env);
             let url, badge;
             if (selection.shown) {
                 if (selection.isAdding(user)) {
@@ -391,7 +392,7 @@ const sortUsers = memoizeWeak(null, function(users, roles, statistics, env, sort
         switch (column) {
             case 'name':
                 return (user) => {
-                    return p(user.details.name);
+                    return _.toLower(UserUtils.getDisplayName(user, env));
                 };
             case 'range':
                 return (user) => {

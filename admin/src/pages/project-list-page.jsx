@@ -4,6 +4,7 @@ import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as ProjectSaver from 'common/objects/savers/project-saver.mjs';
+import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
@@ -365,12 +366,11 @@ function ProjectListPageSync(props) {
 }
 
 const sortProjects = memoizeWeak(null, function(projects, users, repos, statistics, env, sort) {
-    const { p } = env.locale;
     const columns = _.map(sort.columns, (column) => {
         switch (column) {
             case 'title':
                 return (project) => {
-                    return p(project.details.title)
+                    return _.toLower(ProjectUtils.getDisplayName(project, env))
                 };
             case 'users':
                 return (project) => {

@@ -3,17 +3,11 @@ import * as ExternalDataUtils from './external-data-utils.mjs';
 
 function getDisplayName(repo, env) {
     const { p } = env.locale;
-    let title;
-    if (repo && repo.details) {
-        title = p(repo.details.title) || repo.name;
-    }
-    return title || '';
+    return p(_.get(repo, 'details.title')) || _.get(repo, 'name') || '';
 }
 
 function getURL(repo) {
-    if (repo && repo.details) {
-        return repo.details.web_url;
-    }
+    return _.get(repo, 'details.web_url', '');
 }
 
 function getMembershipPageURL(repo) {

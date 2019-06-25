@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 function getDisplayName(role, env) {
     const { p } = env.locale;
-    return p(role.details.title) || role.name;
+    return p(_.get(role, 'details.title')) || _.get(role, 'name') || '';
 }
 
 export {

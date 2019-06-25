@@ -2,6 +2,7 @@ import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import Moment from 'moment';
+import * as ServerUtils from 'common/objects/utils/server-utils.mjs';
 import * as HTTPRequest from 'common/transport/http-request.mjs';
 
 // widgets
@@ -162,8 +163,8 @@ async function SignInPage(props) {
     }
 
     function renderOAuthButton(server, i) {
-        const name = p(server.details.title) || t(`server-type-${server.type}`);
-        const icon = getServerIcon(server.type);
+        const name = ServerUtils.getDisplayName(server, env);
+        const icon = ServerUtils.getIcon(server);
         const url = database.getOAuthURL(server);
         const props = {
             className: 'oauth-button',
@@ -185,15 +186,6 @@ async function SignInPage(props) {
                 <span className="label">{text}</span>
             </a>
         );
-    }
-}
-
-function getServerIcon(type) {
-    switch (type) {
-        case 'facebook':
-            return 'facebook-official';
-        default:
-            return type;
     }
 }
 
