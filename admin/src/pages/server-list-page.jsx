@@ -225,7 +225,7 @@ function ServerListPageSync(props) {
                 const params = { serverID: server.id };
                 url = route.find('server-summary-page', params);
             }
-            const iconName = getServerIcon(server.type);
+            const iconName = ServerUtils.getIcon(server);
             const icon = <i className={`fa fa-${iconName} fa-fw`} />;
             return (
                 <td>
@@ -332,15 +332,6 @@ const sortServers = memoizeWeak(null, function(servers, users, env, sort) {
     });
     return _.orderBy(servers, columns, sort.directions);
 });
-
-function getServerIcon(type) {
-    switch (type) {
-        case 'facebook':
-            return 'facebook-official';
-        default:
-            return type;
-    }
-}
 
 function hasOAuthCredentials(server) {
     if (server && server.settings) {
