@@ -495,14 +495,7 @@ function canReceiveNotification(user, repos, type) {
  */
 function getDisplayName(user, env) {
     let { p } = env.locale;
-    if (!user) {
-        return '\u00a0';
-    }
-    let name = p(user.details.name);
-    if (!_.trim(name)) {
-        name = _.capitalize(user.username);
-    }
-    return name;
+    return p(_.get(user, 'details.name')) || _.capitalize(_.get(user, 'username')) || '';
 }
 
 /**

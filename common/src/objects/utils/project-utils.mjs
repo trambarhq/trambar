@@ -65,7 +65,7 @@ function isVisibleToUser(project, user) {
 
 function getDisplayName(project, env) {
     const { p } = env.locale;
-    return p(project.details.title) || project.name;
+    return p(_.get(project, 'details.title')) || _.get(project, 'name') || '';
 }
 
 export {

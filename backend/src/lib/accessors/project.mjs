@@ -248,7 +248,7 @@ class Project extends Data {
             const projectBefore = projectsBefore[index];
             const projectAfter = projectsAfter[index];
             if (projectReceived.user_ids) {
-                const newUserIds = projectAfter.user_ids;
+                let newUserIds = projectAfter.user_ids;
                 if (projectBefore) {
                     newUserIds = _.difference(projectAfter.user_ids, projectBefore.user_ids);
                 }

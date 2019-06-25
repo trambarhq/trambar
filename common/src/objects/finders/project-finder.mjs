@@ -92,7 +92,7 @@ async function findActiveProjects(db, minimum) {
 }
 
 /**
- * Find projects that have given users as members
+ * Find active projects that have given users as members
  *
  * @param  {Database} db
  * @param  {Array<User>} users
@@ -109,7 +109,11 @@ async function findProjectsWithMembers(db, users, minimum) {
     return db.find({
         schema,
         table,
-        criteria: { user_ids: ids },
+        criteria: {
+            user_ids: ids,
+            archived: false,
+            deleted: false,
+        },
         minimum
     });
 }
