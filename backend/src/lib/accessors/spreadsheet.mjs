@@ -13,7 +13,7 @@ class Spreadsheet extends Data {
             url: String,
             etag: String,
         };
-        this.criteria, {
+        this.criteria = {
             ...this.criteria,
             name: String,
             etag: String,

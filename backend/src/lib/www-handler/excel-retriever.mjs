@@ -64,7 +64,7 @@ async function retrieve(schema, name, redirection) {
 async function fetchSpreadsheet(spreadsheet) {
     const { url, etag } = spreadsheet;
     const fileURL = getFileURL(url);
-    const options = {};
+    const options = { timeout: 5000 };
     if (etag) {
         options.headers = {
             'If-None-Match': etag,
@@ -153,14 +153,39 @@ function extractCellValue(cell, field) {
     if (!field || !field.name) {
         return;
     }
-    const text = cell.text;
     if (field.import) {
-        const src = text;
+        const src = _.trim(cell.text);
         return { src };
     } else {
-        return { text };
+        const style = {};
+        if (cell.alignment && !_.isEqual(cell.alignment, defaultAlignment)) {
+            style.alignment = cell.alignment;
+        }
+        if (cell.border && !_.isEqual(cell.border, defaultBorder)) {
+            style.border = cell.border;
+        }
+        if (cell.fill && !_.isEqual(cell.fill, defaultFill)) {
+            style.fill = cell.fill;
+        }
+        let richText = cell.value.richText;
+        if (!richText) {
+            if (cell.font) {
+                richText = [ { font: cell.font, text: cell.text } ];
+            } else if (!_.isEmpty(style)) {
+                richText = [ { font: {}, text: cell.text }];
+            }
+        }
+        if (richText) {
+            return { richText, ...style };
+        } else {
+            return cell.text;
+        }
     }
 }
+
+const defaultAlignment = { vertical: 'top', horizontal: 'left' };
+const defaultFill = { type: 'pattern', pattern: 'none' };
+const defaultBorder = {};
 
 function findMediaImports(data) {
     const list = [];
