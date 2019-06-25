@@ -12,6 +12,7 @@ import Repo from './lib/accessors/repo.mjs';
 import Server from './lib/accessors/server.mjs';
 
 import * as HookManager from './lib/gitlab-adapter/hook-manager.mjs';
+import * as TemplateManager from './lib/gitlab-adapter/template-manager.mjs';
 
 import TaskQueue from './lib/task-queue.mjs';
 import {
@@ -57,6 +58,9 @@ async function start() {
     app.set('json spaces', 2);
     app.post('/srv/gitlab/hook/:serverID', handleSystemHookCallback);
     app.post('/srv/gitlab/hook/:serverID/:repoID/:projectID', handleProjectHookCallback);
+    app.get('/internal/retrieve/:schema/:commit/:type/*', handleFileRequest);
+    app.use(handleError);
+
     server = app.listen(80);
 
     // listen for database change events
@@ -267,10 +271,11 @@ function handleSystemChangeEvent(event) {
  *
  * @param  {Request} req
  * @param  {Response} res
+ * @param  {Function} next
  *
  * @return {Promise}
  */
-async function handleSystemHookCallback(req, res) {
+async function handleSystemHookCallback(req, res, next) {
     const serverID = parseInt(req.params.serverID);
     const serverName = await getServerName(serverID);
     const taskLog = TaskLog.start('system-event-handle', {
@@ -302,10 +307,10 @@ async function handleSystemHookCallback(req, res) {
             taskLog.merge(glHookEvent);
         }
         await taskLog.finish();
+        res.end();
     } catch (err) {
         await taskLog.abort(err);
-    } finally {
-        res.end();
+        next(err);
     }
 }
 
@@ -314,10 +319,11 @@ async function handleSystemHookCallback(req, res) {
  *
  * @param  {Request} req
  * @param  {Response} res
+ * @param  {Function} next
  *
  * @return {Promise}
  */
-async function handleProjectHookCallback(req, res) {
+async function handleProjectHookCallback(req, res, next) {
     const serverID = parseInt(req.params.serverID);
     const serverName = await getServerName(serverID);
     const repoID = parseInt(req.params.repoID);
@@ -339,10 +345,28 @@ async function handleProjectHookCallback(req, res) {
         taskQueue.add(new TaskImportProjectHookEvent(repoID, projectID, glHookEvent));
         taskLog.merge(glHookEvent);
         await taskLog.finish();
+        res.end();
     } catch (err) {
         await taskLog.abort(err);
-    } finally {
-        res.end();
+        next(err);
+    }
+}
+
+async function handleFileRequest(req, res, next) {
+    try {
+        const { schema, commit, type } = req.params;
+        const path = req.params[0];
+        const buffer = await TemplateManager.retrieveFile(schema, commit, type, path);
+        res.send(buffer);
+    } catch (err) {
+        next(err);
+    }
+}
+
+function handleError(err, req, res, next) {
+    if (!res.headersSent) {
+        const status = err.status || 400;
+        res.type('text').status(status).send(err.message);
     }
 }
 

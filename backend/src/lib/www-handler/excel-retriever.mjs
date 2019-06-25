@@ -222,7 +222,7 @@ function trimURLs(data) {
  */
 async function importMediaFile(url) {
     const adjustedURL = getFileURL(url)
-    const importURL = 'http://media_server/srv/internal/import';
+    const importURL = 'http://media_server/internal/import';
     const method = 'post';
     const headers = { 'Content-Type': 'application/json' };
     const body = JSON.stringify({ url: adjustedURL });

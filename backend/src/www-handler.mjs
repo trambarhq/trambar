@@ -13,6 +13,8 @@ import * as TaskLog from './lib/task-log.mjs'
 import * as Shutdown from './lib/shutdown.mjs';
 
 import * as ExcelRetriever from './lib/www-handler/excel-retriever.mjs';
+import * as PageGenerator from './lib/www-handler/page-generator.mjs';
+import * as TemplateRetriever from './lib/www-handler/template-retriever.mjs';
 import * as WikiRetriever from './lib/www-handler/wiki-retriever.mjs';
 
 import Project from './lib/accessors/project.mjs';
@@ -40,6 +42,9 @@ async function start() {
     app.get('/srv/www/:schema/wiki/:slug', handleWikiRequest);
     app.get('/srv/www/:schema/excel/:name', handleExcelRequest);
     app.get('/srv/www/:schema/:type(images|video|audio)/*', handleMediaRequest);
+    app.get('/srv/www/:schema/\\(:commit\\)/*', handleFileRequest);
+    app.get('/srv/www/:schema/*', handleFileRequest);
+    app.get('/srv/www/:schema/\\(:commit\\)/*', handlePageRequest);
     app.get('/srv/www/:schema/*', handlePageRequest);
     app.use(handleError);
 
@@ -75,13 +80,6 @@ async function stop() {
     if (database) {
         database.close();
         database = undefined;
-    }
-}
-
-function handleError(err, req, res, next) {
-    if (!res.headersSent) {
-        const status = err.status || 400;
-        res.type('text').status(status).send(err.message);
     }
 }
 
@@ -132,11 +130,27 @@ function controlCache(res, override, etag) {
     }
 }
 
-async function handlePageRequest(req, res, next) {
-    const { schema } = req.params;
-    const path = req.url;
+async function handleFileRequest(req, res, next) {
+    const { schema, commit } = req.params;
+    const path = req.params[0];
+    const [ ext ] = /\.\w+$/.exec(path);
+    if (!ext) {
+        return next();
+    }
     try {
-        res.json({ schema, path });
+        const buffer = await TemplateRetriever.retrieve(schema, commit, 'www', path);
+        res.send(buffer);
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function handlePageRequest(req, res, next) {
+    const { schema, commit } = req.params;
+    const path = req.params[0];
+    try {
+        const page = await PageGenerator.generate(schema, commit, path);
+        res.send(page);
     } catch (err) {
         next(err);
     }
@@ -150,6 +164,13 @@ async function handleMediaRequest(req, res, next) {
         res.set('X-Accel-Redirect', uri).end();
     } catch (err) {
         next(err);
+    }
+}
+
+function handleError(err, req, res, next) {
+    if (!res.headersSent) {
+        const status = err.status || 400;
+        res.type('text').status(status).send(err.message);
     }
 }
 

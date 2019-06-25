@@ -1,25 +1,19 @@
-import { ExternalData } from './external-data.mjs';
+import { Data } from './data.mjs';
 
-class Wiki extends ExternalData {
+class Template extends Data {
     constructor() {
         super();
-        this.schema = 'project';
-        this.table = 'wiki';
+        this.schema = 'global';
+        this.table = 'template';
         this.columns = {
             ...this.columns,
-            language_codes: Array(String),
-            slug: String,
-            public: Boolean,
-            chosen: Boolean,
+            repo_id: Number,
         };
         this.criteria = {
             ...this.criteria,
-            language_codes: Array(String),
-            slug: String,
-            public: Boolean,
-            chosen: Boolean,
+            repo_id: Number,
         };
-        this.version = 3;
+        this.version = 4;
     }
 
     /**
@@ -40,14 +34,7 @@ class Wiki extends ExternalData {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                language_codes varchar(2)[] NOT NULL DEFAULT '{}'::text[],
-                slug varchar(256) NOT NULL,
-                public boolean NOT NULL DEFAULT false,
-                chosen boolean NOT NULL DEFAULT false,
-                external jsonb[] NOT NULL DEFAULT '{}',
-                exchange jsonb[] NOT NULL DEFAULT '{}',
-                itime timestamp,
-                etime timestamp,
+                repo_id int NULL DEFAULT null,
                 PRIMARY KEY (id)
             );
         `;
@@ -64,7 +51,7 @@ class Wiki extends ExternalData {
      * @return {Promise<Boolean>}
      */
     async upgrade(db, schema, version) {
-        if (version === 3) {
+        if (version === 4) {
             await this.create(db, schema);
             await this.grant(db, schema);
             await this.watch(db, schema);
@@ -102,9 +89,6 @@ class Wiki extends ExternalData {
         await this.createChangeTrigger(db, schema);
         await this.createNotificationTriggers(db, schema, [
             'deleted',
-            'slug',
-            'public',
-            'chosen',
         ]);
     }
 
@@ -127,5 +111,5 @@ const instance = new Wiki;
 
 export {
     instance as default,
-    Wiki,
+    Template,
 };

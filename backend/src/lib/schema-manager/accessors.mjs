@@ -18,6 +18,7 @@ import Reaction from '../accessors/reaction.mjs';
 import Spreadsheet from '../accessors/spreadsheet.mjs';
 import Statistics from '../accessors/statistics.mjs';
 import Story from '../accessors/story.mjs';
+import Template from '../accessors/template.mjs';
 import Wiki from '../accessors/wiki.mjs';
 
 // appear in both
@@ -36,6 +37,7 @@ const globalAccessors = [
     Session,
     Subscription,
     System,
+    Template,
     Task,
     User,
 ];

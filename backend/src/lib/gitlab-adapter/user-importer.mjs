@@ -406,7 +406,7 @@ async function findProfileImage(glUser) {
         return null;
     }
 
-    const url = 'http://media_server/srv/internal/import';
+    const url = 'http://media_server/internal/import';
     const method = 'post';
     const headers = { 'Content-Type': 'application/json' };
     const body = JSON.stringify({ url: avatarURL });

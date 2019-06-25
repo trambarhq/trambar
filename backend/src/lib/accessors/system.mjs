@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import HTTPError from '../common/errors/http-error.mjs';
 import { Data } from './data.mjs';
 import Task from './task.mjs';

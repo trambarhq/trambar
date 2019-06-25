@@ -55,7 +55,7 @@ async function start() {
     app.post('/srv/media/audios/upload/:schema/', upload.single('file'), handleAudioUpload);
     app.post('/srv/media/audios/poster/:schema/', upload.single('file'), handleAudioPoster);
     app.post('/srv/media/stream/', upload.single('file'), handleStream);
-    app.post('/srv/internal/import', upload.single('file'), handleImageImport);
+    app.post('/internal/import', upload.single('file'), handleImageImport);
     await new Promise((resolve, reject) => {
         server = app.listen(80, () => {
             resolve();
