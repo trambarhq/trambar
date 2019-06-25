@@ -55,7 +55,7 @@ async function UserSummaryPage(props) {
 
     function render() {
         const sprops = { system, user, roles, project, statistics, creating };
-        show(<UserSummaryPageSync {...sprops} {...props} />);
+        show(<UserSummaryPageSync key={userID} {...sprops} {...props} />);
     }
 }
 

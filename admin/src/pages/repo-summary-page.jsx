@@ -45,7 +45,7 @@ async function RepoSummaryPage(props) {
 
     function render() {
         const sprops = { system, repo, project, statistics };
-        show(<RepoSummaryPageSync {...sprops} {...props} />);
+        show(<RepoSummaryPageSync key={repoID} {...sprops} {...props} />);
     }
 }
 
@@ -101,7 +101,6 @@ function RepoSummaryPageSync(props) {
 
     const { changed } = draft;
     const title = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
-    console.log(env);
     return (
         <div className="repo-summary-page">
             {renderButtons()}

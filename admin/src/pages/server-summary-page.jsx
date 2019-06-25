@@ -50,7 +50,7 @@ async function ServerSummaryPage(props) {
 
     function render() {
         const sprops = { system, server, roles, creating };
-        show(<ServerSummaryPageSync {...sprops} {...props} />);
+        show(<ServerSummaryPageSync key={serverID} {...sprops} {...props} />);
     }
 }
 

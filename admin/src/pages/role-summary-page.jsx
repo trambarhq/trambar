@@ -46,7 +46,7 @@ async function RoleSummaryPage(props) {
 
     function render() {
         const sprops = { system, role, users, creating };
-        show(<RoleSummaryPageSync {...sprops} {...props} />);
+        show(<RoleSummaryPageSync key={roleID} {...sprops} {...props} />);
     }
 }
 

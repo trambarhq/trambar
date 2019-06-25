@@ -48,7 +48,7 @@ async function ProjectSummaryPage(props) {
 
     function render() {
         const sprops = { system, project, statistics, creating };
-        show (<ProjectSummaryPageSync {...sprops} {...props} />);
+        show (<ProjectSummaryPageSync key={projectID} {...sprops} {...props} />);
     }
 }
 
