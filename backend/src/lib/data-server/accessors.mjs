@@ -5,6 +5,7 @@ import Project from '../accessors/project.mjs';
 import Repo from '../accessors/repo.mjs';
 import Role from '../accessors/role.mjs';
 import Server from '../accessors/server.mjs';
+import Snapshot from '../accessors/snapshot.mjs';
 import Subscription from '../accessors/subscription.mjs';
 import System from '../accessors/system.mjs';
 import User from '../accessors/user.mjs';
@@ -27,6 +28,7 @@ const globalAccessors = [
     Repo,
     Role,
     Server,
+    Snapshot,
     Subscription,
     System,
     Task,

@@ -14,6 +14,7 @@ class Repo extends ExternalData {
             type: String,
             name: String,
             user_ids: Array(Number),
+            template: Boolean,
         };
         this.criteria = {
             ...this.criteria,
@@ -23,6 +24,7 @@ class Repo extends ExternalData {
             name: String,
             user_ids: Array(Number),
             server_id: Number,
+            template: Boolean,
         };
     }
 
@@ -55,6 +57,30 @@ class Repo extends ExternalData {
             );
         `;
         await db.execute(sql);
+    }
+
+    /**
+     * Upgrade table in schema to given DB version (from one version prior)
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Number} version
+     *
+     * @return {Promise<Boolean>}
+     */
+    async upgrade(db, schema, version) {
+        if (version === 3) {
+            // adding: template
+            const table = this.getTableName(schema);
+            const sql = `
+                ALTER TABLE ${table}
+                ADD COLUMN IF NOT EXISTS
+                template bool NULL DEFAULT NULL;
+            `;
+            await db.execute(sql)
+            return true;
+        }
+        return false;
     }
 
     /**

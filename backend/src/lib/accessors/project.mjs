@@ -19,6 +19,7 @@ class Project extends Data {
             name: String,
             repo_ids: Array(Number),
             user_ids: Array(Number),
+            template_repo_id: Number,
             settings: Object,
             archived: Boolean,
         };
@@ -27,6 +28,7 @@ class Project extends Data {
             name: String,
             repo_ids: Array(Number),
             user_ids: Array(Number),
+            template_repo_id: Number,
             archived: Boolean,
         };
         this.accessControlColumns = {
@@ -65,6 +67,30 @@ class Project extends Data {
             CREATE INDEX ON ${table} USING gin(("payloadTokens"(details))) WHERE "payloadTokens"(details) IS NOT NULL;
         `;
         await db.execute(sql);
+    }
+
+    /**
+     * Upgrade table in schema to given DB version (from one version prior)
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Number} version
+     *
+     * @return {Promise<Boolean>}
+     */
+    async upgrade(db, schema, version) {
+        if (version === 3) {
+            // adding: template_repo_id
+            const table = this.getTableName(schema);
+            const sql = `
+                ALTER TABLE ${table}
+                ADD COLUMN IF NOT EXISTS
+                template_repo_id int NULL DEFAULT NULL;
+            `;
+            await db.execute(sql)
+            return true;
+        }
+        return false;
     }
 
     /**

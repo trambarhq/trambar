@@ -7,6 +7,7 @@ import Repo from '../accessors/repo.mjs';
 import Role from '../accessors/role.mjs';
 import Server from '../accessors/server.mjs';
 import Session from '../accessors/session.mjs';
+import Snapshot from '../accessors/snapshot.mjs';
 import Subscription from '../accessors/subscription.mjs';
 import System from '../accessors/system.mjs';
 import User from '../accessors/user.mjs';
@@ -18,7 +19,6 @@ import Reaction from '../accessors/reaction.mjs';
 import Spreadsheet from '../accessors/spreadsheet.mjs';
 import Statistics from '../accessors/statistics.mjs';
 import Story from '../accessors/story.mjs';
-import Template from '../accessors/template.mjs';
 import Wiki from '../accessors/wiki.mjs';
 
 // appear in both
@@ -35,9 +35,9 @@ const globalAccessors = [
     Role,
     Server,
     Session,
+    Snapshot,
     Subscription,
     System,
-    Template,
     Task,
     User,
 ];

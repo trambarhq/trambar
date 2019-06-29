@@ -1,19 +1,25 @@
 import { Data } from './data.mjs';
 
-class Template extends Data {
+class Snapshot extends Data {
     constructor() {
         super();
         this.schema = 'global';
-        this.table = 'template';
+        this.table = 'snapshot';
         this.columns = {
             ...this.columns,
             repo_id: Number,
+            branch_name: String,
+            commit_id: String,
+            head: Boolean,
         };
         this.criteria = {
             ...this.criteria,
             repo_id: Number,
+            branch_name: String,
+            commit_id: String,
+            head: Boolean,
         };
-        this.version = 4;
+        this.version = 3;
     }
 
     /**
@@ -35,8 +41,13 @@ class Template extends Data {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 repo_id int NULL DEFAULT null,
+                branch_name text NOT NULL DEFAULT '',
+                commit_id text NOT NULL DEFAULT '',
+                head bool NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
+            CREATE UNIQUE INDEX ON ${table} (repo_id, branch_name) WHERE deleted = false AND head = true;
+            CREATE UNIQUE INDEX ON ${table} (repo_id, branch_name, commit_id) WHERE deleted = false;
         `;
         await db.execute(sql);
     }
@@ -51,7 +62,7 @@ class Template extends Data {
      * @return {Promise<Boolean>}
      */
     async upgrade(db, schema, version) {
-        if (version === 4) {
+        if (version === 3) {
             await this.create(db, schema);
             await this.grant(db, schema);
             await this.watch(db, schema);
@@ -89,6 +100,7 @@ class Template extends Data {
         await this.createChangeTrigger(db, schema);
         await this.createNotificationTriggers(db, schema, [
             'deleted',
+            'head',
         ]);
     }
 
@@ -107,9 +119,9 @@ class Template extends Data {
     }
 }
 
-const instance = new Wiki;
+const instance = new Snapshot;
 
 export {
     instance as default,
-    Template,
+    Snapshot,
 };
