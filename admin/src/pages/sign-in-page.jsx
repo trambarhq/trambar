@@ -12,13 +12,27 @@ import TextField from '../widgets/text-field.jsx';
 import './sign-in-page.scss';
 
 async function SignInPage(props) {
+    const { database } = props;
+    const [ show ] = useProgress();
+
+    render();
+    const { system, servers } = await database.beginSession('admin');
+    render();
+
+    function render() {
+        const sprops = { system, servers, ...props };
+        show(<SignInPageSync {...sprops} />);
+    }
+}
+
+function SignInPageSync(props) {
+    const { system, servers } = props;
     const { database, route, env } = props;
     const { t, p } = env.locale;
-    const [ show ] = useProgress();
     const [ username, setUsername ] = useState('');
     const [ password, setPassowrd ] = useState('');
     const [ submitting, setSubmitting ] = useState(false);
-    const [ error, run ] = useErrorCatcher(true);
+    const [ error, run ] = useErrorCatcher();
     const [ oauthErrors, setOAuthErrors ] = useState({});
     const [ savedCredentials, setSavedCredentials ] = useState(false);
     const credentialsValid = !!_.trim(username) && !!_.trim(password);
@@ -71,18 +85,13 @@ async function SignInPage(props) {
         }, 500);
     }, []);
 
-    render();
-    const { system, servers } = await database.beginSession('admin');
-    render();
 
-    function render() {
-        show(
-            <div className="sign-in-page">
-                {renderForm()}
-                {renderOAuthButtons()}
-            </div>
-        );
-    }
+    return (
+        <div className="sign-in-page">
+            {renderForm()}
+            {renderOAuthButtons()}
+        </div>
+    );
 
     function renderForm() {
         const title = p(_.get(system, 'details.title'));
@@ -133,7 +142,7 @@ async function SignInPage(props) {
             return null;
         }
         let problem;
-        switch (err.statusCode) {
+        switch (error.statusCode) {
             case 401: problem = 'incorrect-username-password'; break;
             case 403: problem = 'no-support-for-username-password'; break;
             default: problem = 'unexpected-error';
