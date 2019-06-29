@@ -23,11 +23,11 @@ import Story from '../accessors/story.mjs';
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Story|undefined>}
+ * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent) {
     if (!glEvent.target_id) {
-        return false;
+        return;
     }
     const schema = project.name;
     const repoLink = ExternalDataUtils.findLink(repo, server);
@@ -56,7 +56,6 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
             throw err;
         }
     }
-    return true;
 }
 
 /**
@@ -74,7 +73,7 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
  */
 async function processHookEvent(db, system, server, repo, project, author, glHookEvent) {
     if (glHookEvent.object_attributes.action !== 'update') {
-        return true;
+        return;
     }
     // construct a glMergeRequest object from data in hook event
     const repoLink = ExternalDataUtils.findLink(repo, server);
@@ -106,7 +105,6 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
     const storyChanges = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
     const storyAfter = (storyChanges) ? await Story.updateOne(db, schema, storyAfter) : story;
     await AssignmentImporter.importAssignments(db, server, project, repo, storyAfter, assignments);
-    return true;
 }
 
 /**

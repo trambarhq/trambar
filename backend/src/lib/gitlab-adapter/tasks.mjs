@@ -213,16 +213,12 @@ class TaskImportProjectHookEvent extends BasicTask {
         const server = await getRepoServer(db, repo);
         const glHookEvent = this.glHookEvent;
         if (system && server && repo && project) {
-            const handled = await EventImporter.processHookEvent(db, system, server, repo, project, glHookEvent);
-            if (!handled) {
-                // scan the activity log if the event wasn't handled
-                queue.add(new TaskImportRepoEvents(this.repoID, this.projectID, this.glHookEvent));
-            }
-
             if (glHookEvent.object_kind === 'wiki_page') {
                 // update wikis
                 queue.add(new TaskImportWikis(this.repoID, this.projectID));
             }
+
+            await EventImporter.processHookEvent(db, system, server, repo, project, glHookEvent);
         }
     }
 }

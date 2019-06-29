@@ -110,13 +110,12 @@ async function importRepositories(db, server) {
  * @param  {Project} project
  * @param  {Object} glEvent
  *
- * @return {Promise<Boolean>}
+ * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent) {
     const schema = project.name;
     const storyNew = copyEventProperties(null, system, server, repo, author, glEvent);
     await Story.insertOne(db, schema, storyNew);
-    return true;
 }
 
 /**

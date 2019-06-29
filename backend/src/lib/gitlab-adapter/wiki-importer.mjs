@@ -245,7 +245,7 @@ async function fetchWikis(server, glProjectId) {
  * @param  {User} author
  * @param  {Object} glHookEvent
  *
- * @return {Promise<Boolean>}
+ * @return {Promise}
  */
 async function processHookEvent(db, system, server, repo, project, author, glHookEvent) {
     const schema = project.name;
@@ -267,7 +267,6 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
         const storyNew = copyEventProperties(null, system, server, repo, author, glHookEvent);
         const storyAfter = await Story.saveOne(db, schema, storyNew);
     }
-    return true;
 }
 
 /**

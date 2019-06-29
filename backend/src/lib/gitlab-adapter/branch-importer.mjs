@@ -15,13 +15,13 @@ import Story from '../accessors/story.mjs';
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Boolean>}
+ * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent) {
     // creation of a branch or a tag is handled by PushImporter
     // we only handle deletion events here
     if (glEvent.action_name !== 'deleted') {
-        return false;
+        return;
     }
     const schema = project.name;
     let branch, tailID, type;
@@ -52,10 +52,8 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
         // delete the story if no changes were checked in with the branch
         if (_.isEmpty(story.details.files)) {
             await Story.updateOne(db, schema, { id: story.id, deleted: true });
-            return true;
         }
     }
-    return false;
 }
 
 export {

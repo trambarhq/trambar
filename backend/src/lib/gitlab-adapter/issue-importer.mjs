@@ -25,7 +25,7 @@ import Story from '../accessors/story.mjs';
  */
 async function processEvent(db, system, server, repo, project, author, glEvent) {
     if (!glEvent.target_id) {
-        return false;
+        return;
     }
     const schema = project.name;
     const repoLink = ExternalDataUtils.findLink(repo, server);
@@ -54,7 +54,6 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
             throw err;
         }
     }
-    return true;
 }
 
 /**
@@ -68,11 +67,11 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Story|undefined>}
+ * @return {Promise}
  */
 async function processHookEvent(db, system, server, repo, project, author, glHookEvent) {
     if (glHookEvent.object_attributes.action !== 'update') {
-        return true;
+        return;
     }
     // construct a glIssue object from data in hook event
     const repoLink = ExternalDataUtils.findLink(repo, server);
@@ -116,7 +115,6 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
             throw err;
         }
     }
-    return true;
 }
 
 /**

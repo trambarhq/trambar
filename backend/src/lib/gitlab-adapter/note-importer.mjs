@@ -23,17 +23,16 @@ import Reaction from '../accessors/reaction.mjs';
  * @param  {Object} glEvent
  * @param  {Object} glHookEvent
  *
- * @return {Promise<Boolean>}
+ * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent, glHookEvent) {
-    switch (_.toLower(glEvent.note.noteable_type)) {
-        case 'issue':
-            return processIssueNoteEvent(db, system, server, repo, project, author, glEvent);
-        case 'mergerequest':
-        case 'merge_request':
-            return processMergeRequestNoteEvent(db, system, server, repo, project, author, glEvent);
-        case 'commit':
-            return processCommitNoteEvent(db, system, server, repo, project, author, glEvent, glHookEvent);
+    const noteType = _.toLower(glEvent.note.noteable_type);
+    if (noteType === 'issue') {
+        await processIssueNoteEvent(db, system, server, repo, project, author, glEvent);
+    } else if (noteType === 'commit') {
+        await processCommitNoteEvent(db, system, server, repo, project, author, glEvent, glHookEvent);
+    } else if (noteType === 'mergerequest' || noteType === 'merge_request') {
+        await processMergeRequestNoteEvent(db, system, server, repo, project, author, glEvent);
     }
 }
 
@@ -48,7 +47,7 @@ async function processEvent(db, system, server, repo, project, author, glEvent, 
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Boolean>}
+ * @return {Promise}
  */
 async function processIssueNoteEvent(db, system, server, repo, project, author, glEvent) {
     const schema = project.name;
@@ -59,11 +58,10 @@ async function processIssueNoteEvent(db, system, server, repo, project, author, 
     };
     const story = await Story.findOne(db, schema, criteria, '*');
     if (!story) {
-        return false;
+        return;
     }
     const reactionNew = copyEventProperties(null, system, server, story, author, glEvent);
     await Reaction.insertOne(db, schema, reactionNew);
-    return true;
 }
 
 /**
@@ -77,7 +75,7 @@ async function processIssueNoteEvent(db, system, server, repo, project, author, 
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Boolean>}
+ * @return {Promise}
  */
 async function processMergeRequestNoteEvent(db, system, server, repo, project, author, glEvent) {
     const schema = project.name;
@@ -88,11 +86,10 @@ async function processMergeRequestNoteEvent(db, system, server, repo, project, a
     };
     const story = await Story.findOne(db, schema, criteria, '*');
     if (!story) {
-        return false;
+        return;
     }
     const reactionNew = copyEventProperties(null, system, server, story, author, glEvent);
     await Reaction.insertOne(db, schema, reactionNew);
-    return true;
 }
 
 /**
@@ -106,14 +103,14 @@ async function processMergeRequestNoteEvent(db, system, server, repo, project, a
  * @param  {Object} glEvent
  * @param  {Object} glHookEvent
  *
- * @return {Promise<Boolean>}
+ * @return {Promise}
  */
 async function processCommitNoteEvent(db, system, server, repo, project, author, glEvent, glHookEvent) {
     // need to find the commit id first, since Gitlab doesn't include it
     // in the activity log entry
     const commitID = await findCommitID(db, server, repo, glEvent, glHookEvent);
     if (!commitID) {
-        return false;
+        return;
     }
     const schema = project.name;
     const criteria = {
@@ -123,7 +120,7 @@ async function processCommitNoteEvent(db, system, server, repo, project, author,
     };
     const story = await Story.findOne(db, schema, criteria, '*');
     if (!story) {
-        return false;
+        return;
     }
     const reactionNew = copyEventProperties(null, system, server, story, author, glEvent);
     // link to a particular commit (whereas the story could be linked to multiple)
@@ -132,7 +129,6 @@ async function processCommitNoteEvent(db, system, server, repo, project, author,
         link.commit = { id: commitID };
     }
     await Reaction.insertOne(db, schema, reactionNew);
-    return false;
 }
 
 /**

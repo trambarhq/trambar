@@ -20,12 +20,12 @@ import Story from '../accessors/story.mjs';
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Boolean>}
+ * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent) {
     if (!glEvent.target_id) {
         // milestone was deleted
-        return false;
+        return;
     }
     const schema = project.name;
     const repoLink = ExternalDataUtils.findLink(repo, server);
@@ -39,7 +39,6 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
     const story = await Story.findOne(db, schema, criteria, '*');
     const storyChanges = copyMilestoneProperties(story, system, server, repo, author, glMilestone);
     const storyAfter = (storyChanges) ? await Story.saveOne(db, schema, storyChanges) : story;
-    return true;
 }
 
 /**

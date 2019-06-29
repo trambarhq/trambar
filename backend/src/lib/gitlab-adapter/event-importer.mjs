@@ -27,7 +27,7 @@ import Story from '../accessors/story.mjs';
  * @param  {Project} project
  * @param  {Object} glHookEvent
  *
- * @return {Promise<Boolean>}
+ * @return {Promise}
  */
 async function processNewEvents(db, system, server, repo, project, glHookEvent) {
     const lastTask = await TaskLog.last('gitlab-event-import', {
@@ -56,7 +56,6 @@ async function processNewEvents(db, system, server, repo, project, glHookEvent) 
     });
     const now = Moment();
     let firstEventAge;
-    let processedEventCount = 0;
     try {
         await Transport.fetchEach(server, url, params, async (glEvent, index, total) => {
             const ctime = glEvent.created_at;
@@ -77,19 +76,15 @@ async function processNewEvents(db, system, server, repo, project, glHookEvent) 
                 nom = (firstEventAge - eventAge);
                 denom = firstEventAge;
             }
-            const result = await processEvent(db, system, server, repo, project, glEvent, glHookEvent);
-            taskLog.append(result ? 'added' : 'ignored', glEvent.action_name);
+            await processEvent(db, system, server, repo, project, glEvent, glHookEvent);
+            taskLog.append('added', glEvent.action_name);
             taskLog.set('last_event_time', ctime);
             taskLog.report(nom, denom);
-            if (result) {
-                processedEventCount++;
-            }
         });
         await taskLog.finish();
     } catch (err) {
         await taskLog.abort(err);
     }
-    return (processedEventCount > 0);
 }
 
 /**
@@ -103,19 +98,45 @@ async function processNewEvents(db, system, server, repo, project, glHookEvent) 
  * @param  {Object} glEvent
  * @param  {Object} glHookEvent
  *
- * @return {Promise<Boolean>}
+ * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, glEvent, glHookEvent) {
     try {
-        const importer = getEventImporter(glEvent);
-        if (!importer) {
-            return false;
-        }
         const author = await UserImporter.importUser(db, server, glEvent.author);
         if (!author) {
-            return false;
+            return;
         }
-        return importer.processEvent(db, system, server, repo, project, author, glEvent, glHookEvent);
+
+        const targetType = normalizeToken(glEvent.target_type);
+        const actionName = normalizeToken(glEvent.action_name);
+        if (targetType === 'issue') {
+            await IssueImporter.processEvent(db, system, server, repo, project, author, glEvent);
+        } else if (targetType === 'milestone') {
+            await MilestoneImporter.processEvent(db, system, server, repo, project, author, glEvent);
+        } else if (targetType === 'merge_request' || targetType === 'mergerequest') {
+            await MergeRequestImporter.processEvent(db, system, server, repo, project, author, glEvent);
+        } else if (targetType === 'note') {
+            // the hook event object is only used when we're importing a commit note
+            await NoteImporter.processEvent(db, system, server, repo, project, author, glEvent, glHookEvent);
+        } else if (actionName === 'created' || actionName === 'imported') {
+            await RepoImporter.processEvent(db, system, server, repo, project, author, glEvent);
+        } else if (actionName === 'deleted') {
+            if (glEvent.push_data || glEvent.data) {
+                await BranchImporter.processEvent(db, system, server, repo, project, author, glEvent);
+            } else {
+                await RepoImporter.processEvent(db, system, server, repo, project, author, glEvent);
+            }
+        } else if (actionName === 'joined' || actionName === 'left') {
+            await UserImporter.processEvent(db, system, server, repo, project, author, glEvent);
+        } else if (actionName === 'pushed_new' || actionName === 'pushed_to') {
+            await PushImporter.processEvent(db, system, server, repo, project, author, glEvent);
+        } else {
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`Unknown event: target_type = ${targetType}, action_name = ${actionName}`);
+                console.log(glEvent);
+                console.log('******************************************************')
+            }
+        }
     } catch (err) {
         if (err.statusCode !== 404) {
             throw err;
@@ -137,76 +158,25 @@ async function processEvent(db, system, server, repo, project, glEvent, glHookEv
  * @return {Promise}
  */
 async function processHookEvent(db, system, server, repo, project, glHookEvent) {
-    const importer = getHookEventImporter(glHookEvent);
-    if (!importer) {
-        return false;
-    }
     try {
         const author = await UserImporter.importUser(db, server, glHookEvent.user);
         if (!author) {
-            return false;
+            return;
         }
-        return importer.processHookEvent(db, system, server, repo, project, author, glHookEvent);
+        const objectKind = normalizeToken(glHookEvent.object_kind);
+        if (objectKind === 'wiki_page') {
+            await WikiImporter.processHookEvent(db, system, server, repo, project, author, glHookEvent);
+        } else if (objectKind === 'issue') {
+            await IssueImporter.processHookEvent(db, system, server, repo, project, author, glHookEvent);
+        } else if (objectKind === 'mergerequest' || objectKind === 'merge_request') {
+            await MergeRequestImporter.processHookEvent(db, system, server, repo, project, author, glHookEvent);
+        } else {
+            await processNewEvents(db, system, server, repo, project, glHookEvent);
+        }
     } catch (err) {
         if (err.statusCode !== 404) {
             throw err;
         }
-    }
-}
-
-/**
- * Return an importer capable of importing the event
- *
- * @param  {Object} glEvent
- *
- * @return {Object}
- */
-function getEventImporter(glEvent) {
-    const targetType = normalizeToken(glEvent.target_type);
-    switch (targetType) {
-        case 'issue': return IssueImporter;
-        case 'milestone': return MilestoneImporter;
-        case 'merge_request':
-        case 'mergerequest': return MergeRequestImporter;
-        case 'note': return NoteImporter;
-    }
-
-    const actionName = normalizeToken(glEvent.action_name);
-    switch (actionName) {
-        case 'created':
-        case 'imported': return RepoImporter;
-        case 'deleted':
-            if (glEvent.push_data || glEvent.data) {
-                return BranchImporter;
-            } else {
-                return RepoImporter;
-            }
-        case 'joined':
-        case 'left': return UserImporter;
-        case 'pushed_new':
-        case 'pushed_to': return PushImporter;
-    }
-    if (process.env.NODE_ENV !== 'production') {
-        console.log(`Unknown event: target_type = ${targetType}, action_name = ${actionName}`);
-        console.log(glEvent);
-        console.log('******************************************************')
-    }
-}
-
-/**
- * Return an importer capable of importing the hook event
- *
- * @param  {Object} glEvent
- *
- * @return {Object}
- */
-function getHookEventImporter(glHookEvent) {
-    const objectKind = normalizeToken(glHookEvent.object_kind);
-    switch (objectKind) {
-        case 'wiki_page': return WikiImporter;
-        case 'issue': return IssueImporter;
-        case 'mergerequest':
-        case 'merge_request': return MergeRequestImporter;
     }
 }
 

@@ -305,7 +305,6 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
         userIDs = _.difference(project.user_ids, [ author.id ]);
     }
     await Project.updateOne(db, 'global', { id: project.id, user_ids: userIDs });
-    return true;
 }
 
 /**

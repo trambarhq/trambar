@@ -20,7 +20,7 @@ import Story from '../accessors/story.mjs';
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Boolean>}
+ * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent) {
     const schema = project.name;
@@ -52,7 +52,6 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
     const components = await PushDecorator.retrieveDescriptions(server, repo, push, languageCode);
     const storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
     await Story.insertOne(db, schema, storyNew);
-    return true;
 }
 
 /**
