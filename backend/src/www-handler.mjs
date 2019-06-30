@@ -111,14 +111,15 @@ async function handleExcelRequest(req, res, next) {
 async function handleSnapshotFileRequest(req, res, next) {
     const { schema, tag } = req.params;
     const path = req.params[0];
-    const [ ext ] = /\.\w+$/.exec(path);
-    if (!ext) {
+    const m = /\.\w+$/.exec(path);
+    if (!m) {
         return next();
     }
+    const ext = m[0];
     try {
         const buffer = await SnapshotRetriever.retrieve(schema, tag, 'www', path);
         controlCache(res);
-        res.send(buffer);
+        res.type(ext).send(buffer);
     } catch (err) {
         next(err);
     }

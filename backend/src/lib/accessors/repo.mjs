@@ -49,6 +49,7 @@ class Repo extends ExternalData {
                 type varchar(64) NOT NULL,
                 name varchar(128) NOT NULL,
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
+                template bool NULL DEFAULT NULL,
                 external jsonb[] NOT NULL DEFAULT '{}',
                 exchange jsonb[] NOT NULL DEFAULT '{}',
                 itime timestamp,

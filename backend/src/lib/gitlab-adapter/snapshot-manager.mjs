@@ -1,6 +1,8 @@
+import _ from 'lodash';
 import Database from '../database.mjs';
 import HTTPError from '../common/errors/http-error.mjs';
 import * as TaskLog from '../task-log.mjs';
+import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
 
 import Project from '../accessors/project.mjs';
 import Repo from '../accessors/repo.mjs';

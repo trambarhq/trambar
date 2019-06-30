@@ -356,7 +356,7 @@ async function handleFileRequest(req, res, next) {
     try {
         const { schema, commit, type } = req.params;
         const path = req.params[0];
-        const buffer = await TemplateManager.retrieveFile(schema, commit, type, path);
+        const buffer = await SnapshotManager.retrieveFile(schema, commit, type, path);
         res.send(buffer);
     } catch (err) {
         next(err);
