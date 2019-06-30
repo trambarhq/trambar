@@ -12,7 +12,7 @@ import Repo from './lib/accessors/repo.mjs';
 import Server from './lib/accessors/server.mjs';
 
 import * as HookManager from './lib/gitlab-adapter/hook-manager.mjs';
-import * as TemplateManager from './lib/gitlab-adapter/template-manager.mjs';
+import * as SnapshotManager from './lib/gitlab-adapter/snapshot-manager.mjs';
 
 import TaskQueue from './lib/task-queue.mjs';
 import {

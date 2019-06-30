@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
+import { promises as FS } from 'fs';
 import Path from 'path';
 import URL from 'url';
 import Express from 'express';
@@ -14,14 +15,13 @@ import * as Shutdown from './lib/shutdown.mjs';
 
 import * as ExcelRetriever from './lib/www-handler/excel-retriever.mjs';
 import * as PageGenerator from './lib/www-handler/page-generator.mjs';
-import * as TemplateRetriever from './lib/www-handler/template-retriever.mjs';
+import * as SnapshotRetriever from './lib/www-handler/snapshot-retriever.mjs';
 import * as WikiRetriever from './lib/www-handler/wiki-retriever.mjs';
 
 import Project from './lib/accessors/project.mjs';
 
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
-const staticFileOptions = { maxAge: 3600000 };
 const folder = Path.dirname(URL.fileURLToPath(import.meta.url));
 const clientFolder = Path.resolve(`${folder}/../../client/www`);
 const adminFolder = Path.resolve(`${folder}/../../admin/www`);
@@ -36,16 +36,17 @@ async function start() {
     app.use(CORS());
     app.use(BodyParser.json());
     app.use(redirectToProject);
-    app.use('/', Express.static(clientFolder, staticFileOptions));
-    app.use('/admin', Express.static(adminFolder, staticFileOptions));
     app.get('/srv/www/:schema/wiki/:repoName/:slug', handleWikiRequest);
     app.get('/srv/www/:schema/wiki/:slug', handleWikiRequest);
     app.get('/srv/www/:schema/excel/:name', handleExcelRequest);
     app.get('/srv/www/:schema/:type(images|video|audio)/*', handleMediaRequest);
-    app.get('/srv/www/:schema/\\(:commit\\)/*', handleFileRequest);
-    app.get('/srv/www/:schema/*', handleFileRequest);
-    app.get('/srv/www/:schema/\\(:commit\\)/*', handlePageRequest);
-    app.get('/srv/www/:schema/*', handlePageRequest);
+    app.get('/srv/www/:schema/\\(:tag\\)/*', handleSnapshotFileRequest);
+    app.get('/srv/www/:schema/*', handleSnapshotFileRequest);
+    app.get('/srv/www/:schema/\\(:tag\\)/*', handleSnapshotPageRequest);
+    app.get('/srv/www/:schema/*', handleSnapshotPageRequest);
+    app.get('/admin/*', handleStaticFileRequest);
+    app.get('/*', handleStaticFileRequest);
+
     app.use(handleError);
 
     await new Promise((resolve, reject) => {
@@ -68,6 +69,7 @@ async function start() {
     // listen for database change events
     const tables = [
         'project',
+        'snapshot',
         'spreadsheet',
         'wiki',
     ];
@@ -106,6 +108,71 @@ async function handleExcelRequest(req, res, next) {
     }
 }
 
+async function handleSnapshotFileRequest(req, res, next) {
+    const { schema, tag } = req.params;
+    const path = req.params[0];
+    const [ ext ] = /\.\w+$/.exec(path);
+    if (!ext) {
+        return next();
+    }
+    try {
+        const buffer = await SnapshotRetriever.retrieve(schema, tag, 'www', path);
+        controlCache(res);
+        res.send(buffer);
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function handleSnapshotPageRequest(req, res, next) {
+    const { schema, tag } = req.params;
+    const path = req.params[0];
+    try {
+        const page = await PageGenerator.generate(schema, tag, path);
+        controlCache(res);
+        res.send(page);
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function handleStaticFileRequest(req, res, next) {
+    const isAdmin = _.startsWith(req.path, '/admin');
+    const folder = (isAdmin) ? adminFolder : clientFolder;
+    const file = req.params[0];
+    try {
+        const path = `${folder}/${file}`;
+        const stats = await FS.stat(path);
+        controlCache(res);
+        res.sendFile(path);
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            const uri = (isAdmin) ? `/admin/index.html` : `/index.html`;
+            res.set('X-Accel-Redirect', uri).end();
+        } else {
+            next(err);
+        }
+    }
+}
+
+async function handleMediaRequest(req, res, next) {
+    const path = req.params[0];
+    const type = req.params.type;
+    try {
+        const uri = `/srv/media/${type}/${path}`;
+        res.set('X-Accel-Redirect', uri).end();
+    } catch (err) {
+        next(err);
+    }
+}
+
+function handleError(err, req, res, next) {
+    if (!res.headersSent) {
+        const status = err.status || 400;
+        res.type('text').status(status).send(err.message);
+    }
+}
+
 const defaultCacheControl = {
     'public': true,
     'max-age': 0,
@@ -127,50 +194,6 @@ function controlCache(res, override, etag) {
     res.set({ 'Cache-Control': items.join() });
     if (etag) {
         res.set({ 'ETag': etag });
-    }
-}
-
-async function handleFileRequest(req, res, next) {
-    const { schema, commit } = req.params;
-    const path = req.params[0];
-    const [ ext ] = /\.\w+$/.exec(path);
-    if (!ext) {
-        return next();
-    }
-    try {
-        const buffer = await TemplateRetriever.retrieve(schema, commit, 'www', path);
-        res.send(buffer);
-    } catch (err) {
-        next(err);
-    }
-}
-
-async function handlePageRequest(req, res, next) {
-    const { schema, commit } = req.params;
-    const path = req.params[0];
-    try {
-        const page = await PageGenerator.generate(schema, commit, path);
-        res.send(page);
-    } catch (err) {
-        next(err);
-    }
-}
-
-async function handleMediaRequest(req, res, next) {
-    const path = req.params[0];
-    const type = req.params.type;
-    try {
-        const uri = `/srv/media/${type}/${path}`;
-        res.set('X-Accel-Redirect', uri).end();
-    } catch (err) {
-        next(err);
-    }
-}
-
-function handleError(err, req, res, next) {
-    if (!res.headersSent) {
-        const status = err.status || 400;
-        res.type('text').status(status).send(err.message);
     }
 }
 
@@ -219,6 +242,9 @@ function handleDatabaseChanges(events) {
         switch (event.table) {
             case 'project':
                 updateDomainNameTable(db);
+                break;
+            case 'snapshot':
+                // TODO: invalidate Nginx cache
                 break;
             case 'spreadsheet':
                 // TODO: invalidate Nginx cache

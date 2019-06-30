@@ -231,13 +231,9 @@ function ServerSummaryPageSync(props) {
         draft.set('settings.oauth.base_url', url);
 
         // make sure the URL isn't localhost, which points to the Docker container
-        let newProblems;
         if (/https?:\/\/localhost\b/.test(url)) {
-            newProblems = { ...problems, base_url: 'validation-localhost-is-wrong' };
-        } else {
-            newProblems = _.omit(problems, 'base_url');
+            reportProblems({ base_url: 'validation-localhost-is-wrong' });
         }
-        setProblems(newProblems);
     });
     const handleOAuthIDChange = useListener((evt) => {
         const id = evt.target.value;

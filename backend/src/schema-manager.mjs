@@ -254,10 +254,10 @@ async function upgradeSchema(db, schema) {
     const accessors = Accessors.get(schema);
     const currentVersion = await getSchemaVersion(db, schema);
     const latestVersion = _.max(_.map(accessors, 'version'));
-    const jumps = _.range(currentVersion, latestVersion);
-    if (_.isEmpty(jumps)) {
+    if (currentVersion >= latestVersion) {
         return false;
     }
+    const jumps = _.range(currentVersion, latestVersion);
     const taskLog = TaskLog.start('schema-upgrade', { schema });
     try {
         await db.begin();

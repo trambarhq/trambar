@@ -1,17 +1,18 @@
 import * as TaskLog from '../task-log.mjs'
 import HTTPError from '../common/errors/http-error.mjs';
 
-import * as TemplateRetriever from './template-retriever.mjs';
+import * as SnapshotRetriever from './snapshot-retriever.mjs';
 
-async function generate(schema, commit, path) {
+async function generate(schema, tag, path) {
+    if (!tag) {
+        tag = 'master';
+    }
     const taskLog = TaskLog.start('page-generate', {
         project: schema,
+        tag,
     });
     try {
         taskLog.set('path', path);
-        if (commit) {
-            taskLog.set('commit', commit);
-        }
         await taskLog.finish();
         return '';
     } catch (err) {

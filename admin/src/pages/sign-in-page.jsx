@@ -65,14 +65,17 @@ function SignInPageSync(props) {
             return;
         }
         run(async () => {
-            setSubmitting(true);
-            const credentials = {
-                type: 'password',
-                username,
-                password,
-            };
-            await database.authenticate(credentials);
-            setSubmitting(false);
+            try {
+                setSubmitting(true);
+                const credentials = {
+                    type: 'password',
+                    username,
+                    password,
+                };
+                await database.authenticate(credentials);
+            } finally {
+                setSubmitting(false);
+            }
         });
     });
     useEffect(() => {
