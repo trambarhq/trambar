@@ -551,7 +551,7 @@ async function authenticateThruPassport(req, res, system, server, params) {
         query += name + '=' + value;
         return query;
     }, '');
-    const address = _.get(system, 'settings.address');
+    const address = _.trimEnd(_.get(system, 'settings.address'), ' /');
     if (!address) {
         throw new HTTPError(400, { message: 'Missing site address' });
     }
