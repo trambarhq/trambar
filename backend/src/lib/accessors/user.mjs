@@ -29,6 +29,10 @@ class User extends ExternalData {
             requested_project_ids: Array(Number),
             disabled: Boolean,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            requested_project_ids: Array(Number),
+        };
     }
 
     /**
@@ -97,14 +101,7 @@ class User extends ExternalData {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'requested_project_ids',
-            'external',
-            'mtime',
-            'itime',
-            'etime'
-        ]);
+        await this.createNotificationTriggers(db, schema);
         await this.createResourceCoalescenceTrigger(db, schema, []);
         await Task.createUpdateTrigger(db, schema, 'updateUser', 'updateResource', [ this.table ]);
     }

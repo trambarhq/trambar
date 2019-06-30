@@ -24,6 +24,10 @@ class Session extends Data {
 
             expired: Boolean,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            user_id: Number,
+        };
         this.version = 3;
     }
 
@@ -107,10 +111,7 @@ class Session extends Data {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'user_id',
-        ]);
+        await this.createNotificationTriggers(db, schema);
     }
 
     /**

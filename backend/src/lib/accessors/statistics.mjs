@@ -20,6 +20,11 @@ class Statistics extends LiveData {
             filters_hash: String,
             match_any: Array(Object),
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            type: String,
+            filters: Object,
+        };
     }
 
     /**
@@ -65,12 +70,7 @@ class Statistics extends LiveData {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'dirty',
-            'type',
-            'filters'
-        ]);
+        await this.createNotificationTriggers(db, schema);
     }
 
     /**

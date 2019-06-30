@@ -26,6 +26,9 @@ class Device extends Data {
             user_id: Number,
             session_handle: String,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+        };
         this.version = 2;
     }
 

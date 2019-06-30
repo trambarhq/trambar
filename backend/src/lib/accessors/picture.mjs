@@ -18,6 +18,11 @@ class Picture extends Data {
             user_id: Number,
             url: String,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            purpose: String,
+            user_id: Number,
+        };
     }
 
     /**
@@ -58,11 +63,7 @@ class Picture extends Data {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'purpose',
-            'user_id'
-        ]);
+        await this.createNotificationTriggers(db, schema);
         await this.createResourceCoalescenceTrigger(db, schema, []);
         await Task.createUpdateTrigger(db, schema, 'updatePicture', 'updateResource', [ this.table ]);
     }

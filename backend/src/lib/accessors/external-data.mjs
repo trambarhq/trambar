@@ -17,6 +17,13 @@ class ExternalData extends Data {
             ...this.criteria,
             external_object: Object,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            external: Array(Object),
+            mtime: String,
+            itime: String,
+            etime: String,
+        };
     }
 
     /**
@@ -117,6 +124,7 @@ class ExternalData extends Data {
     async createChangeTrigger(db, schema) {
         const table = this.getTableName(schema);
         const sql = `
+            DROP TRIGGER IF EXISTS "indicateDataChangeOnUpdate" ON ${table};
             CREATE TRIGGER "indicateDataChangeOnUpdate"
             BEFORE UPDATE ON ${table}
             FOR EACH ROW
@@ -142,14 +150,19 @@ class ExternalData extends Data {
             return `"${propName}"`;
         }).join(', ');
         const sql = `
+            DROP TRIGGER IF EXISTS "notifyDataChangeOnInsert" ON ${table};
             CREATE CONSTRAINT TRIGGER "notifyDataChangeOnInsert"
             AFTER INSERT ON ${table} INITIALLY DEFERRED
             FOR EACH ROW
             EXECUTE PROCEDURE "notifyDataChangeEx"(${args});
+
+            DROP TRIGGER IF EXISTS "notifyDataChangeOnUpdate" ON ${table};
             CREATE CONSTRAINT TRIGGER "notifyDataChangeOnUpdate"
             AFTER UPDATE ON ${table} INITIALLY DEFERRED
             FOR EACH ROW
             EXECUTE PROCEDURE "notifyDataChangeEx"(${args});
+
+            DROP TRIGGER IF EXISTS "notifyDataChangeOnDelete" ON ${table};
             CREATE CONSTRAINT TRIGGER "notifyDataChangeOnDelete"
             AFTER DELETE ON ${table} INITIALLY DEFERRED
             FOR EACH ROW

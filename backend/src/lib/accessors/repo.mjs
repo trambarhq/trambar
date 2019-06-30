@@ -110,13 +110,7 @@ class Repo extends ExternalData {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'external',
-            'mtime',
-            'itime',
-            'etime'
-        ]);
+        await this.createNotificationTriggers(db, schema);
         // completion of tasks will automatically update details->resources
         await Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table ]);
     }

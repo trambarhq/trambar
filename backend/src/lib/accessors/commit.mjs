@@ -19,6 +19,12 @@ class Commit extends ExternalData {
             title_hash: String,
             external_object: Object,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            external: Array(Object),
+            itime: String,
+            etime: String,
+        };
     }
 
     /**
@@ -79,13 +85,7 @@ class Commit extends ExternalData {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'external',
-            'mtime',
-            'itime',
-            'etime'
-        ]);
+        await this.createNotificationTriggers(db, schema);
     }
 
     /**

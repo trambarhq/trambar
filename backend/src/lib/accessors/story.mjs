@@ -53,6 +53,20 @@ class Story extends ExternalData {
             search: Object,
             per_user_limit: Number,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            type: String,
+            tags: Array(String),
+            language_codes: Array(String),
+            user_ids: Array(Number),
+            role_ids: Array(Number),
+            published: Boolean,
+            ready: Boolean,
+            ptime: String,
+            btime: String,
+            public: Boolean,
+            unfinished_tasks: Number,
+        };
         this.accessControlColumns = {
             public: Boolean,
         };
@@ -115,24 +129,7 @@ class Story extends ExternalData {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'type',
-            'tags',
-            'unfinished_tasks',
-            'language_codes',
-            'user_ids',
-            'role_ids',
-            'published',
-            'ready',
-            'public',
-            'external',
-            'ptime',
-            'btime',
-            'mtime',
-            'itime',
-            'etime'
-        ]);
+        await this.createNotificationTriggers(db, schema);
         await this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'ptime' ]);
         await Task.createUpdateTrigger(db, schema, 'updateStory', 'updateResource', [ this.table ]);
     }

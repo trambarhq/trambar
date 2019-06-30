@@ -32,6 +32,12 @@ class Task extends Data {
             complete: Boolean,
             noop: Boolean,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            action: String,
+            failed: Boolean,
+            user_id: Number,
+        };
     }
 
     /**
@@ -76,13 +82,7 @@ class Task extends Data {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'action',
-            'user_id',
-            'server_id',
-            'failed',
-            'deleted'
-        ]);
+        await this.createNotificationTriggers(db, schema);
     }
 
     /**
@@ -210,6 +210,7 @@ class Task extends Data {
     async createUpdateTrigger(db, schema, triggerName, method, args) {
         const table = this.getTableName(schema);
         const sql = `
+            DROP TRIGGER IF EXISTS "${triggerName}" ON ${table};
             CREATE TRIGGER "${triggerName}"
             AFTER UPDATE ON ${table}
             FOR EACH ROW

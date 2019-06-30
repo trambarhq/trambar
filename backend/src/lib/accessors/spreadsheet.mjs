@@ -18,6 +18,10 @@ class Spreadsheet extends Data {
             name: String,
             etag: String,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            name: String,
+        };
         this.version = 3;
     }
 
@@ -62,7 +66,6 @@ class Spreadsheet extends Data {
         if (version === 3) {
             await this.create(db, schema);
             await this.grant(db, schema);
-            await this.watch(db, schema);
             return true;
         }
         return false;
@@ -95,12 +98,7 @@ class Spreadsheet extends Data {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'name',
-            'url',
-            'etag',
-        ]);
+        await this.createNotificationTriggers(db, schema);
     }
 
     /**

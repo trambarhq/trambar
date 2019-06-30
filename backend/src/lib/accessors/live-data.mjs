@@ -15,6 +15,10 @@ class LiveData extends Data {
             ...this.criteria,
             dirty: Boolean,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            dirty: Boolean,
+        };
     }
 
     /**
@@ -58,6 +62,7 @@ class LiveData extends Data {
     async createChangeTrigger(db, schema) {
         const table = this.getTableName(schema);
         const sql = `
+            DROP TRIGGER IF EXISTS "indicateLiveDataChangeOnUpdate" ON ${table};
             CREATE TRIGGER "indicateLiveDataChangeOnUpdate"
             BEFORE UPDATE ON ${table}
             FOR EACH ROW
@@ -72,25 +77,30 @@ class LiveData extends Data {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<String>} propNames
      *
      * @return {Promise}
      */
-    async createNotificationTriggers(db, schema, propNames) {
+    async createNotificationTriggers(db, schema) {
         const table = this.getTableName(schema);
+        const propNames = _.keys(this.eventColumns);
         const args = _.map(propNames, (propName) => {
             // use quotes just in case the name is mixed case
             return `"${propName}"`;
         }).join(', ');
         const sql = `
+            DROP TRIGGER IF EXISTS "notifyLiveDataChangeOnInsert" ON ${table};
             CREATE CONSTRAINT TRIGGER "notifyLiveDataChangeOnInsert"
             AFTER INSERT ON ${table} INITIALLY DEFERRED
             FOR EACH ROW
             EXECUTE PROCEDURE "notifyLiveDataChange"(${args});
+
+            DROP TRIGGER IF EXISTS "notifyLiveDataChangeOnUpdate" ON ${table};
             CREATE CONSTRAINT TRIGGER "notifyLiveDataChangeOnUpdate"
             AFTER UPDATE ON ${table} INITIALLY DEFERRED
             FOR EACH ROW
             EXECUTE PROCEDURE "notifyLiveDataChange"(${args});
+
+            DROP TRIGGER IF EXISTS "notifyLiveDataChangeOnDelete" ON ${table};
             CREATE CONSTRAINT TRIGGER "notifyLiveDataChangeOnDelete"
             AFTER DELETE ON ${table} INITIALLY DEFERRED
             FOR EACH ROW

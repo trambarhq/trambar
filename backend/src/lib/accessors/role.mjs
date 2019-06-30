@@ -11,12 +11,19 @@ class Role extends ExternalData {
             ...this.columns,
             name: String,
             disabled: Boolean,
+            general: Boolean,
             settings: Object,
         };
         this.criteria = {
             ...this.criteria,
             name: String,
             disabled: Boolean,
+            general: Boolean,
+        };
+        this.eventColumns = {
+            ...this.eventColumns,
+            disabled: Boolean,
+            general: Boolean,
         };
     }
 
@@ -80,15 +87,7 @@ class Role extends ExternalData {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'disabled',
-            'general',
-            'external',
-            'mtime',
-            'itime',
-            'etime'
-        ]);
+        await this.createNotificationTriggers(db, schema);
         await Task.createUpdateTrigger(db, schema, 'updateRole', 'updateResource', [ this.table ]);
     }
 

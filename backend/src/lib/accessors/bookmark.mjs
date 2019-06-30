@@ -13,7 +13,7 @@ class Bookmark extends Data {
             user_ids: Array(Number),
             target_user_id: Number,
             hidden: Boolean,
-            suppresed: Boolean,
+            suppressed: Boolean,
         };
         this.criteria = {
             ...this.criteria,
@@ -22,6 +22,13 @@ class Bookmark extends Data {
             target_user_id: Number,
             hidden: Boolean,
             suppressed: Boolean,
+        };
+        this.eventColumns = {
+            ...this.eventColumns,
+            story_id: Number,
+            user_ids: Array(Number),
+            target_user_id: Number,
+            hidden: Boolean,
         };
         this.version = 2;
     }
@@ -95,13 +102,7 @@ class Bookmark extends Data {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'story_id',
-            'user_ids',
-            'target_user_id',
-            'hidden','public'
-        ]);
+        await this.createNotificationTriggers(db, schema);
     }
 
     /**

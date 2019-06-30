@@ -17,6 +17,9 @@ class Data {
             id: Number,
             deleted: Boolean,
         };
+        this.eventColumns = {
+            deleted: Boolean,
+        };
         this.accessControlColumns = {
         };
         this.version = 1;
@@ -113,6 +116,7 @@ class Data {
     async createChangeTrigger(db, schema) {
         const table = this.getTableName(schema);
         const sql = `
+            DROP TRIGGER IF EXISTS "indicateDataChangeOnUpdate" ON ${table};
             CREATE TRIGGER "indicateDataChangeOnUpdate"
             BEFORE UPDATE ON ${table}
             FOR EACH ROW
@@ -123,29 +127,34 @@ class Data {
 
     /**
      * Add triggers that send notification messages, bundled with values of
-     * the specified properties.
+     * certain columns
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<String>} propNames
      *
      * @return {Promise}
      */
-    async createNotificationTriggers(db, schema, propNames) {
+    async createNotificationTriggers(db, schema) {
         const table = this.getTableName(schema);
+        const propNames = _.keys(this.eventColumns);
         const args = _.map(propNames, (propName) => {
             // use quotes just in case the name is mixed case
             return `"${propName}"`;
         }).join(', ');
         const sql = `
+            DROP TRIGGER IF EXISTS "notifyDataChangeOnInsert" ON ${table};
             CREATE CONSTRAINT TRIGGER "notifyDataChangeOnInsert"
             AFTER INSERT ON ${table} INITIALLY DEFERRED
             FOR EACH ROW
             EXECUTE PROCEDURE "notifyDataChange"(${args});
+
+            DROP TRIGGER IF EXISTS "notifyDataChangeOnUpdate" ON ${table};
             CREATE CONSTRAINT TRIGGER "notifyDataChangeOnUpdate"
             AFTER UPDATE ON ${table} INITIALLY DEFERRED
             FOR EACH ROW
             EXECUTE PROCEDURE "notifyDataChange"(${args});
+
+            DROP TRIGGER IF EXISTS "notifyDataChangeOnDelete" ON ${table};
             CREATE CONSTRAINT TRIGGER "notifyDataChangeOnDelete"
             AFTER DELETE ON ${table} INITIALLY DEFERRED
             FOR EACH ROW
@@ -948,21 +957,20 @@ class Data {
     async createResourceCoalescenceTrigger(db, schema, args) {
         const table = this.getTableName(schema);
         // trigger name needs to be smaller than "indicateDataChange" so it runs first
-        const sql = [
-            `
-                CREATE TRIGGER "coalesceResourcesOnInsert"
-                BEFORE INSERT ON ${table}
-                FOR EACH ROW
-                EXECUTE PROCEDURE "coalesceResources"(${args.join(', ')});
-            `,
-            `
-                CREATE TRIGGER "coalesceResourcesOnUpdate"
-                BEFORE UPDATE ON ${table}
-                FOR EACH ROW
-                EXECUTE PROCEDURE "coalesceResources"(${args.join(', ')});
-            `
-        ];
-        await db.execute(sql.join('\n'));
+        const sql = `
+            DROP TRIGGER IF EXISTS "coalesceResourcesOnInsert" ON ${table};
+            CREATE TRIGGER "coalesceResourcesOnInsert"
+            BEFORE INSERT ON ${table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE "coalesceResources"(${args.join(', ')});
+
+            DROP TRIGGER IF EXISTS "coalesceResourcesOnUpdate" ON ${table};
+            CREATE TRIGGER "coalesceResourcesOnUpdate"
+            BEFORE UPDATE ON ${table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE "coalesceResources"(${args.join(', ')});
+        `;
+        await db.execute(sql);
     }
 
     /**

@@ -31,6 +31,14 @@ class Project extends Data {
             template_repo_id: Number,
             archived: Boolean,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            name: String,
+            repo_ids: Array(Number),
+            user_ids: Array(Number),
+            template_repo_id: Number,
+            archived: Boolean,
+        };
         this.accessControlColumns = {
             user_ids: Array(Number),
             settings: Object,
@@ -59,6 +67,7 @@ class Project extends Data {
                 repo_ids int[] NOT NULL DEFAULT '{}'::int[],
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 role_ids int[],
+                template_repo_id int NULL DEFAULT NULL,
                 settings jsonb NOT NULL DEFAULT '{}',
                 archived boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
@@ -121,13 +130,7 @@ class Project extends Data {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'name',
-            'repo_ids',
-            'user_ids',
-            'archived',
-        ]);
+        await this.createNotificationTriggers(db, schema);
         await this.createResourceCoalescenceTrigger(db, schema, []);
         // completion of tasks will automatically update details->resources
         await Task.createUpdateTrigger(db, schema, 'updateProject', 'updateResource', [ this.table ]);

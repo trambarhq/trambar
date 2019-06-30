@@ -11,6 +11,10 @@ class System extends Data {
             ...this.columns,
             settings: Object,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            settings: Object,
+        };
     }
 
     /**
@@ -68,7 +72,7 @@ class System extends Data {
         await this.createChangeTrigger(db, schema);
         // we need to know the previous settings when address changes, in
         // order to remove hook created previously
-        await this.createNotificationTriggers(db, schema, [ 'settings' ]);
+        await this.createNotificationTriggers(db, schema);
         await this.createResourceCoalescenceTrigger(db, schema, []);
         // completion of tasks will automatically update details->resources
         await Task.createUpdateTrigger(db, schema, 'updateSystem', 'updateResource', [ this.table ]);

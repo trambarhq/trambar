@@ -29,6 +29,12 @@ class Listing extends LiveData {
             match_any: Array(Object),
             has_candidates: Array(Number),
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            finalized: Boolean,
+            type: String,
+            target_user_id: Number,
+        };
     }
 
     /**
@@ -75,13 +81,7 @@ class Listing extends LiveData {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'dirty',
-            'finalized',
-            'type',
-            'target_user_id'
-        ]);
+        await this.createNotificationTriggers(db, schema);
     }
 
     /**

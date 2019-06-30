@@ -19,6 +19,10 @@ class Snapshot extends Data {
             commit_id: String,
             head: Boolean,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            head: Boolean,
+        };
         this.version = 3;
     }
 
@@ -65,7 +69,6 @@ class Snapshot extends Data {
         if (version === 3) {
             await this.create(db, schema);
             await this.grant(db, schema);
-            await this.watch(db, schema);
             return true;
         }
         return false;
@@ -98,10 +101,7 @@ class Snapshot extends Data {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'head',
-        ]);
+        await this.createNotificationTriggers(db, schema);
     }
 
     /**

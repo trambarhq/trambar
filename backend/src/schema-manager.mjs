@@ -267,6 +267,10 @@ async function upgradeSchema(db, schema) {
                 await accessor.upgrade(db, schema, version + 1);
             }
             taskLog.append('applied', `${version} -> ${version + 1}`);
+        }        
+        taskLog.describe(`recreating triggers`);
+        for (let accessor of accessors) {
+            await accessor.watch(db, schema);
         }
         await setSchemaVersion(db, schema, latestVersion);
         await db.commit()

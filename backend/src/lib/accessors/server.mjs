@@ -22,6 +22,11 @@ class Server extends Data {
             name: String,
             disabled: Boolean,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            type: String,
+            disabled: Boolean,
+        };
     }
 
     /**
@@ -81,11 +86,7 @@ class Server extends Data {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'disabled',
-            'type'
-        ]);
+        await this.createNotificationTriggers(db, schema);
         // completion of tasks will automatically update details->resources
         await Task.createUpdateTrigger(db, schema, 'updateServer', 'updateResource', [ this.table ]);
     }

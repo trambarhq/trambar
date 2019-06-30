@@ -19,6 +19,12 @@ class Wiki extends ExternalData {
             public: Boolean,
             chosen: Boolean,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            slug: String,
+            public: Boolean,
+            chosen: Boolean,
+        };
         this.version = 3;
     }
 
@@ -67,7 +73,6 @@ class Wiki extends ExternalData {
         if (version === 3) {
             await this.create(db, schema);
             await this.grant(db, schema);
-            await this.watch(db, schema);
             return true;
         }
         return false;
@@ -100,12 +105,7 @@ class Wiki extends ExternalData {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'slug',
-            'public',
-            'chosen',
-        ]);
+        await this.createNotificationTriggers(db, schema);
     }
 
     /**

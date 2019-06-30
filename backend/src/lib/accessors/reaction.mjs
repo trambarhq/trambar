@@ -18,7 +18,7 @@ class Reaction extends ExternalData {
             user_id: Number,
             published: Boolean,
             ready: Boolean,
-            suppresed: Boolean,
+            suppressed: Boolean,
             ptime: String,
             public: Boolean,
         };
@@ -31,7 +31,7 @@ class Reaction extends ExternalData {
             user_id: Number,
             published: Boolean,
             ready: Boolean,
-            suppresed: Boolean,
+            suppressed: Boolean,
             public: Boolean,
 
             server_id: Number,
@@ -39,6 +39,18 @@ class Reaction extends ExternalData {
             newer_than: String,
             older_than: String,
             search: Object,
+        };
+        this.eventColumns = {
+            ...this.eventColumns,
+            type: String,
+            tags: Array(String),
+            language_codes: Array(String),
+            story_id: Number,
+            user_id: Number,
+            published: Boolean,
+            ready: Boolean,
+            ptime: String,
+            public: Boolean,
         };
         this.accessControlColumns = {
             public: Boolean,
@@ -95,22 +107,7 @@ class Reaction extends ExternalData {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'type',
-            'tags',
-            'language_codes',
-            'story_id',
-            'user_id',
-            'published',
-            'ready',
-            'ptime',
-            'public',
-            'external',
-            'mtime',
-            'itime',
-            'etime'
-        ]);
+        await this.createNotificationTriggers(db, schema);
         // merge changes to details->resources to avoid race between
         // client-side changes and server-side changes
         await this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'ptime' ]);

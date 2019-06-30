@@ -31,6 +31,15 @@ class Notification extends Data {
             newer_than: String,
             older_than: String,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            type: String,
+            story_id: Number,
+            reaction_id: Number,
+            user_id: Number,
+            target_user_id: Number,
+            seen: Boolean,
+        };
     }
 
     /**
@@ -100,16 +109,7 @@ class Notification extends Data {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'ctime',
-            'deleted',
-            'type',
-            'story_id',
-            'reaction_id',
-            'user_id',
-            'target_user_id',
-            'seen'
-        ]);
+        await this.createNotificationTriggers(db, schema);
     }
 
     /**
