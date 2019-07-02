@@ -129,9 +129,9 @@ async function handleSnapshotPageRequest(req, res, next) {
     const { schema, tag } = req.params;
     const path = req.params[0];
     try {
-        const page = await PageGenerator.generate(schema, tag, path);
+        const buffer = await PageGenerator.generate(schema, tag, path);
         controlCache(res);
-        res.send(page);
+        res.type('html').send(buffer);
     } catch (err) {
         next(err);
     }
@@ -169,7 +169,7 @@ async function handleMediaRequest(req, res, next) {
 
 function handleError(err, req, res, next) {
     if (!res.headersSent) {
-        const status = err.status || 400;
+        const status = err.status || err.statusCode || 400;
         res.type('text').status(status).send(err.message);
     }
 }

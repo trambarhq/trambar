@@ -17,6 +17,8 @@ async function retrieveFile(schema, tag, type, path) {
     const taskLog = TaskLog.start('snapshot-retrieve', {
         project: schema,
         tag,
+        type,
+        path,
     });
     try {
         // find repo in which the template is stored
@@ -87,8 +89,6 @@ async function retrieveFile(schema, tag, type, path) {
 
         taskLog.set('repo', repo.name);
         taskLog.set('commit', commitID);
-        taskLog.set('type', type);
-        taskLog.set('path', path);
         await taskLog.finish();
         return buffer;
     } catch (err) {

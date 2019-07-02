@@ -365,7 +365,7 @@ async function handleFileRequest(req, res, next) {
 
 function handleError(err, req, res, next) {
     if (!res.headersSent) {
-        const status = err.status || 400;
+        const status = err.status || err.statusCode || 400;
         res.type('text').status(status).send(err.message);
     }
 }

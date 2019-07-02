@@ -9,6 +9,8 @@ async function retrieve(schema, tag, type, path) {
     const taskLog = TaskLog.start('snapshot-retrieve', {
         project: schema,
         tag,
+        type,
+        path
     });
     try {
         taskLog.describe(`retrieving ${tag}:${path}`);
@@ -19,8 +21,7 @@ async function retrieve(schema, tag, type, path) {
             throw new HTTPError(response.status, text);
         }
         const buffer = await response.buffer();
-        taskLog.set('path', path);
-        taskLog.set('type', type);
+        taskLog.set('size', buffer.length);
         await taskLog.finish();
         return buffer;
     } catch (err) {
