@@ -16,6 +16,7 @@ class Data {
         this.criteria = {
             id: Number,
             deleted: Boolean,
+            exclude: Array(Number),
         };
         this.eventColumns = {
             deleted: Boolean,

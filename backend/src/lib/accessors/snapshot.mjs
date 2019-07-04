@@ -50,7 +50,7 @@ class Snapshot extends Data {
                 head bool NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
-            CREATE UNIQUE INDEX ON ${table} (repo_id, branch_name) WHERE deleted = false AND head = true;
+            CREATE INDEX ON ${table} (repo_id, branch_name) WHERE deleted = false AND head = true;
             CREATE UNIQUE INDEX ON ${table} (repo_id, branch_name, commit_id) WHERE deleted = false;
         `;
         await db.execute(sql);

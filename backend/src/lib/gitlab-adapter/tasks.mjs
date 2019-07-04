@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Bluebird from 'bluebird';
 import Moment from 'moment';
 import Database from '../database.mjs';
+import * as TaskLog from '../task-log.mjs';
 import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
 import { BasicTask, PeriodicTask } from '../task-queue.mjs';
 
@@ -12,6 +13,7 @@ import * as UserImporter from './user-importer.mjs';
 import * as MilestoneImporter from './milestone-importer.mjs';
 import * as IssueExporter from './issue-exporter.mjs';
 import * as WikiImporter from './wiki-importer.mjs';
+import * as SnapshotManager from './snapshot-manager.mjs';
 
 // accessors
 import Project from '../accessors/project.mjs';
@@ -40,11 +42,10 @@ class TaskImportRepos extends BasicTask {
 }
 
 class TaskImportRepoEvents extends BasicTask {
-    constructor(repoID, projectID, glHookEvent) {
+    constructor(repoID, projectID) {
         super();
         this.repoID = repoID;
         this.projectID = projectID;
-        this.glHookEvent = glHookEvent;
     }
 
     async run() {
@@ -56,7 +57,23 @@ class TaskImportRepoEvents extends BasicTask {
         if (system, repo, project, server) {
             // make sure the project-specific schema exists
             await db.need(project.name);
-            await EventImporter.processNewEvents(db, system, server, repo, project, this.glHookEvent);
+            await EventImporter.processNewEvents(db, system, server, repo, project);
+        }
+    }
+}
+
+class TaskImportSnapshots extends BasicTask {
+    constructor(repoID) {
+        super();
+        this.repoID = repoID;
+    }
+
+    async run() {
+        const db = await Database.open();
+        const repo = await getRepo(db, this.repoID);
+        const server = await getRepoServer(db, repo);
+        if (repo, server) {
+            await SnapshotManager.processNewEvents(db, server, repo);
         }
     }
 }
@@ -197,7 +214,7 @@ class TaskRemoveProjectHook extends BasicTask {
     }
 }
 
-class TaskImportProjectHookEvent extends BasicTask {
+class TaskProcessProjectHookEvent extends BasicTask {
     constructor(repoID, projectID, glHookEvent) {
         super();
         this.repoID = repoID;
@@ -213,12 +230,82 @@ class TaskImportProjectHookEvent extends BasicTask {
         const server = await getRepoServer(db, repo);
         const glHookEvent = this.glHookEvent;
         if (system && server && repo && project) {
-            if (glHookEvent.object_kind === 'wiki_page') {
-                // update wikis
-                queue.add(new TaskImportWikis(this.repoID, this.projectID));
-            }
+            const taskLog = TaskLog.start('gitlab-repo-event-process', {
+                server_id: server.id,
+                server: server.name,
+                repo_id: repo.id,
+                repo: repo.name,
+                project_id: project.id,
+                project: project.name,
+            });
+            try {
+                const objectKind = _.snakeCase(glHookEvent.object_kind);
+                if (objectKind === 'wiki_page') {
+                    const author = await UserImporter.importUser(db, server, glHookEvent.user);
+                    await WikiImporter.processHookEvent(db, system, server, repo, project, author, glHookEvent);
 
-            await EventImporter.processHookEvent(db, system, server, repo, project, glHookEvent);
+                    // update wikis
+                    await WikiImporter.importWikis(db, system, server, repo, project);
+                } else if (objectKind === 'issue') {
+                    const author = await UserImporter.importUser(db, server, glHookEvent.user);
+                    await IssueImporter.processHookEvent(db, system, server, repo, project, author, glHookEvent);
+                } else if (objectKind === 'mergerequest' || objectKind === 'merge_request') {
+                    const author = await UserImporter.importUser(db, server, glHookEvent.user);
+                    await MergeRequestImporter.processHookEvent(db, system, server, repo, project, author, glHookEvent);
+                } else {
+                    await EventImporter.processNewEvents(db, system, server, repo, project, this.glHookEvent);
+                }
+                taskLog.merge(glHookEvent);
+                await taskLog.finish();
+            } catch (err) {
+                await taskLog.abort(err);
+            }
+        }
+    }
+}
+
+class TaskProcessSystemHookEvent extends BasicTask {
+    constructor(serverID, glHookEvent) {
+        super();
+        this.serverID = serverID;
+        this.glHookEvent = glHookEvent;
+    }
+
+    async run(queue) {
+        const db = await Database.open();
+        const server = await getServer(db, this.serverID);
+        const glHookEvent = this.glHookEvent;
+        if (server) {
+            const taskLog = TaskLog.start('gitlab-system-event-process', {
+                server_id: server.id,
+                server: server.name,
+            });
+            try {
+                const eventName = _.snakeCase(glHookEvent.event_name);
+                if (eventName === 'repository_update') {
+                    const criteria = {
+                        external_object: ExternalDataUtils.createLink(server, {
+                            project: {
+                                id: glHookEvent.project_id
+                            }
+                        }),
+                        deleted: false,
+                        template: true,
+                    };
+                    const repo = await Repo.findOne(db, 'global', criteria, '*');
+                    if (repo) {
+                        await SnapshotManager.processNewEvents(db, server, repo);
+                    }
+                } else if (/^project_(create|destroy|rename|transfer|update)/.test(eventName) || /^user_(add|remove)/.test(eventName)) {
+                    await RepoImporter.importRepositories(db, server);
+                } else if (/^user_(create|destroy)/.test(eventName)) {
+                    await UserImporter.importUsers(db, server);
+                }
+                taskLog.merge(glHookEvent);
+                await taskLog.finish();
+            } catch (err) {
+                await taskLog.abort(err)
+            }
         }
     }
 }
@@ -453,6 +540,20 @@ class PeriodicTaskImportRepoEvents extends PeriodicTask {
     }
 }
 
+class PeriodicTaskImportSnapshots extends PeriodicTask {
+    delay(initial) {
+        return (initial) ? 1 : 60 * MIN;
+    }
+
+    async run(queue) {
+        const db = await Database.open();
+        const repos = await getTemplateRepos(db);
+        for (let repo of repos) {
+            queue.add(new TaskImportSnapshots(repo.id));
+        }
+    }
+}
+
 class PeriodicTaskUpdateMilestones extends PeriodicTask {
     delay(initial) {
         return (initial) ? 0 : 5 * MIN;
@@ -559,6 +660,14 @@ async function getReposProjects(db, repos) {
         archived: false,
     };
     return Project.find(db, 'global', criteria, '*');
+}
+
+async function getTemplateRepos(db) {
+    const criteria = {
+        template: true,
+        deleted: false,
+    };
+    return Repo.find(db, 'global', criteria, '*');
 }
 
 async function getProject(db, projectID) {
@@ -668,6 +777,7 @@ function hasAccessToken(server) {
 export {
     TaskImportRepos,
     TaskImportRepoEvents,
+    TaskImportSnapshots,
     TaskImportUsers,
     TaskInstallHooks,
     TaskRemoveHooks,
@@ -675,19 +785,21 @@ export {
     TaskRemoveServerHooks,
     TaskInstallProjectHook,
     TaskRemoveProjectHook,
-    TaskImportProjectHookEvent,
     TaskImportWikis,
     TaskReimportWiki,
     TaskRemoveWikis,
     TaskUpdateMilestones,
     TaskExportStory,
     TaskReexportStory,
+    TaskProcessProjectHookEvent,
+    TaskProcessSystemHookEvent,
 
     PeriodicTaskMaintainHooks,
     PeriodicTaskImportRepos,
     PeriodicTaskImportUsers,
     PeriodicTaskImportWikis,
     PeriodicTaskImportRepoEvents,
+    PeriodicTaskImportSnapshots,
     PeriodicTaskUpdateMilestones,
     PeriodicTaskRetryFailedExports,
 };

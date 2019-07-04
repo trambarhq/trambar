@@ -107,8 +107,8 @@ async function processEvent(db, system, server, repo, project, glEvent, glHookEv
             return;
         }
 
-        const targetType = normalizeToken(glEvent.target_type);
-        const actionName = normalizeToken(glEvent.action_name);
+        const targetType = _.snakeCase(glEvent.target_type);
+        const actionName = _.snakeCase(glEvent.action_name);
         if (targetType === 'issue') {
             await IssueImporter.processEvent(db, system, server, repo, project, author, glEvent);
         } else if (targetType === 'milestone') {
@@ -144,49 +144,6 @@ async function processEvent(db, system, server, repo, project, glEvent, glHookEv
     }
 }
 
-/**
- * Process a hook event, updating a story usually--a story is created here only
- * if the event wouldn't have an entry in the activity log
- *
- * @param  {Database} db
- * @param  {System} system
- * @param  {Server} server
- * @param  {Repo} repo
- * @param  {Project} project
- * @param  {Object} glHookEvent
- *
- * @return {Promise}
- */
-async function processHookEvent(db, system, server, repo, project, glHookEvent) {
-    try {
-        const author = await UserImporter.importUser(db, server, glHookEvent.user);
-        if (!author) {
-            return;
-        }
-        const objectKind = normalizeToken(glHookEvent.object_kind);
-        if (objectKind === 'wiki_page') {
-            await WikiImporter.processHookEvent(db, system, server, repo, project, author, glHookEvent);
-        } else if (objectKind === 'issue') {
-            await IssueImporter.processHookEvent(db, system, server, repo, project, author, glHookEvent);
-        } else if (objectKind === 'mergerequest' || objectKind === 'merge_request') {
-            await MergeRequestImporter.processHookEvent(db, system, server, repo, project, author, glHookEvent);
-        } else {
-            await processNewEvents(db, system, server, repo, project, glHookEvent);
-        }
-    } catch (err) {
-        if (err.statusCode !== 404) {
-            throw err;
-        }
-    }
-}
-
-function normalizeToken(s) {
-    s = _.toLower(s);
-    s = _.replace(s, /[\s\-]/g, '_');
-    return s;
-}
-
 export {
     processNewEvents,
-    processHookEvent,
 };

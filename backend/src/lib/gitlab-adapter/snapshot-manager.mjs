@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Moment from 'moment';
 import Database from '../database.mjs';
 import HTTPError from '../common/errors/http-error.mjs';
 import * as TaskLog from '../task-log.mjs';
@@ -10,8 +11,10 @@ import Server from '../accessors/server.mjs';
 import Snapshot from '../accessors/snapshot.mjs';
 
 import * as Transport from './transport.mjs';
+import * as PushReconstructor from './push-reconstructor.mjs';
 
 const availableFileTypes = [ 'www', 'ssr' ];
+const availableFileTypesRE = new RegExp(`^(${availableFileTypes.join('|')})\\/`);
 
 async function retrieveFile(schema, tag, type, path) {
     const taskLog = TaskLog.start('snapshot-retrieve', {
@@ -97,10 +100,146 @@ async function retrieveFile(schema, tag, type, path) {
     }
 }
 
+/**
+ * Scan activity log entries to see if there're new snapshots
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Repo} repo
+ *
+ * @return {Promise}
+ */
+async function processNewEvents(db, server, repo) {
+    const lastTask = await TaskLog.last('gitlab-snapshot-import', {
+        server_id: server.id,
+        repo_id: repo.id,
+    });
+    const lastEventTime = _.get(lastTask, 'details.last_event_time');
+    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const url = `/projects/${repoLink.project.id}/events`;
+    const params = { sort: 'asc', action: 'pushed' };
+    if (lastEventTime) {
+        // the GitLab API's 'after' param only supports a date for some reason
+        // need to start one day back to ensure all events are fetched
+        const dayBefore = Moment(lastEventTime).subtract(1, 'day');
+        params.after = dayBefore.format('YYYY-MM-DD');
+    }
+    const taskLog = TaskLog.start('gitlab-snapshot-import', {
+        saving: true,
+        server_id: server.id,
+        server: server.name,
+        repo_id: repo.id,
+        repo: repo.name,
+    });
+    const now = Moment();
+    let firstEventAge;
+    let lastSnapshot;
+    try {
+        await Transport.fetchEach(server, url, params, async (glEvent, index, total) => {
+            const ctime = glEvent.created_at;
+            if (lastEventTime) {
+                if (ctime <= lastEventTime) {
+                    return;
+                }
+            }
+            let nom = index + 1;
+            let denom = total;
+            if (!total) {
+                // when the number of events is not yet known, use the event
+                // time to calculate progress
+                const eventAge = now.diff(ctime);
+                if (firstEventAge === undefined) {
+                    firstEventAge = eventAge;
+                }
+                nom = (firstEventAge - eventAge);
+                denom = firstEventAge;
+            }
+            const actionName = _.snakeCase(glEvent.action_name);
+            if (actionName === 'pushed_to' || actionName === 'pushed_new') {
+                const snapshot = await importSnapshot(db, server, repo, glEvent);
+                if (snapshot) {
+                    lastSnapshot = snapshot;
+                    taskLog.append('commits', snapshot.commit_id);
+                }
+            }
+            taskLog.set('last_event_time', ctime);
+            taskLog.report(nom, denom);
+        });
+
+        if (lastSnapshot) {
+            // clear head flag of other snapshots
+            const criteria = {
+                exclude: [ lastSnapshot.id ],
+                deleted: false,
+                head: true,
+            };
+            await Snapshot.updateMatching(db, 'global', criteria, { head: false });
+        }
+        await taskLog.finish();
+    } catch (err) {
+        await taskLog.abort(err);
+    }
+}
+
+async function importSnapshot(db, server, repo, glEvent) {
+    let branch, headID, tailID, type, count;
+    if (glEvent.push_data) {
+        // version 10
+        branch = glEvent.push_data.ref;
+        type = glEvent.push_data.ref_type;
+        headID = glEvent.push_data.commit_to;
+        tailID = glEvent.push_data.commit_from;
+        count = glEvent.push_data.commit_count;
+    } else if (glEvent.data) {
+        // version 9
+        const refParts = _.split(glEvent.data.ref, '/');
+        branch = _.last(refParts);
+        type = /^tags$/.test(refParts[1]) ? 'tag' : 'branch';
+        headID = glEvent.data.after;
+        tailID = glEvent.data.before;
+        if (/^0+$/.test(tailID)) {
+            // all zeros
+            tailID = null;
+        }
+        count = glEvent.data.total_commits_count;
+    }
+    const push = await PushReconstructor.reconstructPush(db, server, repo, type, branch, headID, tailID, count);
+    if (containsTemplateFile(push)) {
+        try {
+            const snapshot = {
+                repo_id: repo.id,
+                branch_name: branch,
+                commit_id: headID,
+                head: true,
+            };
+            const snapshotAfter = await Snapshot.insertOne(db, 'global', snapshot);
+            return snapshotAfter;
+        } catch (err) {
+            if (err.code === '23505') {
+                // unique constraint violation--ignore
+            } else {
+                throw err;
+            }
+        }
+    }
+}
+
+function containsTemplateFile(push) {
+    for (let files of _.values(push.files)) {
+        for (let file of files) {
+            if (availableFileTypesRE.test(file)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 function isCommitID(commitID) {
     return /^[a-f0-9]{40}$/.test(commitID);
 }
 
 export {
     retrieveFile,
+    processNewEvents,
 };
