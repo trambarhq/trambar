@@ -86,8 +86,9 @@ async function stop() {
 }
 
 async function handleWikiRequest(req, res, next) {
-    const { schema, repoName, slug } = req.params;
     try {
+        const { schema, repoName, slug } = req.params;
+
         const wiki = await WikiRetriever.retrieve(schema, repoName, slug);
         controlCache(res);
         res.type('text').send(wiki.details.content);
@@ -97,9 +98,10 @@ async function handleWikiRequest(req, res, next) {
 }
 
 async function handleExcelRequest(req, res, next) {
-    const { schema, name } = req.params;
-    const { redirected } = req;
     try {
+        const { schema, name } = req.params;
+        const { redirected } = req;
+
         const spreadsheet = await ExcelRetriever.retrieve(schema, name, !!redirected);
         controlCache(res, { 's-maxage': 5 }, spreadsheet.etag);
         res.type('text').send(spreadsheet.details.data);
@@ -109,14 +111,26 @@ async function handleExcelRequest(req, res, next) {
 }
 
 async function handleSnapshotFileRequest(req, res, next) {
-    const { schema, tag } = req.params;
-    const path = req.params[0];
-    const m = /\.\w+$/.exec(path);
-    if (!m) {
-        return next();
-    }
-    const ext = m[0];
     try {
+        const { schema, tag } = req.params;
+        const path = req.params[0];
+        const m = /\.\w+$/.exec(path);
+        if (!m) {
+            return next();
+        }
+        const ext = m[0];
+
+        const filename = Path.basename(path);
+        if (path !== filename) {
+            // direct to file as base location
+            // this allows us to link to JS and CSS file using relative URL
+            const originalURL = req.originalUrl;
+            const folder = originalURL.substr(0, originalURL.length - path.length);
+            const baseURL = folder + filename;
+            res.redirect(301, baseURL);
+            return;
+        }
+
         const buffer = await SnapshotRetriever.retrieve(schema, tag, 'www', path);
         controlCache(res);
         res.type(ext).send(buffer);
@@ -126,10 +140,11 @@ async function handleSnapshotFileRequest(req, res, next) {
 }
 
 async function handleSnapshotPageRequest(req, res, next) {
-    const { schema, tag } = req.params;
-    const host = req.headers.host;
-    const path = req.params[0];
     try {
+        const { schema, tag } = req.params;
+        const host = req.headers.host;
+        const path = req.params[0];
+
         const buffer = await PageGenerator.generate(schema, tag, path, host);
         controlCache(res);
         res.type('html').send(buffer);
@@ -140,9 +155,10 @@ async function handleSnapshotPageRequest(req, res, next) {
 
 async function handleStaticFileRequest(req, res, next) {
     const isAdmin = _.startsWith(req.path, '/admin');
-    const folder = (isAdmin) ? adminFolder : clientFolder;
-    const file = req.params[0];
     try {
+        const folder = (isAdmin) ? adminFolder : clientFolder;
+        const file = req.params[0];
+
         const path = `${folder}/${file}`;
         const stats = await FS.stat(path);
         controlCache(res);
@@ -158,9 +174,10 @@ async function handleStaticFileRequest(req, res, next) {
 }
 
 async function handleMediaRequest(req, res, next) {
-    const path = req.params[0];
-    const type = req.params.type;
     try {
+        const path = req.params[0];
+        const type = req.params.type;
+
         const uri = `/srv/media/${type}/${path}`;
         res.set('X-Accel-Redirect', uri).end();
     } catch (err) {
