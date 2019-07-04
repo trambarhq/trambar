@@ -13,6 +13,7 @@ async function retrieve(schema, tag, type, path) {
         path
     });
     try {
+        const start = new Date;
         taskLog.describe(`retrieving ${tag}:${path}`);
         const url = `http://gitlab_adapter/internal/retrieve/${schema}/${tag}/${type}/${path}`;
         const response = await CrossFetch(url);
@@ -21,7 +22,9 @@ async function retrieve(schema, tag, type, path) {
             throw new HTTPError(response.status, text);
         }
         const buffer = await response.buffer();
-        taskLog.set('size', buffer.length);
+        const end = new Date;
+        taskLog.set('duration', `${end - start} ms`);
+        taskLog.set('size', `${buffer.length} bytes`);
         await taskLog.finish();
         return buffer;
     } catch (err) {

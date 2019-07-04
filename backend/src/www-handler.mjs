@@ -127,9 +127,10 @@ async function handleSnapshotFileRequest(req, res, next) {
 
 async function handleSnapshotPageRequest(req, res, next) {
     const { schema, tag } = req.params;
+    const host = req.headers.host;
     const path = req.params[0];
     try {
-        const buffer = await PageGenerator.generate(schema, tag, path);
+        const buffer = await PageGenerator.generate(schema, tag, path, host);
         controlCache(res);
         res.type('html').send(buffer);
     } catch (err) {

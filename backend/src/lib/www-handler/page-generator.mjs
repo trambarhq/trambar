@@ -7,7 +7,7 @@ import HTTPError from '../common/errors/http-error.mjs';
 
 import * as SnapshotRetriever from './snapshot-retriever.mjs';
 
-async function generate(schema, tag, path) {
+async function generate(schema, tag, path, host) {
     if (!tag) {
         tag = 'master';
     }
@@ -17,22 +17,31 @@ async function generate(schema, tag, path) {
         path,
     });
     try {
+        const start = new Date;
         taskLog.describe(`retrieving index.js`);
         const codeBuffer = await SnapshotRetriever.retrieve(schema, tag, 'ssr', 'index.js');
         taskLog.describe(`retrieving index.html`);
         const htmlBuffer = await SnapshotRetriever.retrieve(schema, tag, 'ssr', 'index.html');
+        const html = htmlBuffer.toString();
         taskLog.describe(`running code in subprocess`);
         const env = {
-            RETRIEVAL_SCHEMA: schema,
-            RETRIEVAL_TAG: tag,
-            RETRIEVAL_TYPE: 'ssr',
-            RETRIEVAL_PATH: path
+            PAGE_SCHEMA: schema,
+            PAGE_TAG: tag,
+            PAGE_TYPE: 'ssr',
+            PAGE_PATH: path
         };
-        const ssrBuffer = await runSubprocess(codeBuffer, env, 5000);
-        const pageBuffer = insertContents(htmlBuffer, ssrBuffer);
-        taskLog.set('size', pageBuffer.length);
-        taskLog.set('contents', ssrBuffer.length);
+        const { body, headers } = await runSubprocess(codeBuffer, env, 5000);
+        const finalHTML = insertContents(html, body);
+        const pageBuffer = Buffer.from(finalHTML);
+        const sourceURLs = extractSourceURLs(headers);
+        const end = new Date;
+        taskLog.set('duration', `${end - start} ms`);
+        taskLog.set('size', `${pageBuffer.length} bytes`);
+        for (let [ index, url ] of sourceURLs.entries()) {
+            taskLog.set(`url${index + 1}`, url);
+        }
         await taskLog.finish();
+        pageBuffer.sourceURLs = sourceURLs;
         return pageBuffer;
     } catch (err) {
         await taskLog.abort(err);
@@ -95,10 +104,9 @@ async function runSubprocess(input, env, timeLimit) {
     });
     clearTimeout(timeout);
 
-    // join the data chunks
     if (!successful) {
-        let message = Buffer.concat(stderrChunks).toString() || undefined;
-        let status = 500;
+        let { status, statusText, body } = parseResponse(Buffer.concat(stderrChunks));
+        let message = body || statusText;
         if (child.killed) {
             message = `Script execution exceeded limit (${timeLimit} ms)`;
             status = 503;
@@ -106,12 +114,10 @@ async function runSubprocess(input, env, timeLimit) {
         throw new HTTPError(status, message);
     }
 
-    return Buffer.concat(stdoutChunks);
+    return parseResponse(Buffer.concat(stdoutChunks));
 }
 
-function insertContents(htmlBuffer, ssrBuffer) {
-    const html = htmlBuffer.toString();
-    const ssr = ssrBuffer.toString();
+function insertContents(html, ssr) {
     const placeholder = '<!--REACT-->';
     const placeholderIndex = html.indexOf(placeholder);
     if (placeholderIndex === -1) {
@@ -121,6 +127,36 @@ function insertContents(htmlBuffer, ssrBuffer) {
     const trailer = html.substr(placeholderIndex + placeholder.length);
     const buffer = Buffer.from(header + ssr + trailer);
     return buffer;
+}
+
+function parseResponse(buffer) {
+    const bodyIndex = buffer.indexOf('\n\n');
+    let status = 500;
+    let statusText = 'Internal Server Error';
+    let headers = [];
+    let body = '';
+    if (bodyIndex !== -1) {
+        headers = buffer.slice(0, bodyIndex).toString().split('\n');
+        const m = /(\d+)\s(.*)/.exec(headers[0]);
+        if (m) {
+            status = parseInt(m[1])
+            statusText = m[2];
+            headers.shift();
+        }
+        body = buffer.slice(bodyIndex + 2).toString();
+    }
+    return { status, statusText, headers, body };
+}
+
+function extractSourceURLs(headers) {
+    const urls = [];
+    for (let header of headers) {
+        const m = /^x-source-url: (.*)/i.exec(header);
+        if (m) {
+            urls.push(m[1]);
+        }
+    }
+    return urls;
 }
 
 export {
