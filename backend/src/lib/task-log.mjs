@@ -363,13 +363,24 @@ class TaskLog {
                 const value = this.details[key];
                 const items = (value instanceof Array) ? value : [ value ];
                 const list = _.map(items, (item) => {
-                    if (item instanceof Object) {
+                    if (item instanceof Array) {
+                        return '[…]';
+                    } else if (item instanceof Object) {
                         return '{…}';
                     } else {
-                        return item;
+                        return item + '';
                     }
                 });
-                lines.push(`${key}: ${list.join(', ')}`);
+                const text = list.join(', ');
+                if (text.length <= 40) {
+                    lines.push(`${key}: ${text}`);
+                } else {
+                    const blank = _.repeat(' ', key.length + 2);
+                    for (let [ index, item ] of list.entries()) {
+                        const label = (index === 0) ? `${key}: ` : blank;
+                        lines.push(label + item);
+                    }
+                }
             }
         } else {
             if (this.description) {

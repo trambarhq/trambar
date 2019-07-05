@@ -1,11 +1,11 @@
 import _ from 'lodash';
+import './lib/common/utils/lodash-extra.mjs';
 import Moment from 'moment';
 import { promises as FS } from 'fs';
 import Path from 'path';
 import URL from 'url';
 import Express from 'express';
 import CORS from 'cors';
-import BodyParser from 'body-parser';
 import Compression from 'compression';
 import SpiderDetector from 'spider-detector';
 import DNSCache from 'dnscache';
@@ -13,11 +13,21 @@ import Database from './lib/database.mjs';
 import * as TaskLog from './lib/task-log.mjs'
 import * as Shutdown from './lib/shutdown.mjs';
 
+import * as CacheManager from './lib/www-handler/cache-manager.mjs';
 import * as ExcelRetriever from './lib/www-handler/excel-retriever.mjs';
 import * as PageGenerator from './lib/www-handler/page-generator.mjs';
 import * as SnapshotRetriever from './lib/www-handler/snapshot-retriever.mjs';
 import * as WikiRetriever from './lib/www-handler/wiki-retriever.mjs';
 
+import TaskQueue from './lib/task-queue.mjs';
+import {
+    TaskPurgeSnapshotHead,
+    TaskPurgeProject,
+    TaskPurgeSpreadsheet,
+    TaskPurgeWiki,
+} from './lib/www-handler/tasks.mjs';
+
+// accessors
 import Project from './lib/accessors/project.mjs';
 
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
@@ -28,14 +38,15 @@ const adminFolder = Path.resolve(`${folder}/../../admin/www`);
 
 let server;
 let database;
+let taskQueue;
 
 async function start() {
     // start up Express
     const app = Express();
     app.set('json spaces', 2);
     app.use(CORS());
-    app.use(BodyParser.json());
     app.use(redirectToProject);
+    app.get('/srv/www/.cache', handleCacheStatusRequest);
     app.get('/srv/www/:schema/wiki/:repoName/:slug', handleWikiRequest);
     app.get('/srv/www/:schema/wiki/:slug', handleWikiRequest);
     app.get('/srv/www/:schema/excel/:name', handleExcelRequest);
@@ -74,10 +85,18 @@ async function start() {
         'wiki',
     ];
     await db.listen(tables, 'change', handleDatabaseChanges, 500);
+
+    taskQueue = new TaskQueue;
+    await taskQueue.start();
 }
 
 async function stop() {
     await Shutdown.close(server);
+
+    if (taskQueue) {
+        await taskQueue.stop();
+        taskQueue = undefined;
+    }
 
     if (database) {
         database.close();
@@ -85,10 +104,19 @@ async function stop() {
     }
 }
 
+async function handleCacheStatusRequest(req, res, next) {
+    try {
+        const text = await CacheManager.stat();
+        res.set({ 'X-Accel-Expires': 0 });
+        res.type('text').send(text);
+    } catch (err) {
+        next(err);
+    }
+}
+
 async function handleWikiRequest(req, res, next) {
     try {
         const { schema, repoName, slug } = req.params;
-
         const wiki = await WikiRetriever.retrieve(schema, repoName, slug);
         controlCache(res);
         res.type('text').send(wiki.details.content);
@@ -101,9 +129,8 @@ async function handleExcelRequest(req, res, next) {
     try {
         const { schema, name } = req.params;
         const { redirected } = req;
-
         const spreadsheet = await ExcelRetriever.retrieve(schema, name, !!redirected);
-        controlCache(res, { 's-maxage': 5 }, spreadsheet.etag);
+        controlCache(res, {}, spreadsheet.etag);
         res.type('text').send(spreadsheet.details.data);
     } catch (err) {
         next(err);
@@ -144,7 +171,6 @@ async function handleSnapshotPageRequest(req, res, next) {
         const { schema, tag } = req.params;
         const host = req.headers.host;
         const path = req.params[0];
-
         const buffer = await PageGenerator.generate(schema, tag, path, host);
         controlCache(res);
         res.type('html').send(buffer);
@@ -158,7 +184,6 @@ async function handleStaticFileRequest(req, res, next) {
     try {
         const folder = (isAdmin) ? adminFolder : clientFolder;
         const file = req.params[0];
-
         const path = `${folder}/${file}`;
         const stats = await FS.stat(path);
         controlCache(res);
@@ -177,7 +202,6 @@ async function handleMediaRequest(req, res, next) {
     try {
         const path = req.params[0];
         const type = req.params.type;
-
         const uri = `/srv/media/${type}/${path}`;
         res.set('X-Accel-Redirect', uri).end();
     } catch (err) {
@@ -195,9 +219,9 @@ function handleError(err, req, res, next) {
 const defaultCacheControl = {
     'public': true,
     'max-age': 0,
-    's-maxage': 60,
+    's-maxage': 24 * 60 * 60,
     'must-revalidate': true,
-    'proxy-revalidate': true,
+    'proxy-revalidate': false,
 };
 
 function controlCache(res, override, etag) {
@@ -241,8 +265,15 @@ function redirectToProject(req, res, next) {
     const host = req.headers.host;
     const schema = projectDomainMap[host];
     if (schema) {
-        req.url = `/srv/www/${schema}${req.url}`;
-        req.redirected = true;
+        if (_.startsWith(req.url, '/srv/www')) {
+            req.redirected = true;
+        } else {
+            const uri = `/srv/www/${schema}${req.url}`;
+            res.set('X-Accel-Redirect', uri).end();
+            return;
+        }
+    } else {
+        req.redirected = false;
     }
     next();
 }
@@ -255,22 +286,28 @@ function redirectToProject(req, res, next) {
 function handleDatabaseChanges(events) {
     const db = this;
     for (let event of events) {
-        if (event.op === 'DELETE') {
+        if (event.op === 'DELETE' || event.op === 'INSERT') {
             continue;
         }
-        switch (event.table) {
-            case 'project':
-                updateDomainNameTable(db);
-                break;
-            case 'snapshot':
-                // TODO: invalidate Nginx cache
-                break;
-            case 'spreadsheet':
-                // TODO: invalidate Nginx cache
-                break;
-            case 'wiki':
-                // TODO: invalidate Nginx cache
-                break;
+        if (event.table === 'project') {
+            updateDomainNameTable(db);
+
+            if (event.diff.name || event.diff.repo_ids) {
+                const schema = event.previous.name || event.current.name;
+                taskQueue.add(new TaskPurgeProject(schema));
+            }
+        } else if (event.table === 'snapshot') {
+            if (event.diff.head && !event.current.head) {
+                taskQueue.add(new TaskPurgeSnapshotHead(event.id));
+            }
+        } else if (event.table === 'spreadsheet') {
+            const name = event.previous.name || event.current.name;
+            taskQueue.add(new TaskPurgeSpreadsheet(schema, name));
+        } else if (event.table === 'wiki') {
+            const schema = event.schema;
+            const slug = event.previous.slug || event.current.slug;
+            console.log(slug, event);
+            taskQueue.add(new TaskPurgeWiki(schema, slug));
         }
     }
 }

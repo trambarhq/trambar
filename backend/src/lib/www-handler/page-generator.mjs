@@ -37,9 +37,7 @@ async function generate(schema, tag, path, host) {
         const end = new Date;
         taskLog.set('duration', `${end - start} ms`);
         taskLog.set('size', `${pageBuffer.length} bytes`);
-        for (let [ index, url ] of sourceURLs.entries()) {
-            taskLog.set(`url${index + 1}`, url);
-        }
+        taskLog.set('sources', sourceURLs);
         await taskLog.finish();
         pageBuffer.sourceURLs = sourceURLs;
         return pageBuffer;

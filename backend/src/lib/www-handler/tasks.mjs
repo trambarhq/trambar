@@ -1,0 +1,98 @@
+import _ from 'lodash';
+import Database from '../database.mjs';
+import { BasicTask, PeriodicTask } from '../task-queue.mjs';
+
+import * as CacheManager from './cache-manager.mjs';
+
+// accessors
+import Project from '../accessors/project.mjs';
+import Snapshot from '../accessors/snapshot.mjs';
+
+const MIN = 60 * 1000;
+const HOUR = 60 * MIN;
+
+class TaskPurgeSnapshotHead extends BasicTask {
+    constructor(snapshotID) {
+        super();
+        this.snapshotID = snapshotID;
+    }
+
+    async run() {
+        const { snapshotID } = this;
+        const db = await Database.open();
+        const snapshot = await getSnapshot(db, snapshotID);
+        const projects = await getSnapshotProjects(db, snapshot);
+        for (let project of projects) {
+            const schema = project.name;
+            const pattern = new RegExp(`^/srv/www/${schema}/.*`);
+            await CacheManager.purge(pattern);
+        }
+    }
+}
+
+class TaskPurgeProject extends BasicTask {
+    constructor(schema) {
+        super();
+        this.schema = schema;
+    }
+
+    async run() {
+        const { schema } = this;
+        const pattern = new RegExp(`^/srv/www/${schema}/.*`);
+        await CacheManager.purge(pattern);
+    }
+}
+
+class TaskPurgeSpreadsheet extends BasicTask {
+    constructor(schema, name) {
+        super();
+        this.schema = schema;
+        this.name = name;
+    }
+
+    async run() {
+        const { schema, name } = this;
+        const pattern = new RegExp(`^/srv/www/${schema}/excel/${name}`);
+        await CacheManager.purge(pattern);
+    }
+}
+
+class TaskPurgeWiki extends BasicTask {
+    constructor(schema, slug) {
+        super();
+        this.schema = schema;
+        this.slug = slug;
+    }
+
+    async run() {
+        const { schema, slug } = this;
+        const pattern = new RegExp(`^/srv/www/${schema}/wiki/([^/]+/)?${slug}`);
+        await CacheManager.purge(pattern);
+    }
+}
+
+function getSnapshot(db, snapshotID) {
+    const criteria = {
+        id: snapshotID,
+        deleted: false,
+    };
+    return Snapshot.findOne(db, 'global', criteria, '*');
+}
+
+function getSnapshotProjects(db, snapshot) {
+    if (!snapshot) {
+        return [];
+    }
+    const criteria = {
+        id: snapshot.repo_id,
+        deleted: false,
+    };
+    return Project.find(db, 'global', criteria, '*');
+}
+
+export {
+    TaskPurgeSnapshotHead,
+    TaskPurgeProject,
+    TaskPurgeSpreadsheet,
+    TaskPurgeWiki,
+};
