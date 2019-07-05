@@ -5,6 +5,7 @@ import * as Localization from '../localization.mjs';
 import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
+import * as SnapshotManager from './snapshot-manager.mjs';
 import * as UserImporter from './user-importer.mjs';
 
 // accessors
@@ -99,6 +100,23 @@ async function importRepositories(db, server) {
     return reposAfter;
 }
 
+async function detectTemplate(db, server, repo) {
+    try {
+        const repoLink = ExternalDataUtils.findLink(repo, server);
+        const packageInfo = await fetchPackageJSON(server, repoLink.project.id);
+        const keywords = _.get(packageInfo, 'keywords');
+        const template = _.includes(keywords, 'trambar-template');
+        if (repo.template !== template) {
+            const repoChanges = {
+                id: repo.id,
+                template
+            };
+            const repoAfter = await Repo.updateOne(db, 'global', repoChanges);
+        }
+    } catch (err) {
+    }
+}
+
 /**
  * Import an activity log entry about an repo action
  *
@@ -116,6 +134,45 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
     const schema = project.name;
     const storyNew = copyEventProperties(null, system, server, repo, author, glEvent);
     await Story.insertOne(db, schema, storyNew);
+}
+
+/**
+ * Respond to system-level event
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Object} glHookEvent
+ *
+ * @return {Promise}
+ */
+async function processSystemEvent(db, server, glHookEvent) {
+    const eventName = _.snakeCase(glHookEvent.event_name);
+    if (/^user_(add|remove)/.test(eventName)) {
+        await RepoImporter.importRepositories(db, server);
+    } else if (/^user_(create|destroy)/.test(eventName)) {
+        await importUsers(db, server);
+    }
+
+    if (eventName === 'repository_update') {
+        const criteria = {
+            external_object: ExternalDataUtils.createLink(server, {
+                project: { id: glHookEvent.project_id }
+            }),
+            deleted: false,
+        };
+        const repo = await Repo.findOne(db, 'global', criteria, '*');
+        if (repo) {
+            if (repo.template) {
+                await SnapshotManager.processNewEvents(db, server, repo);
+            } else {
+                if (isMasterChanged(glHookEvent)) {
+                    await detectTemplate(db, server, repo);
+                }
+            }
+        }
+    } else if (/^project_(create|destroy|rename|transfer|update)/.test(eventName)) {
+        await importRepositories(db, server);
+    }
 }
 
 /**
@@ -323,7 +380,46 @@ async function fetchMembers(server, glRepoID) {
     return Transport.fetchAll(server, url);
 }
 
+/**
+ * Retrieve package.json
+ *
+ * @param  {Server} server
+ * @param  {Number} glRepoID
+ *
+ * @return {Promise<Array<Object|null>>}
+ */
+async function fetchPackageJSON(server, glRepoID) {
+    const treeURL = `/projects/${glRepoID}/repository/tree`;
+    const query = { ref: 'master' };
+    const listing = await Transport.fetchAll(server, treeURL, query);
+    const entry = _.find(listing, { type: 'blob', name: 'package.json' });
+    if (!entry) {
+        return null;
+    }
+    const pathEncoded = encodeURIComponent(entry.path);
+    const blobURL = `/projects/${glRepoID}/repository/files/${pathEncoded}`;
+    const file = await Transport.fetch(server, blobURL, query);
+    const buffer = Buffer.from(file.content, 'base64');
+    const text = buffer.toString();
+    const object = JSON.parse(text);
+    return object;
+}
+
+function isMasterChanged(glHookEvent) {
+    const changes = glHookEvent.changes;
+    if (changes === undefined) {
+        return true;
+    }
+    return _.some(changes, (change) => {
+        const refParts = _.split(change.ref, '/');
+        const branch = _.last(refParts);
+        return (branch === 'master');
+    });
+}
+
 export {
     importRepositories,
+    detectTemplate,
     processEvent,
+    processSystemEvent,
 };

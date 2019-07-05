@@ -8,6 +8,7 @@ import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.
 import { DefaultUserSettings } from '../common/objects/settings/user-settings.mjs';
 
 import * as Transport from './transport.mjs';
+import * as RepoImporter from './repo-importer.mjs';
 
 // accessors
 import Project from '../accessors/project.mjs';
@@ -308,6 +309,24 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
 }
 
 /**
+ * Respond to system-level event
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Object} glHookEvent
+ *
+ * @return {Promise}
+ */
+async function processSystemEvent(db, server, glHookEvent) {
+    const eventName = _.snakeCase(glHookEvent.event_name);
+    if (/^user_(add|remove)/.test(eventName)) {
+        await RepoImporter.importRepositories(db, server);
+    } else if (/^user_(create|destroy)/.test(eventName)) {
+        await importUsers(db, server);
+    }
+}
+
+/**
  * Copy properties of event
  *
  * @param  {Story|null} story
@@ -430,4 +449,5 @@ export {
     findUsersByName,
     copyUserProperties,
     processEvent,
+    processSystemEvent,
 };

@@ -248,6 +248,8 @@ async function fetchWikis(server, glProjectId) {
  * @return {Promise}
  */
 async function processHookEvent(db, system, server, repo, project, author, glHookEvent) {
+    await WikiImporter.importWikis(db, system, server, repo, project);
+
     const schema = project.name;
     // see if there's story about this page recently
     // one story a day about a page is enough

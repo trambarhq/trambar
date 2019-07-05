@@ -11,7 +11,6 @@ import * as BranchImporter from './branch-importer.mjs';
 import * as PushImporter from './push-importer.mjs';
 import * as RepoImporter from './repo-importer.mjs';
 import * as UserImporter from './user-importer.mjs';
-import * as WikiImporter from './wiki-importer.mjs';
 import * as NoteImporter from './note-importer.mjs';
 
 // accessors

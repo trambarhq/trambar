@@ -25,6 +25,7 @@ import Task from '../accessors/task.mjs';
 import Wiki from '../accessors/wiki.mjs';
 
 const MIN = 60 * 1000;
+const HOUR = 60 * MIN;
 
 class TaskImportRepos extends BasicTask {
     constructor(serverID) {
@@ -72,8 +73,24 @@ class TaskImportSnapshots extends BasicTask {
         const db = await Database.open();
         const repo = await getRepo(db, this.repoID);
         const server = await getRepoServer(db, repo);
-        if (repo, server) {
+        if (repo && server) {
             await SnapshotManager.processNewEvents(db, server, repo);
+        }
+    }
+}
+
+class TaskDetectTemplate extends BasicTask {
+    constructor(repoID) {
+        super();
+        this.repoID = repoID;
+    }
+
+    async run() {
+        const db = await Database.open();
+        const repo = await getRepo(db, this.repoID);
+        const server = await getRepoServer(db, repo);
+        if (repo && server) {
+            await RepoImporter.detectTemplate(db, server, repo);
         }
     }
 }
@@ -243,9 +260,6 @@ class TaskProcessProjectHookEvent extends BasicTask {
                 if (objectKind === 'wiki_page') {
                     const author = await UserImporter.importUser(db, server, glHookEvent.user);
                     await WikiImporter.processHookEvent(db, system, server, repo, project, author, glHookEvent);
-
-                    // update wikis
-                    await WikiImporter.importWikis(db, system, server, repo, project);
                 } else if (objectKind === 'issue') {
                     const author = await UserImporter.importUser(db, server, glHookEvent.user);
                     await IssueImporter.processHookEvent(db, system, server, repo, project, author, glHookEvent);
@@ -282,24 +296,10 @@ class TaskProcessSystemHookEvent extends BasicTask {
             });
             try {
                 const eventName = _.snakeCase(glHookEvent.event_name);
-                if (eventName === 'repository_update') {
-                    const criteria = {
-                        external_object: ExternalDataUtils.createLink(server, {
-                            project: {
-                                id: glHookEvent.project_id
-                            }
-                        }),
-                        deleted: false,
-                        template: true,
-                    };
-                    const repo = await Repo.findOne(db, 'global', criteria, '*');
-                    if (repo) {
-                        await SnapshotManager.processNewEvents(db, server, repo);
-                    }
-                } else if (/^project_(create|destroy|rename|transfer|update)/.test(eventName) || /^user_(add|remove)/.test(eventName)) {
-                    await RepoImporter.importRepositories(db, server);
-                } else if (/^user_(create|destroy)/.test(eventName)) {
-                    await UserImporter.importUsers(db, server);
+                if (/^repository_/.test(eventName) || /^project_/.test(eventName)) {
+                    await RepoImporter.processSystemEvent(db, server, glHookEvent);
+                } else if (/^user_/.test(eventName)) {
+                    await UserImporter.processSystemEvent(db, server, glHookEvent);
                 }
                 taskLog.merge(glHookEvent);
                 await taskLog.finish();
@@ -554,6 +554,23 @@ class PeriodicTaskImportSnapshots extends PeriodicTask {
     }
 }
 
+class PeriodicTaskDetectTemplate extends PeriodicTask {
+    delay(initial) {
+        return (initial) ? 0 : 24 * HOUR;
+    }
+
+    async run(queue) {
+        const db = await Database.open();
+        const servers = await getServers(db);
+        for (let server of servers) {
+            const repos = await getServerRepos(db, server);
+            for (let repo of repos) {
+                queue.add(new TaskDetectTemplate(repo.id));
+            }
+        }
+    }
+}
+
 class PeriodicTaskUpdateMilestones extends PeriodicTask {
     delay(initial) {
         return (initial) ? 0 : 5 * MIN;
@@ -778,6 +795,7 @@ export {
     TaskImportRepos,
     TaskImportRepoEvents,
     TaskImportSnapshots,
+    TaskDetectTemplate,
     TaskImportUsers,
     TaskInstallHooks,
     TaskRemoveHooks,
@@ -800,6 +818,7 @@ export {
     PeriodicTaskImportWikis,
     PeriodicTaskImportRepoEvents,
     PeriodicTaskImportSnapshots,
+    PeriodicTaskDetectTemplate,
     PeriodicTaskUpdateMilestones,
     PeriodicTaskRetryFailedExports,
 };

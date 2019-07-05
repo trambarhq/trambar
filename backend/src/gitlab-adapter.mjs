@@ -19,6 +19,7 @@ import {
     TaskImportRepos,
     TaskImportRepoEvents,
     TaskImportSnapshots,
+    TaskDetectTemplate,
     TaskImportUsers,
     TaskInstallHooks,
     TaskRemoveHooks,
@@ -41,6 +42,7 @@ import {
     PeriodicTaskImportWikis,
     PeriodicTaskImportRepoEvents,
     PeriodicTaskImportSnapshots,
+    PeriodicTaskDetectTemplate,
     PeriodicTaskUpdateMilestones,
     PeriodicTaskRetryFailedExports,
 } from './lib/gitlab-adapter/tasks.mjs';
@@ -85,6 +87,7 @@ async function start() {
     taskQueue.schedule(new PeriodicTaskImportWikis);
     taskQueue.schedule(new PeriodicTaskImportRepoEvents);
     taskQueue.schedule(new PeriodicTaskImportSnapshots);
+    taskQueue.schedule(new PeriodicTaskDetectTemplate);
     taskQueue.schedule(new PeriodicTaskUpdateMilestones);
     taskQueue.schedule(new PeriodicTaskRetryFailedExports);
     await taskQueue.start();
@@ -205,6 +208,8 @@ function handleRepoChangeEvent(event) {
         const repoID = event.id;
         if (event.current.template) {
             taskQueue.add(new TaskImportSnapshots(repoID));
+        } else if (event.current.template === null) {
+            taskQueue.add(new TaskDetectTemplate(repoID));
         }
     }
 }
