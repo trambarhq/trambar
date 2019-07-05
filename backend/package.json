@@ -13,6 +13,7 @@
     "test:docker:stop": "docker-compose -p test -f test.yml down"
   },
   "dependencies": {
+    "ascii-table": "0.0.9",
     "bluebird": "^3.5.4",
     "body-parser": "^1.19.0",
     "compression": "^1.7.4",
@@ -23,12 +24,8 @@
     "exceljs": "^1.12.2",
     "express": "^4.16.4",
     "file-type": "^11.0.0",
-    "gnu-tools": "git+https://github.com/paroga/node-gnu-tools.git",
     "htpasswd-js": "^1.0.2",
     "ignore": "^5.1.1",
-    "isolated-vm": "^1.7.10",
-    "jsDAV": "^0.3.4",
-    "jsdav-promise": "^0.0.3",
     "lodash": "^4.17.11",
     "mark-gor": "0.0.7",
     "moment": "^2.24.0",
@@ -55,6 +52,9 @@
   },
   "devDependencies": {
     "chai": "^4.2.0",
+    "gnu-tools": "git+https://github.com/paroga/node-gnu-tools.git",
+    "jsDAV": "^0.3.4",
+    "jsdav-promise": "^0.0.3",
     "mocha": "^6.1.4"
   }
 }
