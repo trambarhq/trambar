@@ -26,6 +26,11 @@ class Repo extends ExternalData {
             server_id: Number,
             template: Boolean,
         };
+        this.eventColumns = {
+            ...this.eventColumns,
+            template: Boolean,
+        };
+        this.version = 3;
     }
 
     /**

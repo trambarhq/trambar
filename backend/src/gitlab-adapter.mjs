@@ -69,6 +69,7 @@ async function start() {
     // listen for database change events
     const tables = [
         'project',
+        'repo',
         'server',
         'story',
         'system',
@@ -119,6 +120,9 @@ function handleDatabaseChanges(events) {
                 break;
             case 'project':
                 handleProjectChangeEvent(event);
+                break;
+            case 'repo':
+                handleRepoChangeEvent(event);
                 break;
             case 'story':
                 handleStoryChangeEvent(event);
@@ -186,6 +190,21 @@ function handleProjectChangeEvent(event) {
                 taskQueue.add(new TaskImportWikis(repoID, projectID));
                 taskQueue.add(new TaskInstallProjectHook(repoID, projectID));
             }
+        }
+    }
+}
+
+/**
+ * Import snapshots from repository when we discover that it contains a
+ * website template
+ *
+ * @param  {Object} event
+ */
+function handleRepoChangeEvent(event) {
+    if (event.diff.template) {
+        const repoID = event.id;
+        if (event.current.template) {
+            taskQueue.add(new TaskImportSnapshots(repoID));
         }
     }
 }
