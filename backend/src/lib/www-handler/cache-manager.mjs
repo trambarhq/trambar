@@ -7,6 +7,12 @@ import * as TaskLog from '../task-log.mjs'
 
 const CACHE_PATH = '/var/cache/nginx/data';
 
+const fileDependencies = {};
+
+function link(url, sourceURLs) {
+    fileDependencies[url] = sourceURLs;
+}
+
 async function purge(pattern) {
     const taskLog = TaskLog.start('nginx-cache-purge', {
         pattern: pattern.toString()
@@ -31,6 +37,19 @@ async function purge(pattern) {
                 }
             }
         }
+
+        // purge file that're dependent on the purged items
+        for (let [ url, sourceURLs ] of Object.entries(fileDependencies)) {
+            const overlap = _.intersection(sourceURLs, purged);
+            if (!_.isEmpty(overlap)) {
+                const md5 = Crypto.createHash('md5').update(url).digest('hex');
+                const success = await removeCacheEntry({ url, md5 });
+                if (success) {
+                    purged.push(url);
+                }
+            }
+        }
+
         if (purged.length > 0) {
             taskLog.set('count', purged.length);
             if (process.env.NODE_ENV !== 'production') {
@@ -108,6 +127,7 @@ async function loadCacheEntryKey(path) {
 async function removeCacheEntry(entry) {
     try {
         delete cacheEntryCache[entry.md5];
+        delete fileDependencies[entry.url];
         await FS.unlink(`${CACHE_PATH}/${entry.md5}`);
         return true;
     } catch (err){
@@ -132,6 +152,7 @@ async function stat() {
 }
 
 export {
+    link,
     purge,
     stat,
 };
