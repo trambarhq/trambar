@@ -132,6 +132,7 @@ async function NavigationTree(props) {
             children = [
                 getMemberListNode(level + 1),
                 getRepoListNode(level + 1),
+                getWebsiteNode(level + 1),
             ];
         } else if (projectID === 'new') {
             label = <i>{t('nav-project-new')}</i>;
@@ -180,6 +181,28 @@ async function NavigationTree(props) {
         } else {
             return null;
         }
+        return { label, page, level };
+    }
+
+    function getWebsiteNode(level) {
+        const page = 'website-summary-page';
+        const label = t('nav-website');
+        const children = [
+            getWikiListNode(level + 1),
+            getExcelListNode(level + 1),
+        ];
+        return { label, page, children, level };
+    }
+
+    function getWikiListNode(level) {
+        const page = 'wiki-list-page';
+        const label = t('nav-wikis');
+        return { label, page, level };
+    }
+
+    function getExcelListNode(level) {
+        const page = 'spreadsheet-list-page';
+        const label = t('nav-spreadsheets');
         return { label, page, level };
     }
 

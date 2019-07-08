@@ -387,7 +387,6 @@ function MemberListPageSync(props) {
 }
 
 const sortUsers = memoizeWeak(null, function(users, roles, statistics, env, sort) {
-    const { p } = env.locale;
     const columns = _.map(sort.columns, (column) => {
         switch (column) {
             case 'name':

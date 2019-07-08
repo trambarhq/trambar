@@ -1,11 +1,15 @@
-.role-list-page {
+.spreadsheet-list-page {
     .buttons {
         float: right;
     }
 
     .sortable-table {
-        #users {
-            width: 10em;
+        #title {
+            width: 12em;
+        }
+
+        #sheets {
+            width: 8em;
         }
 
         #mtime {

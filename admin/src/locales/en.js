@@ -124,6 +124,7 @@ const phrases = {
     'member-list-status-pending': 'Request pending',
     'member-list-title': 'Members',
 
+    'nav-spreadsheets': 'Excel files',
     'nav-member-new': 'New member',
     'nav-members': 'Members',
     'nav-project-new': 'New project',
@@ -136,6 +137,8 @@ const phrases = {
     'nav-settings': 'Settings',
     'nav-user-new': 'New user',
     'nav-users': 'Users',
+    'nav-website': 'Website',
+    'nav-wikis': 'GitLab wikis',
 
     'project-list-add': 'Add new project',
     'project-list-cancel': 'Cancel',
@@ -396,6 +399,45 @@ const phrases = {
 
     'sign-off-menu-sign-off': 'Sign off',
 
+    'spreadsheet-list-add': 'Add new spreadsheet',
+    'spreadsheet-list-cancel': 'Cancel',
+    'spreadsheet-list-confirm-disable-$count': (count) => {
+        let spreadsheets = cardinal(count, 'this spreadsheet', 'these 2 spreadsheets');
+        return `Are you sure you want to disable ${spreadsheets}?`
+    },
+    'spreadsheet-list-confirm-reactivate-$count': (count) => {
+        let spreadsheets = cardinal(count, 'this spreadsheet', 'these 2 spreadsheets');
+        return `Are you sure you want to reactivate ${spreadsheets}?`
+    },
+    'spreadsheet-list-edit': 'Edit spreadsheet list',
+    'spreadsheet-list-save': 'Save spreadsheet list',
+    'spreadsheet-list-status-deleted': 'Deleted',
+    'spreadsheet-list-status-disabled': 'Disabled',
+    'spreadsheet-list-title': 'Excel files',
+
+    'spreadsheet-summary-$title': (title) => {
+        let text = 'Excel file';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-add': 'Add new spreadsheet',
+    'spreadsheet-summary-cancel': 'Cancel',
+    'spreadsheet-summary-confirm-delete': 'Are you sure you want to delete this spreadsheet?',
+    'spreadsheet-summary-confirm-disable': 'Are you sure you want to disable this spreadsheet?',
+    'spreadsheet-summary-confirm-reactivate': 'Are you sure you want to reactivate this spreadsheet?',
+    'spreadsheet-summary-delete': 'Delete spreadsheet',
+    'spreadsheet-summary-description': 'Description',
+    'spreadsheet-summary-disable': 'Disable spreadsheet',
+    'spreadsheet-summary-edit': 'Edit spreadsheet',
+    'spreadsheet-summary-name': 'Identifier',
+    'spreadsheet-summary-reactivate': 'Reactivate spreadsheet',
+    'spreadsheet-summary-return': 'Return to spreadsheet list',
+    'spreadsheet-summary-save': 'Save spreadsheet',
+    'spreadsheet-summary-title': 'Name',
+    'spreadsheet-summary-url': 'URL',
+
     'table-heading-api-access': 'API access﻿',
     'table-heading-date-range': 'Active period',
     'table-heading-email': 'E-mail',
@@ -408,10 +450,12 @@ const phrases = {
     'table-heading-repositories': 'Repositories',
     'table-heading-roles': 'Roles',
     'table-heading-server': 'Server',
+    'table-heading-sheets': 'Sheets',
     'table-heading-this-month': 'This month',
     'table-heading-title': 'Name',
     'table-heading-to-date': 'To date',
     'table-heading-type': 'Type',
+    'table-heading-url': 'URL',
     'table-heading-username': 'User name',
     'table-heading-users': 'Users',
 

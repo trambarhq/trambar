@@ -74,6 +74,50 @@ const routes = {
             match.params.module = await import('./pages/repo-summary-page.jsx' /* webpackChunkName: "page-repo-summary" */);
         }
     },
+    'website-summary-page': {
+        path: '/projects/${projectID}/website/',
+        query: {
+            edit: '${editing}',
+        },
+        params: { projectID: Number, editing: Boolean },
+        load: async (match) => {
+            match.params.key = match.name;
+            match.params.module = await import('./pages/website-summary-page.jsx' /* webpackChunkName: "page-website-summary" */);
+        }
+    },
+    'wiki-list-page': {
+        path: '/projects/${projectID}/website/wikis/',
+        query: {
+            edit: '${editing}',
+        },
+        params: { projectID: Number, editing: Boolean },
+        load: async (match) => {
+            match.params.key = match.name;
+            match.params.module = await import('./pages/wiki-list-page.jsx' /* webpackChunkName: "page-wiki-list" */);
+        }
+    },
+    'spreadsheet-list-page': {
+        path: '/projects/${projectID}/website/spreadsheets/',
+        query: {
+            edit: '${editing}',
+        },
+        params: { projectID: Number, editing: Boolean },
+        load: async (match) => {
+            match.params.key = match.name;
+            match.params.module = await import('./pages/spreadsheet-list-page.jsx' /* webpackChunkName: "page-spreadsheet-list" */);
+        }
+    },
+    'spreadsheet-summary-page': {
+        path: '/projects/${projectID}/website/spreadsheets/${spreadsheetID}/',
+        query: {
+            edit: '${editing}',
+        },
+        params: { projectID: Number, spreadsheetID: NumberOrNew, editing: Boolean },
+        load: async (match) => {
+            match.params.key = match.name;
+            match.params.module = await import('./pages/spreadsheet-summary-page.jsx' /* webpackChunkName: "page-spreadsheet-summary" */);
+        }
+    },
     'role-list-page': {
         path: '/roles/',
         query: {

@@ -1,13 +1,11 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
-import * as RoleSaver from 'common/objects/savers/role-saver.mjs';
-import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
+import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.mjs';
+import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as UserSaver from 'common/objects/savers/user-saver.mjs';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -30,43 +28,37 @@ import {
     useDataLossWarning,
 } from '../hooks.mjs';
 
-import './role-summary-page.scss';
+import './spreadsheet-summary-page.scss';
 
-async function RoleSummaryPage(props) {
-    const { database, roleID } = props;
-    const creating = (roleID === 'new');
+async function SpreadsheetSummaryPage(props) {
+    const { database, projectID, spreadsheetID } = props;
+    const creating = (spreadsheetID === 'new');
     const [ show ] = useProgress();
 
     render();
     const currentUserID = await database.start();
     const system = await SystemFinder.findSystem(database);
-    const role = !creating ? await RoleFinder.findRole(database, roleID) : null;
-    render();
-    const users = await UserFinder.findActiveUsers(database);
+    const project = await ProjectFinder.findProject(database, projectID);
+    const schema = project.name;
+    const spreadsheet = !creating ? await SpreadsheetFinder.findSpreadsheet(database, schema, spreadsheetID) : null;
     render();
 
     function render() {
-        const sprops = { system, role, users, creating };
-        show(<RoleSummaryPageSync key={roleID} {...sprops} {...props} />);
+        const sprops = { system, project, spreadsheet, creating };
+        show(<SpreadsheetSummaryPageSync key={spreadsheetID} {...sprops} {...props} />);
     }
 }
 
-function RoleSummaryPageSync(props) {
-    const { system, role, users, creating } = props;
+function SpreadsheetSummaryPageSync(props) {
+    const { system, project, spreadsheet, users, creating } = props;
     const { database, route, env, editing } = props;
     const { t, p } = env.locale;
+    const schema = project.name;
     const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !editing && !creating;
     const [ adding, setAdding ] = useState(false);
     const draft = useDraftBuffer({
-        original: role || {},
-        reset: readOnly,
-    });
-    const members = _.filter(users, (user) => {
-        return (role) ? _.includes(user.role_ids, role.id) : false;
-    });
-    const userSelection = useSelectionBuffer({
-        original: members,
+        original: spreadsheet || {},
         reset: readOnly,
     });
     const [ problems, reportProblems ] = useValidation();
@@ -85,29 +77,29 @@ function RoleSummaryPageSync(props) {
         }
     });
     const handleAddClick = useListener((evt) => {
-        route.push({ roleID: 'new' });
+        route.push({ spreadsheetID: 'new' });
     });
     const handleReturnClick = useListener((evt) => {
-        route.push('role-list-page');
+        route.push('spreadsheet-list-page', { projectID: project.id });
     });
     const handleDisableClick = useListener((evt) => {
         run(async () => {
-            await confirm(t('role-summary-confirm-disable'));
-            await RoleSaver.disableRole(database, role);
+            await confirm(t('spreadsheet-summary-confirm-disable'));
+            await SpreadsheetSaver.disableSpreadsheet(database, schema, spreadsheet);
             handleReturnClick();
         });
     });
     const handleRemoveClick = useListener((evt) => {
         run(async () => {
-            await confirm(t('role-summary-confirm-delete'));
-            await RoleSaver.removeRole(database, role);
+            await confirm(t('spreadsheet-summary-confirm-delete'));
+            await SpreadsheetSaver.removeSpreadsheet(database, schema, spreadsheet);
             handleReturnClick();
         });
     });
     const handleRestoreClick = useListener((evt) => {
         run(async () => {
-            await confirm(t('role-summary-confirm-reactivate'));
-            await RoleSaver.restoreRole(database, role);
+            await confirm(t('spreadsheet-summary-confirm-reactivate'));
+            await SpreadsheetSaver.restoreSpreadsheet(database, schema, spreadsheet);
         });
     });
     const handleSaveClick = useListener((evt) => {
@@ -120,20 +112,16 @@ function RoleSummaryPageSync(props) {
                 }
                 reportProblems(problems);
 
-                const roleAfter = await RoleSaver.saveRole(database, draft.current);
-                const adding = userSelection.adding();
-                const removing = userSelection.removing();
-                await UserSaver.addRole(database, adding, roleAfter);
-                await UserSaver.removeRole(database, removing, roleAfter);
+                const spreadsheetAfter = await SpreadsheetSaver.saveSpreadsheet(database, schema, draft.current);
 
                 if (creating) {
                     setAdding(true);
                 }
                 warnDataLoss(false);
-                route.replace({ editing: undefined, roleID: roleAfter.id });
+                route.replace({ editing: undefined, spreadsheetID: spreadsheetAfter.id });
             } catch (err) {
                 if (err.statusCode === 409) {
-                    reportProblems({ name: 'validation-duplicate-role-name' });
+                    reportProblems({ name: 'validation-duplicate-spreadsheet-name' });
                 } else {
                     throw err;
                 }
@@ -148,24 +136,18 @@ function RoleSummaryPageSync(props) {
         const description = evt.target.value;
         draft.set('details.description', description);
     });
-    const handleRatingOptionClick = useListener((evt) => {
-        const key = evt.name;
-        const rating = messageRatings[key];
-        draft.set('settings.rating', rating);
-    });
-    const handleUserOptionClick = useListener((evt) => {
-        const userID = parseInt(evt.name);
-        const user = _.find(users, { id: userID });
-        userSelection.toggle(user);
+    const handleURLChange = useListener((evt) => {
+        const url = evt.target.value;
+        draft.set('url', url);
     });
 
-    warnDataLoss(draft.changed || userSelection.changed);
+    warnDataLoss(draft.changed);
 
-    const title = RoleUtils.getDisplayName(draft.current, env);
+    const title = SpreadsheetUtils.getDisplayName(draft.current, env);
     return (
-        <div className="role-summary-page">
+        <div className="spreadsheet-summary-page">
             {renderButtons()}
-            <h2>{t('role-summary-$title', title)}</h2>
+            <h2>{t('spreadsheet-summary-$title', title)}</h2>
             <UnexpectedError error={error} />
             {renderForm()}
             {renderInstructions()}
@@ -175,7 +157,7 @@ function RoleSummaryPageSync(props) {
 
     function renderButtons() {
         if (readOnly) {
-            const active = (role) ? !role.deleted && !role.disabled : true;
+            const active = (spreadsheet) ? !spreadsheet.deleted && !spreadsheet.disabled : true;
             let preselected;
             if (active) {
                 preselected = (adding) ? 'add' : 'return';
@@ -186,37 +168,37 @@ function RoleSummaryPageSync(props) {
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
                         <option name="return" onClick={handleReturnClick}>
-                            {t('role-summary-return')}
+                            {t('spreadsheet-summary-return')}
                         </option>
                         <option name="add" onClick={handleAddClick}>
-                            {t('role-summary-add')}
+                            {t('spreadsheet-summary-add')}
                         </option>
                         <option name="archive" disabled={!active} separator onClick={handleDisableClick}>
-                            {t('role-summary-disable')}
+                            {t('spreadsheet-summary-disable')}
                         </option>
                         <option name="delete" disabled={!active} onClick={handleRemoveClick}>
-                            {t('role-summary-delete')}
+                            {t('spreadsheet-summary-delete')}
                         </option>
                         <option name="reactivate" hidden={active} onClick={handleRestoreClick}>
-                            {t('role-summary-reactivate')}
+                            {t('spreadsheet-summary-reactivate')}
                         </option>
                     </ComboButton>
                     {' '}
                     <PushButton className="emphasis" onClick={handleEditClick}>
-                        {t('role-summary-edit')}
+                        {t('spreadsheet-summary-edit')}
                     </PushButton>
                 </div>
             );
         } else {
-            const changed = draft.changed || userSelection.changed;
+            const { changed } = draft;
             return (
                 <div className="buttons">
                     <PushButton onClick={handleCancelClick}>
-                        {t('role-summary-cancel')}
+                        {t('spreadsheet-summary-cancel')}
                     </PushButton>
                     {' '}
                     <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
-                        {t('role-summary-save')}
+                        {t('spreadsheet-summary-save')}
                     </PushButton>
                 </div>
             );
@@ -229,8 +211,7 @@ function RoleSummaryPageSync(props) {
                 {renderTitleInput()}
                 {renderNameInput()}
                 {renderDescriptionInput()}
-                {renderRatingSelector()}
-                {renderUserSelector()}
+                {renderURLInput()}
             </div>
         );
     }
@@ -246,7 +227,7 @@ function RoleSummaryPageSync(props) {
         };
         return (
             <MultilingualTextField {...props}>
-                {t('role-summary-title')}
+                {t('spreadsheet-summary-title')}
             </MultilingualTextField>
         );
     }
@@ -262,7 +243,7 @@ function RoleSummaryPageSync(props) {
         };
         return (
             <TextField {...props}>
-                {t('role-summary-name')}
+                {t('spreadsheet-summary-name')}
                 <InputError>{t(problems.name)}</InputError>
             </TextField>
         );
@@ -280,64 +261,30 @@ function RoleSummaryPageSync(props) {
         };
         return (
             <MultilingualTextField {...props}>
-                {t('role-summary-description')}
+                {t('spreadsheet-summary-description')}
             </MultilingualTextField>
         );
     }
 
-    function renderRatingSelector() {
-        let listProps = {
-            onOptionClick: handleRatingOptionClick,
+    function renderURLInput() {
+        const props = {
+            id: 'oauth_callback',
+            value: draft.get('url', ''),
             readOnly,
+            env,
+            onChange: handleURLChange,
         };
         return (
-            <OptionList {...listProps}>
-                <label>{t('role-summary-rating')}</label>
-                {_.map(messageRatings, renderRatingOption)}
-            </OptionList>
+            <TextField {...props}>
+                {t('spreadsheet-summary-url')}
+            </TextField>
         );
-    }
-
-    function renderRatingOption(rating, key) {
-        const ratingCurr = draft.getCurrent('settings.rating', 0);
-        const ratingPrev = draft.getOriginal('settings.rating', 0);
-        const props = {
-            name: key,
-            selected: ratingCurr === rating,
-            previous: ratingPrev === rating,
-            children: t(`role-summary-rating-${key}`),
-        };
-        return <option key={key} {...props} />;
-    }
-
-    function renderUserSelector() {
-        const usersSorted = sortUsers(users, env);
-        const listProps = {
-            readOnly,
-            onOptionClick: handleUserOptionClick,
-        };
-        return (
-            <OptionList {...listProps}>
-                <label>{t('role-summary-users')}</label>
-                {_.map(usersSorted, renderUserOption)}
-            </OptionList>
-        );
-    }
-
-    function renderUserOption(user, i) {
-        const props = {
-            name: String(user.id),
-            selected: userSelection.isKeeping(user),
-            previous: userSelection.isExisting(user),
-            children: p(user.details.name) || p.username
-        };
-        return <option key={i} {...props} />;
     }
 
     function renderInstructions() {
         const instructionProps = {
-            folder: 'role',
-            topic: 'role-summary',
+            folder: 'spreadsheet',
+            topic: 'spreadsheet-summary',
             hidden: readOnly,
             env,
         };
@@ -349,25 +296,9 @@ function RoleSummaryPageSync(props) {
     }
 }
 
-const sortUsers = memoizeWeak(null, function(users, env) {
-    const { p } = env.locale;
-    const name = (user) => {
-        return p(user.details.name) || user.username;
-    };
-    return _.sortBy(users, name);
-});
-
-const messageRatings = {
-    'very-high': 50,
-    'high': 20,
-    'normal': 0,
-    'low': -20,
-    'very-low': -50,
-};
-
-const component = Relaks.memo(RoleSummaryPage);
+const component = Relaks.memo(SpreadsheetSummaryPage);
 
 export {
     component as default,
-    component as RoleSummaryPage,
+    component as SpreadsheetSummaryPage,
 };
