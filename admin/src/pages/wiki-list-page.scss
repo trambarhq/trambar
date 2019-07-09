@@ -4,16 +4,12 @@
     }
 
     .sortable-table {
-        #title {
-            width: 12em;
-        }
-
-        #slug {
-            width: 12em;
-        }
-
-        #repository {
+        #public {
             width: 8em;
+        }
+
+        #repo {
+            width: 12em;
         }
 
         #mtime {

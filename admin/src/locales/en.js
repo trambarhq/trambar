@@ -9,10 +9,12 @@ const phrases = {
     'action-badge-add': 'add',
     'action-badge-approve': 'approve',
     'action-badge-archive': 'archive',
+    'action-badge-deselect': 'deselect',
     'action-badge-disable': 'disable',
     'action-badge-reactivate': 'reactivate',
     'action-badge-remove': 'remove',
     'action-badge-restore': 'restore',
+    'action-badge-select': 'select',
 
     'activity-chart-legend-branch': 'New branches',
     'activity-chart-legend-issue': 'Issues',
@@ -447,6 +449,7 @@ const phrases = {
     'table-heading-name': 'Name',
     'table-heading-oauth': 'OAuth authentication',
     'table-heading-projects': 'Projects',
+    'table-heading-public': 'Public',
     'table-heading-repositories': 'Repositories',
     'table-heading-roles': 'Roles',
     'table-heading-repo': 'Repository',
@@ -649,8 +652,10 @@ const phrases = {
         return `Are you sure you want to deselect ${wikis}?`
     },
     'wiki-list-edit': 'Edit wiki list',
+    'wiki-list-public-always': 'always',
+    'wiki-list-public-no': 'no',
+    'wiki-list-public-referenced': 'referenced',
     'wiki-list-save': 'Save wiki list',
-    'wiki-list-status-referenced': 'Referenced',
     'wiki-list-title': 'GitLab wikis',
 };
 

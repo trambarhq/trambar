@@ -14,12 +14,14 @@ function ActionBadge(props) {
         case 'approve':
         case 'restore':
         case 'reactivate':
+        case 'select':
             className += ' add';
             icon = 'plus';
             break;
         case 'remove':
         case 'archive':
         case 'disable':
+        case 'deselect':
             className += ' remove';
             icon = 'times';
             break;

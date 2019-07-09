@@ -2,8 +2,10 @@ import _ from 'lodash';
 import React from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
+import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
 import * as WikiFinder from 'common/objects/finders/wiki-finder.mjs';
 import * as WikiSaver from 'common/objects/savers/wiki-saver.mjs';
 
@@ -145,8 +147,8 @@ function WikiListPageSync(props) {
         return (
             <tr>
                 {renderTitleColumn()}
-                {renderSlugColumn()}
                 {renderRepoColumn()}
+                {renderPublicColumn()}
                 {renderModifiedTimeColumn()}
             </tr>
         );
@@ -154,17 +156,13 @@ function WikiListPageSync(props) {
 
     function renderRows() {
         const visible = (selection.shown) ? wikis : publicWikis;
-        const sorted = sortWikis(wikis, env, sort);
+        const sorted = sortWikis(visible, env, sort);
         return _.map(sorted, renderRow);
     }
 
     function renderRow(wiki) {
         const classNames = [];
-        let title, onClick;
-        if (wiki.public && !wiki.chosen) {
-            classNames.push('referenced');
-            title = t('wiki-list-status-referenced');
-        }
+        let onClick;
         if (selection.shown) {
             if (selection.isExisting(wiki) || wiki.public) {
                 classNames.push('fixed');
@@ -178,13 +176,12 @@ function WikiListPageSync(props) {
             className: classNames.join(' '),
             'data-id': wiki.id,
             onClick,
-            title,
         };
         return (
             <tr key={wiki.id} {...props}>
                 {renderTitleColumn(wiki)}
-                {renderSlugColumn(wiki)}
                 {renderRepoColumn(wiki)}
+                {renderPublicColumn(wiki)}
                 {renderModifiedTimeColumn(wiki)}
             </tr>
         );
@@ -215,25 +212,48 @@ function WikiListPageSync(props) {
         }
     }
 
-    function renderSlugColumn(wiki) {
-        if (!env.isWiderThan('narrow')) {
-            return null;
-        }
-        if (!wiki) {
-            return <TH id="url">{t('table-heading-slug')}</TH>;
-        } else {
-            return <td>{wiki.url}</td>;
-        }
-    }
-
     function renderRepoColumn(wiki) {
         if (!env.isWiderThan('narrow')) {
             return null;
         }
         if (!wiki) {
-            return <TH id="url">{t('table-heading-repo')}</TH>;
+            return <TH id="repo">{t('table-heading-repo')}</TH>;
         } else {
-            return <td>{wiki.repo_id}</td>;
+            const repo = findRepo(repos, wiki);
+            let contents;
+            if (repo) {
+                const title = RepoUtils.getDisplayName(repo, env);
+                let url;
+                if (!selection.shown) {
+                    url = route.find('repo-summary-page', {
+                        projectID: project.id,
+                        repoID: repo.id
+                    });
+                }
+                contents = <a href={url}>{title}</a>;
+            }
+            return <td>{contents}</td>;
+        }
+    }
+
+    function renderPublicColumn(wiki) {
+        if (!env.isWiderThan('narrow')) {
+            return null;
+        }
+        if (!wiki) {
+            return <TH id="public">{t('table-heading-public')}</TH>;
+        } else {
+            let state;
+            if (wiki.public) {
+                if (wiki.chosen) {
+                    state = 'always';
+                } else {
+                    state = 'referenced';
+                }
+            } else {
+                state = 'no';
+            }
+            return <td>{t(`wiki-list-public-${state}`)}</td>;
         }
     }
 
@@ -258,7 +278,22 @@ const sortWikis = memoizeWeak(null, function(wikis, env, sort) {
     const columns = _.map(sort.columns, (column) => {
         switch (column) {
             case 'title':
+                return (wiki) => {
+                    return _.toLower(wiki.details.title);
+                };
                 return 'details.title';
+            case 'public':
+                return (wiki) => {
+                    if (wiki.public) {
+                        if (wiki.chosen) {
+                            return 0;
+                        } else {
+                            return 1;
+                        }
+                    } else {
+                        return 2;
+                    }
+                };
             default:
                 return column;
         }
@@ -271,6 +306,13 @@ const filterWikis = memoizeWeak(null, function(wikis, chosen) {
         if (wiki.public) {
             return wiki.chosen || !chosen;
         }
+    });
+});
+
+const findRepo = memoizeWeak(null, function(repos, wiki) {
+    return _.find(repos, (repo) => {
+        let link = ExternalDataUtils.findLinkByRelative(repo, wiki, 'project');
+        return !!link;
     });
 });
 

@@ -230,11 +230,14 @@ function RepoListPageSync(props) {
             const server = findServer(servers, repo);
             let contents;
             if (server) {
-                const title = p(server.details.title) || t(`server-type-${server.type}`);
-                const url = route.find('server-summary-page', {
-                    serverID: server.id
-                });
-                contents =(
+                const title = ServerUtils.getDisplayName(server, env);
+                let url;
+                if (!selection.shown) {
+                    url = route.find('server-summary-page', {
+                        serverID: server.id
+                    });
+                }
+                contents = (
                     <a href={url}>
                         <i className={`fa fa-${server.type} fa-fw`} />
                         {' '}
