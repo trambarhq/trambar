@@ -557,6 +557,8 @@ const phrases = {
     'user-summary-phone': 'Telefonní číslo',
     'user-summary-profile-image': 'Profilový obrázek',
     'user-summary-reactivate': 'Reaktivovat uživatele',
+    'user-summary-remove-membership': 'Odebrat uživatele z projektu',
+    'user-summary-restore-membership': 'Přidat uživatele do projektu',
     'user-summary-return': 'Návrat na seznam uživatelů',
     'user-summary-role-none': 'Žádné',
     'user-summary-roles': 'Role',

@@ -554,6 +554,8 @@ const phrases = {
     'user-summary-phone': 'Puhelinnumero',
     'user-summary-profile-image': 'Profiilikuva',
     'user-summary-reactivate': 'Reaktivoi käyttäjätili',
+    'user-summary-remove-membership': 'Poista käyttäjä projektista',
+    'user-summary-restore-membership': 'Lisää käyttäjä projektiin',
     'user-summary-return': 'Palaa käyttäjäluetteloon',
     'user-summary-role-none': 'Ei mitään',
     'user-summary-roles': 'Roolit',

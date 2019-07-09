@@ -557,6 +557,8 @@ const phrases = {
     'user-summary-phone': 'Numer telefonu',
     'user-summary-profile-image': 'Zdjęcie profilowe',
     'user-summary-reactivate': 'Reaktywuj konto użytkownika',
+    'user-summary-remove-membership': 'Usuń użytkownika z projektu',
+    'user-summary-restore-membership': 'Dodaj użytkownika do projektu',
     'user-summary-return': 'Powrót do listy użytkowników',
     'user-summary-role-none': 'Żadna',
     'user-summary-roles': 'Role',

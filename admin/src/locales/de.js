@@ -568,6 +568,8 @@ const phrases = {
     'user-summary-phone': 'Telefonnummer',
     'user-summary-profile-image': 'Profilbild',
     'user-summary-reactivate': 'Benutzer reaktivieren',
+    'user-summary-remove-membership': 'Benutzer aus Projekt entfernen',
+    'user-summary-restore-membership': 'Benutzer zum Projekt hinzufügen',
     'user-summary-return': 'Zurück zur Benutzerliste',
     'user-summary-role-none': 'Keiner',
     'user-summary-roles': 'Rollen',

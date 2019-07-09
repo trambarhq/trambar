@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectSaver from 'common/objects/savers/project-saver.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
@@ -91,9 +92,9 @@ function UserSummaryPageSync(props) {
     });
     const handleReturnClick = useListener(() => {
         if (projectID) {
-            route.replace('member-list-page', { projectID });
+            route.push('member-list-page', { projectID });
         } else {
-            route.replace('user-list-page');
+            route.push('user-list-page');
         }
     });
     const handleDisableClick = useListener(async (evt) => {
@@ -114,6 +115,17 @@ function UserSummaryPageSync(props) {
         run(async () => {
             await confirm(t('user-summary-confirm-reactivate'));
             await UserSaver.restoreUser(database, user);
+        });
+    });
+    const handleRemoveMembershipClick = useListener(async (evt) => {
+        run(async () => {
+            await ProjectSaver.removeUsers(database, project, [ user ]);
+            handleReturnClick();
+        });
+    });
+    const handleRestoreMembershipClick = useListener(async (evt) => {
+        run(async () => {
+            await ProjectSaver.addUsers(database, project, [ user ]);
         });
     });
     const handleSaveClick = useListener(async (evt) => {
@@ -230,9 +242,13 @@ function UserSummaryPageSync(props) {
     function renderButtons() {
         if (readOnly) {
             const active = (user) ? !user.deleted && !user.disabled : true;
+            const membership = (project) ? _.includes(project.user_ids, user.id) : undefined;
             let preselected;
             if (active) {
                 preselected = (adding) ? 'add' : 'return';
+                if (membership === false) {
+                    preselected = 'restore-membership';
+                }
             } else {
                 preselected = 'reactivate';
             }
@@ -253,6 +269,12 @@ function UserSummaryPageSync(props) {
                         </option>
                         <option name="reactivate" hidden={active} onClick={handleRestoreClick}>
                             {t('user-summary-reactivate')}
+                        </option>
+                        <option name="remove-membership" hidden={membership !== true} separator onClick={handleRemoveMembershipClick}>
+                            {t('user-summary-remove-membership')}
+                        </option>
+                        <option name="restore-membership" hidden={membership !== false} separator onClick={handleRestoreMembershipClick}>
+                            {t('user-summary-restore-membership')}
                         </option>
                     </ComboButton>
                     {' '}

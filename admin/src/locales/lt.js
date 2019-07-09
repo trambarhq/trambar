@@ -544,6 +544,8 @@ const phrases = {
     'user-summary-phone': 'Telefono numeris',
     'user-summary-profile-image': 'Profilio nuotrauka',
     'user-summary-reactivate': 'Reaktyvuoti vartotojo paskyrą',
+    'user-summary-remove-membership': 'Pašalinti vartotoją iš projekto',
+    'user-summary-restore-membership': 'Pridėti vartotoją prie projekto',
     'user-summary-return': 'Grįžti į vartotojų sąrašą',
     'user-summary-role-none': 'Jokio',
     'user-summary-roles': 'Vaidmenys',
