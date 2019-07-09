@@ -1,4 +1,4 @@
-const table = 'role';
+const table = 'spreadsheet';
 
 async function saveSpreadsheets(db, schema, spreadsheets) {
     const spreadsheetsAfter = await db.save({ schema,  table }, spreadsheets);
@@ -17,33 +17,33 @@ async function disableSpreadsheets(db, schema, spreadsheets) {
     return saveSpreadsheets(db, schema, changes);
 }
 
-async function disableSpreadsheet(db, schema, role) {
-    const [ roleAfter ] = await disableSpreadsheets(db, schema, [ role ]);
-    return roleAfter;
+async function disableSpreadsheet(db, schema, spreadsheet) {
+    const [ spreadsheetAfter ] = await disableSpreadsheets(db, schema, [ spreadsheet ]);
+    return spreadsheetAfter;
 }
 
-async function removeSpreadsheets(db, schema, role) {
-    const changes = _.map(roles, (role) => {
-        return { id: role.id, deleted: true };
+async function removeSpreadsheets(db, schema, spreadsheet) {
+    const changes = _.map(spreadsheets, (spreadsheet) => {
+        return { id: spreadsheet.id, deleted: true };
     });
     return saveSpreadsheets(db, schema, changes);
 }
 
-async function removeSpreadsheet(db, schema, role) {
-    const [ roleAfter ] = await removeSpreadsheets(db, schema, [ role ]);
-    return roleAfter;
+async function removeSpreadsheet(db, schema, spreadsheet) {
+    const [ spreadsheetAfter ] = await removeSpreadsheets(db, schema, [ spreadsheet ]);
+    return spreadsheetAfter;
 }
 
-async function restoreSpreadsheets(db, schema, roles) {
-    const changes = _.map(roles, (role) => {
-        return { id: role.id, disabled: false, deleted: false };
+async function restoreSpreadsheets(db, schema, spreadsheets) {
+    const changes = _.map(spreadsheets, (spreadsheet) => {
+        return { id: spreadsheet.id, disabled: false, deleted: false };
     });
     return saveSpreadsheets(db, schema, changes);
 }
 
-async function restoreSpreadsheet(db, schema, role) {
-    const [ roleAfter ] = await restoreSpreadsheets(db, schema, [ role ]);
-    return roleAfter;
+async function restoreSpreadsheet(db, schema, spreadsheet) {
+    const [ spreadsheetAfter ] = await restoreSpreadsheets(db, schema, [ spreadsheet ]);
+    return spreadsheetAfter;
 }
 
 export {

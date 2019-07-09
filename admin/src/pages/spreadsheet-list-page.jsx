@@ -40,19 +40,19 @@ async function SpreadsheetListPage(props) {
     render();
 
     function render() {
-        const sprops = { project, spreadsheets };
+        const sprops = { schema, project, spreadsheets };
         show(<SpreadsheetListPageSync {...sprops} {...props} />);
     }
 }
 
 function SpreadsheetListPageSync(props) {
-    const { project, spreadsheets } = props;
+    const { schema, project, spreadsheets } = props;
     const { database, route, env, editing } = props;
     const { t, p, f } = env.locale;
     const readOnly = !editing;
     const activeSpreadsheets = filterSpreadsheets(spreadsheets);
     const selection = useSelectionBuffer({
-        original: spreadsheets,
+        original: activeSpreadsheets,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
@@ -69,7 +69,7 @@ function SpreadsheetListPageSync(props) {
     });
     const handleAddClick = useListener((evt) => {
         route.push('spreadsheet-summary-page', {
-            projectID: project.id, 
+            projectID: project.id,
             spreadsheetID: 'new'
         });
     });
@@ -83,8 +83,8 @@ function SpreadsheetListPageSync(props) {
             if (adding.length > 0) {
                 await confirm(t('spreadsheet-list-confirm-reactivate-$count', adding.length));
             }
-            await SpreadsheetSaver.disableSpreadsheets(database, removing);
-            await SpreadsheetSaver.restoreSpreadsheets(database, adding);
+            await SpreadsheetSaver.disableSpreadsheets(database, schema, removing);
+            await SpreadsheetSaver.restoreSpreadsheets(database, schema, adding);
             warnDataLoss(false);
             handleCancelClick();
         });

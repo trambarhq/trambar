@@ -449,8 +449,10 @@ const phrases = {
     'table-heading-projects': 'Projects',
     'table-heading-repositories': 'Repositories',
     'table-heading-roles': 'Roles',
+    'table-heading-repo': 'Repository',
     'table-heading-server': 'Server',
     'table-heading-sheets': 'Sheets',
+    'table-heading-slug': 'Slug',
     'table-heading-this-month': 'This month',
     'table-heading-title': 'Name',
     'table-heading-to-date': 'To date',
@@ -634,6 +636,20 @@ const phrases = {
     'validation-required': 'Required',
 
     'welcome': 'Welcome!',
+
+    'wiki-list-cancel': 'Cancel',
+    'wiki-list-confirm-select-$count': (count) => {
+        let wikis = cardinal(count, 'this wiki', 'these 2 wikis');
+        return `Are you sure you want to make ${wikis} public?`
+    },
+    'wiki-list-confirm-deselect-$count': (count) => {
+        let spreadsheets = cardinal(count, 'this wiki', 'these 2 wikis');
+        return `Are you sure you want to deselect ${wikis}?`
+    },
+    'wiki-list-edit': 'Edit wiki list',
+    'wiki-list-save': 'Save wiki list',
+    'wiki-list-status-referenced': 'Referenced',
+    'wiki-list-title': 'GitLab wikis',
 };
 
 export {

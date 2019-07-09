@@ -96,6 +96,14 @@ const routes = {
             match.params.module = await import('./pages/wiki-list-page.jsx' /* webpackChunkName: "page-wiki-list" */);
         }
     },
+    'wiki-summary-page': {
+        path: '/projects/${projectID}/website/wikis/${wikiID}/',
+        params: { projectID: Number, wikiID: Number },
+        load: async (match) => {
+            match.params.key = match.name;
+            match.params.module = await import('./pages/wiki-summary-page.jsx' /* webpackChunkName: "page-wiki-summary" */);
+        }
+    },
     'spreadsheet-list-page': {
         path: '/projects/${projectID}/website/spreadsheets/',
         query: {

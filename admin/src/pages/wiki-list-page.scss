@@ -1,0 +1,24 @@
+.wiki-list-page {
+    .buttons {
+        float: right;
+    }
+
+    .sortable-table {
+        #title {
+            width: 12em;
+        }
+
+        #slug {
+            width: 12em;
+        }
+
+        #repository {
+            width: 8em;
+        }
+
+        #mtime {
+            width: 12em;
+        }
+
+    }
+}

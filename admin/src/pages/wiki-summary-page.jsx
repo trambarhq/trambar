@@ -2,9 +2,8 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
-import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.mjs';
-import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
+import * as WikiFinder from 'common/objects/finders/wiki-finder.mjs';
+import * as WikiSaver from 'common/objects/savers/wiki-saver.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 
 // widgets
@@ -28,11 +27,11 @@ import {
     useDataLossWarning,
 } from '../hooks.mjs';
 
-import './spreadsheet-summary-page.scss';
+import './wiki-summary-page.scss';
 
-async function SpreadsheetSummaryPage(props) {
-    const { database, projectID, spreadsheetID } = props;
-    const creating = (spreadsheetID === 'new');
+async function WikiSummaryPage(props) {
+    const { database, projectID, wikiID } = props;
+    const creating = (wikiID === 'new');
     const [ show ] = useProgress();
 
     render();
@@ -40,24 +39,25 @@ async function SpreadsheetSummaryPage(props) {
     const system = await SystemFinder.findSystem(database);
     const project = await ProjectFinder.findProject(database, projectID);
     const schema = project.name;
-    const spreadsheet = !creating ? await SpreadsheetFinder.findSpreadsheet(database, schema, spreadsheetID) : null;
+    const wiki = !creating ? await WikiFinder.findWiki(database, schema, wikiID) : null;
     render();
 
     function render() {
-        const sprops = { schema, system, project, spreadsheet, creating };
-        show(<SpreadsheetSummaryPageSync key={spreadsheetID} {...sprops} {...props} />);
+        const sprops = { system, project, wiki, creating };
+        show(<WikiSummaryPageSync key={wikiID} {...sprops} {...props} />);
     }
 }
 
-function SpreadsheetSummaryPageSync(props) {
-    const { schema, system, project, spreadsheet, users, creating } = props;
+function WikiSummaryPageSync(props) {
+    const { system, project, wiki, users, creating } = props;
     const { database, route, env, editing } = props;
     const { t, p } = env.locale;
+    const schema = project.name;
     const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !editing && !creating;
     const [ adding, setAdding ] = useState(false);
     const draft = useDraftBuffer({
-        original: spreadsheet || {},
+        original: wiki || {},
         reset: readOnly,
     });
     const [ problems, reportProblems ] = useValidation();
@@ -76,29 +76,29 @@ function SpreadsheetSummaryPageSync(props) {
         }
     });
     const handleAddClick = useListener((evt) => {
-        route.push({ spreadsheetID: 'new' });
+        route.push({ wikiID: 'new' });
     });
     const handleReturnClick = useListener((evt) => {
-        route.push('spreadsheet-list-page', { projectID: project.id });
+        route.push('wiki-list-page', { projectID: project.id });
     });
     const handleDisableClick = useListener((evt) => {
         run(async () => {
-            await confirm(t('spreadsheet-summary-confirm-disable'));
-            await SpreadsheetSaver.disableSpreadsheet(database, schema, spreadsheet);
+            await confirm(t('wiki-summary-confirm-disable'));
+            await WikiSaver.disableWiki(database, schema, wiki);
             handleReturnClick();
         });
     });
     const handleRemoveClick = useListener((evt) => {
         run(async () => {
-            await confirm(t('spreadsheet-summary-confirm-delete'));
-            await SpreadsheetSaver.removeSpreadsheet(database, schema, spreadsheet);
+            await confirm(t('wiki-summary-confirm-delete'));
+            await WikiSaver.removeWiki(database, schema, wiki);
             handleReturnClick();
         });
     });
     const handleRestoreClick = useListener((evt) => {
         run(async () => {
-            await confirm(t('spreadsheet-summary-confirm-reactivate'));
-            await SpreadsheetSaver.restoreSpreadsheet(database, schema, spreadsheet);
+            await confirm(t('wiki-summary-confirm-reactivate'));
+            await WikiSaver.restoreWiki(database, schema, wiki);
         });
     });
     const handleSaveClick = useListener((evt) => {
@@ -111,16 +111,16 @@ function SpreadsheetSummaryPageSync(props) {
                 }
                 reportProblems(problems);
 
-                const spreadsheetAfter = await SpreadsheetSaver.saveSpreadsheet(database, schema, draft.current);
+                const wikiAfter = await WikiSaver.saveWiki(database, schema, draft.current);
 
                 if (creating) {
                     setAdding(true);
                 }
                 warnDataLoss(false);
-                route.replace({ editing: undefined, spreadsheetID: spreadsheetAfter.id });
+                route.replace({ editing: undefined, wikiID: wikiAfter.id });
             } catch (err) {
                 if (err.statusCode === 409) {
-                    reportProblems({ name: 'validation-duplicate-spreadsheet-name' });
+                    reportProblems({ name: 'validation-duplicate-wiki-name' });
                 } else {
                     throw err;
                 }
@@ -142,11 +142,11 @@ function SpreadsheetSummaryPageSync(props) {
 
     warnDataLoss(draft.changed);
 
-    const title = SpreadsheetUtils.getDisplayName(draft.current, env);
+    const title = draft.get('details.title');
     return (
-        <div className="spreadsheet-summary-page">
+        <div className="wiki-summary-page">
             {renderButtons()}
-            <h2>{t('spreadsheet-summary-$title', title)}</h2>
+            <h2>{t('wiki-summary-$title', title)}</h2>
             <UnexpectedError error={error} />
             {renderForm()}
             {renderInstructions()}
@@ -156,7 +156,7 @@ function SpreadsheetSummaryPageSync(props) {
 
     function renderButtons() {
         if (readOnly) {
-            const active = (spreadsheet) ? !spreadsheet.deleted && !spreadsheet.disabled : true;
+            const active = (wiki) ? !wiki.deleted && !wiki.disabled : true;
             let preselected;
             if (active) {
                 preselected = (adding) ? 'add' : 'return';
@@ -167,24 +167,24 @@ function SpreadsheetSummaryPageSync(props) {
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
                         <option name="return" onClick={handleReturnClick}>
-                            {t('spreadsheet-summary-return')}
+                            {t('wiki-summary-return')}
                         </option>
                         <option name="add" onClick={handleAddClick}>
-                            {t('spreadsheet-summary-add')}
+                            {t('wiki-summary-add')}
                         </option>
                         <option name="archive" disabled={!active} separator onClick={handleDisableClick}>
-                            {t('spreadsheet-summary-disable')}
+                            {t('wiki-summary-disable')}
                         </option>
                         <option name="delete" disabled={!active} onClick={handleRemoveClick}>
-                            {t('spreadsheet-summary-delete')}
+                            {t('wiki-summary-delete')}
                         </option>
                         <option name="reactivate" hidden={active} onClick={handleRestoreClick}>
-                            {t('spreadsheet-summary-reactivate')}
+                            {t('wiki-summary-reactivate')}
                         </option>
                     </ComboButton>
                     {' '}
                     <PushButton className="emphasis" onClick={handleEditClick}>
-                        {t('spreadsheet-summary-edit')}
+                        {t('wiki-summary-edit')}
                     </PushButton>
                 </div>
             );
@@ -193,11 +193,11 @@ function SpreadsheetSummaryPageSync(props) {
             return (
                 <div className="buttons">
                     <PushButton onClick={handleCancelClick}>
-                        {t('spreadsheet-summary-cancel')}
+                        {t('wiki-summary-cancel')}
                     </PushButton>
                     {' '}
                     <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
-                        {t('spreadsheet-summary-save')}
+                        {t('wiki-summary-save')}
                     </PushButton>
                 </div>
             );
@@ -226,7 +226,7 @@ function SpreadsheetSummaryPageSync(props) {
         };
         return (
             <MultilingualTextField {...props}>
-                {t('spreadsheet-summary-title')}
+                {t('wiki-summary-title')}
             </MultilingualTextField>
         );
     }
@@ -242,7 +242,7 @@ function SpreadsheetSummaryPageSync(props) {
         };
         return (
             <TextField {...props}>
-                {t('spreadsheet-summary-name')}
+                {t('wiki-summary-name')}
                 <InputError>{t(problems.name)}</InputError>
             </TextField>
         );
@@ -260,7 +260,7 @@ function SpreadsheetSummaryPageSync(props) {
         };
         return (
             <MultilingualTextField {...props}>
-                {t('spreadsheet-summary-description')}
+                {t('wiki-summary-description')}
             </MultilingualTextField>
         );
     }
@@ -275,15 +275,15 @@ function SpreadsheetSummaryPageSync(props) {
         };
         return (
             <TextField {...props}>
-                {t('spreadsheet-summary-url')}
+                {t('wiki-summary-url')}
             </TextField>
         );
     }
 
     function renderInstructions() {
         const instructionProps = {
-            folder: 'spreadsheet',
-            topic: 'spreadsheet-summary',
+            folder: 'wiki',
+            topic: 'wiki-summary',
             hidden: readOnly,
             env,
         };
@@ -295,9 +295,9 @@ function SpreadsheetSummaryPageSync(props) {
     }
 }
 
-const component = Relaks.memo(SpreadsheetSummaryPage);
+const component = Relaks.memo(WikiSummaryPage);
 
 export {
     component as default,
-    component as SpreadsheetSummaryPage,
+    component as WikiSummaryPage,
 };
