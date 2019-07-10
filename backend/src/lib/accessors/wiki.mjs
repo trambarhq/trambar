@@ -118,9 +118,33 @@ class Wiki extends ExternalData {
      * @return {Boolean}
      */
     isRelevantTo(event, user, subscription) {
-        // objects aren't currently used on client-side
-        return false;
+        return (subscription.area === 'admin');
     }
+
+    /**
+     * Export database row to client-side code, omitting sensitive or
+     * unnecessary information
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     * @param  {Object} options
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async export(db, schema, rows, credentials, options) {
+        const objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            const row = rows[index];
+            object.language_codes = row.language_codes;
+            object.slug = row.slug;
+            object.public = row.public;
+            object.chosen = row.chosen;
+        }
+        return objects;
+    }
+
 }
 
 const instance = new Wiki;

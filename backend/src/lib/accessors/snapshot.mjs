@@ -114,8 +114,32 @@ class Snapshot extends Data {
      * @return {Boolean}
      */
     isRelevantTo(event, user, subscription) {
-        // objects aren't currently used on client-side
-        return false;
+        return (subscription.area === 'admin');
+    }
+
+    /**
+     * Export database row to client-side code, omitting sensitive or
+     * unnecessary information
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     * @param  {Object} options
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async export(db, schema, rows, credentials, options) {
+        const objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            const row = rows[index];
+            object.chosen = row.chosen;
+            object.repo_id = row.repo_id;
+            object.branch_name = row.branch_name;
+            object.commit_id = row.commit_id;
+            object.head = row.head;
+        }
+        return objects;
     }
 }
 

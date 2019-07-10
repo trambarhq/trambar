@@ -9,17 +9,21 @@ class Spreadsheet extends Data {
         this.table = 'spreadsheet';
         this.columns = {
             ...this.columns,
+            disabled: Boolean,
             name: String,
             url: String,
             etag: String,
         };
         this.criteria = {
             ...this.criteria,
+            disabled: Boolean,
             name: String,
+            url: String,
             etag: String,
         };
         this.eventColumns = {
             ...this.eventColumns,
+            disabled: Boolean,
             name: String,
         };
         this.version = 3;
@@ -117,6 +121,7 @@ class Spreadsheet extends Data {
         const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
             const row = rows[index];
+            object.disabled = row.disabled;
             object.name = row.name;
             object.etag = row.etag;
             object.url = row.url;
