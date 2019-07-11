@@ -182,6 +182,7 @@ class Project extends Data {
             if (row.archived) {
                 object.archived = row.archived;
             }
+            object.template_repo_id = row.template_repo_id;
         }
         return objects;
     }

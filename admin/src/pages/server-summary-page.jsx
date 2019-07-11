@@ -367,8 +367,8 @@ function ServerSummaryPageSync(props) {
     }
 
     function renderServerType(type, i) {
-        const typeCurr = draft.getCurrent('type', 'current');
-        const typePrev = draft.getOriginal('type', 'original');
+        const typeCurr = draft.getCurrent('type');
+        const typePrev = draft.getOriginal('type');
         const props = {
             name: type,
             selected: typeCurr === type,

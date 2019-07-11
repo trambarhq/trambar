@@ -640,6 +640,15 @@ const phrases = {
     'validation-password-for-admin-only': 'Only administrators can sign in using password',
     'validation-required': 'Required',
 
+    'website-summary-cancel': 'Cancel',
+    'website-summary-domain-names': 'Domain names',
+    'website-summary-edit': 'Edit website',
+    'website-summary-save': 'Save website',
+    'website-summary-template': 'Template',
+    'website-summary-template-disabled': 'Disabled',
+    'website-summary-template-generic': 'Generic template',
+    'website-summary-title': 'Website',
+
     'welcome': 'Welcome!',
 
     'wiki-list-cancel': 'Cancel',

@@ -97,9 +97,29 @@ async function findProjectRepos(db, projects) {
     }
 }
 
+/**
+ * Find repos that can server as website template
+ *
+ * @param  {Database} db
+ * @param  {Project|Array<Project>} id
+ *
+ * @return {Promise<Array<Repo>>}
+ */
+async function findTemplates(db) {
+    return db.find({
+        schema,
+        table,
+        criteria: {
+            template: true,
+            deleted: false
+        },
+    });
+}
+
 export {
     findRepo,
     findAllRepos,
     findExistingRepos,
     findProjectRepos,
+    findTemplates,
 };
