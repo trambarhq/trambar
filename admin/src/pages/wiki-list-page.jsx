@@ -38,11 +38,11 @@ async function WikiListPage(props) {
     const schema = project.name;
     const wikis = await WikiFinder.findAllWikis(database, schema);
     render();
-    const repos = await RepoFinder.findProjectRepos(database, [ project ]);
+    const repos = await RepoFinder.findProjectRepos(database, project);
     render();
 
     function render() {
-        const sprops = { project, wikis, repos };
+        const sprops = { schema, project, wikis, repos };
         show(<WikiListPageSync {...sprops} {...props} />);
     }
 }
@@ -74,14 +74,14 @@ function WikiListPageSync(props) {
         run(async () => {
             const removing = selection.removing();
             if (removing.length > 0) {
-                await confirm(t('wiki-list-confirm-disable-$count', removing.length));
+                await confirm(t('wiki-list-confirm-deselect-$count', removing.length));
             }
             const adding = selection.adding();
             if (adding.length > 0) {
-                await confirm(t('wiki-list-confirm-reactivate-$count', adding.length));
+                await confirm(t('wiki-list-confirm-select-$count', adding.length));
             }
-            await WikiSaver.disableWikis(database, schema, removing);
-            await WikiSaver.restoreWikis(database, schema, adding);
+            await WikiSaver.selectWikis(database, schema, adding);
+            await WikiSaver.deselectWikis(database, schema, removing);
             warnDataLoss(false);
             handleCancelClick();
         });

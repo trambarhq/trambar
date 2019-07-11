@@ -144,7 +144,6 @@ class Wiki extends ExternalData {
         }
         return objects;
     }
-
 }
 
 const instance = new Wiki;

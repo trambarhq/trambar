@@ -648,7 +648,7 @@ const phrases = {
         return `Are you sure you want to make ${wikis} public?`
     },
     'wiki-list-confirm-deselect-$count': (count) => {
-        let spreadsheets = cardinal(count, 'this wiki', 'these 2 wikis');
+        let wikis = cardinal(count, 'this wiki', 'these 2 wikis');
         return `Are you sure you want to deselect ${wikis}?`
     },
     'wiki-list-edit': 'Edit wiki list',
@@ -657,6 +657,26 @@ const phrases = {
     'wiki-list-public-referenced': 'referenced',
     'wiki-list-save': 'Save wiki list',
     'wiki-list-title': 'GitLab wikis',
+
+    'wiki-summary-$title': (title) => {
+        let text = 'GitLab wiki';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'wiki-summary-cancel': 'Cancel',
+    'wiki-summary-confirm-select': 'Are you sure you want to make this wiki public?',
+    'wiki-summary-confirm-deselect': 'Are you sure you want to deselect this wiki?',
+    'wiki-summary-edit': 'Edit wiki',
+    'wiki-summary-public-always': 'Always',
+    'wiki-summary-public': 'Public',
+    'wiki-summary-public-no': 'No',
+    'wiki-summary-public-referenced': 'When referenced by another public page',
+    'wiki-summary-repo': 'Repository identifier',
+    'wiki-summary-return': 'Return to wiki list',
+    'wiki-summary-slug': 'Slug',
+    'wiki-summary-title': 'Title',
 };
 
 export {

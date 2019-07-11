@@ -41,7 +41,7 @@ async function RepoListPage(props) {
     const project = await ProjectFinder.findProject(database, projectID);
     const repos = await RepoFinder.findExistingRepos(database);
     render();
-    const servers = await ServerFinder.findServersOfRepos(database, repos);
+    const servers = await ServerFinder.findRepoServers(database, repos);
     render();
     const linkedRepos = findRepos(repos, project);
     const statistics = await StatisticsFinder.findDailyActivitiesOfRepos(database, project, linkedRepos);

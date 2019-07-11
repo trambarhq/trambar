@@ -12,19 +12,19 @@ async function saveWiki(db, schema, wiki) {
 
 async function selectWikis(db, schema, wikis) {
     const changes = _.map(wikis, (wiki) => {
-        return { id: wiki.id, chosen: true };
+        return { id: wiki.id, chosen: true, public: true };
     });
     return saveWikis(db, schema, changes);
 }
 
 async function selectWiki(db, schema, wiki) {
-    const [ wikiAfter ] = await chooseWikis(db, schema, [ wiki ]);
+    const [ wikiAfter ] = await selectWikis(db, schema, [ wiki ]);
     return wikiAfter;
 }
 
 async function deselectWikis(db, schema, wikis) {
     const changes = _.map(wikis, (wiki) => {
-        return { id: wiki.id, chosen: false };
+        return { id: wiki.id, chosen: false, public: false };
     });
     return saveWikis(db, schema, changes);
 }

@@ -11,7 +11,7 @@ const emptyArray = [];
  * @return {Promise<Wiki>}
  */
 function findWiki(db, schema, id) {
-    return db.find({
+    return db.findOne({
         schema,
         table,
         criteria: { deleted: false, id },

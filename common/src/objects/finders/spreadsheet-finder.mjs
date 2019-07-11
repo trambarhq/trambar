@@ -11,7 +11,7 @@ const emptyArray = [];
  * @return {Promise<Spreadsheet>}
  */
 function findSpreadsheet(db, schema, id) {
-    return db.find({
+    return db.findOne({
         schema,
         table,
         criteria: { id },
