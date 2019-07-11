@@ -3,6 +3,7 @@ import Database from '../database.mjs';
 import { BasicTask, PeriodicTask } from '../task-queue.mjs';
 
 import * as CacheManager from './cache-manager.mjs';
+import * as ExcelRetriever from './excel-retriever.mjs';
 
 // accessors
 import Project from '../accessors/project.mjs';
@@ -10,6 +11,19 @@ import Snapshot from '../accessors/snapshot.mjs';
 
 const MIN = 60 * 1000;
 const HOUR = 60 * MIN;
+
+class TaskImportSpreadsheet extends BasicTask {
+    constructor(schema, name) {
+        super();
+        this.schema = schema;
+        this.name = name;
+    }
+
+    async run() {
+        const { schema, name } = this;
+        await ExcelRetriever.retrieve(schema, name, false);
+    }
+}
 
 class TaskPurgeSnapshotHead extends BasicTask {
     constructor(snapshotID) {
@@ -98,6 +112,8 @@ function getSnapshotProjects(db, snapshot) {
 }
 
 export {
+    TaskImportSpreadsheet,
+
     TaskPurgeSnapshotHead,
     TaskPurgeProject,
     TaskPurgeSpreadsheet,

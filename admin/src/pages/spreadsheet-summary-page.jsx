@@ -5,7 +5,6 @@ import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
 import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.mjs';
 import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
-import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -22,7 +21,6 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 import {
     useDraftBuffer,
     useSelectionBuffer,
-    useAutogenID,
     useValidation,
     useConfirmation,
     useDataLossWarning,
@@ -37,23 +35,21 @@ async function SpreadsheetSummaryPage(props) {
 
     render();
     const currentUserID = await database.start();
-    const system = await SystemFinder.findSystem(database);
     const project = await ProjectFinder.findProject(database, projectID);
     const schema = project.name;
     const spreadsheet = !creating ? await SpreadsheetFinder.findSpreadsheet(database, schema, spreadsheetID) : null;
     render();
 
     function render() {
-        const sprops = { schema, system, project, spreadsheet, creating };
+        const sprops = { schema, project, spreadsheet, creating };
         show(<SpreadsheetSummaryPageSync key={spreadsheetID} {...sprops} {...props} />);
     }
 }
 
 function SpreadsheetSummaryPageSync(props) {
-    const { schema, system, project, spreadsheet, users, creating } = props;
+    const { schema, project, spreadsheet, users, creating } = props;
     const { database, route, env, editing } = props;
     const { t, p } = env.locale;
-    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !editing && !creating;
     const [ adding, setAdding ] = useState(false);
     const draft = useDraftBuffer({
@@ -105,10 +101,6 @@ function SpreadsheetSummaryPageSync(props) {
         run(async () => {
             try {
                 const problems = {};
-                const name = draft.get('name');
-                if (!name) {
-                    problems.name = 'validation-required';
-                }
                 reportProblems(problems);
 
                 const spreadsheetAfter = await SpreadsheetSaver.saveSpreadsheet(database, schema, draft.current);
@@ -127,13 +119,9 @@ function SpreadsheetSummaryPageSync(props) {
             }
         });
     });
-    const [ handleTitleChange, handleNameChange ] = useAutogenID(draft, {
-        titleKey: 'details.title',
-        nameKey: 'name',
-    });
-    const handleDescriptionChange = useListener((evt) => {
-        const description = evt.target.value;
-        draft.set('details.description', description);
+    const handleNameChange = useListener((evt) => {
+        const name = _.toLower(evt.target.value).replace(/[^\w\-]+/g, '');
+        draft.set('name', name);
     });
     const handleURLChange = useListener((evt) => {
         const url = evt.target.value;
@@ -207,27 +195,26 @@ function SpreadsheetSummaryPageSync(props) {
     function renderForm() {
         return (
             <div className="form">
-                {renderTitleInput()}
-                {renderNameInput()}
-                {renderDescriptionInput()}
                 {renderURLInput()}
+                {renderNameInput()}
+                {renderTitle()}
+                {renderDescription()}
             </div>
         );
     }
 
-    function renderTitleInput() {
+    function renderURLInput() {
         const props = {
-            id: 'title',
-            value: draft.get('details.title', {}),
-            availableLanguageCodes,
+            id: 'oauth_callback',
+            value: draft.get('url', ''),
             readOnly,
             env,
-            onChange: handleTitleChange,
+            onChange: handleURLChange,
         };
         return (
-            <MultilingualTextField {...props}>
-                {t('spreadsheet-summary-title')}
-            </MultilingualTextField>
+            <TextField {...props}>
+                {t('spreadsheet-summary-url')}
+            </TextField>
         );
     }
 
@@ -243,39 +230,35 @@ function SpreadsheetSummaryPageSync(props) {
         return (
             <TextField {...props}>
                 {t('spreadsheet-summary-name')}
-                <InputError>{t(problems.name)}</InputError>
             </TextField>
         );
     }
 
-    function renderDescriptionInput() {
+    function renderTitle() {
         const props = {
-            id: 'description',
-            value: draft.get('details.description', {}),
-            type: 'textarea',
-            availableLanguageCodes,
-            readOnly,
+            id: 'title',
+            value: draft.get('details.title', ''),
+            readOnly: true,
             env,
-            onChange: handleDescriptionChange,
-        };
-        return (
-            <MultilingualTextField {...props}>
-                {t('spreadsheet-summary-description')}
-            </MultilingualTextField>
-        );
-    }
-
-    function renderURLInput() {
-        const props = {
-            id: 'oauth_callback',
-            value: draft.get('url', ''),
-            readOnly,
-            env,
-            onChange: handleURLChange,
         };
         return (
             <TextField {...props}>
-                {t('spreadsheet-summary-url')}
+                {t('spreadsheet-summary-title')}
+            </TextField>
+        );
+    }
+
+    function renderDescription() {
+        const props = {
+            id: 'description',
+            value: draft.get('details.description', ''),
+            type: 'textarea',
+            readOnly: true,
+            env,
+        };
+        return (
+            <TextField {...props}>
+                {t('spreadsheet-summary-description')}
             </TextField>
         );
     }

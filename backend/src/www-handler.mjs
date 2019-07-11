@@ -21,6 +21,7 @@ import * as WikiRetriever from './lib/www-handler/wiki-retriever.mjs';
 
 import TaskQueue from './lib/task-queue.mjs';
 import {
+    TaskImportSpreadsheet,
     TaskPurgeSnapshotHead,
     TaskPurgeProject,
     TaskPurgeSpreadsheet,
@@ -312,9 +313,6 @@ function redirectToProject(req, res, next) {
 function handleDatabaseChanges(events) {
     const db = this;
     for (let event of events) {
-        if (event.op === 'DELETE' || event.op === 'INSERT') {
-            continue;
-        }
         if (event.table === 'project') {
             updateDomainNameTable(db);
 
@@ -330,6 +328,12 @@ function handleDatabaseChanges(events) {
             const schema = event.schema;
             const name = event.previous.name || event.current.name;
             taskQueue.add(new TaskPurgeSpreadsheet(schema, name));
+
+            if (event.diff.disabled || event.diff.deleted) {
+                if (!event.current.disabled && !event.current.deleted) {
+                    taskQueue.add(new TaskImportSpreadsheet(schema, name))
+                }
+            }
         } else if (event.table === 'wiki') {
             const schema = event.schema;
             const slug = event.previous.slug || event.current.slug;

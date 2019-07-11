@@ -50,6 +50,7 @@ class Spreadsheet extends Data {
                 name varchar(128) NOT NULL DEFAULT '',
                 etag varchar(128) NOT NULL DEFAULT '',
                 url varchar(1024) NOT NULL DEFAULT '',
+                disabled boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
             CREATE UNIQUE INDEX ON ${table} (name) WHERE deleted = false;
