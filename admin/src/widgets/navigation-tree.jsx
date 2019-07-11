@@ -9,8 +9,11 @@ import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
 import * as ServerUtils from 'common/objects/utils/server-utils.mjs';
+import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
+import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as WikiFinder from 'common/objects/finders/wiki-finder.mjs';
 
 // widgets
 import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
@@ -40,13 +43,16 @@ async function NavigationTree(props) {
     }, [ route, env ])
 
     render();
-    const { projectID, userID, roleID, repoID, serverID } = route.params;
+    const { projectID, userID, roleID, repoID, serverID, spreadsheetID, wikiID } = route.params;
     const currentUserID = await database.start();
     const project =  _.isFinite(projectID) ? await ProjectFinder.findProject(database, projectID) : null;
     const user = _.isFinite(userID) ? await UserFinder.findUser(database, userID) : null;
     const role = _.isFinite(roleID) ? await RoleFinder.findRole(database, roleID) : null;
     const repo = _.isFinite(repoID) ? await RepoFinder.findRepo(database, repoID) : null;
     const server = _.isFinite(serverID) ? await ServerFinder.findServer(database, serverID) : null;
+    const schema = project.name;
+    const spreadsheet = _.isFinite(spreadsheetID) ? await SpreadsheetFinder.findSpreadsheet(database, schema, spreadsheetID) : null;
+    const wiki = _.isFinite(wikiID) ? await WikiFinder.findWiki(database, schema, wikiID) : null;
     render();
 
     function render() {
@@ -89,7 +95,7 @@ async function NavigationTree(props) {
 
     function renderArrow() {
         const { position, count, action } = arrowState;
-        const numbers = [ 'zero', 'one', 'two', 'three', 'four' ];
+        const numbers = [ 'zero', 'one', 'two', 'three', 'four', 'five' ];
         const arrowProps = {
             ref: arrow,
             className: `arrow ${numbers[count]} ${action}`,
@@ -101,6 +107,7 @@ async function NavigationTree(props) {
                 <i className="fa fa-play second" />
                 <i className="fa fa-play third" />
                 <i className="fa fa-play fourth" />
+                <i className="fa fa-play fifth" />
             </div>
         );
     }
@@ -197,12 +204,40 @@ async function NavigationTree(props) {
     function getWikiListNode(level) {
         const page = 'wiki-list-page';
         const label = t('nav-wikis');
+        const children = [
+            getWikiNode(level + 1),
+        ];
+        return { label, page, children, level };
+    }
+
+    function getWikiNode(level) {
+        const page = 'wiki-summary-page';
+        let label;
+        if (wiki) {
+            label = _.get(wiki, 'details.title', '-');
+        } else {
+            return null;
+        }
         return { label, page, level };
     }
 
     function getExcelListNode(level) {
         const page = 'spreadsheet-list-page';
         const label = t('nav-spreadsheets');
+        const children = [
+            getExcelNode(level + 1),
+        ];
+        return { label, page, children, level };
+    }
+
+    function getExcelNode(level) {
+        const page = 'spreadsheet-summary-page';
+        let label;
+        if (spreadsheet) {
+            label = SpreadsheetUtils.getDisplayName(spreadsheet, env);
+        } else {
+            return null;
+        }
         return { label, page, level };
     }
 
