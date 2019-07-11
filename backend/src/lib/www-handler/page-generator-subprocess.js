@@ -15,7 +15,7 @@ async function run() {
         }
         overrideRequire(preloaded);
 
-        const FrontEnd = require('./index.js');
+        const ssr = require('./index.js');
         const path = process.env.PAGE_PATH;
         const target = process.env.PAGE_TARGET;
 
@@ -33,7 +33,7 @@ async function run() {
             return CrossFetch(url, options);
         };
         const options = { host, path, target, fetch };
-        const html = await FrontEnd.render(options);
+        const html = await ssr.render(options);
         const stream = new Stream.PassThrough();
         stream.write(`200 OK\n`);
         for (let url of sourceURLs) {

@@ -38,7 +38,7 @@ async function purge(pattern) {
             }
         }
 
-        // purge file that're dependent on the purged items
+        // purge files that're dependent on the purged items
         for (let [ url, sourceURLs ] of Object.entries(fileDependencies)) {
             const overlap = _.intersection(sourceURLs, purged);
             if (!_.isEmpty(overlap)) {

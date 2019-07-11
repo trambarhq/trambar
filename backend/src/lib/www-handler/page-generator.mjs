@@ -20,9 +20,6 @@ async function generate(schema, tag, path, host) {
         const start = new Date;
         taskLog.describe(`retrieving index.js`);
         const codeBuffer = await SnapshotRetriever.retrieve(schema, tag, 'ssr', 'index.js');
-        taskLog.describe(`retrieving index.html`);
-        const htmlBuffer = await SnapshotRetriever.retrieve(schema, tag, 'ssr', 'index.html');
-        const html = htmlBuffer.toString();
         taskLog.describe(`running code in subprocess`);
         const env = {
             PAGE_SCHEMA: schema,
@@ -31,8 +28,8 @@ async function generate(schema, tag, path, host) {
             PAGE_PATH: path
         };
         const { body, headers } = await runSubprocess(codeBuffer, env, 5000);
-        const finalHTML = insertContents(html, body);
-        const pageBuffer = Buffer.from(finalHTML);
+        const html = '<!DOCTYPE html>\n' + body;
+        const pageBuffer = Buffer.from(html);
         const sourceURLs = extractSourceURLs(headers);
         const end = new Date;
         taskLog.set('duration', `${end - start} ms`);

@@ -71,6 +71,13 @@ class TaskPurgeWiki extends BasicTask {
     }
 }
 
+class TaskPurgeAll extends BasicTask {
+    async run() {
+        const pattern = new RegExp('.*');
+        await CacheManager.purge(pattern);
+    }
+}
+
 function getSnapshot(db, snapshotID) {
     const criteria = {
         id: snapshotID,
@@ -95,4 +102,5 @@ export {
     TaskPurgeProject,
     TaskPurgeSpreadsheet,
     TaskPurgeWiki,
+    TaskPurgeAll,
 };

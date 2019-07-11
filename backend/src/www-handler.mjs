@@ -25,6 +25,7 @@ import {
     TaskPurgeProject,
     TaskPurgeSpreadsheet,
     TaskPurgeWiki,
+    TaskPurgeAll,
 } from './lib/www-handler/tasks.mjs';
 
 // accessors
@@ -88,6 +89,8 @@ async function start() {
 
     taskQueue = new TaskQueue;
     await taskQueue.start();
+
+    taskQueue.add(new TaskPurgeAll);
 }
 
 async function stop() {
@@ -118,8 +121,9 @@ async function handleWikiRequest(req, res, next) {
     try {
         const { schema, repoName, slug } = req.params;
         const wiki = await WikiRetriever.retrieve(schema, repoName, slug);
+        const data = exportWiki(wiki);
         controlCache(res);
-        res.type('text').send(wiki.details.content);
+        res.json(data);
     } catch (err) {
         next(err);
     }
@@ -130,8 +134,9 @@ async function handleExcelRequest(req, res, next) {
         const { schema, name } = req.params;
         const { redirected } = req;
         const spreadsheet = await ExcelRetriever.retrieve(schema, name, !!redirected);
+        const data = exportSpreadsheet(spreadsheet);
         controlCache(res, {}, spreadsheet.etag);
-        res.type('text').send(spreadsheet.details.data);
+        res.json(data);
     } catch (err) {
         next(err);
     }
@@ -216,6 +221,25 @@ function handleError(err, req, res, next) {
         const status = err.status || err.statusCode || 400;
         res.type('text').status(status).send(err.message);
     }
+}
+
+function exportWiki(wiki) {
+    return {
+        slug: _.get(wiki, 'slug', ''),
+        title: _.get(wiki, 'details.title', ''),
+        markdown: _.get(wiki, 'details.content', ''),
+    };
+}
+
+function exportSpreadsheet(spreadsheet) {
+    return {
+        name: _.get(spreadsheet, 'name', ''),
+        title: _.get(spreadsheet, 'details.title', ''),
+        description: _.get(spreadsheet, 'details.description', ''),
+        subject: _.get(spreadsheet, 'details.subject', ''),
+        keywords: _.get(spreadsheet, 'details.keywords', []),
+        sheets: _.get(spreadsheet, 'details.sheets', []),
+    };
 }
 
 const defaultCacheControl = {
@@ -303,12 +327,12 @@ function handleDatabaseChanges(events) {
                 taskQueue.add(new TaskPurgeSnapshotHead(event.id));
             }
         } else if (event.table === 'spreadsheet') {
+            const schema = event.schema;
             const name = event.previous.name || event.current.name;
             taskQueue.add(new TaskPurgeSpreadsheet(schema, name));
         } else if (event.table === 'wiki') {
             const schema = event.schema;
             const slug = event.previous.slug || event.current.slug;
-            console.log(slug, event);
             taskQueue.add(new TaskPurgeWiki(schema, slug));
         }
     }

@@ -24,10 +24,10 @@ async function retrieve(schema, name, redirection) {
         if (buffer) {
             taskLog.describe(`parsing Excel file`);
             const { etag, type } = buffer;
-            const data = await parseSpreadsheet(buffer);
+            const workbook = await parseSpreadsheet(buffer);
 
             // import media files
-            const mediaImports = findMediaImports(data);
+            const mediaImports = findMediaImports(workbook.sheets);
             const mediaCount = mediaImports.length;
             let mediaNumber = 1;
             for (let mediaImport of mediaImports) {
@@ -40,14 +40,22 @@ async function retrieve(schema, name, redirection) {
 
             const spreadsheetChanges = {
                 id: spreadsheet.id,
-                details: { type, data },
+                details: { ...spreadsheet.details, type, ...workbook },
                 etag,
             };
-            spreadsheet = await Spreadsheet.updateOne(db, schema, spreadsheetChanges);
+            if (!spreadsheet.name && buffer.filename) {
+                // use the filename as the spreadsheet's name
+                const name = _.snakeCase(_.replace(buffer.filename, /\.\w+$/, ''));
+                spreadsheetChanges.name = name;
+            }
+            spreadsheet = await Spreadsheet.saveUnique(db, schema, spreadsheetChanges);
             changed = true;
         }
         taskLog.set('name', name);
         taskLog.set('changed', changed);
+        if (buffer.filename) {
+            taskLog.set('filename', buffer.filename);
+        }
         await taskLog.finish();
 
         if (redirection) {
@@ -78,6 +86,17 @@ async function fetchSpreadsheet(spreadsheet) {
         if (!buffer.etag) {
             throw new HTTPError(400, `No e-tag: ${url}`);
         }
+
+        // get filename
+        const disposition = res.headers.get('content-disposition');
+        if (disposition) {
+            const m = /filename=(".+?"|\S+)/i.exec(disposition);
+            if (m) {
+                const filename = _.trim(m[1], ' "');
+                buffer.filename = filename;
+            }
+        }
+
         return buffer;
     } else if (res.status === 304) {
         return null;
@@ -101,59 +120,52 @@ async function fetchSpreadsheet(spreadsheet) {
 async function parseSpreadsheet(buffer) {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer);
-    const data = {};
+    const keywords = _.split(workbook.keywords, /\s+/);
+    const title = workbook.title;
+    const description = workbook.description;
+    const subject = workbook.subject;
+    const sheets = [];
     for (let worksheet of workbook.worksheets) {
         const sheetName = _.trim(worksheet.name);
         const { state, rowCount, columnCount } = worksheet;
         if (state === 'visible' && sheetName) {
             const { rowCount, columnCount } = worksheet;
-            const fields = [];
-            const objects = [];
+            const sheet = {
+                name: sheetName,
+                columns: [],
+                rows: [],
+            };
+            const importing = {};
             for (let r = 1; r <= rowCount; r++) {
                 const row = worksheet.getRow(r);
-                const object = {};
-                let empty = true;
-                for (let c = 1; c <= columnCount; c++) {
-                    let cell = row.getCell(c);
-                    if (r === 1) {
-                        const field = extractFieldProperties(cell);
-                        fields.push(field);
-                    } else {
-                        const field = fields[c - 1];
-                        const fieldValue = extractCellValue(cell, field);
-                        if (fieldValue !== undefined) {
-                            object[field.name] = fieldValue;
-                            empty = false;
+                if (r === 1) {
+                    for (let c = 1; c <= columnCount; c++) {
+                        const cell = row.getCell(c);
+                        let name = _.trim(cell.text);
+                        if (/\[import\]/i.test(name)) {
+                            name = name.replace(/\s*\[import\]\s*/, ''),
+                            importing[c] = true;
                         }
+                        sheet.columns.push(name);
                     }
-                }
-                if (!empty) {
-                    objects.push(object);
+                } else {
+                    const currentRow = [];
+                    for (let c = 1; c <= columnCount; c++) {
+                        const cell = row.getCell(c);
+                        const value = extractCellValue(cell, !!importing[c]);
+                        currentRow.push(value);
+                    }
+                    sheet.rows.push(currentRow);
                 }
             }
-            data[sheetName] = objects;
+            sheets.push(sheet);
         }
     }
-    return data;
+    return { title, subject, description, keywords, sheets };
 }
 
-function extractFieldProperties(cell) {
-    const name = _.trim(cell.text);
-    if (/\[import\]/i.test(name)) {
-        return {
-            name: name.replace(/\s*\[import\]\s*/, ''),
-            import: true,
-        };
-    } else {
-        return { name };
-    }
-}
-
-function extractCellValue(cell, field) {
-    if (!field || !field.name) {
-        return;
-    }
-    if (field.import) {
+function extractCellValue(cell, importing) {
+    if (importing) {
         const src = _.trim(cell.text);
         return { src };
     } else {
@@ -187,13 +199,13 @@ const defaultAlignment = { vertical: 'top', horizontal: 'left' };
 const defaultFill = { type: 'pattern', pattern: 'none' };
 const defaultBorder = {};
 
-function findMediaImports(data) {
+function findMediaImports(sheets) {
     const list = [];
-    for (let [ name, objects ] of _.entries(data)) {
-        for (let object of objects) {
-            for (let fieldValue of _.values(object)) {
-                if (/^https?:/.test(fieldValue.src)) {
-                    list.push(fieldValue);
+    for (let sheet of sheets) {
+        for (let row of sheet.rows) {
+            for (let cell of row) {
+                if (/^https?:/.test(cell.src)) {
+                    list.push(cell);
                 }
             }
         }
@@ -201,12 +213,12 @@ function findMediaImports(data) {
     return list;
 }
 
-function trimURLs(data) {
-    for (let [ name, objects ] of _.entries(data)) {
-        for (let object of objects) {
-            for (let fieldValue of _.values(object)) {
-                if (_.startsWith(fieldValue.url, '/srv/media')) {
-                    fieldValue.url = fieldValue.url.substr(10);
+function trimURLs(sheets) {
+    for (let sheet of sheets) {
+        for (let row of sheet.rows) {
+            for (let cell of row) {
+                if (_.startsWith(cell.url, '/srv/media')) {
+                    cell.url = cell.url.substr(10);
                 }
             }
         }

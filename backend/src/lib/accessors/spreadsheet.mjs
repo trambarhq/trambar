@@ -142,6 +142,36 @@ class Spreadsheet extends Data {
         }
         throw new HTTPError(403);
     }
+
+    /**
+     * Save a row, appending a number if a name conflict occurs
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {user} object
+     *
+     * @return {Promise<Object>}
+     */
+    async saveUnique(db, schema, object) {
+        // this doesn't work within a transaction
+        try {
+            return this.saveOne(db, schema, object);
+        } catch (err) {
+            // unique violation
+            if (err.code === '23505') {
+                object = { ...object };
+                const m = /(.*)(\d+)$/.exec(object.name);
+                if (m) {
+                    const number = parseInt(m[2]);
+                    object.username = m[1] + (number + 1);
+                } else {
+                    object.username += '2';
+                }
+                return this.saveUnique(db, schema, object);
+            }
+            throw err;
+        }
+    }
 }
 
 const instance = new Spreadsheet;
