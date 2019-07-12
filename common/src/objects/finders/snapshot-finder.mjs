@@ -14,7 +14,7 @@ function findSnapshots(db, repo) {
     if (!repo) {
         return emptyArray;
     }
-    return db.findOne({
+    return db.find({
         schema,
         table,
         criteria: {

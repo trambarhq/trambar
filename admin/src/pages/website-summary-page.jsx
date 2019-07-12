@@ -71,6 +71,9 @@ function WebsiteSummaryPageSync(props) {
     });
     const handleSaveClick = useListener((evt) => {
         run(async () => {
+            const domains = _.filter(draft.get('details.domains', []));
+            draft.set('details.domains', domains);
+
             const problems = {};
             reportProblems(problems);
 
