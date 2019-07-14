@@ -79,7 +79,7 @@ module.exports = {
                 type: 'javascript/auto',
                 query: {
                     presets: [
-                        'env',
+                        [ 'env', { modules: false } ],
                         'react',
                         'stage-0',
                     ],

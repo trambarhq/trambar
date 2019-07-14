@@ -145,7 +145,7 @@ function UserSummaryPageSync(props) {
 
                     // add user to member list if he's not there yet
                     if (project && !_.includes(project.user_ids, userAfter.id)) {
-                        await ProjectSaver.addToUserList(database, project, userAfter.id);
+                        await ProjectSaver.addUsers(database, project, [ userAfter ]);
                     }
 
                     warnDataLoss(false);

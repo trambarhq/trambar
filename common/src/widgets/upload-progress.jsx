@@ -21,3 +21,7 @@ function UploadProgress(props) {
         </div>
     );
 }
+
+export {
+    UploadProgress,
+};

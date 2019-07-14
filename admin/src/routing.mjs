@@ -229,6 +229,6 @@ const routes = {
     },
 };
 
-module.exports = {
+export {
     routes,
 };

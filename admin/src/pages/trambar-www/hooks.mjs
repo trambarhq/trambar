@@ -30,4 +30,5 @@ function resolve(target, path) {
 export {
     usePlainText,
     useRichText,
+    TextContext,
 };

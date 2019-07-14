@@ -1,10 +1,12 @@
 import _ from 'lodash';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
 import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.mjs';
 import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
+
+import { ExcelFile, TextContext, useRichText } from './trambar-www/index.mjs';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -61,6 +63,12 @@ function SpreadsheetSummaryPageSync(props) {
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     const warnDataLoss = useDataLossWarning(route, env, confirm);
+    const textOptions = useMemo(() => {
+        return {
+            language: env.localeCode,
+            devicePixelRatio: env.devicePixelRatio,
+        };
+    }, [ env ]);
 
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
@@ -282,7 +290,11 @@ function SpreadsheetSummaryPageSync(props) {
     function renderSheets() {
         if (spreadsheet && !spreadsheet.disabled && !spreadsheet.deleted) {
             const excel = new ExcelFile(spreadsheet.details);
-            return _.map(excel.sheets, renderSheet);
+            return (
+                <TextContext.Provider value={textOptions}>
+                    {_.map(excel.sheets, renderSheet)}
+                </TextContext.Provider>
+            );
         }
     }
 
@@ -329,9 +341,6 @@ function Sheet(props) {
         );
     }
 }
-
-import { ExcelFile } from './trambar-www/excel-file.mjs';
-import { useRichText } from './trambar-www/hooks.mjs';
 
 function Table(props) {
     const { sheet, env } = props;

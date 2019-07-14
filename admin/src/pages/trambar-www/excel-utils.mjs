@@ -1,5 +1,5 @@
 function chooseLanguageVersion(objects, options) {
-    const { lang } = options;
+    const lang =  options.language;
     const [ reqLC, reqCC ] = (lang) ? lang.toLowerCase().split('-') : [];
     const list = [];
     const scores = {};

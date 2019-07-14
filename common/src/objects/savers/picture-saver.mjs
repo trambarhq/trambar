@@ -8,6 +8,16 @@ async function savePictures(db, pictures) {
     return picturesAfter;
 }
 
+async function removePictures(db, pictures) {
+    const pictureChanges = _.map(pictures, (picture) => {
+        return {
+            id: picture.id,
+            deleted: true,
+        };
+    });
+    return savePictures(db, pictures);
+}
+
 async function uploadPictures(db, payloads, files) {
     // lists from event objects would disappear after an await operation
     files = _.slice(files);
@@ -42,5 +52,6 @@ async function uploadPictures(db, payloads, files) {
 
 export {
     savePictures,
+    removePictures,
     uploadPictures,
 };
