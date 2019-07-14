@@ -21,8 +21,8 @@ function detect(text, onReference) {
         return _.some(text, detect);
     }
     // process the text fully at block level, so ref links are captured
-    let parser = createParser(onReference);
-    let bTokens = parser.extractBlocks(text);
+    const parser = createParser(onReference);
+    const bTokens = parser.extractBlocks(text);
     return _.some(bTokens, (bToken) => {
         switch (bToken.type) {
             case 'space':
@@ -30,9 +30,9 @@ function detect(text, onReference) {
             case 'paragraph':
             case 'text_block':
                 // scan for inline markup
-                let iToken;
-                let inlineLexer = parser.inlineLexer;
+                const inlineLexer = parser.inlineLexer;
                 inlineLexer.start(bToken.markdown);
+                let iToken;
                 while (iToken = inlineLexer.captureToken()) {
                     switch (iToken.type) {
                         case 'url':
@@ -48,7 +48,7 @@ function detect(text, onReference) {
                 break;
             case 'list':
                 return _.every(bToken.children, (item) => {
-                    let child = item.children[0];
+                    const child = item.children[0];
                     if (child.type === 'text_block') {
                         if (/^\s*\[/.test(child.markdown)) {
                             // it might be a task-list or survey item
@@ -72,10 +72,10 @@ function detect(text, onReference) {
  * @return {Array<ReactElement>}
  */
 function render(text, onReference) {
-    let parser = createParser(onReference);
-    let renderer = createRenderer();
-    let bTokens = parser.parse(text);
-    let paragraphs = renderer.render(bTokens);
+    const parser = createParser(onReference);
+    const renderer = createRenderer();
+    const bTokens = parser.parse(text);
+    const paragraphs = renderer.render(bTokens);
     return paragraphs;
 }
 
@@ -90,20 +90,20 @@ function render(text, onReference) {
  * @return {Array<String|ReactElement>}
  */
 function renderSurvey(text, answers, onChange, onReference) {
-    let listTokens = ListParser.extract(text);
-    let markdownTexts = renderListTokens(listTokens, onReference);
+    const listTokens = ListParser.extract(text);
+    const markdownTexts = renderListTokens(listTokens, onReference);
 
     // create text nodes and list items
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
             // it's a list
-            let listItems = _.map(listToken, (item, key) => {
+            const listItems = _.map(listToken, (item, key) => {
                 let checked = item.checked;
-                let label = markdownTexts[index][key];
+                const label = markdownTexts[index][key];
                 if (answers) {
                     // override radio-button state indicated in text
                     // with set-but-not-yet-saved value
-                    let answer = answers[item.list];
+                    const answer = answers[item.list];
                     if (answer !== undefined) {
                         checked = (item.key == answer);
                     }
@@ -136,19 +136,19 @@ function renderSurvey(text, answers, onChange, onReference) {
  * @return {Array<String|ReactElement>}
  */
 function renderSurveyResults(text, voteCounts, onReference) {
-    let listTokens = ListParser.extract(text);
-    let markdownTexts = renderListTokens(listTokens, onReference);
+    const listTokens = ListParser.extract(text);
+    const markdownTexts = renderListTokens(listTokens, onReference);
 
     // create text nodes and list items
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
-            let listItems = _.map(listToken, (item, key) => {
-                let label = markdownTexts[index][key];
-                let tally = voteCounts[item.list];
-                let total = _.get(tally, 'total', 0);
-                let count = _.get(tally, [ 'answers', item.key ], 0);
-                let percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
-                let color = `color-${item.key % 12}`;
+            const listItems = _.map(listToken, (item, key) => {
+                const label = markdownTexts[index][key];
+                const tally = voteCounts[item.list];
+                const total = _.get(tally, 'total', 0);
+                const count = _.get(tally, [ 'answers', item.key ], 0);
+                const percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
+                const color = `color-${item.key % 12}`;
                 let className = 'vote-count';
                 if (count === total) {
                     className += ' unanimous';
@@ -183,21 +183,21 @@ function renderSurveyResults(text, voteCounts, onReference) {
  * @return {Array<String|ReactElement>}
  */
 function renderTaskList(text, answers, onChange, onReference) {
-    let listTokens = ListParser.extract(text);
-    let markdownTexts = renderListTokens(listTokens, onReference);
+    const listTokens = ListParser.extract(text);
+    const markdownTexts = renderListTokens(listTokens, onReference);
 
     // create text nodes and list items
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
-            let listItems = _.map(listToken, (item, key) => {
+            const listItems = _.map(listToken, (item, key) => {
                 let checked = item.checked;
-                let label = markdownTexts[index][key];
+                const label = markdownTexts[index][key];
                 if (answers) {
                     // override checkbox state indicated in text
                     // with set-but-not-yet-saved value
-                    let answer = answers[item.list];
+                    const answer = answers[item.list];
                     if (answer !== undefined) {
-                        let selected = answer[item.key];
+                        const selected = answer[item.key];
                         if (selected !== undefined) {
                             checked = selected;
                         }
@@ -232,8 +232,8 @@ function renderTaskList(text, answers, onChange, onReference) {
  */
 function renderListTokens(listTokens, onReference) {
     // process the text fully at block level, so ref links are captured
-    let parser = createParser(onReference);
-    let blockTokenLists = _.map(listTokens, (listToken, index) => {
+    const parser = createParser(onReference);
+    const blockTokenLists = _.map(listTokens, (listToken, index) => {
         let blockTokens;
         if (listToken instanceof Array) {
             // process the label of each item
@@ -247,7 +247,7 @@ function renderListTokens(listTokens, onReference) {
 
     // process at the inline level
     for (let [ index, listToken ] of _.entries(listTokens)) {
-        let blockTokens = blockTokenLists[index];
+        const blockTokens = blockTokenLists[index];
         if (listToken instanceof Array) {
             for (let tokens of blockTokens) {
                 parser.processInline(tokens);
@@ -258,9 +258,9 @@ function renderListTokens(listTokens, onReference) {
     }
 
     // render tokens
-    let renderer = createRenderer();
-    let markdownTexts = _.map(listTokens, (listToken, index) => {
-        let blockTokens = blockTokenLists[index];
+    const renderer = createRenderer();
+    const markdownTexts = _.map(listTokens, (listToken, index) => {
+        const blockTokens = blockTokenLists[index];
         if (listToken instanceof Array) {
             return _.map(listToken, (item, index) => {
                 let label = _.first(renderer.render(blockTokens[index]));
@@ -286,13 +286,13 @@ function renderListTokens(listTokens, onReference) {
  * @return {Parser}
  */
 function createParser(onReference) {
-    let blockLexer = new MarkGor.BlockLexer();
-    let inlineLexer = new MarkGor.InlineLexer({
+    const blockLexer = new MarkGor.BlockLexer();
+    const inlineLexer = new MarkGor.InlineLexer({
         links: blockLexer.links,
         findRefLink: findMarkdownRefLink,
         onReference,
     });
-    let parser = new MarkGor.Parser({ blockLexer, inlineLexer });
+    const parser = new MarkGor.Parser({ blockLexer, inlineLexer });
     return parser;
 }
 
@@ -314,10 +314,10 @@ function createRenderer() {
  * @return {ReactElement}
  */
 function renderImage(token, key) {
-    let url = token.href;
-    let title = token.title;
-    let text = token.text;
-    let resource = ResourceUtils.parseJSONEncodedURL(url);
+    const url = token.href;
+    const title = token.title;
+    const text = token.text;
+    const resource = ResourceUtils.parseJSONEncodedURL(url);
     if (resource) {
         return <ResourceView key={key} resource={resource} alt={text} title={title} />;
     } else {
@@ -362,15 +362,15 @@ function findMarkdownRefLink(name, forImage) {
 }
 
 function findReferencedResource(resources, name) {
-    let match = /^(picture|image|photo|video|audio|website)(-(\d+))?$/.exec(name);
+    const match = /^(picture|image|photo|video|audio|website)(-(\d+))?$/.exec(name);
     if (match) {
         let type = match[1];
         if (type === 'picture' || type === 'photo') {
             type = 'image';
         }
-        let matchingResources = _.filter(resources, { type });
-        let number = parseInt(match[3]) || 1;
-        let res = matchingResources[number - 1];
+        const matchingResources = _.filter(resources, { type });
+        const number = parseInt(match[3]) || 1;
+        const res = matchingResources[number - 1];
         if (res) {
             return res;
         }

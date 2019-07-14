@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
@@ -7,9 +7,12 @@ import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as WikiFinder from 'common/objects/finders/wiki-finder.mjs';
 import * as WikiSaver from 'common/objects/savers/wiki-saver.mjs';
 
+import { MarkdownPage, TextContext, useRichText } from './trambar-www/index.mjs';
+
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
 import { ComboButton } from '../widgets/combo-button.jsx';
+import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 import { InstructionBlock } from '../widgets/instruction-block.jsx';
 import { TextField } from '../widgets/text-field.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
@@ -54,6 +57,12 @@ function WikiSummaryPageSync(props) {
     const { t } = env.locale;
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
+    const textOptions = useMemo(() => {
+        return {
+            language: env.localeCode,
+            devicePixelRatio: env.devicePixelRatio,
+        };
+    }, [ env ]);
 
     const handleEditClick = useListener((evt) => {
         const baseURL = _.get(repo, 'details.web_url');
@@ -85,6 +94,7 @@ function WikiSummaryPageSync(props) {
             <h2>{t('wiki-summary-$title', title)}</h2>
             <UnexpectedError error={error} />
             {renderForm()}
+            {renderSections()}
             <ActionConfirmation ref={confirmationRef} env={env} />
         </div>
     );
@@ -191,6 +201,73 @@ function WikiSummaryPageSync(props) {
             </TextField>
         );
     }
+
+    function renderSections() {
+        if (wiki && wiki.public) {
+            const data = {
+                slug: wiki.slug,
+                title: wiki.details.title,
+                markdown: wiki.details.content,
+            };
+            const page = new MarkdownPage(data);
+            return (
+                <TextContext.Provider value={textOptions}>
+                    {_.map(page.sections, renderSection)}
+                </TextContext.Provider>
+            );
+        }
+    }
+
+    function renderSection(section, i) {
+        return <Section key={i} section={section} env={env}/>
+    }
+}
+
+function Section(props) {
+    const { section, number, env } = props;
+    const { t } = env.locale;
+    const [ open, setOpen ] = useState(true);
+
+    const handleToggleClick = useListener((evt) => {
+        setOpen(!open);
+    });
+
+    return (
+        <div className="section">
+            {renderTitle()}
+            {renderContents()}
+        </div>
+    );
+
+    function renderTitle() {
+        const dir = (open) ? 'up' : 'down';
+        let title = 'Contents';
+        return (
+            <h2 className="title-toggle" onClick={handleToggleClick}>
+                {title}
+                {' '}
+                <i className={`fa fa-angle-double-${dir}`} />
+            </h2>
+        );
+    }
+
+    function renderContents() {
+        return (
+            <CollapsibleContainer open={open}>
+                <div className="markdown-container">
+                    <Markdown section={section} />
+                </div>
+            </CollapsibleContainer>
+        );
+    }
+}
+
+function Markdown(props) {
+    const { section } = props;
+    const rt = useRichText({
+        imageHeight: 48,
+    });
+    return rt(section);
 }
 
 const component = Relaks.memo(WikiSummaryPage);

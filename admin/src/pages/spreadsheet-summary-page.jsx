@@ -335,7 +335,7 @@ function Sheet(props) {
         return (
             <CollapsibleContainer open={open}>
                 <div className="table-container">
-                    <Table sheet={sheet} env={env} />
+                    <Table sheet={sheet} />
                 </div>
             </CollapsibleContainer>
         );
@@ -343,14 +343,12 @@ function Sheet(props) {
 }
 
 function Table(props) {
-    const { sheet, env } = props;
-    const { t } = env.locale;
+    const { sheet } = props;
     const rt = useRichText({
         imageWidth: 100,
         imageFilters: {
             sharpen: true
         },
-        imageServer: `${location.protocol}//${location.hostname}`,
     });
 
     return (
