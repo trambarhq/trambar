@@ -9,6 +9,7 @@ import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
 import { ComboButton } from '../widgets/combo-button.jsx';
+import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 import { InstructionBlock } from '../widgets/instruction-block.jsx';
 import { TextField } from '../widgets/text-field.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
@@ -138,6 +139,7 @@ function SpreadsheetSummaryPageSync(props) {
             <UnexpectedError error={error} />
             {renderForm()}
             {renderInstructions()}
+            {renderSheets()}
             <ActionConfirmation ref={confirmationRef} env={env} />
         </div>
     );
@@ -275,6 +277,90 @@ function SpreadsheetSummaryPageSync(props) {
                 <InstructionBlock {...instructionProps} />
             </div>
         );
+    }
+
+    function renderSheets() {
+        if (spreadsheet && !spreadsheet.disabled && !spreadsheet.deleted) {
+            const excel = new ExcelFile(spreadsheet.details);
+            return _.map(excel.sheets, renderSheet);
+        }
+    }
+
+    function renderSheet(sheet, i) {
+        return <Sheet sheet={sheet} number={i + 1} env={env}/>
+    }
+}
+
+function Sheet(props) {
+    const { sheet, number, env } = props;
+    const { t } = env.locale;
+    const [ open, setOpen ] = useState(true);
+
+    const handleToggleClick = useListener((evt) => {
+        setOpen(!open);
+    });
+
+    return (
+        <div className="sheet">
+            {renderTitle()}
+            {renderTable()}
+        </div>
+    );
+
+    function renderTitle() {
+        const dir = (open) ? 'up' : 'down';
+        const { name } = sheet;
+        return (
+            <h2 className="title-toggle" onClick={handleToggleClick}>
+                {t('spreadsheet-summary-sheet-$number-$name', number, name)}
+                {' '}
+                <i className={`fa fa-angle-double-${dir}`} />
+            </h2>
+        );
+    }
+
+    function renderTable() {
+        return (
+            <CollapsibleContainer open={open}>
+                <div className="table-container">
+                    <Table sheet={sheet} env={env} />
+                </div>
+            </CollapsibleContainer>
+        );
+    }
+}
+
+import { ExcelFile } from './trambar-www/excel-file.mjs';
+import { useRichText } from './trambar-www/hooks.mjs';
+
+function Table(props) {
+    const { sheet, env } = props;
+    const { t } = env.locale;
+    const rt = useRichText();
+
+    return (
+        <table>
+            <thead>
+                <tr>
+                    {_.map(sheet.columns, renderHeader)}
+                </tr>
+            </thead>
+            <tbody>
+                {_.map(sheet.rows, renderRow)}
+            </tbody>
+        </table>
+    );
+
+    function renderHeader(column) {
+        return <th>{rt(column.header)}</th>;
+    }
+
+    function renderRow(row) {
+        return <tr>{_.map(row.cells, renderCell)}</tr>;
+    }
+
+    function renderCell(cell) {
+        return <td>{rt(cell)}</td>;
     }
 }
 

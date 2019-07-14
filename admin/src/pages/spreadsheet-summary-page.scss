@@ -1,3 +1,5 @@
+@import '../colors';
+
 .spreadsheet-summary-page{
     .buttons {
         float: right;
@@ -14,5 +16,68 @@
 
     .instructions {
         padding-top: 1.2em;
+    }
+
+    .sheet {
+        clear: both;
+
+        .title-toggle {
+            cursor: pointer;
+            margin-top: 0.5em;
+            margin-bottom: 0.25em;
+
+            &:hover {
+                color: $link-hover-color;
+            }
+        }
+
+        .table-container {
+            box-sizing: content-box;
+            border: 1px solid black;
+            overflow-x: auto;
+            overflow-y: auto;
+            max-width: 100%;
+            max-height: 50vh;
+            width: max-content;
+            margin-left: 0.5em;
+
+            TABLE {
+                width: max-content;
+                border-collapse: collapse;
+
+                TD, TH {
+                    border: 1px solid black;
+                    padding: 2px 2px 2px 2px;
+                    text-align: left;
+                    max-width: 20vw;
+                    vertical-align: top;
+                }
+
+                TR:first-child {
+                    TH {
+                        border-top: 0;
+                    }
+                }
+
+                TR:last-child {
+                    TD {
+                        border-bottom: 0;
+                    }
+                }
+
+                TR {
+                    TD, TH {
+                        &:first-child {
+                            border-left: 0;
+                        }
+                    }
+                    TD, TH {
+                        &:last-child {
+                            border-right: 0;
+                        }
+                    }
+                }
+            }
+        }
     }
 }

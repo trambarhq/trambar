@@ -437,6 +437,13 @@ const phrases = {
     'spreadsheet-summary-reactivate': 'Reactivate spreadsheet',
     'spreadsheet-summary-return': 'Return to spreadsheet list',
     'spreadsheet-summary-save': 'Save spreadsheet',
+    'spreadsheet-summary-sheet-$number-$name': (number, name) => {
+        let text = `Sheet ${number}`;
+        if (name) {
+            text += `: ${name}`;
+        }
+        return text;
+    },
     'spreadsheet-summary-title': 'Name',
     'spreadsheet-summary-url': 'URL',
 
