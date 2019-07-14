@@ -133,8 +133,11 @@ const phrases = {
     'nav-server-new': 'Новый сервер',
     'nav-servers': 'Серверы',
     'nav-settings': 'Настройки',
+    'nav-spreadsheets': 'Файлы Excel',
     'nav-user-new': 'Новый пользователь',
     'nav-users': 'Пользователи',
+    'nav-website': 'Веб-сайт',
+    'nav-wikis': 'GitLab вики',
 
     'project-list-add': 'Добавить проект',
     'project-list-cancel': 'Отмена',
@@ -589,6 +592,15 @@ const phrases = {
     'validation-localhost-is-wrong': '«localhost» недействителен',
     'validation-password-for-admin-only': 'Только администраторы могут войти с помощью пароля',
     'validation-required': 'Необходимые',
+
+    'website-summary-cancel': 'Отмена',
+    'website-summary-domain-names': 'Доменные имена',
+    'website-summary-edit': 'Редактировать сайт',
+    'website-summary-save': 'Сохранить сайт',
+    'website-summary-template': 'Шаблон',
+    'website-summary-template-disabled': 'Отключен',
+    'website-summary-template-generic': 'Общий шаблон',
+    'website-summary-title': 'Веб-сайт',
 
     'welcome': 'Добро пожаловать!',
 };

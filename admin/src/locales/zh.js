@@ -178,8 +178,11 @@ const traditionalPhrases = {
     'nav-server-new': '新服務器',
     'nav-servers': '服務器',
     'nav-settings': '設置',
+    'nav-spreadsheets': 'Excel文件',
     'nav-user-new': '新用戶',
     'nav-users': '用戶',
+    'nav-website': '網站',
+    'nav-wikis': 'GitLab維基',
 
     'project-list-add': '添加項目',
     'project-list-cancel': '取消',
@@ -622,6 +625,15 @@ const traditionalPhrases = {
     'validation-password-for-admin-only': '只有管理員可以使用密碼登錄',
     'validation-required': '需要',
 
+    'website-summary-cancel': '取消',
+    'website-summary-domain-names': '網站域名',
+    'website-summary-edit': '編輯網站',
+    'website-summary-save': '保存網站',
+    'website-summary-template': '網站模板',
+    'website-summary-template-disabled': '不使用網站',
+    'website-summary-template-generic': '通用模板',
+    'website-summary-title': '網站',
+
     'welcome': '歡迎!',
 };
 
@@ -754,8 +766,11 @@ const simplifiedPhrases = {
     'nav-server-new': '新服务器',
     'nav-servers': '服务器',
     'nav-settings': '设置',
+    'nav-spreadsheets': 'Excel文件',
     'nav-user-new': '新用户',
     'nav-users': '用户',
+    'nav-website': '网站',
+    'nav-wikis': 'GitLab维基',
 
     'project-list-add': '添加项目',
     'project-list-cancel': '取消',
@@ -1197,6 +1212,15 @@ const simplifiedPhrases = {
     'validation-localhost-is-wrong': '《localhost》是不正确的',
     'validation-password-for-admin-only': '只有管理员可以使用密码登录',
     'validation-required': '需要',
+
+    'website-summary-cancel': '取消',
+    'website-summary-domain-names': '网站域名',
+    'website-summary-edit': '编辑网站',
+    'website-summary-save': '保存网站',
+    'website-summary-template': '网站模板',
+    'website-summary-template-disabled': '不使用网站',
+    'website-summary-template-generic': '通用模板',
+    'website-summary-title': '网站',
 
     'welcome': '欢迎!',
 };

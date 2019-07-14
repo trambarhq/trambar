@@ -130,8 +130,11 @@ const phrases = {
     'nav-server-new': "Nuovo server",
     'nav-servers': "Server",
     'nav-settings': "Impostazioni",
+    'nav-spreadsheets': "File di Excel",
     'nav-user-new': "Nuovo utente",
     'nav-users': "Utenti",
+    'nav-website': "Sito web",
+    'nav-wikis': "GitLab wiki",
 
     'project-list-add': "Aggiungi un nuovo progetto",
     'project-list-cancel': "Annulla",
@@ -621,6 +624,15 @@ const phrases = {
     'validation-localhost-is-wrong': "«localhost» non è valido",
     'validation-password-for-admin-only': "Solo gli amministratori possono accedere utilizzando la password",
     'validation-required': "Necessario",
+
+    'website-summary-cancel': "Annulla",
+    'website-summary-domain-names': "Nomi di dominio",
+    'website-summary-edit': "Modifica sito Web",
+    'website-summary-save': "Salva sito Web",
+    'website-summary-template': "Modello",
+    'website-summary-template-disabled': "Disattivato",
+    'website-summary-template-generic': "Modello generico",
+    'website-summary-title': "Sito web",
 
     'welcome': "Benvenuto!",
 };

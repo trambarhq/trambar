@@ -133,8 +133,11 @@ const phrases = {
     'nav-server-new': 'Nový server',
     'nav-servers': 'Servery',
     'nav-settings': 'Nastavení',
+    'nav-spreadsheets': 'Excel files',
     'nav-user-new': 'Nový uživatel',
     'nav-users': 'Uživatelé',
+    'nav-website': 'Webová stránka',
+    'nav-wikis': 'GitLab wiki',
 
     'project-list-add': 'Přidat nový projekt',
     'project-list-cancel': 'Zrušit',
@@ -589,6 +592,15 @@ const phrases = {
     'validation-localhost-is-wrong': '"localhost" není platné',
     'validation-password-for-admin-only': 'Pouze administrátoři se mohou přihlásit pomocí hesla',
     'validation-required': 'Povinný',
+
+    'website-summary-cancel': 'Zrušit',
+    'website-summary-domain-names': 'Doménová jména',
+    'website-summary-edit': 'Upravit webové stránky',
+    'website-summary-save': 'Uložit webové stránky',
+    'website-summary-template': 'Šablona',
+    'website-summary-template-disabled': 'Stránka deaktivovaná',
+    'website-summary-template-generic': 'Obecná šablona',
+    'website-summary-title': 'Webová stránka',
 
     'welcome': 'Vítejte!',
 };

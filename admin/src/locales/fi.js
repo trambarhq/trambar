@@ -130,8 +130,11 @@ const phrases = {
     'nav-server-new': 'Uusi palvelin',
     'nav-servers': 'Palvelimet',
     'nav-settings': 'Ssetukset',
+    'nav-spreadsheets': 'Excel-tiedostot',
     'nav-user-new': 'Uusi käyttäjä',
     'nav-users': 'Käyttäjät',
+    'nav-website': 'Verkkosivusto',
+    'nav-wikis': 'GitLab wikit',
 
     'project-list-add': 'Lisää uusi projekti',
     'project-list-cancel': 'Peruutta',
@@ -586,6 +589,15 @@ const phrases = {
     'validation-localhost-is-wrong': '"localhost" ei ole kelvollinen',
     'validation-password-for-admin-only': 'Vain järjestelmänvalvojat voivat kirjautua salasanalla',
     'validation-required': 'Edellytetään',
+
+    'website-summary-cancel': 'Peruutta',
+    'website-summary-domain-names': 'Domain-nimet',
+    'website-summary-edit': 'Muokkaa sivustoa',
+    'website-summary-save': 'Tallenna sivusto',
+    'website-summary-template': 'Sivuston malli',
+    'website-summary-template-disabled': 'Deaktivoitu',
+    'website-summary-template-generic': 'Yleinen malli',
+    'website-summary-title': 'Verkkosivusto',
 
     'welcome': 'Tervetuloa!',
 };

@@ -126,7 +126,6 @@ const phrases = {
     'member-list-status-pending': 'Request pending',
     'member-list-title': 'Members',
 
-    'nav-spreadsheets': 'Excel files',
     'nav-member-new': 'New member',
     'nav-members': 'Members',
     'nav-project-new': 'New project',
@@ -137,6 +136,7 @@ const phrases = {
     'nav-server-new': 'New server',
     'nav-servers': 'Servers',
     'nav-settings': 'Settings',
+    'nav-spreadsheets': 'Excel files',
     'nav-user-new': 'New user',
     'nav-users': 'Users',
     'nav-website': 'Website',

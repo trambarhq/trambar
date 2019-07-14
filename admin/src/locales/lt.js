@@ -132,8 +132,11 @@ const phrases = {
     'nav-server-new': 'Naujas serveris',
     'nav-servers': 'Serveriai',
     'nav-settings': 'Nustatymai',
+    'nav-spreadsheets': 'Excel failai',
     'nav-user-new': 'Naujas vartotojas',
     'nav-users': 'Vartotojai',
+    'nav-website': 'Interneto svetainė',
+    'nav-wikis': 'GitLab vikisvetaines',
 
     'project-list-add': 'Pridėti naują projektą',
     'project-list-cancel': 'Atšaukti',
@@ -576,6 +579,15 @@ const phrases = {
     'validation-localhost-is-wrong': '"localhost" ira netinkamas',
     'validation-password-for-admin-only': 'Tik administratoriai gali prisijungti naudodami slaptažodį',
     'validation-required': 'Privalomas',
+
+    'website-summary-cancel': 'Atšaukti',
+    'website-summary-domain-names': 'Domenų vardai',
+    'website-summary-edit': 'Redaguoti svetainę',
+    'website-summary-save': 'Išsaugoti svetainę',
+    'website-summary-template': 'Šablonas',
+    'website-summary-template-disabled': 'Išjungta',
+    'website-summary-template-generic': 'Bendras šablonas',
+    'website-summary-title': 'Interneto svetainė',
 
     'welcome': 'Sveiki!',
 };

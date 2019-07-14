@@ -130,8 +130,11 @@ const phrases = {
     'nav-server-new': 'Ny server',
     'nav-servers': 'Servere',
     'nav-settings': 'Innstillinger',
+    'nav-spreadsheets': 'Excel-filer',
     'nav-user-new': 'Ny bruker',
     'nav-users': 'Brukere',
+    'nav-website': 'Nettsted',
+    'nav-wikis': 'GitLab wikier',
 
     'project-list-add': 'Legg til nytt prosjekt',
     'project-list-cancel': 'Avbryt',
@@ -586,6 +589,15 @@ const phrases = {
     'validation-localhost-is-wrong': '"localhost" er ikke gyldig',
     'validation-password-for-admin-only': 'Bare administratorer kan logge på med passord',
     'validation-required': 'Påkrevd',
+
+    'website-summary-cancel': 'Avbryt',
+    'website-summary-domain-names': 'Domenenavn',
+    'website-summary-edit': 'Rediger nettside',
+    'website-summary-save': 'Lagre nettside',
+    'website-summary-template': 'Mal',
+    'website-summary-template-disabled': 'Deaktivert',
+    'website-summary-template-generic': 'Generisk mal',
+    'website-summary-title': 'Nettsted',
 
     'welcome': 'Velkommen!',
 };
