@@ -13,7 +13,7 @@ class ExcelPlainTextCell {
     }
 
     getData(options) {
-        return this.text;
+        return [ { style: {}, text: this.text } ];
     }
 }
 
