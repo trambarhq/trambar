@@ -401,18 +401,18 @@ const phrases = {
 
     'sign-off-menu-sign-off': 'Sign off',
 
-    'spreadsheet-list-add': 'Add new spreadsheet',
+    'spreadsheet-list-add': 'Add new link',
     'spreadsheet-list-cancel': 'Cancel',
     'spreadsheet-list-confirm-disable-$count': (count) => {
-        let spreadsheets = cardinal(count, 'this spreadsheet', 'these 2 spreadsheets');
+        let spreadsheets = cardinal(count, 'this link', 'these 2 links');
         return `Are you sure you want to disable ${spreadsheets}?`
     },
     'spreadsheet-list-confirm-reactivate-$count': (count) => {
-        let spreadsheets = cardinal(count, 'this spreadsheet', 'these 2 spreadsheets');
+        let spreadsheets = cardinal(count, 'this link', 'these 2 links');
         return `Are you sure you want to reactivate ${spreadsheets}?`
     },
-    'spreadsheet-list-edit': 'Edit spreadsheet list',
-    'spreadsheet-list-save': 'Save spreadsheet list',
+    'spreadsheet-list-edit': 'Edit link list',
+    'spreadsheet-list-save': 'Save link list',
     'spreadsheet-list-status-deleted': 'Deleted',
     'spreadsheet-list-status-disabled': 'Disabled',
     'spreadsheet-list-title': 'Excel files',
@@ -424,19 +424,19 @@ const phrases = {
         }
         return text;
     },
-    'spreadsheet-summary-add': 'Add new spreadsheet',
+    'spreadsheet-summary-add': 'Add new link',
     'spreadsheet-summary-cancel': 'Cancel',
-    'spreadsheet-summary-confirm-delete': 'Are you sure you want to delete this spreadsheet?',
-    'spreadsheet-summary-confirm-disable': 'Are you sure you want to disable this spreadsheet?',
-    'spreadsheet-summary-confirm-reactivate': 'Are you sure you want to reactivate this spreadsheet?',
-    'spreadsheet-summary-delete': 'Delete spreadsheet',
+    'spreadsheet-summary-confirm-delete': 'Are you sure you want to delete this link?',
+    'spreadsheet-summary-confirm-disable': 'Are you sure you want to disable this link?',
+    'spreadsheet-summary-confirm-reactivate': 'Are you sure you want to reactivate this link?',
+    'spreadsheet-summary-delete': 'Delete link',
     'spreadsheet-summary-description': 'Description',
-    'spreadsheet-summary-disable': 'Disable spreadsheet',
-    'spreadsheet-summary-edit': 'Edit spreadsheet',
+    'spreadsheet-summary-disable': 'Disable link',
+    'spreadsheet-summary-edit': 'Edit link',
     'spreadsheet-summary-name': 'Identifier',
-    'spreadsheet-summary-reactivate': 'Reactivate spreadsheet',
-    'spreadsheet-summary-return': 'Return to spreadsheet list',
-    'spreadsheet-summary-save': 'Save spreadsheet',
+    'spreadsheet-summary-reactivate': 'Reactivate link',
+    'spreadsheet-summary-return': 'Return to link list',
+    'spreadsheet-summary-save': 'Save link',
     'spreadsheet-summary-sheet-$number-$name': (number, name) => {
         let text = `Sheet ${number}`;
         if (name) {
@@ -685,10 +685,10 @@ const phrases = {
     'wiki-summary-confirm-select': 'Are you sure you want to make this wiki public?',
     'wiki-summary-confirm-deselect': 'Are you sure you want to deselect this wiki?',
     'wiki-summary-edit': 'Edit wiki',
-    'wiki-summary-public-always': 'Always',
     'wiki-summary-public': 'Public',
+    'wiki-summary-public-always': 'Always',
     'wiki-summary-public-no': 'No',
-    'wiki-summary-public-referenced': 'When referenced by another public page',
+    'wiki-summary-public-referenced': 'Yes (referenced by another public page)',
     'wiki-summary-repo': 'Repository identifier',
     'wiki-summary-return': 'Return to wiki list',
     'wiki-summary-slug': 'Slug',
