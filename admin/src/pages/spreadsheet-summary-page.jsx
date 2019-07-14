@@ -287,7 +287,7 @@ function SpreadsheetSummaryPageSync(props) {
     }
 
     function renderSheet(sheet, i) {
-        return <Sheet sheet={sheet} number={i + 1} env={env}/>
+        return <Sheet key={i} sheet={sheet} number={i + 1} env={env}/>
     }
 }
 
@@ -336,7 +336,13 @@ import { useRichText } from './trambar-www/hooks.mjs';
 function Table(props) {
     const { sheet, env } = props;
     const { t } = env.locale;
-    const rt = useRichText();
+    const rt = useRichText({
+        imageWidth: 100,
+        imageFilters: {
+            sharpen: true
+        },
+        imageServer: `${location.protocol}//${location.hostname}`,
+    });
 
     return (
         <table>
@@ -351,16 +357,16 @@ function Table(props) {
         </table>
     );
 
-    function renderHeader(column) {
-        return <th>{rt(column.header)}</th>;
+    function renderHeader(column, i) {
+        return <th key={i}>{rt(column.header)}</th>;
     }
 
-    function renderRow(row) {
-        return <tr>{_.map(row.cells, renderCell)}</tr>;
+    function renderRow(row, i) {
+        return <tr key={i}>{_.map(row.cells, renderCell)}</tr>;
     }
 
-    function renderCell(cell) {
-        return <td>{rt(cell)}</td>;
+    function renderCell(cell, i) {
+        return <td key={i}>{rt(cell)}</td>;
     }
 }
 

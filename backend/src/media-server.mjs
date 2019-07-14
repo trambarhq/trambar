@@ -170,7 +170,8 @@ async function handleImageFiltersRequest(req, res) {
         if (!m) {
             throw new HTTPError(400, 'Invalid filename');
         }
-        const filters = m[1], format = m[3];
+        const filters = m[1];
+        let format = m[3];
         if (!format || format === 'jpg') {
             format = 'jpeg';
         }

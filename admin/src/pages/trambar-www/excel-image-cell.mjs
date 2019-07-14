@@ -1,3 +1,5 @@
+import React from 'react';
+
 class ExcelImageCell {
     constructor(column, data) {
         this.column = column;
@@ -12,16 +14,86 @@ class ExcelImageCell {
     }
 
     getRichText(options) {
-        return this.getPlainText(options);
+        const props = this.getData(options);
+        return React.createElement('img', props);
     }
 
     getData(options) {
-        return this.getData(options);
+        // calcuate size of image based on specified dimensions
+        const reqWidth = options.imageWidth;
+        const reqHeight = options.imageHeight;
+        const aspectRatio = this.width / this.height;
+        let scaledWidth, scaledHeight;
+        let crop;
+        if (reqWidth && reqHeight) {
+            const reqAspectRatio = reqWidth / reqHeight;
+            if (reqAspectRatio !== aspectRatio) {
+                // need to crop image
+                crop = {};
+                if (reqAspectRatio > aspectRatio) {
+                    // wider than actual image--crop top and bottom
+                    crop.width = this.width;
+                    crop.height = Math.round(this.width / reqAspectRatio);
+                    crop.left = 0;
+                    crop.top = Math.round((this.height - crop.height) / 2);
+                } else {
+                    crop.width = Math.round(this.height * reqAspectRatio);
+                    crop.height = this.height;
+                    crop.left = Math.round((this.width - crop.width) / 2);
+                    crop.top = 0;
+                }
+            }
+            scaledWidth = reqWidth;
+            scaledHeight = reqHeight;
+        } else if (reqWidth) {
+            scaledWidth = reqWidth;
+            scaledHeight = Math.round(reqWidth / aspectRatio);
+        } else if (reqHeight) {
+            scaledWidth = Math.round(reqHeight * aspectRatio);
+            scaledHeight = reqHeight;
+        } else {
+            scaledWidth = this.width;
+            scaledHeight = this.height;
+        }
+
+        // calculate source image size based on device pixel ratio
+        const imagePixelRatio = Math.min(this.width / scaledWidth, this.height / scaledHeight);
+        const devicePixelRatio = options.devicePixelRatio || 1;
+        const pixelRatio = Math.min(devicePixelRatio, imagePixelRatio);
+        const realWidth = Math.round(scaledWidth * pixelRatio);
+        const realHeight = Math.round(scaledHeight * pixelRatio);
+
+        // apply necessary filters
+        const dimFilters = {};
+        let origWidth = this.width;
+        let origHeight = this.height;
+        if (crop) {
+            dimFilters.crop = crop;
+            origWidth = crop.width;
+            origHeight = crop.height;
+        }
+        if (origWidth !== realWidth || origHeight !== realHeight) {
+            dimFilters.resize = { width: realWidth, height: realHeight };
+        }
+        const filters = { ...dimFilters, ...options.imageFilters };
+        const format = options.imageFormat || this.format;
+        const server = options.imageServer;
+        const url = this.getURL(filters, format, server);
+
+        return {
+            src: url,
+            width: realWidth,
+            height: realHeight,
+            style: {
+                width: scaledWidth,
+                height: scaledHeight,
+            }
+        };
     }
 
-    getURL(filters, format) {
-        const modifier = [];
-        for (let [ n, v ] in Object.entries(filters)) {
+    getURL(filters, format, server) {
+        const modifiers = [];
+        for (let [ n, v ] of Object.entries(filters)) {
             let m = '';
             switch (n) {
                 case 'background':
@@ -101,7 +173,7 @@ class ExcelImageCell {
                     break;
             }
             if (m) {
-                modifier.push(m);
+                modifiers.push(m);
             }
         }
         let url = this.url;
@@ -110,6 +182,9 @@ class ExcelImageCell {
             if (format) {
                 url += `.${format}`;
             }
+        }
+        if (server) {
+            url = server + url;
         }
         return url;
     }
