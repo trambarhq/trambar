@@ -17,6 +17,7 @@ import * as CacheManager from './lib/www-handler/cache-manager.mjs';
 import * as ExcelRetriever from './lib/www-handler/excel-retriever.mjs';
 import * as PageGenerator from './lib/www-handler/page-generator.mjs';
 import * as SnapshotRetriever from './lib/www-handler/snapshot-retriever.mjs';
+import * as TrafficMonitor from './lib/www-handler/traffic-monitor.mjs';
 import * as WikiRetriever from './lib/www-handler/wiki-retriever.mjs';
 
 import TaskQueue from './lib/task-queue.mjs';
@@ -27,6 +28,9 @@ import {
     TaskPurgeSpreadsheet,
     TaskPurgeWiki,
     TaskPurgeAll,
+
+    PeriodicTaskSaveWebsiteTraffic,
+    PeriodicTaskUpdateGeoIPDatabase,
 } from './lib/www-handler/tasks.mjs';
 
 // accessors
@@ -49,6 +53,7 @@ async function start() {
     app.use(CORS());
     app.use(redirectToProject);
     app.get('/srv/www/.cache', handleCacheStatusRequest);
+    app.get('/srv/www/:schema/geoip', handleGeoIPRequest);
     app.get('/srv/www/:schema/wiki/:repoName/:slug', handleWikiRequest);
     app.get('/srv/www/:schema/wiki/:slug', handleWikiRequest);
     app.get('/srv/www/:schema/excel/:name', handleExcelRequest);
@@ -89,9 +94,10 @@ async function start() {
     await db.listen(tables, 'change', handleDatabaseChanges, 500);
 
     taskQueue = new TaskQueue;
-    await taskQueue.start();
-
+    taskQueue.schedule(new PeriodicTaskSaveWebsiteTraffic);
+    taskQueue.schedule(new PeriodicTaskUpdateGeoIPDatabase);
     taskQueue.add(new TaskPurgeAll);
+    await taskQueue.start();
 }
 
 async function stop() {
@@ -113,6 +119,21 @@ async function handleCacheStatusRequest(req, res, next) {
         const text = await CacheManager.stat();
         res.set({ 'X-Accel-Expires': 0 });
         res.type('text').send(text);
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function handleGeoIPRequest(req, res, next) {
+    try {
+        const { schema } = req.params;
+        const ip = req.headers['x-forwarded-for'];
+        if (!ip) {
+            throw new Error('Nginx did not send X-Forwarded-For header');
+        }
+        const country = await TrafficMonitor.recordIP(schema, ip);
+        res.set({ 'X-Accel-Expires': 0 });
+        res.type('text').send(country);
     } catch (err) {
         next(err);
     }
@@ -222,6 +243,9 @@ function handleError(err, req, res, next) {
         const status = err.status || err.statusCode || 400;
         res.type('text').status(status).send(err.message);
     }
+    if (process.env.NODE_ENV !== 'production') {
+        console.error(err);
+    }
 }
 
 function exportWiki(wiki) {
@@ -319,6 +343,11 @@ function handleDatabaseChanges(events) {
             if (event.diff.name || event.diff.repo_ids) {
                 const schema = event.previous.name || event.current.name;
                 taskQueue.add(new TaskPurgeProject(schema));
+            }
+            if (event.diff.name) {
+                const nameBefore = event.previous.name;
+                const nameAfter = event.current.name;
+                TrafficMonitor.moveStatistics(nameBefore, nameAfter);
             }
         } else if (event.table === 'snapshot') {
             if (event.diff.head && !event.current.head) {

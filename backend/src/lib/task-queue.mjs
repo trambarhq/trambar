@@ -9,6 +9,9 @@ class TaskQueue {
     }
 
     add(task) {
+        if (task instanceof PeriodicTask) {
+            throw new Error('Use schedule() to schedule periodic tasks');
+        }
         const existing = this.queue.find((existing) => {
             return _.isEqual(existing, task);
         });

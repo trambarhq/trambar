@@ -12,6 +12,7 @@ const StoryTypes = [
     'post',
     'survey',
     'task-list',
+    'website-traffic',
 ];
 
 const EditableStoryTypes = [

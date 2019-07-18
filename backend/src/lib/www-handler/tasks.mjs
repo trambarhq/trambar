@@ -1,9 +1,11 @@
 import _ from 'lodash';
+import Moment from 'moment';
 import Database from '../database.mjs';
 import { BasicTask, PeriodicTask } from '../task-queue.mjs';
 
 import * as CacheManager from './cache-manager.mjs';
 import * as ExcelRetriever from './excel-retriever.mjs';
+import * as TrafficMonitor from './traffic-monitor.mjs';
 
 // accessors
 import Project from '../accessors/project.mjs';
@@ -92,6 +94,32 @@ class TaskPurgeAll extends BasicTask {
     }
 }
 
+class PeriodicTaskSaveWebsiteTraffic extends PeriodicTask {
+    delay(initial) {
+        if (initial) {
+            // start it at the hour
+            return Moment().startOf('hour').add(1, 'hour') - Moment();
+        } else {
+            return 1 * HOUR;
+        }
+    }
+
+    async run() {
+        return TrafficMonitor.saveStatistics();
+    }
+}
+
+class PeriodicTaskUpdateGeoIPDatabase extends PeriodicTask {
+    delay(initial) {
+        return 24 * HOUR;
+    }
+
+    async run() {
+        return TrafficMonitor.updateDatabase();
+    }
+}
+
+
 function getSnapshot(db, snapshotID) {
     const criteria = {
         id: snapshotID,
@@ -119,4 +147,7 @@ export {
     TaskPurgeSpreadsheet,
     TaskPurgeWiki,
     TaskPurgeAll,
+
+    PeriodicTaskSaveWebsiteTraffic,
+    PeriodicTaskUpdateGeoIPDatabase,
 };
