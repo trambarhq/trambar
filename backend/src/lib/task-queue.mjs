@@ -3,18 +3,29 @@ import AsyncQueue from './common/utils/async-queue.mjs';
 
 class TaskQueue {
     constructor() {
-        const priority = (task) => { return task.priority(); };
+        const priority = (entry) => {
+            return entry.task.priority(entry.initial); 
+        };
         this.queue = new AsyncQueue([ priority ], [ 'desc' ]);
         this.periodicTasks = [];
     }
 
     add(task) {
-        const existing = this.queue.find((existing) => {
-            return _.isEqual(existing, task);
-        });
-        if (!existing) {
-            this.queue.add(task);
+        if (task instanceof PeriodicTask) {
+            throw new Error('Use schedule() to schedule periodic tasks');
         }
+        return this.push(task, false);
+    }
+
+    push(task, initial) {
+        const existing = this.queue.find((existing) => {
+            return _.isEqual(existing.task, task);
+        });
+        if (existing) {
+            return false;
+        }
+        this.queue.add({ task, initial });
+        return true;
     }
 
     schedule(periodicTask) {
@@ -29,7 +40,7 @@ class TaskQueue {
             try {
                 await task.start(this);
                 setTimeout(() => {
-                    this.add(task);
+                    this.push(task, true);
                 }, task.delay(true));
             } catch (err) {
                 console.error(err);
@@ -50,15 +61,16 @@ class TaskQueue {
 
     async loop() {
         for (;;) {
-            const task = await this.queue.pull();
-            if (!task) {
+            const entry = await this.queue.pull();
+            if (!entry) {
                 break;
             }
+            const { task, initial } = entry;
             try {
-                await task.run(this);
+                await task.run(this, initial);
                 if (task instanceof PeriodicTask) {
                     setTimeout(() => {
-                        this.add(task);
+                        this.push(task, false);
                     }, task.delay());
                 }
             } catch (err) {
