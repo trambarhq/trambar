@@ -128,7 +128,7 @@ async function handleGeoIPRequest(req, res, next) {
     try {
         const { schema } = req.params;
         //const ip = req.headers['x-forwarded-for'];
-        const ip = '91.202.240.199';
+        const ip = '213.171.195.48';
         if (!ip) {
             throw new Error('Nginx did not send X-Forwarded-For header');
         }

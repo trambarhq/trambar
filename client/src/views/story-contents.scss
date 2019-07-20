@@ -215,6 +215,68 @@
                 margin-right: 2em;
             }
         }
+
+        &.website-traffic {
+            .by-country {
+                .label {
+                    display: block;
+                    margin-bottom: 0.1em;
+                }
+
+                .bar {
+                    display: block;
+                    position: relative;
+                    border: 1px solid $story-survey-bar-border-color;
+                    font-size: 0.8em;
+                    height: 1.5em;
+                    margin-bottom: 0.4em;
+
+                    .percent {
+                        position: absolute;
+                        display: block;
+                        left: 0.2em;
+                        top: 0.1em;
+                        color: $story-survey-bar-text-color;
+                    }
+
+                    .count {
+                        position: absolute;
+                        display: block;
+                        right: 0.2em;
+                        top: 0.1em;
+                        color: $story-survey-count-text-color;
+                    }
+
+                    .filled {
+                        display: block;
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        bottom: 0;
+                        $series-colors: (
+                            hsl(30, 100%, 65%),
+                            hsl(60, 80%, 55%),
+                            hsl(90, 100%, 65%),
+                            hsl(120, 80%, 45%),
+                            hsl(150, 100%, 65%),
+                        );
+
+                        @for $i from 0 to length($series-colors) {
+                            &.color-#{$i + 1} {
+                                background-color: nth($series-colors, $i + 1);
+                            }
+                        }
+                    }
+                }
+
+                &.vast-majority {
+                    .count {
+                        // use darker color when bar extends all the way to the end
+                        color: $story-survey-bar-text-color;
+                    }
+                }
+            }
+        }
     }
 
     .impact {

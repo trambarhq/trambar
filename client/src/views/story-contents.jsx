@@ -35,7 +35,7 @@ import './story-contents.scss';
 function StoryContents(props) {
     const { story, authors, reactions, repo, currentUser } = props;
     const { database, env, access } = props;
-    const { t, p, g } = env.locale;
+    const { t, p, g, f } = env.locale;
     const audioPlayerRef = useRef();
     const [ selectedComponent, setSelectedComponent ] = useState('');
     const [ error, run ] = useErrorCatcher();
@@ -45,7 +45,7 @@ function StoryContents(props) {
     const userAnswers = useDraftBuffer({
         original: originalAnswers,
     });
-    const resources = _.get(story, 'details.resources');
+    const resources = story.details.resources;
     const markdownResources = useMarkdownResources(resources, env);
 
     const handleTaskListItemChange = useListener((evt) => {
@@ -127,6 +127,8 @@ function StoryContents(props) {
                 return renderMilestoneText();
             case 'wiki':
                 return renderWikiText();
+            case 'website-traffic':
+                return renderWebsiteTrafficText();
         }
     }
 
@@ -372,8 +374,66 @@ function StoryContents(props) {
         );
     }
 
+    function renderWebsiteTrafficText() {
+        const total = story.details.total;
+        const date = f(story.details.date);
+        return (
+            <div className="text website-traffic">
+                <p>
+                    {t('story-website-traffic-$count-on-$date', total, date)}
+                </p>
+                <p>{renderWebsiteTrafficChart()}</p>
+            </div>
+        );
+    }
+
+    function renderWebsiteTrafficChart() {
+        const total = story.details.total;
+        const countries = [];
+        for (let [ code, count ] of _.entries(story.details.by_country)) {
+            countries.push({ code, count });
+        }
+        const topCountries = _.orderBy(countries, 'count', 'desc');
+        if (topCountries.length > 5) {
+            const otherCountries = topCountries.splice(4);
+            const otherTotal = _.sum(_.map(otherCountries, 'count'));
+            const otherCodes = _.map(otherCountries, 'code');
+            topCountries.push({ code: 'zz', count: otherTotal, others: otherCodes });
+        }
+        return _.map(topCountries, (country, key) => {
+            const classNames = [ 'by-country' ];
+            const percentNum = _.round(country.count / total * 100);
+            if (percentNum === 0) {
+                return;
+            } else if (percentNum >= 99) {
+                classNames.push('vast-majority');
+            }
+            const percent = percentNum + '%';
+            const color = `color-${key + 1}`;
+            let title;
+            if (country.code === 'zz') {
+                const others = _.map(country.others, (code) => {
+                    return t(`country-name-${code}`);
+                });
+                title = others.join(', ');
+            }
+            return (
+                <span className={classNames.join(' ')} title={title} key={key}>
+                    <span className="label">{t(`country-name-${country.code}`)}</span>
+                    <span className="bar">
+                        <span className={`filled ${color}`} style={{ width: percent }} />
+                        <span className="percent">{percent}</span>
+                        <span className="count">{country.count}</span>
+                    </span>
+                </span>
+            );
+        });
+
+
+    }
+
     function renderChanges() {
-        const files = _.get(story, 'details.files');
+        const files = story.details.files;
         if (_.isEmpty(files)) {
             return null;
         }
@@ -388,7 +448,7 @@ function StoryContents(props) {
                 );
             }
         }, []);
-        const lines = _.get(story, 'details.lines');
+        const lines = story.details.lines;
         const lineChangeTypes = [ 'added', 'deleted', 'modified' ];
         const lineChanges = _.transform(lineChangeTypes, (elements, type, i) => {
             const count = lines[type];
@@ -499,7 +559,7 @@ function StoryContents(props) {
     }
 
     function renderAppComponents() {
-        const components = _.get(story, 'details.components');
+        const components = story.details.components;
         if (_.isEmpty(components)) {
             return null;
         }

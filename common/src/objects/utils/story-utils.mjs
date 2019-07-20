@@ -271,6 +271,19 @@ function removeSuperfluousDetails(story) {
     return story;
 }
 
+const trafficRobot = {
+    robot: true,
+    type: 'traffic'
+};
+
+function findRobot(story) {
+    if (story) {
+        switch (story.type) {
+            case 'website-traffic': return trafficRobot;
+        }
+    }
+}
+
 export {
     isSaved,
     isEditable,
@@ -285,4 +298,5 @@ export {
     extractUserAnswers,
     insertUserAnswers,
     removeSuperfluousDetails,
+    findRobot,
 };

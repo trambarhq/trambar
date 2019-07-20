@@ -191,6 +191,7 @@ async function StoryList(props) {
                     respondents: findRespondents(respondents, reactions),
                     bookmarks: findBookmarks(bookmarks, story, currentUser),
                     recipients: findRecipients(recipients, bookmarks, story, currentUser),
+                    project,
                     repos,
                     currentUser,
                     database,

@@ -13,14 +13,19 @@ import './author-names.scss';
  * will appear while the rests are given in a pop-up (MultipleUserNames).
  */
 function AuthorNames(props) {
-    let { env, authors } = props;
+    let { env, authors, robot } = props;
     let { t } = env.locale;
     let names = _.map(authors, (author) => {
         return UserUtils.getDisplayName(author, env);
     });
     let contents;
     if (!authors || authors.length === 0) {
-        contents = '\u00a0';
+        if (robot) {
+            const name = t(`robot-name-${robot.type}`);
+            contents = <span key={1} className="sole author">{name}</span>
+        } else {
+            contents = '\u00a0';
+        }
     } else if (authors.length === 1) {
         contents = <span key={1} className="sole author">{names[0]}</span>;
     } else if (authors.length === 2) {

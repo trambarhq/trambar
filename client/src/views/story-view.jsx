@@ -28,7 +28,7 @@ import './story-view.scss';
  * task of rendering the actual story contents to StoryContents.
  */
 function StoryView(props) {
-    const { story, authors, reactions, respondents, bookmarks, recipients, repos, currentUser } = props;
+    const { story, authors, reactions, respondents, bookmarks, recipients, project, repos, currentUser } = props;
     const { access, highlighting, pending } = props;
     const { highlightReactionID, scrollToReactionID } = props;
     const { database, route, env, payloads } = props;
@@ -39,6 +39,7 @@ function StoryView(props) {
     const [ openMenu, setOpenMenu ] = useState('');
     const [ error, run ] = useErrorCatcher(true);
     const reactionContainerRef = useRef();
+    const robot = StoryUtils.findRobot(story);
 
     const handleExpansionClick = useListener((evt) => {
         showComments(true);
@@ -226,13 +227,18 @@ function StoryView(props) {
             user: leadAuthor,
             size: 'medium',
             href: url,
+            robot,
             env,
         };
         return <ProfileImage {...props} />;
     }
 
     function renderAuthorNames() {
-        const props = { authors, env };
+        const props = {
+            authors,
+            robot,
+            env
+        };
         return <AuthorNames {...props} />;
     }
 

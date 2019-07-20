@@ -3,7 +3,8 @@ import React from 'react';
 import * as BlobManager from 'common/transport/blob-manager.mjs';
 import { ResourceView }  from 'common/widgets/resource-view.jsx';
 
-import Icon from 'octicons/build/svg/person.svg';
+import ProfileIcon from 'octicons/build/svg/person.svg';
+import InternetIcon from '../../assets/internet.svg';
 
 import './profile-image.scss';
 
@@ -12,7 +13,7 @@ import './profile-image.scss';
  * it renders a placeholder graphic.
  */
 function ProfileImage(props) {
-    const { env, href, user, size } = props;
+    const { env, href, user, robot, size } = props;
     const className = `profile-image ${size}`;
     const resources = _.get(user, 'details.resources');
     const profileImage = _.find(resources, { type: 'image' });
@@ -28,7 +29,17 @@ function ProfileImage(props) {
         };
         image = <ResourceView {...props} />;
     } else {
-        image = <div className="placeholder"><Icon /></div>;
+        let Icon = ProfileIcon;
+        let iconClassName = 'placeholder';
+        if (robot) {
+            switch (robot.type) {
+                case 'traffic':
+                    Icon = InternetIcon;
+                    break;
+            }
+            iconClassName = robot.type;
+        }
+        image = <div className={iconClassName}><Icon /></div>;
     }
     if (href) {
         return <a className={className} href={href}>{image}</a>;
