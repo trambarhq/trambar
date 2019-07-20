@@ -119,7 +119,6 @@ class PeriodicTaskUpdateGeoIPDatabase extends PeriodicTask {
     }
 }
 
-
 function getSnapshot(db, snapshotID) {
     const criteria = {
         id: snapshotID,

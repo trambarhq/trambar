@@ -51,6 +51,7 @@ class Story extends ExternalData {
             has_tags: Boolean,
             has_unfinished_tasks: Boolean,
             search: Object,
+            created_between: String,
             per_user_limit: Number,
         };
         this.eventColumns = {
@@ -164,6 +165,7 @@ class Story extends ExternalData {
     async apply(db, schema, criteria, query) {
         const { lead_author_id, time_range, newer_than, older_than, bumped_after,
                 url, has_tags, has_unfinished_tasks, search, per_user_limit,
+                created_between,
                 ...basic } = criteria;
         super.apply(basic, query);
 
@@ -178,6 +180,9 @@ class Story extends ExternalData {
         }
         if (time_range !== undefined) {
             conds.push(`ptime <@ $${params.push(time_range)}::tsrange`);
+        }
+        if (created_between !== undefined) {
+            conds.push(`ctime <@ $${params.push(created_between)}::tsrange`);
         }
         if (newer_than !== undefined) {
             conds.push(`ptime > $${params.push(newer_than)}`);

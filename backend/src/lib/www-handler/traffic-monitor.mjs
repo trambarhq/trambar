@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Moment from 'moment';
 import CrossFetch from 'cross-fetch';
 import Zlib from 'zlib';
 import Tar from 'tar';
@@ -13,9 +14,11 @@ let traffic = {};
 
 async function recordIP(schema, ip) {
     try {
+        const date = Moment().startOf('day').format('YYYY-MM-DD');
         const country = await findCountry(ip);
-        const count = _.get(traffic, [ schema, country ], 0);
-        _.set(traffic, [ schema, country ], count + 1);
+        const path = [ schema, date, country ];
+        const count = _.get(traffic, path, 0);
+        _.set(traffic, path, count + 1);
         return country;
     } catch (err) {
         return 'zz';
@@ -35,7 +38,43 @@ async function saveStatistics() {
     traffic = {};
 
     const db = await Database.open();
-    for (let [ schema, stats ] of _.entries(traffic)) {
+    for (let [ schema, stats ] of _.entries(oldTraffic)) {
+        const taskLog = TaskLog.start('website-statistics-save', {
+            project: schema,
+        });
+        try {
+            let total = 0;
+            for (let [ date, dailyStats ] of _.entries(stats)) {
+                // look for existing story
+                const start = Moment(date);
+                const end = start.clone().add(1, 'day');
+                const range = `[${start.toISOString()},${end.toISOString()})`;
+                const criteria = {
+                    type: 'website-traffic',
+                    created_between: range,
+                };
+                const story = await Story.findOne(db, schema, criteria, 'id, details');
+                const storyChanges = story || {
+                    type: 'website-traffic',
+                    details: {}
+                };
+                let addition = 0;
+                for (let [ country, count ] of _.entries(dailyStats)) {
+                    const path = [ 'by_country', country ];
+                    const existingCount = _.get(storyChanges.details, path, 0);
+                    _.set(storyChanges.details, path, existingCount + count);
+                    addition += count;
+                }
+                const existingTotal = _.get(storyChanges.details, 'total', 0);
+                _.set(storyChanges.details, 'total', existingTotal + addition);
+                const storyAfter = await Story.saveOne(db, schema, storyChanges);
+                total += existingTotal + addition;
+            }
+            taskLog.set('visitors', total);
+            await taskLog.finish();
+        } catch (err) {
+            await taskLog.abort(err);
+        }
     }
 }
 
