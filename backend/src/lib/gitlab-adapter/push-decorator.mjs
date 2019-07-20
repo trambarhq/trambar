@@ -296,7 +296,7 @@ async function parseDescriptorFile(cxt, path) {
     for (let token of tokens) {
         if (token.type === 'heading') {
             const cap = _.trim(token.captured);
-            const m = /^#\s*([a-z]{2})\b/.exec(cap);
+            const m = /^#\s*([a-z]{2})\b/i.exec(cap);
             if (m) {
                 const code = m[1];
                 languageTokens[code] = currentLanguageTokens = [];

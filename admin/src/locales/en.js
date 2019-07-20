@@ -685,6 +685,7 @@ const phrases = {
     'wiki-summary-confirm-select': 'Are you sure you want to make this wiki public?',
     'wiki-summary-confirm-deselect': 'Are you sure you want to deselect this wiki?',
     'wiki-summary-edit': 'Edit wiki',
+    'wiki-summary-page-contents': 'Contents',
     'wiki-summary-public': 'Public',
     'wiki-summary-public-always': 'Always',
     'wiki-summary-public-no': 'No',

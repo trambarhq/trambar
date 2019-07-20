@@ -1,12 +1,12 @@
 import _ from 'lodash';
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
 import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.mjs';
 import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
 
-import { ExcelFile, TextContext, useRichText } from './trambar-www/index.mjs';
+import { ExcelFile, useRichText } from 'trambar-www';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -63,12 +63,6 @@ function SpreadsheetSummaryPageSync(props) {
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     const warnDataLoss = useDataLossWarning(route, env, confirm);
-    const textOptions = useMemo(() => {
-        return {
-            language: env.localeCode,
-            devicePixelRatio: env.devicePixelRatio,
-        };
-    }, [ env ]);
 
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
@@ -289,12 +283,8 @@ function SpreadsheetSummaryPageSync(props) {
 
     function renderSheets() {
         if (spreadsheet && !spreadsheet.disabled && !spreadsheet.deleted) {
-            const excel = new ExcelFile(spreadsheet.details);
-            return (
-                <TextContext.Provider value={textOptions}>
-                    {_.map(excel.sheets, renderSheet)}
-                </TextContext.Provider>
-            );
+            const excel = ExcelFile.create(spreadsheet.details);
+            return _.map(excel.sheets, renderSheet);
         }
     }
 
@@ -335,7 +325,7 @@ function Sheet(props) {
         return (
             <CollapsibleContainer open={open}>
                 <div className="table-container">
-                    <Table sheet={sheet} />
+                    <Table sheet={sheet} env={env} />
                 </div>
             </CollapsibleContainer>
         );
@@ -343,13 +333,15 @@ function Sheet(props) {
 }
 
 function Table(props) {
-    const { sheet } = props;
+    const { sheet, env } = props;
     const rt = useRichText({
+        devicePixelRatio: env.devicePixelRatio,
         imageWidth: 100,
         imageFilters: {
             sharpen: true
         },
     });
+    const sheetLocalized = sheet.filter(env.locale.localeCode);
 
     return (
         <table>
@@ -365,7 +357,11 @@ function Table(props) {
     );
 
     function renderHeader(column, i) {
-        return <th key={i}>{rt(column.header)}</th>;
+        let text = column.name;
+        if (!_.isEmpty(column.flags)) {
+            text += ` (${_.join(column.flags, ', ')})`;
+        }
+        return <th key={i}>{text}</th>;
     }
 
     function renderRow(row, i) {

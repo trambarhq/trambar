@@ -23,7 +23,7 @@ async function retrieve(schema, name, redirection) {
         const buffer = await fetchSpreadsheet(spreadsheet);
         if (buffer) {
             taskLog.describe(`parsing Excel file`);
-            const { etag, type } = buffer;
+            const { etag, type, filename } = buffer;
             const workbook = await parseSpreadsheet(buffer);
 
             // import media files
@@ -40,7 +40,7 @@ async function retrieve(schema, name, redirection) {
 
             const spreadsheetChanges = {
                 id: spreadsheet.id,
-                details: { ...spreadsheet.details, type, ...workbook },
+                details: { ...spreadsheet.details, type, filename, ...workbook },
                 etag,
             };
             if (!spreadsheet.name && buffer.filename) {
@@ -53,14 +53,14 @@ async function retrieve(schema, name, redirection) {
         }
         taskLog.set('name', name);
         taskLog.set('changed', changed);
-        if (buffer.filename) {
+        if (buffer && buffer.filename) {
             taskLog.set('filename', buffer.filename);
         }
         await taskLog.finish();
 
         if (redirection) {
             // make URL shorter when we're using project-specific domain name
-            trimURLs(spreadsheet.details.data);
+            trimURLs(spreadsheet.details.sheets);
         }
         return spreadsheet;
     } catch (err) {
@@ -126,34 +126,38 @@ async function parseSpreadsheet(buffer) {
     const subject = workbook.subject;
     const sheets = [];
     for (let worksheet of workbook.worksheets) {
-        const sheetName = _.trim(worksheet.name);
         const { state, rowCount, columnCount } = worksheet;
-        if (state === 'visible' && sheetName) {
-            const { rowCount, columnCount } = worksheet;
+        const sheetNameFlags = extractNameFlags(worksheet.name);
+        if (state === 'visible' && sheetNameFlags) {
             const sheet = {
-                name: sheetName,
+                ...sheetNameFlags,
                 columns: [],
                 rows: [],
             };
+            const using = {};
             const importing = {};
+            const { rowCount, columnCount } = worksheet;
             for (let r = 1; r <= rowCount; r++) {
                 const row = worksheet.getRow(r);
                 if (r === 1) {
                     for (let c = 1; c <= columnCount; c++) {
                         const cell = row.getCell(c);
-                        let name = _.trim(cell.text);
-                        if (/\[import\]/i.test(name)) {
-                            name = name.replace(/\s*\[import\]\s*/, ''),
-                            importing[c] = true;
+                        const columnNameFlags = extractNameFlags(cell.text);
+                        if (columnNameFlags) {
+                            const column = columnNameFlags;
+                            sheet.columns.push(column);
+                            using[c] = true;
+                            importing[c] = (column.flags && column.flags.indexOf('import') !== -1);
                         }
-                        sheet.columns.push(name);
                     }
                 } else {
                     const currentRow = [];
                     for (let c = 1; c <= columnCount; c++) {
-                        const cell = row.getCell(c);
-                        const value = extractCellValue(cell, !!importing[c]);
-                        currentRow.push(value);
+                        if (using[c]) {
+                            const cell = row.getCell(c);
+                            const value = extractCellValue(cell, importing[c]);
+                            currentRow.push(value);
+                        }
                     }
                     sheet.rows.push(currentRow);
                 }
@@ -162,6 +166,21 @@ async function parseSpreadsheet(buffer) {
         }
     }
     return { title, subject, description, keywords, sheets };
+}
+
+function extractNameFlags(text) {
+    const trimmed = _.trim(text);
+    if (trimmed) {
+        const m = /\s*\(([^\)]+)\)$/.exec(trimmed);
+        const results = {};
+        if (m) {
+            const name = trimmed.substr(0, trimmed.length - m[0].length);
+            const flags = m[1].split(/\s*,\s*/).map(_.toLower);
+            return { name, flags };
+        } else {
+            return { name: trimmed };
+        }
+    }
 }
 
 function extractCellValue(cell, importing) {
@@ -179,7 +198,7 @@ function extractCellValue(cell, importing) {
         if (cell.fill && !_.isEqual(cell.fill, defaultFill)) {
             style.fill = cell.fill;
         }
-        let richText = cell.value.richText;
+        let richText = (cell.value) ? cell.value.richText : null;
         if (!richText) {
             if (cell.font) {
                 richText = [ { font: cell.font, text: cell.text } ];
