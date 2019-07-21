@@ -109,6 +109,16 @@ class PeriodicTaskSaveWebsiteTraffic extends PeriodicTask {
     }
 }
 
+class PeriodicTaskPublishWebsiteTraffic extends PeriodicTask {
+    delay(initial) {
+        return (initial) ? 0 : 1 * MIN;
+    }
+
+    async run(queue, initial) {
+        return TrafficMonitor.publishStatistics(initial);
+    }
+}
+
 class PeriodicTaskUpdateGeoIPDatabase extends PeriodicTask {
     delay(initial) {
         return 24 * HOUR;
@@ -148,5 +158,6 @@ export {
     TaskPurgeAll,
 
     PeriodicTaskSaveWebsiteTraffic,
+    PeriodicTaskPublishWebsiteTraffic,
     PeriodicTaskUpdateGeoIPDatabase,
 };

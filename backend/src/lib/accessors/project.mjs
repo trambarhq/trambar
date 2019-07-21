@@ -177,7 +177,12 @@ class Project extends Data {
             if (credentials.unrestricted) {
                 object.settings = row.settings;
             } else {
-                object.settings = _.pick(row.settings, 'membership', 'access_control');
+                const columns = [
+                    'membership',
+                    'access_control',
+                    'domains',
+                ]
+                object.settings = _.pick(row.settings, columns);
             }
             if (row.archived) {
                 object.archived = row.archived;

@@ -71,6 +71,7 @@ class Story extends ExternalData {
         this.accessControlColumns = {
             public: Boolean,
         };
+        this.version = 3;
     }
 
     /**
@@ -116,8 +117,31 @@ class Story extends ExternalData {
             CREATE INDEX ON ${table} USING gin(("payloadTokens"(details))) WHERE "payloadTokens"(details) IS NOT NULL;
             CREATE INDEX ON ${table} ((COALESCE(ptime, btime))) WHERE published = true AND ready = true;
             CREATE INDEX ON ${table} (id) WHERE unfinished_tasks > 0 AND published = true AND deleted = false;
+            CREATE INDEX ON ${table} (id) WHERE type = 'website-traffic' AND published = false;
         `;
         await db.execute(sql);
+    }
+
+    /**
+     * Upgrade table in schema to given DB version (from one version prior)
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Number} version
+     *
+     * @return {Promise<Boolean>}
+     */
+    async upgrade(db, schema, version) {
+        if (version === 3) {
+            // adding: template_repo_id
+            const table = this.getTableName(schema);
+            const sql = `
+                CREATE INDEX ON ${table} (id) WHERE type = 'website-traffic' AND published = false;
+            `;
+            await db.execute(sql)
+            return true;
+        }
+        return false;
     }
 
     /**

@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
+import 'moment-timezone';
 import CrossFetch from 'cross-fetch';
 import Zlib from 'zlib';
 import Tar from 'tar';
@@ -8,17 +9,22 @@ import GeoIP2Node from '@maxmind/geoip2-node';
 import Database from '../database.mjs';
 import * as TaskLog from '../task-log.mjs';
 
+import * as ProjectSettings from './project-settings.mjs';
 import Story from '../accessors/story.mjs';
 
 let traffic = {};
 
 async function recordIP(schema, ip) {
     try {
-        const date = Moment().startOf('day').format('YYYY-MM-DD');
         const country = await findCountry(ip);
-        const path = [ schema, date, country ];
-        const count = _.get(traffic, path, 0);
-        _.set(traffic, path, count + 1);
+        const project = ProjectSettings.find({ name: schema });
+        if (project) {
+            const tz = _.get(project.settings, 'timezone');
+            const date = getDate(tz);
+            const path = [ schema, date, country ];
+            const count = _.get(traffic, path, 0);
+            _.set(traffic, path, count + 1);
+        }
         return country;
     } catch (err) {
         return 'zz';
@@ -43,12 +49,15 @@ async function saveStatistics() {
             project: schema,
         });
         try {
+            const project = ProjectSettings.find({ name: schema });
+            if (!project) {
+                throw new Error('Project not found');
+            }
             let total = 0;
             for (let [ date, dailyStats ] of _.entries(stats)) {
                 // look for existing story
-                const start = Moment(date);
-                const end = start.clone().add(1, 'day');
-                const range = `[${start.toISOString()},${end.toISOString()})`;
+                const tz = _.get(project.settings, 'timezone');
+                const range = getDateRange(date, tz);
                 const criteria = {
                     type: 'website-traffic',
                     created_between: range,
@@ -56,7 +65,7 @@ async function saveStatistics() {
                 const story = await Story.findOne(db, schema, criteria, 'id, details');
                 const storyChanges = story || {
                     type: 'website-traffic',
-                    details: {}
+                    details: { date }
                 };
                 let addition = 0;
                 for (let [ country, count ] of _.entries(dailyStats)) {
@@ -78,10 +87,73 @@ async function saveStatistics() {
     }
 }
 
+const lastPublicationTimes = {};
+
+async function publishStatistics(initial) {
+    for (let project of ProjectSettings.all()) {
+        const tz = _.get(project.settings, 'timezone');
+        const reportTime = _.get(project.settings, 'traffic_report_time', '23:59:59');
+        const reportTimeToday = getTime(reportTime, tz);
+        const currentTime = Moment().toISOString();
+        if (currentTime > reportTimeToday || initial) {
+            const lastPublicationTime = lastPublicationTimes[project.id];
+            if (lastPublicationTime > reportTimeToday) {
+                // already published today's report
+                continue;
+            }
+            const schema = project.name;
+            const taskLog = TaskLog.start('website-statistics-publish', {
+                project: schema
+            });
+            try {
+                const db = await Database.open();
+                const criteria = {
+                    type: 'website-traffic',
+                    published: false,
+                };
+                const stories = await Story.find(db, schema, criteria, 'id');
+                const storyChanges = _.map(stories, (story) => {
+                    return {
+                        id: story.id,
+                        published: true,
+                        ptime: new String('NOW()')
+                    };
+                });
+                const storiesAfter = await Story.save(db, schema, storyChanges);
+                if (!_.isEmpty(storiesAfter)) {
+                    taskLog.set('count', storiesAfter.length);
+                }
+                lastPublicationTimes[project.id] = currentTime;
+                await taskLog.finish();
+            } catch (err) {
+                await taskLog.abort(err);
+            }
+        }
+    }
+}
+
 async function findCountry(ip) {
     const reader = await initializeReader();
     const response = await reader.country(ip);
     return _.toLower(response.country.isoCode);
+}
+
+function getDate(tz) {
+    const now = (tz) ? Moment().tz(tz) : Moment();
+    const start = now.startOf('day');
+    return start.format('YYYY-MM-DD');
+}
+
+function getDateRange(date, tz) {
+    const start = (tz) ? Moment.tz(date, tz) : Moment(date);
+    const end = start.clone().add(1, 'day');
+    return `[${start.toISOString()},${end.toISOString()})`;
+}
+
+function getTime(time, tz) {
+    const format = 'HH:mm:ss';
+    const at = (tz) ? Moment(time, format) : Moment.tz(time, format, tz);
+    return at.toISOString();
 }
 
 let readerPromise, reader, lastModified;
@@ -159,6 +231,7 @@ export {
     recordIP,
     findCountry,
     saveStatistics,
+    publishStatistics,
     moveStatistics,
     updateDatabase,
 };

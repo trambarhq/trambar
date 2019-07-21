@@ -16,6 +16,7 @@ import * as Shutdown from './lib/shutdown.mjs';
 import * as CacheManager from './lib/www-handler/cache-manager.mjs';
 import * as ExcelRetriever from './lib/www-handler/excel-retriever.mjs';
 import * as PageGenerator from './lib/www-handler/page-generator.mjs';
+import * as ProjectSettings from './lib/www-handler/project-settings.mjs';
 import * as SnapshotRetriever from './lib/www-handler/snapshot-retriever.mjs';
 import * as TrafficMonitor from './lib/www-handler/traffic-monitor.mjs';
 import * as WikiRetriever from './lib/www-handler/wiki-retriever.mjs';
@@ -30,11 +31,9 @@ import {
     TaskPurgeAll,
 
     PeriodicTaskSaveWebsiteTraffic,
+    PeriodicTaskPublishWebsiteTraffic,
     PeriodicTaskUpdateGeoIPDatabase,
 } from './lib/www-handler/tasks.mjs';
-
-// accessors
-import Project from './lib/accessors/project.mjs';
 
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
@@ -82,7 +81,7 @@ async function start() {
     // load project domain names
     const db = database = await Database.open(true);
     await db.need('global');
-    await updateDomainNameTable(db);
+    await ProjectSettings.load(db);
 
     // listen for database change events
     const tables = [
@@ -95,6 +94,7 @@ async function start() {
 
     taskQueue = new TaskQueue;
     taskQueue.schedule(new PeriodicTaskSaveWebsiteTraffic);
+    taskQueue.schedule(new PeriodicTaskPublishWebsiteTraffic);
     taskQueue.schedule(new PeriodicTaskUpdateGeoIPDatabase);
     taskQueue.add(new TaskPurgeAll);
     await taskQueue.start();
@@ -292,35 +292,14 @@ function controlCache(res, override, etag) {
     }
 }
 
-let projectDomainMap = {};
-
-async function updateDomainNameTable(db) {
-    const taskLog = TaskLog.start('project-domain-update');
-    try {
-        const projects = await Project.find(db, 'global', { deleted: false }, 'name, details');
-        const newMap = {};
-        for (let project of projects) {
-            const domains = _.get(project, 'details.domains', []);
-            for (let domain of domains) {
-                newMap[domain] = project.name;
-            }
-        }
-        taskLog.merge(newMap);
-        projectDomainMap = newMap;
-        await taskLog.finish();
-    } catch (err) {
-        await taskLog.abort(err);
-    }
-}
-
 function redirectToProject(req, res, next) {
     const host = req.headers.host;
-    const schema = projectDomainMap[host];
-    if (schema) {
+    const project = ProjectSettings.find({ host });
+    if (project) {
         if (_.startsWith(req.url, '/srv/www')) {
             req.redirected = true;
         } else {
-            const uri = `/srv/www/${schema}${req.url}`;
+            const uri = `/srv/www/${project.name}${req.url}`;
             res.set('X-Accel-Redirect', uri).end();
             return;
         }
@@ -338,35 +317,33 @@ function redirectToProject(req, res, next) {
 function handleDatabaseChanges(events) {
     const db = this;
     for (let event of events) {
-        if (event.table === 'project') {
-            updateDomainNameTable(db);
-
-            if (event.diff.name || event.diff.repo_ids) {
-                const schema = event.previous.name || event.current.name;
-                taskQueue.add(new TaskPurgeProject(schema));
+        const { id, schema, table, diff, previous, current } = event;
+        if (table === 'project') {
+            if (diff.name || diff.repo_ids || diff.template_repo_id) {
+                const name = previous.name || current.name;
+                taskQueue.add(new TaskPurgeProject(name));
             }
-            if (event.diff.name) {
-                const nameBefore = event.previous.name;
-                const nameAfter = event.current.name;
-                TrafficMonitor.moveStatistics(nameBefore, nameAfter);
+            if (diff.name) {
+                TrafficMonitor.moveStatistics(previous.name, current.name);
             }
-        } else if (event.table === 'snapshot') {
-            if (event.diff.head && !event.current.head) {
-                taskQueue.add(new TaskPurgeSnapshotHead(event.id));
+            if (diff.name || diff.settings || diff.deleted) {
+                ProjectSettings.update(db, id);
             }
-        } else if (event.table === 'spreadsheet') {
-            const schema = event.schema;
-            const name = event.previous.name || event.current.name;
+        } else if (table === 'snapshot') {
+            if (diff.head && !current.head) {
+                taskQueue.add(new TaskPurgeSnapshotHead(id));
+            }
+        } else if (table === 'spreadsheet') {
+            const name = previous.name || current.name;
             taskQueue.add(new TaskPurgeSpreadsheet(schema, name));
 
-            if (event.diff.disabled || event.diff.deleted) {
-                if (!event.current.disabled && !event.current.deleted) {
+            if (diff.disabled || diff.deleted) {
+                if (!current.disabled && !current.deleted) {
                     taskQueue.add(new TaskImportSpreadsheet(schema, name))
                 }
             }
-        } else if (event.table === 'wiki') {
-            const schema = event.schema;
-            const slug = event.previous.slug || event.current.slug;
+        } else if (table === 'wiki') {
+            const slug = previous.slug || current.slug;
             taskQueue.add(new TaskPurgeWiki(schema, slug));
         }
     }
