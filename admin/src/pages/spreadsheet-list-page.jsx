@@ -209,7 +209,7 @@ function SpreadsheetListPageSync(props) {
         if (!spreadsheet) {
             return <TH id="filename">{t('table-heading-filename')}</TH>;
         } else {
-            const filename = spreadsheet.details.filename || '-';
+            const filename = SpreadsheetUtils.getDisplayName(spreadsheet, env);
             let url, badge;
             if (selection.shown) {
                 if (selection.isAdding(spreadsheet)) {
