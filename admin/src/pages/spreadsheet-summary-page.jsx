@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
@@ -63,6 +63,16 @@ function SpreadsheetSummaryPageSync(props) {
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     const warnDataLoss = useDataLossWarning(route, env, confirm);
+    const excel = useMemo(() => {
+        if (spreadsheet && !spreadsheet.disabled && !spreadsheet.deleted) {
+            return ExcelFile.create(spreadsheet.details);
+        }
+    }, [ spreadsheet ]);
+    const excelLocalized = useMemo(() => {
+        if (excel) {
+            return excel.filter(env.locale.localeCode);
+        }
+    }, [ excel, env.locale ]);
 
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
@@ -306,19 +316,24 @@ function SpreadsheetSummaryPageSync(props) {
     }
 
     function renderSheets() {
-        if (spreadsheet && !spreadsheet.disabled && !spreadsheet.deleted) {
-            const excel = ExcelFile.create(spreadsheet.details);
+        if (excel) {
             return _.map(excel.sheets, renderSheet);
         }
     }
 
     function renderSheet(sheet, i) {
-        return <Sheet key={i} sheet={sheet} number={i + 1} env={env}/>
+        const props = {
+            sheet,
+            number: i + 1,
+            localized: excelLocalized,
+            env,
+        };
+        return <Sheet key={i} {...props} />
     }
 }
 
 function Sheet(props) {
-    const { sheet, number, env } = props;
+    const { sheet, localized, number, env } = props;
     const { t } = env.locale;
     const [ open, setOpen ] = useState(true);
 
@@ -335,10 +350,14 @@ function Sheet(props) {
 
     function renderTitle() {
         const dir = (open) ? 'up' : 'down';
-        const { name } = sheet;
+        const { name, flags } = sheet;
+        let label = name;
+        if (!_.isEmpty(flags)) {
+            label += ` (${_.join(flags, ', ')})`;
+        }
         return (
             <h2 className="title-toggle" onClick={handleToggleClick}>
-                {t('spreadsheet-summary-sheet-$number-$name', number, name)}
+                {t('spreadsheet-summary-sheet-$number-$name', number, label)}
                 {' '}
                 <i className={`fa fa-angle-double-${dir}`} />
             </h2>
@@ -349,7 +368,7 @@ function Sheet(props) {
         return (
             <CollapsibleContainer open={open}>
                 <div className="table-container">
-                    <Table sheet={sheet} env={env} />
+                    <Table sheet={sheet} localized={localized} env={env} />
                 </div>
             </CollapsibleContainer>
         );
@@ -357,7 +376,7 @@ function Sheet(props) {
 }
 
 function Table(props) {
-    const { sheet, env } = props;
+    const { sheet, localized, env } = props;
     const rt = useRichText({
         devicePixelRatio: env.devicePixelRatio,
         imageWidth: 100,
@@ -366,7 +385,6 @@ function Table(props) {
         },
         imageServer: env.address,
     });
-    const sheetLocalized = sheet.filter(env.locale.localeCode);
 
     return (
         <table>
@@ -382,19 +400,34 @@ function Table(props) {
     );
 
     function renderHeader(column, i) {
-        let text = column.name;
-        if (!_.isEmpty(column.flags)) {
-            text += ` (${_.join(column.flags, ', ')})`;
+        const { name, flags } = column;
+        let label = name;
+        if (!_.isEmpty(flags)) {
+            label += ` (${_.join(flags, ', ')})`;
         }
-        return <th key={i}>{text}</th>;
+        const className = localized.includes(column) ? undefined : 'foreign';
+        return (
+            <th className={className} key={i}>
+                {label}
+            </th>
+        );
     }
 
     function renderRow(row, i) {
-        return <tr key={i}>{_.map(row.cells, renderCell)}</tr>;
+        return (
+            <tr key={i}>
+                {_.map(row.cells, renderCell)}
+            </tr>
+        );
     }
 
     function renderCell(cell, i) {
-        return <td key={i}>{rt(cell)}</td>;
+        const className = localized.includes(cell) ? undefined : 'foreign';
+        return (
+            <td className={className} key={i}>
+                {rt(cell)}
+            </td>
+        );
     }
 }
 

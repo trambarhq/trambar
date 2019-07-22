@@ -51,6 +51,10 @@
                     text-align: left;
                     max-width: 20vw;
                     vertical-align: top;
+
+                    &.foreign {
+                        background-color: $foreign-text-background;
+                    }
                 }
 
                 TR:first-child {
