@@ -278,8 +278,18 @@ function Markdown(props) {
                 classNames.push('foreign');
             }
         }
+
+        const code = block.code();
+        if (code && code.language === 'json') {
+            try {
+                JSON.parse(code.text);
+            } catch (err) {
+                classNames.push('broken');
+            }
+        }
+
         return (
-            <div className={classNames.join(' ')}>
+            <div key={i} className={classNames.join(' ')}>
                 {block.richText(options)}
             </div>
         )

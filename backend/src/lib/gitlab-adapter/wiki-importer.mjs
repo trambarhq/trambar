@@ -198,9 +198,11 @@ function findMarkdownReferences(text) {
     const blockTokens = parser.parse(text);
     const slugs = [];
     for (let blockToken of blockTokens) {
-        for (let inlineToken of blockToken.children) {
-            if (inlineToken.type === 'link') {
-                slugs.push(inlineToken.href);
+        if (blockToken.children instanceof Array) {
+            for (let inlineToken of blockToken.children) {
+                if (inlineToken.type === 'link') {
+                    slugs.push(inlineToken.href);
+                }
             }
         }
     }

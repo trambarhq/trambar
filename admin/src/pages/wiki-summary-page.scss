@@ -44,8 +44,21 @@
                 padding-right: 0.5em;
                 overflow: hidden;
 
+                PRE {
+                    margin-top: 0;
+                    margin-bottom: 0;
+
+                    CODE {
+                        font-family: monospace;
+                    }
+                }
+
                 &.foreign {
                     background-color: $foreign-text-background;
+                }
+
+                &.broken {
+                    background-color: $broken-json-background;
                 }
 
                 &.language {
@@ -53,6 +66,8 @@
                     border-top: 1px dashed black;
                     width: 100%;
                     text-align: right;
+                    user-select: none;
+                    pointer-events: none;
 
                     H1 {
                         font-size: 1em;
