@@ -20,6 +20,9 @@ const libraries = {
     'moment': async () => {
         await import('moment');
     },
+    'moment-timezone': async () => {
+        await import('moment-timezone');
+    },
     'octicons': async () => {
         await import('octicons');
     },

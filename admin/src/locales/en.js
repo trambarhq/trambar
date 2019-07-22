@@ -1160,6 +1160,7 @@ const phrases = {
     'validation-duplicate-server-name': 'A server with that identifier already exists',
     'validation-duplicate-user-name': 'A user with that name already exists',
     'validation-illegal-project-name': 'Project identifier cannot be "global", "admin", "public", or "srv"',
+    'validation-invalid-timezone': 'Invalid time zone',
     'validation-localhost-is-wrong': '"localhost" is not valid',
     'validation-password-for-admin-only': 'Only administrators can sign in using password',
     'validation-required': 'Required',
@@ -1171,7 +1172,9 @@ const phrases = {
     'website-summary-template': 'Template',
     'website-summary-template-disabled': 'Disabled',
     'website-summary-template-generic': 'Generic template',
+    'website-summary-timezone': 'Time zone',
     'website-summary-title': 'Website',
+    'website-summary-traiffic-report-time': 'Traffic report publication time',
 
     'welcome': 'Welcome!',
 

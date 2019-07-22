@@ -129,7 +129,15 @@ class AsyncDraftBuffer extends AsyncSaveBuffer {
     }
 
     set(key, value) {
-        this.update(_.decoupleSet(this.current, key, value));
+        if (value === undefined) {
+            this.unset(key);
+        } else {
+            this.update(_.decoupleSet(this.current, key, value));
+        }
+    };
+
+    unset(key, value) {
+        this.update(_.decoupleUnset(this.current, key, value));
     };
 }
 
