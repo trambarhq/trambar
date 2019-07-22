@@ -156,7 +156,7 @@ function SpreadsheetListPageSync(props) {
     function renderHeadings() {
         return (
             <tr>
-                {renderTitleColumn()}
+                {renderFilenameColumn()}
                 {renderURLColumn()}
                 {renderSheetCountColumn()}
                 {renderModifiedTimeColumn()}
@@ -197,7 +197,7 @@ function SpreadsheetListPageSync(props) {
         };
         return (
             <tr key={spreadsheet.id} {...props}>
-                {renderTitleColumn(spreadsheet)}
+                {renderFilenameColumn(spreadsheet)}
                 {renderURLColumn(spreadsheet)}
                 {renderSheetCountColumn(spreadsheet)}
                 {renderModifiedTimeColumn(spreadsheet)}
@@ -205,11 +205,11 @@ function SpreadsheetListPageSync(props) {
         );
     }
 
-    function renderTitleColumn(spreadsheet) {
+    function renderFilenameColumn(spreadsheet) {
         if (!spreadsheet) {
-            return <TH id="title">{t('table-heading-title')}</TH>;
+            return <TH id="filename">{t('table-heading-filename')}</TH>;
         } else {
-            const name = SpreadsheetUtils.getDisplayName(spreadsheet, env);
+            const filename = spreadsheet.details.filename || '-';
             let url, badge;
             if (selection.shown) {
                 if (selection.isAdding(spreadsheet)) {
@@ -222,16 +222,12 @@ function SpreadsheetListPageSync(props) {
                 const params = { ...route.params, spreadsheetID: spreadsheet.id };
                 url = route.find('spreadsheet-summary-page', params);
             }
-            return (
-                <td>
-                    <a href={url}>{name}</a>{badge}
-                </td>
-            );
+            return <td><a href={url}>{filename}</a></td>;
         }
     }
 
     function renderURLColumn(spreadsheet) {
-        if (!env.isWiderThan('narrow')) {
+        if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!spreadsheet) {
@@ -243,7 +239,7 @@ function SpreadsheetListPageSync(props) {
     }
 
     function renderSheetCountColumn(spreadsheet) {
-        if (!env.isWiderThan('standard')) {
+        if (!env.isWiderThan('narrow')) {
             return null;
         }
         if (!spreadsheet) {
@@ -283,6 +279,8 @@ const sortSpreadsheets = memoizeWeak(null, function(spreadsheets, env, sort) {
                 return (spreadsheet) => {
                     return _.toLower(SpreadsheetUtils.getDisplayName(spreadsheet, env));
                 };
+            case 'sheets':
+                return 'details.filename';
             case 'sheets':
                 return 'details.sheets.length';
             default:

@@ -433,6 +433,7 @@ const phrases = {
     'spreadsheet-summary-description': 'Description',
     'spreadsheet-summary-disable': 'Disable link',
     'spreadsheet-summary-edit': 'Edit link',
+    'spreadsheet-summary-filename': 'Filename',
     'spreadsheet-summary-name': 'Identifier',
     'spreadsheet-summary-reactivate': 'Reactivate link',
     'spreadsheet-summary-return': 'Return to link list',
@@ -444,12 +445,13 @@ const phrases = {
         }
         return text;
     },
-    'spreadsheet-summary-title': 'Name',
+    'spreadsheet-summary-title': 'Title',
     'spreadsheet-summary-url': 'URL',
 
     'table-heading-api-access': 'API access﻿',
     'table-heading-date-range': 'Active period',
     'table-heading-email': 'E-mail',
+    'table-heading-filename': 'Filename',
     'table-heading-issue-tracker': 'Issue tracker',
     'table-heading-last-modified': 'Last modified',
     'table-heading-last-month': 'Last month',

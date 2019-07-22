@@ -201,6 +201,7 @@ function SpreadsheetSummaryPageSync(props) {
             <div className="form">
                 {renderURLInput()}
                 {renderNameInput()}
+                {renderFilename()}
                 {renderTitle()}
                 {renderDescription()}
             </div>
@@ -238,7 +239,27 @@ function SpreadsheetSummaryPageSync(props) {
         );
     }
 
+    function renderFilename() {
+        if (creating) {
+            return;
+        }
+        const props = {
+            id: 'filename',
+            value: draft.get('details.filename', ''),
+            readOnly: true,
+            env,
+        };
+        return (
+            <TextField {...props}>
+                {t('spreadsheet-summary-filename')}
+            </TextField>
+        );
+    }
+
     function renderTitle() {
+        if (creating) {
+            return;
+        }
         const props = {
             id: 'title',
             value: draft.get('details.title', ''),
@@ -253,6 +274,9 @@ function SpreadsheetSummaryPageSync(props) {
     }
 
     function renderDescription() {
+        if (creating) {
+            return;
+        }
         const props = {
             id: 'description',
             value: draft.get('details.description', ''),
@@ -340,6 +364,7 @@ function Table(props) {
         imageFilters: {
             sharpen: true
         },
+        imageServer: env.address,
     });
     const sheetLocalized = sheet.filter(env.locale.localeCode);
 
