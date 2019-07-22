@@ -37,8 +37,40 @@
             overflow-y: auto;
             max-height: 50vh;
             margin-left: 0.5em;
-            padding-left: 0.5em;
-            padding-right: 0.25em;
+            position: relative;
+
+            .block {
+                padding-left: 0.5em;
+                padding-right: 0.5em;
+                overflow: hidden;
+
+                &.foreign {
+                    background-color: $foreign-text-background;
+                }
+
+                &.language {
+                    position: absolute;
+                    border-top: 1px dashed black;
+                    width: 100%;
+                    text-align: right;
+
+                    H1 {
+                        font-size: 1em;
+                        margin-top: 0.2em;
+                        margin-right: -0.3em;
+                    }
+
+                    &:first-child {
+                        border-top: 0;
+                    }
+
+                    &.off {
+                        H1 {
+                            display: none;
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
@@ -7,7 +7,7 @@ import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as WikiFinder from 'common/objects/finders/wiki-finder.mjs';
 import * as WikiSaver from 'common/objects/savers/wiki-saver.mjs';
 
-import { MarkdownPage, useRichText } from 'trambar-www';
+import { MarkdownPage } from 'trambar-www';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -231,29 +231,59 @@ function Page(props) {
     }
 
     function renderContents() {
-        const data = {
-            slug: wiki.slug,
-            title: wiki.details.title,
-            markdown: wiki.details.content,
-            resources: wiki.details.resources,
-        };
         return (
             <CollapsibleContainer open={open}>
-                <div className="markdown-container">
-                    <Markdown data={data} env={env} />
-                </div>
+                <Markdown wiki={wiki} env={env} />
             </CollapsibleContainer>
         );
     }
 }
 
 function Markdown(props) {
-    const { data } = props;
-    const page = MarkdownPage.create(data);
-    const rt = useRichText({
-        imageHeight: 48,
-    });
-    return rt(page);
+    const { wiki, route, env } = props;
+    const page = useMemo(() => {
+        const data = {
+            slug: wiki.slug,
+            title: wiki.details.title,
+            markdown: wiki.details.content,
+            resources: wiki.details.resources,
+        };
+        return MarkdownPage.create(data)
+    }, [ wiki ]);
+    const localized = useMemo(() => {
+        return page.filter(env.locale.localeCode);
+    }, [ page, env.locale ]);
+
+    return (
+        <div className="markdown-container">
+            {_.map(page.blocks, renderBlock)}
+        </div>
+    );
+
+    function renderBlock(block, i) {
+        const options = {
+            imageHeight: 48,
+            devicePixelRatio: env.devicePixelRatio
+        };
+        let classNames = [ 'block' ];
+        if (!localized.includes(block)) {
+            const language = block.language();
+            if (language) {
+                // it's a language indicator
+                classNames.push('language');
+                if (language === 'zz') {
+                    classNames.push('off');
+                }
+            } else {
+                classNames.push('foreign');
+            }
+        }
+        return (
+            <div className={classNames.join(' ')}>
+                {block.richText(options)}
+            </div>
+        )
+    }
 }
 
 const component = Relaks.memo(WikiSummaryPage);
