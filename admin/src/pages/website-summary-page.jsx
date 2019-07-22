@@ -91,7 +91,7 @@ function WebsiteSummaryPageSync(props) {
     });
     const using = (draft.get('template_repo_id') !== null);
 
-    const [ problems, reportProblems ] = useValidation();
+    const [ problems, reportProblems ] = useValidation(!readOnly);
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     const warnDataLoss = useDataLossWarning(route, env, confirm);
@@ -108,6 +108,9 @@ function WebsiteSummaryPageSync(props) {
             draft.set('settings.domains', domains);
 
             const problems = {};
+            if (_.includes(domains, location.hostname)) {
+                problems.domains = 'validation-used-by-trambar';
+            }
             if (!draft.get('settings.timezone') && _.trim(timezoneBuf.current)) {
                 problems.timezone = 'validation-invalid-timezone';
             }
@@ -208,6 +211,7 @@ function WebsiteSummaryPageSync(props) {
         return (
             <TextField {...props}>
                 {t('website-summary-domain-names')}
+                <InputError>{t(problems.domains)}</InputError>
             </TextField>
         );
     }

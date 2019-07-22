@@ -25,7 +25,7 @@ function useDataLossWarning(route, env, confirm) {
     return warn;
 }
 
-function useValidation() {
+function useValidation(reporting) {
     const [ problems, setProblems ] = useState({});
     const reportProblems = useCallback((problems) => {
         setProblems(problems);
@@ -33,7 +33,12 @@ function useValidation() {
             throw new Cancellation;
         }
     });
-    return [ problems, reportProblems ];
+    useEffect(() => {
+        if (!reporting && !_.isEmpty(problems)) {
+            setProblems({});
+        }
+    }, [ reporting ]);
+    return [ (reporting) ? problems : {}, reportProblems ];
 }
 
 function useSortHandler() {

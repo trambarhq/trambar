@@ -59,7 +59,7 @@ function SpreadsheetSummaryPageSync(props) {
         original: spreadsheet || {},
         reset: readOnly,
     });
-    const [ problems, reportProblems ] = useValidation();
+    const [ problems, reportProblems ] = useValidation(!readOnly);
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     const warnDataLoss = useDataLossWarning(route, env, confirm);

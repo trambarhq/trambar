@@ -1166,6 +1166,7 @@ const phrases = {
     'validation-localhost-is-wrong': '"localhost" is not valid',
     'validation-password-for-admin-only': 'Only administrators can sign in using password',
     'validation-required': 'Required',
+    'validation-used-by-trambar': 'Used by Trambar',
 
     'website-summary-cancel': 'Cancel',
     'website-summary-domain-names': 'Domain names',

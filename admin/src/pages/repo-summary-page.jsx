@@ -61,7 +61,7 @@ function RepoSummaryPageSync(props) {
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
-    const [ problems, reportProblems ] = useValidation();
+    const [ problems, reportProblems ] = useValidation(!readOnly);
     const [ confirmationRef, confirm ] = useConfirmation();
     const warnDataLoss = useDataLossWarning(route, env, confirm);
 
