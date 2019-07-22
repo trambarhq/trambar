@@ -16,7 +16,12 @@ function SpreadsheetCountTooltip(props) {
     }
     const sheets = _.get(spreadsheet, 'details.sheets', []);
     const list = _.map(sheets, (sheet, i) => {
-        return <div className="item" key={i}>{sheet.name}</div>;
+        const { name, flags } = sheet;
+        let label = name;
+        if (!_.isEmpty(flags)) {
+            label += ` (${flags.join(', ')})`;
+        }
+        return <div className="item" key={i}>{label}</div>;
     });
     let contents = '-';
     if (list.length > 0) {
