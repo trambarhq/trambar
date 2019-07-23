@@ -7,7 +7,7 @@ class Picture extends Data {
         super();
         this.schema = 'global';
         this.table = 'picture';
-        this.criteria = {
+        this.columns = {
             ...this.criteria,
             purpose: String,
             user_id: Number,

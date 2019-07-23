@@ -268,7 +268,8 @@ async function awaitPosterGeneration(job) {
         if (largestFile) {
             // obtain metadata nad move file into image cache folder
             const meta = await ImageManager.getImageMetadata(largestFile.path);
-            const imagePath = await FileManager.preserveFile(largestFile, null, CacheFolders.image);
+            const source = { file: largestFile };
+            const imagePath = await FileManager.preserveFile(source, CacheFolders.image);
             posterFile.path = imagePath;
             posterFile.width = meta.width;
             posterFile.height = meta.height;

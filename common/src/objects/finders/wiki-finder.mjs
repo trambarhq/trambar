@@ -10,7 +10,7 @@ const emptyArray = [];
  *
  * @return {Promise<Wiki>}
  */
-function findWiki(db, schema, id) {
+async function findWiki(db, schema, id) {
     return db.findOne({
         schema,
         table,
@@ -27,7 +27,7 @@ function findWiki(db, schema, id) {
  *
  * @return {Promise<Array<Wiki>>}
  */
-function findAllWikis(db, schema) {
+async function findAllWikis(db, schema) {
     return db.find({
         schema,
         table,
@@ -43,7 +43,7 @@ function findAllWikis(db, schema) {
  *
  * @return {Promise<Array<Wiki>>}
  */
-function findPublicWikis(db, schema) {
+async function findPublicWikis(db, schema) {
     return db.find({
         schema,
         table,

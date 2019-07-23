@@ -18,6 +18,7 @@ import { DefaultUserSettings } from './lib/common/objects/settings/user-settings
 import * as Whitelist from './lib/common/utils/whitelist.mjs';
 
 import * as GitlabUserImporter from './lib/gitlab-adapter/user-importer.mjs';
+import * as MediaImporter from './lib/media-server/media-importer.mjs';
 
 // accessors
 import Device from './lib/accessors/device.mjs';
@@ -1145,20 +1146,8 @@ async function retrieveProfileImage(profile) {
     if (!avatarURL) {
         avatarURL = _.get(profile.photos, '0.value');
     }
-    if (!avatarURL) {
-        return null;
-    }
-    const url = 'http://media_server/srv/internal/import';
-    const method = 'post';
-    const headers = { 'Content-Type': 'application/json' };
-    const body = JSON.stringify({ url: avatarURL });
-    const response = await CrossFetch(url, { method, headers, body });
-    const { status } = response;
-    if (status === 200) {
-        const info = await response.json();
-        return info;
-    } else {
-        throw new HTTPError(status);
+    if (avatarURL) {
+        return MediaImporter.importFile(avatarURL);
     }
 }
 

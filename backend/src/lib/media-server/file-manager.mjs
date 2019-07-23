@@ -88,19 +88,27 @@ async function hashFile(srcPath) {
 /**
  * Download file file off the Internet
  *
- * @param  {String} url
+ * @param  {Object} source
  * @param  {String} dstFolder
  *
  * @return {Promise<String>}
  */
-async function downloadFile(url, dstFolder) {
+async function downloadFile(source, dstFolder) {
+    const { url, headers: additionalHeaders } = source;
     const previousDownload = await recallDownload(url, dstFolder);
-    const headers = getRetrievalHeaders(previousDownload, dstFolder);
+    const headers = { ...additionalHeaders };
+    if (previousDownload) {
+        if (previousDownload.etag) {
+            headers['If-None-Match'] = previousDownload.etag;
+        } else if (previousDownload.mtime) {
+            headers['If-Modified-Since'] = previousDownload.mtime;
+        }
+    }
     const response = await CrossFetch(url, { headers });
     const { status } = response;
     if (status === 200) {
         // stream contents into temp file
-        const tempPath = makeTempPath(dstFolder, url);
+        const tempPath = makeTempPath(dstFolder, source.url);
         const tempFile = FS.createWriteStream(tempPath);
         const tempFilePromise = new Promise((resolve, reject) => {
             tempFile.once('finish', resolve);
@@ -136,21 +144,20 @@ async function downloadFile(url, dstFolder) {
 /**
  * Preserve user-uploaded file or a file at a URL
  *
- * @param  {File|undefined} file
- * @param  {String|undefined} url
+ * @param  {Object} source
  * @param  {String} dstFolder
  *
  * @return {Promise<String|null>}
  */
-async function preserveFile(file, url, dstFolder) {
-    if (file) {
-        const srcPath = file.path;
+async function preserveFile(source, dstFolder) {
+    if (source.file) {
+        const srcPath = source.file.path;
         const hash = await hashFile(srcPath);
         const dstPath = `${dstFolder}/${hash}`;
         await moveFile(srcPath, dstPath);
         return dstPath;
-    } else if (url) {
-        return downloadFile(url, dstFolder);
+    } else if (source.url) {
+        return downloadFile(source, dstFolder);
     }
     return null;
 }
@@ -196,10 +203,10 @@ function makeTempPath(dstFolder, url, ext) {
  * @return {Promise}
  */
 async function rememberDownload(url, dstFolder, hash, headers) {
-    const etag = headers['etag'];
-    const mtime = headers['last-modified'];
-    const type = headers['content-type'];
-    const size = parseInt(headers['content-length']);
+    const etag = headers.get('etag');
+    const mtime = headers.get('last-modified');
+    const type = headers.get('content-type');
+    const size = parseInt(headers.get('content-length'));
     const info = { url, hash, type, size, etag, mtime };
     const json = JSON.stringify(info, undefined, 2);
     const folder = `${dstFolder}/.url`;
@@ -233,32 +240,13 @@ async function recallDownload(url, dstFolder) {
         if (info.size !== undefined) {
             const stats = await FS.statAsync(info.path);
             if (info.size !== stats.size) {
-                throw new Error('Size mismatch');
+                if (typeof(info.size) === 'number') {
+                    throw new Error('Size mismatch');
+                }
             }
         }
         return info;
     } catch (err) {
-    }
-}
-
-/**
- * Return HTTP headers for conditional download
- *
- * @param  {Object} previousDownload
- *
- * @return {Object|undefined}
- */
-function getRetrievalHeaders(previousDownload) {
-    if (previousDownload) {
-        if (previousDownload.etag) {
-            return {
-                'If-None-Match': previousDownload.etag
-            };
-        } else if (previousDownload.mtime) {
-            return {
-                'If-Modified-Since': previousDownload.mtime
-            };
-        }
     }
 }
 

@@ -21,7 +21,7 @@ async function importPhotos() {
             for (let file of files) {
                 const url = `/srv/media/images/${file}`;
                 const pictureCriteria = { purpose, url };
-                const picture = await Picture.findOne(db, 'global', pictureCriteria, 'id');
+                let picture = await Picture.findOne(db, 'global', pictureCriteria, 'id');
                 if (picture) {
                     // exists in the database already
                     continue;

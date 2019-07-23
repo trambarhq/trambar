@@ -175,8 +175,8 @@ async function applyFiltersToSVGDocument(path, filters) {
         applyOperators(params, svgOperators, filters);
 
         // get the dimensions first
-        const width = parseFloat(svg.getAttribute('width')) || 0;
-        const height = parseFloat(svg.getAttribute('height')) || 0;
+        let width = parseFloat(svg.getAttribute('width')) || 0;
+        let height = parseFloat(svg.getAttribute('height')) || 0;
         const viewBoxString = svg.getAttribute('viewBox');
         let viewBox;
         if (viewBoxString) {

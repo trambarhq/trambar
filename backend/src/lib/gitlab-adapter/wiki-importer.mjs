@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import CrossFetch from 'cross-fetch';
 import Moment from 'moment';
 import MarkGorParser from 'mark-gor/lib/parser.js';
 import * as TaskLog from '../task-log.mjs';
@@ -6,6 +7,7 @@ import * as Localization from '../localization.mjs';
 import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
+import * as MediaImporter from '../media-server/media-importer.mjs';
 
 // accessors
 import Story from '../accessors/story.mjs';
@@ -46,47 +48,71 @@ async function importWikis(db, system, server, repo, project) {
         taskLog.describe('fetching wikis from GitLab server');
         const glWikis = await fetchWikis(server, repoLink.project.id);
 
+        // parse the wikis
+        const glWikisParsed = [];
+        for (let glWiki of glWikis) {
+            const glWikiParsed = parseGitlabWiki(glWiki);
+            if (glWikiParsed) {
+                glWikisParsed.push(glWikiParsed);
+            }
+        }
+
         // delete ones that no longer exists
         for (let wiki of wikis) {
-            if (!_.some(glWikis, { slug: wiki.slug })) {
+            if (!_.some(glWikisParsed, { slug: wiki.slug })) {
                 await Wiki.updateOne(db, schema, { id: wiki.id, deleted: true });
                 taskLog.append('deleted', wiki.slug);
+                _.pull(wikis, wiki);
             }
         }
 
-        const wikiRefLists = [];
-        for (let glWiki of glWikis) {
-            const refs = findWikiReferences(glWiki.content, glWiki.format);
-            wikiRefLists.push({ refs, glWikiReferrer: glWiki });
-        }
+        // determine which ones should be available publicly
+        const markPublic = (glWikiParsed) => {
+            if (!glWikiParsed.public) {
+                glWikiParsed.public = true;
 
-        const isPublic = (glWiki, checked) => {
-            if (!checked) {
-                checked = {};
-            }
-            if (checked[glWiki.slug]) {
-                return false;
-            } else {
-                checked[glWiki.slug] = true;
-            }
-
-            // see if the wiki has been chosen
-            const wiki = _.find(wikis, { slug: glWiki.slug });
-            if (wiki && wiki.chosen) {
-                return true;
-            }
-
-            // see if another wiki that references this one is public
-            for (let { refs, glWikiReferrer } of wikiRefLists) {
-                if (_.includes(refs, glWiki.slug)) {
-                    return isPublic(glWikiReferrer, checked);
+                // mark wikis referenced by this one as public as well
+                for (let slug of glWikiParsed.references) {
+                    const glWikiReferenced = _.find(glWikisParsed, { slug });
+                    if (glWikiReferenced) {
+                        markPublic(glWikiReferenced);
+                    }
                 }
             }
-            return false;
-        };
-        for (let glWiki of glWikis) {
-            const wiki = _.find(wikis, { slug: glWiki.slug });
-            const wikiChanges = copyWikiProperties(wiki, system, server, repo, glWiki, isPublic(glWiki));
+        }
+        for (let wiki of wikis) {
+            if (wiki.chosen) {
+                const glWikiParsed = _.find(glWikisParsed, { slug: wiki.slug });
+                markPublic(glWikiParsed);
+            }
+        }
+
+        // import images used in public pages
+        const baseURL = _.trimEnd(repo.details.web_url, '/');
+        const oauthToken = server.settings.api.access_token;
+        for (let glWikiParsed of glWikisParsed) {
+            for (let resource of glWikiParsed.resources) {
+                const { src } = resource;
+                let url, headers;
+                if (/^\w+:/.test(src)) {
+                    url = src;
+                } else {
+                    url = baseURL + src;
+                    headers = { Authorization: `Bearer ${oauthToken}` };
+                }
+                taskLog.describe(`importing ${url}`);
+                try {
+                    const info = await MediaImporter.importFile(url, headers);
+                    _.assign(resource, info);
+                } catch (err) {
+                    resource.error = err.message;
+                }
+            }
+        }
+
+        for (let glWikiParsed of glWikisParsed) {
+            const wiki = _.find(wikis, { slug: glWikiParsed.slug });
+            const wikiChanges = copyWikiProperties(wiki, system, server, repo, glWikiParsed);
             const wikiAfter = (wikiChanges) ? await Wiki.saveOne(db, schema, wikiChanges) : wiki;
             wikisAfter.push(wikiAfter);
             if (wikiChanges) {
@@ -147,11 +173,11 @@ async function removeWikis(db, system, server, repo, project) {
  * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
- * @param  {Object} glWiki
+ * @param  {Object} glWikiParsed
  *
  * @return {Story|null}
  */
-function copyWikiProperties(wiki, system, server, repo, glWiki, isPublic) {
+function copyWikiProperties(wiki, system, server, repo, glWikiParsed) {
     const defLangCode = Localization.getDefaultLanguageCode(system);
     const wikiChanges = _.cloneDeep(wiki) || {};
     ExternalDataUtils.inheritLink(wikiChanges, server, repo);
@@ -160,23 +186,27 @@ function copyWikiProperties(wiki, system, server, repo, glWiki, isPublic) {
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(wikiChanges, server, 'public', {
-        value: isPublic,
+        value: glWikiParsed.public,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(wikiChanges, server, 'slug', {
-        value: glWiki.slug,
+        value: glWikiParsed.slug,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(wikiChanges, server, 'details.title', {
-        value: glWiki.title,
+        value: glWikiParsed.title,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(wikiChanges, server, 'details.content', {
-        value: (isPublic) ? glWiki.content : undefined,
+        value: (glWikiParsed.public) ? glWikiParsed.content : undefined,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(wikiChanges, server, 'details.format', {
-        value: glWiki.format,
+        value: glWikiParsed.format,
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(wikiChanges, server, 'details.resources', {
+        value: glWikiParsed.resources,
         overwrite: 'always',
     });
     if (_.isEqual(wikiChanges, wiki)) {
@@ -185,28 +215,41 @@ function copyWikiProperties(wiki, system, server, repo, glWiki, isPublic) {
     return wikiChanges;
 }
 
-function findWikiReferences(text, format) {
-    if (format === 'markdown') {
-        return findMarkdownReferences(text);
-    } else {
-        return [];
+function parseGitlabWiki(glWiki, baseURL) {
+    if (glWiki.format === 'markdown') {
+        return parseMarkdownWiki(glWiki, baseURL);
     }
 }
 
-function findMarkdownReferences(text) {
+function parseMarkdownWiki(glWiki) {
+    const { slug, format, title, content } = glWiki;
     const parser = new MarkGorParser;
-    const blockTokens = parser.parse(text);
-    const slugs = [];
+    const blockTokens = parser.parse(content);
+
+    // look for references and import images
+    const references = [];
+    const resources = [];
     for (let blockToken of blockTokens) {
         if (blockToken.children instanceof Array) {
             for (let inlineToken of blockToken.children) {
                 if (inlineToken.type === 'link') {
-                    slugs.push(inlineToken.href);
+                    references.push(inlineToken.href);
+                } else if (inlineToken.type === 'image') {
+                    resources.push({ src: inlineToken.href });
                 }
             }
         }
     }
-    return slugs;
+
+    return {
+        slug,
+        format,
+        title,
+        content,
+        resources,
+        references,
+        public: false
+    };
 }
 
 /**

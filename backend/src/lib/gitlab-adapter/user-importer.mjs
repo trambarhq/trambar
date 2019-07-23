@@ -9,6 +9,7 @@ import { DefaultUserSettings } from '../common/objects/settings/user-settings.mj
 
 import * as Transport from './transport.mjs';
 import * as RepoImporter from './repo-importer.mjs';
+import * as MediaImporter from '../media-server/media-importer.mjs';
 
 // accessors
 import Project from '../accessors/project.mjs';
@@ -419,27 +420,15 @@ async function fetchUserByName(server, username) {
  * @return {Promise<Object|null>}
  */
 async function findProfileImage(glUser) {
-    const avatarURL = glUser.avatar_url;
-    if (!avatarURL) {
-        return null;
-    }
-
-    const url = 'http://media_server/internal/import';
-    const method = 'post';
-    const headers = { 'Content-Type': 'application/json' };
-    const body = JSON.stringify({ url: avatarURL });
     try {
-        const response = await CrossFetch(url, { method, headers, body });
-        const { status } = response;
-        if (status === 200) {
-            const info = await response.json();
+        const avatarURL = glUser.avatar_url;
+        if (avatarURL) {
+            const info = await MediaImporter.importFile(avatarURL);
             return info;
-        } else {
-            throw new HTTPError(status);
         }
     } catch (err) {
-        return null;
     }
+    return null;
 }
 
 export {

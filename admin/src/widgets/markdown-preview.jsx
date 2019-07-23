@@ -1,11 +1,32 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
+import { useRichText } from 'trambar-www';
 
 import './markdown-preview.scss';
 
 function MarkdownPreview(props) {
     const { page, localized, env, onReference } = props;
     const [ limit, setLimit ] = useState(50);
+    const rt = useRichText({
+        devicePixelRatio: env.devicePixelRatio,
+        imageHeight: 24,
+        imageFilters: {
+            sharpen: true
+        },
+        imageServer: env.address,
+        richTextAdjust: (type, props, children) => {
+            if (type === 'a') {
+                if (/^[\w\-]+$/.test(props.href)) {
+                    if (onReference) {
+                        props.href = onReference({ href: props.href })
+                    }
+                } else {
+                    props.target = '_blank';
+                }
+            }
+            return { type, props, children };
+        },
+    });
 
     useEffect(() => {
         if (page && page.blocks.length > limit) {
@@ -34,22 +55,6 @@ function MarkdownPreview(props) {
     }
 
     function renderBlock(block, i) {
-        const options = {
-            imageHeight: 48,
-            devicePixelRatio: env.devicePixelRatio,
-            richTextAdjust: (type, props, children) => {
-                if (type === 'a') {
-                    if (/^[\w\-]+$/.test(props.href)) {
-                        if (onReference) {
-                            props.href = onReference({ href: props.href })
-                        }
-                    } else {
-                        props.target = '_blank';
-                    }
-                }
-                return { type, props, children };
-            },
-        };
         let classNames = [ 'block' ];
         if (!localized.includes(block)) {
             const language = block.language();
@@ -75,7 +80,7 @@ function MarkdownPreview(props) {
 
         return (
             <div key={i} className={classNames.join(' ')}>
-                {block.richText(options)}
+                {rt(block)}
             </div>
         )
     }

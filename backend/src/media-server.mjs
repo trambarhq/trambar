@@ -246,10 +246,9 @@ async function handleImageUpload(req, res) {
         const token = req.query.token;
         const taskLog = await TaskLog.obtain(schema, token, 'add-image');
         try {
-            const file = req.file;
-            const sourceURL = req.body.url;
             taskLog.describe('copying file');
-            const imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
+            const source = { file: req.file, url: req.body.url };
+            const imagePath = await FileManager.preserveFile(source, CacheFolders.image);
             if (!imagePath) {
                 throw new HTTPError(400);
             }
@@ -288,10 +287,12 @@ async function handleImageUpload(req, res) {
 async function handleImageImport(req, res) {
     const taskLog = TaskLog.start('image-import');
     try {
-        const file = req.file;
-        const sourceURL = req.body.url;
-        taskLog.describe(`downloading ${sourceURL}`);
-        const imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
+        const beginning = new Date;
+        const source = { file: req.file, url: req.body.url, headers: req.body.headers };
+        if (source.url) {
+            taskLog.describe(`downloading ${source.url}`);
+        }
+        const imagePath = await FileManager.preserveFile(source, CacheFolders.image);
         if (!imagePath) {
             throw new HTTPError(400);
         }
@@ -305,7 +306,11 @@ async function handleImageImport(req, res) {
             height: metadata.height,
         };
         sendJSON(res, result);
-        taskLog.merge(result);
+
+        const stats = await FS.statAsync(imagePath);
+        if (stats.ctime > beginning) {
+            taskLog.merge(result);
+        }
         await taskLog.finish();
     } catch (err) {
         sendError(res, err);
@@ -364,8 +369,6 @@ async function handleMediaUpload(req, res, type) {
         const schema = req.params.schema;
         const token = req.query.token;
         const streamID = req.body.stream;
-        const file = req.file;
-        const sourceURL = req.body.url;
         const generatePoster = !!req.body.generate_poster;
         const taskLog = await TaskLog.obtain(schema, token, `add-${type}`);
         let result;
@@ -381,9 +384,12 @@ async function handleMediaUpload(req, res, type) {
                 result = {};
             } else {
                 // transcode an uploaded file--move it into cache folder first
-                taskLog.describe('copying file');
+                const source = { file: req.file, url: req.body.url };
+                if (source.url) {
+                    taskLog.describe('copying file');
+                }
                 const dstFolder = CacheFolders[type];
-                const mediaPath = await FileManager.preserveFile(file, sourceURL, dstFolder);
+                const mediaPath = await FileManager.preserveFile(source, dstFolder);
                 if (!mediaPath) {
                     throw new HTTPError(400);
                 }
@@ -486,9 +492,8 @@ async function handleMediaPoster(req, res, type) {
         const taskLog = await TaskLog.obtain(schema, token, `add-${type}`);
         try {
             const streamID = req.body.stream;
-            const file = req.file;
-            const sourceURL = req.body.url;
-            const imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
+            const source = { file: req.file, url: req.body.url };
+            const imagePath = await FileManager.preserveFile(source, CacheFolders.image);
             if (!imagePath) {
                 throw new HTTPError(400);
             }

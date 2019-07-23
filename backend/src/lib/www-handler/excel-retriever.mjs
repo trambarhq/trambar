@@ -6,6 +6,7 @@ import HTTPError from '../common/errors/http-error.mjs';
 import * as TaskLog from '../task-log.mjs'
 
 import Spreadsheet from '../accessors/spreadsheet.mjs';
+import * as MediaImporter from '../media-server/media-importer.mjs';
 
 async function retrieve(schema, name, redirection) {
     const taskLog = TaskLog.start('excel-retrieve', {
@@ -31,11 +32,16 @@ async function retrieve(schema, name, redirection) {
             const mediaCount = mediaImports.length;
             let mediaNumber = 1;
             for (let mediaImport of mediaImports) {
-                taskLog.describe(`importing ${mediaImport.src}`);
-                const info = await importMediaFile(mediaImport.src);
-                _.assign(mediaImport, info);
-                _.unset(mediaImport, 'src');
-                taskLog.report(mediaNumber++, mediaCount);
+                const { src } = mediaImport;
+                taskLog.describe(`importing ${src}`);
+                try {
+                    const url = getFileURL(src);
+                    const info = await MediaImporter.importFile(url);
+                    _.assign(mediaImport, info);
+                    taskLog.report(mediaNumber++, mediaCount);
+                } catch (err) {
+                    mediaImport.error = err.message;
+                }
             }
 
             const spreadsheetChanges = {
@@ -241,29 +247,6 @@ function trimURLs(sheets) {
                 }
             }
         }
-    }
-}
-
-/**
- * Ask Media Server to import a file at the specified URL
- *
- * @param  {String} url
- *
- * @return {Promise<Object>}
- */
-async function importMediaFile(url) {
-    const adjustedURL = getFileURL(url)
-    const importURL = 'http://media_server/internal/import';
-    const method = 'post';
-    const headers = { 'Content-Type': 'application/json' };
-    const body = JSON.stringify({ url: adjustedURL });
-    const response = await CrossFetch(importURL, { method, headers, body });
-    const { status } = response;
-    if (status === 200) {
-        const info = await response.json();
-        return info;
-    } else {
-        throw new HTTPError(status);
     }
 }
 
