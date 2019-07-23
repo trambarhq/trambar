@@ -5,7 +5,7 @@
     border: 1px solid black;
     overflow-x: auto;
     overflow-y: auto;
-    max-width: 100%;
+    max-width: calc(100% - 0.5em - 2px);
     max-height: 50vh;
     width: max-content;
     margin-left: 0.5em;

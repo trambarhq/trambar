@@ -35,7 +35,27 @@ function findAllWikis(db, schema) {
     });
 }
 
+/**
+ * Find public wikis
+ *
+ * @param  {Database} db
+ * @param  {String} schema
+ *
+ * @return {Promise<Array<Wiki>>}
+ */
+function findPublicWikis(db, schema) {
+    return db.find({
+        schema,
+        table,
+        criteria: {
+            public: true,
+            deleted: false,
+        },
+    });
+}
+
 export {
     findWiki,
     findAllWikis,
+    findPublicWikis,
 };

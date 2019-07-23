@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import './markdown-preview.scss';
 
 function MarkdownPreview(props) {
-    const { page, localized, route, env } = props;
+    const { page, localized, env, onReference } = props;
     const [ limit, setLimit ] = useState(50);
 
     useEffect(() => {
@@ -38,8 +38,14 @@ function MarkdownPreview(props) {
             imageHeight: 48,
             devicePixelRatio: env.devicePixelRatio,
             richTextAdjust: (type, props, children) => {
-                if (type === 'A') {
-                    console.log(props);
+                if (type === 'a') {
+                    if (/^[\w\-]+$/.test(props.href)) {
+                        if (onReference) {
+                            props.href = onReference({ href: props.href })
+                        }
+                    } else {
+                        props.target = '_blank';
+                    }
                 }
                 return { type, props, children };
             },

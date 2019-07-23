@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { MarkdownPage, ExcelSheet } from 'trambar-www';
+import { MarkdownPage, ExcelFile, ExcelSheet } from 'trambar-www';
 import { Database } from 'common/data/database.mjs';
 import { Route } from 'common/routing/route.mjs';
 import { Environment } from 'common/env/environment.mjs';
@@ -43,7 +43,7 @@ ComboButton.propType = {
 };
 ExcelPreview.propTypes = {
     sheet: PropTypes.instanceOf(ExcelSheet),
-    localized: PropTypes.instanceOf(ExcelSheet),
+    localized: PropTypes.instanceOf(ExcelFile),
     env: PropTypes.instanceOf(Environment).isRequired,
 };
 ImageSelector.propTypes = {
@@ -69,8 +69,8 @@ InstructionBlock.propTypes = {
 MarkdownPreview.propTypes = {
     page: PropTypes.instanceOf(MarkdownPage),
     localized: PropTypes.instanceOf(MarkdownPage),
-    route: PropTypes.instanceOf(Route),
     env: PropTypes.instanceOf(Environment).isRequired,
+    onReference: PropTypes.func,
 };
 MultilingualTextField.propTypes = {
     type: PropTypes.string,

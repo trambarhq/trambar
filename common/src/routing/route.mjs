@@ -12,6 +12,7 @@ class Route {
         this.search = routeManager.search;
         this.hash = routeManager.hash;
         this.public = routeManager.route.public;
+        this.history = routeManager.history;
         this.callbacks = [];
 
         let module = routeManager.params.module;

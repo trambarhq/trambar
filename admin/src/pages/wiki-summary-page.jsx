@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { MarkdownPage } from 'trambar-www';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
@@ -44,15 +44,17 @@ async function WikiSummaryPage(props) {
         return !!link;
     });
     render();
+    const wikis = await WikiFinder.findPublicWikis(database, schema);
+    render();
 
     function render() {
-        const sprops = { schema, project, wiki, repo };
+        const sprops = { schema, project, wiki, wikis, repo };
         show(<WikiSummaryPageSync key={wikiID} {...sprops} {...props} />);
     }
 }
 
 function WikiSummaryPageSync(props) {
-    const { schema, system, project, wiki, repo } = props;
+    const { schema, system, project, wiki, wikis, repo } = props;
     const { database, route, env, editing } = props;
     const { t } = env.locale;
     const [ error, run ] = useErrorCatcher();
@@ -198,15 +200,27 @@ function WikiSummaryPageSync(props) {
 
     function renderContents() {
         if (wiki && wiki.public) {
-            return <WikiContents wiki={wiki} env={env}/>
+            const props = { wiki, wikis, route, env };
+            return <WikiContents {...props} />
         }
     }
 }
 
+const openedBefore = {};
+
 function WikiContents(props) {
-    const { wiki, env } = props;
+    const { wiki, wikis, env, route } = props;
     const { t } = env.locale;
-    const [ open, setOpen ] = useState(false);
+    const [ open, setOpen ] = useState(() => {
+        // show wiki contents when navigated from another wiki
+        const prev = route.history[route.history.length - 2];
+        if (prev && prev.name === route.name) {
+            return true;
+        } else {
+            // see if it was opened before
+            return !!openedBefore[route.path];
+        }
+    });
     const shown = useRef(false);
     if (open) {
         shown.current = true;
@@ -231,6 +245,18 @@ function WikiContents(props) {
     const handleToggleClick = useListener((evt) => {
         setOpen(!open);
     });
+    const handleReference = useListener((evt) => {
+        const selected = _.find(wikis, { slug: evt.href });
+        if (selected) {
+            const params = { ...route.params, wikiID: selected.id };
+            const url = route.find('wiki-summary-page', params);
+            return url;
+        }
+    });
+
+    useEffect(() => {
+        openedBefore[route.path] = open;
+    }, [ route, open ]);
 
     return (
         <div className="section">
@@ -251,9 +277,15 @@ function WikiContents(props) {
     }
 
     function renderContents() {
+        const props = {
+            page,
+            localized: pageLocalized,
+            env,
+            onReference: handleReference,
+        };
         return (
             <CollapsibleContainer open={open}>
-                <MarkdownPreview page={page} localized={pageLocalized} env={env} />
+                <MarkdownPreview {...props} />
             </CollapsibleContainer>
         );
     }

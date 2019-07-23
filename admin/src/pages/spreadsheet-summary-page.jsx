@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { ExcelFile } from 'trambar-www';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
@@ -326,20 +326,29 @@ function SpreadsheetSummaryPageSync(props) {
             sheet,
             number: i + 1,
             localized: excelLocalized,
+            route,
             env,
         };
         return <Sheet key={i} {...props} />
     }
 }
 
+const openedBefore = {};
+
 function Sheet(props) {
-    const { sheet, localized, number, env } = props;
+    const { sheet, localized, number, route, env } = props;
     const { t } = env.locale;
-    const [ open, setOpen ] = useState(false);
+    const [ open, setOpen ] = useState(() => {
+        return !!openedBefore[route.path + number];
+    });
 
     const handleToggleClick = useListener((evt) => {
         setOpen(!open);
     });
+
+    useEffect(() => {
+        openedBefore[route.path + number] = open;
+    }, [ open, route ]);
 
     return (
         <div className="sheet">
