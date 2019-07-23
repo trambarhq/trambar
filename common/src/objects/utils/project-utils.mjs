@@ -68,8 +68,23 @@ function getDisplayName(project, env) {
     return p(_.get(project, 'details.title')) || _.get(project, 'name') || '';
 }
 
+function getWebsiteAddress(project) {
+    if (!project) {
+        return;
+    }
+    const { protocol, host } = location;
+    const { domains } = project.settings;
+    const { name } = project;
+    if (!_.isEmpty(domains)) {
+        return `${protocol}//${domains[0]}/`;
+    } else {
+        return `${protocol}//${host}/srv/www/${name}/`;
+    }
+}
+
 export {
     isVisibleToUser,
     getDisplayName,
     getUserAccessLevel,
+    getWebsiteAddress,
 };

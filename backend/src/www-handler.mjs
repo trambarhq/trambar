@@ -158,7 +158,7 @@ async function handleExcelRequest(req, res, next) {
         const { redirected } = req;
         const spreadsheet = await ExcelRetriever.retrieve(schema, name, !!redirected);
         const data = exportSpreadsheet(spreadsheet);
-        controlCache(res, {}, spreadsheet.etag);
+        controlCache(res, { 's-maxage': 10 }, spreadsheet.etag);
         res.json(data);
     } catch (err) {
         next(err);

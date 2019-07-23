@@ -1,11 +1,13 @@
 import _ from 'lodash';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { ExcelFile } from 'trambar-www';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
 import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
 import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.mjs';
 import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
+import * as HTTPRequest from 'common/transport/http-request.mjs';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -32,9 +34,23 @@ import {
 import './spreadsheet-summary-page.scss';
 
 async function SpreadsheetSummaryPage(props) {
-    const { database, projectID, spreadsheetID } = props;
+    const { database, projectID, spreadsheetID, env } = props;
     const creating = (spreadsheetID === 'new');
     const [ show ] = useProgress();
+    const updateRequest = useRef(false);
+
+    const handleFocus = useListener((evt) => {
+        if (project && spreadsheet) {
+            requestUpdate(project, spreadsheet, env);
+        }
+    });
+
+    useEffect(() => {
+        window.addEventListener('focus', handleFocus);
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+        }
+    }, []);
 
     render();
     const currentUserID = await database.start();
@@ -42,6 +58,10 @@ async function SpreadsheetSummaryPage(props) {
     const schema = project.name;
     const spreadsheet = !creating ? await SpreadsheetFinder.findSpreadsheet(database, schema, spreadsheetID) : null;
     render();
+
+    if (!updateRequest.current) {
+        updateRequest.current = requestUpdate(project, spreadsheet, env);
+    }
 
     function render() {
         const sprops = { schema, project, spreadsheet, creating };
@@ -117,6 +137,11 @@ function SpreadsheetSummaryPageSync(props) {
                 reportProblems(problems);
 
                 const spreadsheetAfter = await SpreadsheetSaver.saveSpreadsheet(database, schema, draft.current);
+                if (spreadsheet && spreadsheet.url) {
+                    if (spreadsheet.url !== spreadsheetAfter.url) {
+                        requestUpdate(project, spreadsheetAfter, env);
+                    }
+                }
 
                 if (creating) {
                     setAdding(true);
@@ -379,6 +404,16 @@ function Sheet(props) {
                 <ExcelPreview sheet={sheet} localized={localized} env={env} />
             </CollapsibleContainer>
         );
+    }
+}
+
+async function requestUpdate(project, spreadsheet, env) {
+    const baseURL = ProjectUtils.getWebsiteAddress(project);
+    const url = `${baseURL}/excel/${spreadsheet.name}`;
+    try {
+        await HTTPRequest.fetch('HEAD', url);
+    } catch (err) {
+        console.error(err);
     }
 }
 
