@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { MarkdownPage, ExcelSheet } from 'trambar-www';
 import { Database } from 'common/data/database.mjs';
 import { Route } from 'common/routing/route.mjs';
 import { Environment } from 'common/env/environment.mjs';
@@ -8,9 +9,11 @@ import { ActionBadge } from './action-badge.jsx';
 import { ActionConfirmation } from './action-confirmation.jsx';
 import { ActivityChart } from './activity-chart.jsx';
 import { ComboButton } from './combo-button.jsx';
+import { ExcelPreview } from './excel-preview.jsx';
 import { ImageSelector } from './image-selector.jsx';
 import { InputError } from './input-error.jsx';
 import { InstructionBlock } from './instruction-block.jsx';
+import { MarkdownPreview } from './markdown-preview.jsx';
 import { MultilingualTextField } from './multilingual-text-field.jsx';
 import { NavigationTree } from './navigation-tree.jsx'
 import { OptionList } from './option-list.jsx';
@@ -38,6 +41,11 @@ ComboButton.propType = {
     preselected: PropTypes.string,
     alert: PropTypes.bool,
 };
+ExcelPreview.propTypes = {
+    sheet: PropTypes.instanceOf(ExcelSheet),
+    localized: PropTypes.instanceOf(ExcelSheet),
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
 ImageSelector.propTypes = {
     purpose: PropTypes.string,
     desiredWidth: PropTypes.number,
@@ -56,6 +64,12 @@ InstructionBlock.propTypes = {
     folder: PropTypes.string.isRequired,
     topic: PropTypes.string.isRequired,
     hidden: PropTypes.bool,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+MarkdownPreview.propTypes = {
+    page: PropTypes.instanceOf(MarkdownPage),
+    localized: PropTypes.instanceOf(MarkdownPage),
+    route: PropTypes.instanceOf(Route),
     env: PropTypes.instanceOf(Environment).isRequired,
 };
 MultilingualTextField.propTypes = {

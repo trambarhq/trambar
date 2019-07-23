@@ -50,7 +50,7 @@ async function NavigationTree(props) {
     const role = _.isFinite(roleID) ? await RoleFinder.findRole(database, roleID) : null;
     const repo = _.isFinite(repoID) ? await RepoFinder.findRepo(database, repoID) : null;
     const server = _.isFinite(serverID) ? await ServerFinder.findServer(database, serverID) : null;
-    const schema = project.name;
+    const schema = (project) ? project.name : '';
     const spreadsheet = _.isFinite(spreadsheetID) ? await SpreadsheetFinder.findSpreadsheet(database, schema, spreadsheetID) : null;
     const wiki = _.isFinite(wikiID) ? await WikiFinder.findWiki(database, schema, wikiID) : null;
     render();

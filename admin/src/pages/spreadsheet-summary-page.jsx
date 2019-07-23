@@ -1,12 +1,11 @@
 import _ from 'lodash';
 import React, { useState, useMemo } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { ExcelFile } from 'trambar-www';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
 import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.mjs';
 import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
-
-import { ExcelFile, useRichText } from 'trambar-www';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -16,6 +15,7 @@ import { InstructionBlock } from '../widgets/instruction-block.jsx';
 import { TextField } from '../widgets/text-field.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
 import { OptionList } from '../widgets/option-list.jsx';
+import { ExcelPreview } from '../widgets/excel-preview.jsx';
 import { InputError } from '../widgets/input-error.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
@@ -335,7 +335,7 @@ function SpreadsheetSummaryPageSync(props) {
 function Sheet(props) {
     const { sheet, localized, number, env } = props;
     const { t } = env.locale;
-    const [ open, setOpen ] = useState(true);
+    const [ open, setOpen ] = useState(false);
 
     const handleToggleClick = useListener((evt) => {
         setOpen(!open);
@@ -367,66 +367,8 @@ function Sheet(props) {
     function renderTable() {
         return (
             <CollapsibleContainer open={open}>
-                <div className="table-container">
-                    <Table sheet={sheet} localized={localized} env={env} />
-                </div>
+                <ExcelPreview sheet={sheet} localized={localized} env={env} />
             </CollapsibleContainer>
-        );
-    }
-}
-
-function Table(props) {
-    const { sheet, localized, env } = props;
-    const rt = useRichText({
-        devicePixelRatio: env.devicePixelRatio,
-        imageWidth: 100,
-        imageFilters: {
-            sharpen: true
-        },
-        imageServer: env.address,
-    });
-
-    return (
-        <table>
-            <thead>
-                <tr>
-                    {_.map(sheet.columns, renderHeader)}
-                </tr>
-            </thead>
-            <tbody>
-                {_.map(sheet.rows, renderRow)}
-            </tbody>
-        </table>
-    );
-
-    function renderHeader(column, i) {
-        const { name, flags } = column;
-        let label = name;
-        if (!_.isEmpty(flags)) {
-            label += ` (${_.join(flags, ', ')})`;
-        }
-        const className = localized.includes(column) ? undefined : 'foreign';
-        return (
-            <th className={className} key={i}>
-                {label}
-            </th>
-        );
-    }
-
-    function renderRow(row, i) {
-        return (
-            <tr key={i}>
-                {_.map(row.cells, renderCell)}
-            </tr>
-        );
-    }
-
-    function renderCell(cell, i) {
-        const className = localized.includes(cell) ? undefined : 'foreign';
-        return (
-            <td className={className} key={i}>
-                {rt(cell)}
-            </td>
         );
     }
 }

@@ -1,13 +1,12 @@
 import _ from 'lodash';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { MarkdownPage } from 'trambar-www';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as WikiFinder from 'common/objects/finders/wiki-finder.mjs';
 import * as WikiSaver from 'common/objects/savers/wiki-saver.mjs';
-
-import { MarkdownPage } from 'trambar-www';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -17,6 +16,7 @@ import { InstructionBlock } from '../widgets/instruction-block.jsx';
 import { TextField } from '../widgets/text-field.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
 import { OptionList } from '../widgets/option-list.jsx';
+import { MarkdownPreview } from '../widgets/markdown-preview.jsx';
 import { InputError } from '../widgets/input-error.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
@@ -198,15 +198,35 @@ function WikiSummaryPageSync(props) {
 
     function renderContents() {
         if (wiki && wiki.public) {
-            return <Page wiki={wiki} env={env}/>
+            return <WikiContents wiki={wiki} env={env}/>
         }
     }
 }
 
-function Page(props) {
+function WikiContents(props) {
     const { wiki, env } = props;
     const { t } = env.locale;
-    const [ open, setOpen ] = useState(true);
+    const [ open, setOpen ] = useState(false);
+    const shown = useRef(false);
+    if (open) {
+        shown.current = true;
+    }
+    const page = useMemo(() => {
+        if (shown.current) {
+            const data = {
+                slug: wiki.slug,
+                title: wiki.details.title,
+                markdown: wiki.details.content,
+                resources: wiki.details.resources,
+            };
+            return MarkdownPage.create(data)
+        }
+    }, [ wiki, shown.current ]);
+    const pageLocalized = useMemo(() => {
+        if (page) {
+            return page.filter(env.locale.localeCode);
+        }
+    }, [ page, env.locale ]);
 
     const handleToggleClick = useListener((evt) => {
         setOpen(!open);
@@ -233,66 +253,9 @@ function Page(props) {
     function renderContents() {
         return (
             <CollapsibleContainer open={open}>
-                <Markdown wiki={wiki} env={env} />
+                <MarkdownPreview page={page} localized={pageLocalized} env={env} />
             </CollapsibleContainer>
         );
-    }
-}
-
-function Markdown(props) {
-    const { wiki, route, env } = props;
-    const page = useMemo(() => {
-        const data = {
-            slug: wiki.slug,
-            title: wiki.details.title,
-            markdown: wiki.details.content,
-            resources: wiki.details.resources,
-        };
-        return MarkdownPage.create(data)
-    }, [ wiki ]);
-    const localized = useMemo(() => {
-        return page.filter(env.locale.localeCode);
-    }, [ page, env.locale ]);
-
-    return (
-        <div className="markdown-container">
-            {_.map(page.blocks, renderBlock)}
-        </div>
-    );
-
-    function renderBlock(block, i) {
-        const options = {
-            imageHeight: 48,
-            devicePixelRatio: env.devicePixelRatio
-        };
-        let classNames = [ 'block' ];
-        if (!localized.includes(block)) {
-            const language = block.language();
-            if (language) {
-                // it's a language indicator
-                classNames.push('language');
-                if (language === 'zz') {
-                    classNames.push('off');
-                }
-            } else {
-                classNames.push('foreign');
-            }
-        }
-
-        const code = block.code();
-        if (code && code.language === 'json') {
-            try {
-                JSON.parse(code.text);
-            } catch (err) {
-                classNames.push('broken');
-            }
-        }
-
-        return (
-            <div key={i} className={classNames.join(' ')}>
-                {block.richText(options)}
-            </div>
-        )
     }
 }
 
