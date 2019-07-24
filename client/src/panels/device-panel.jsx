@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
-import { Cancellation } from 'relaks';
+import Cancellation from 'common/errors/cancellation.mjs';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';

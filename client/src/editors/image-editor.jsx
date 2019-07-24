@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { useState, useMemo, useRef, useImperativeHandle, useEffect } from 'react';
-import { useListener } from 'relaks';
+import { useListener, useAsyncEffect } from 'relaks';
 import * as BlobManager from 'common/transport/blob-manager.mjs';
 import Payload from 'common/transport/payload.mjs';
 import * as ImageCropping from 'common/media/image-cropping.mjs';
@@ -21,6 +21,7 @@ import './image-editor.scss';
  */
 function ImageEditor(props, ref) {
     const { env, resource, previewWidth, previewHeight, disabled, children } = props;
+    const { onChange } = props;
     const { t } = env.locale;
     const remoteURL = useMemo(() => {
         const params = { remote: true, original: true };
@@ -63,13 +64,11 @@ function ImageEditor(props, ref) {
             FocusManager.unregister(instance);
         };
     }, []);
-    useEffect(() => {
-        async function load() {
+    useAsyncEffect(async () => {
+        if (remoteURL) {
             await BlobManager.fetch(remoteURL);
         }
-        load();
     }, [ remoteURL ]);
-
 
     return (
         <div className="image-editor">

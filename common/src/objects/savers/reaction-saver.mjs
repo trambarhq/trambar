@@ -85,9 +85,14 @@ async function updateTaskStatuses(db, reactions, story, user, answers) {
     return reactionsAfter;
 }
 
+async function republishReaction(db, reaction) {
+    return saveReaction(db, { id: reaction.id, published: true });
+}
+
 export {
     saveReaction,
     removeReaction,
+    republishReaction,
     addLike,
     startComment,
     saveSurveyResults,

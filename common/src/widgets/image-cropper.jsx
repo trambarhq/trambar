@@ -90,9 +90,9 @@ function ImageCropper(props, ref) {
         setDragStart(null);
     });
     const handleMouseWheel = useListener((evt) => {
-        if (evt.cancelable) {
+        //if (evt.cancelable) {
             evt.preventDefault();
-        }
+        //}
 
         if (!hasFocus) {
             containerRef.current.focus();
@@ -296,6 +296,15 @@ function ImageCropper(props, ref) {
             };
         }
     }, [ hasFocus ]);
+    useEffect(() => {
+        // work around change in Chrome 73 regarding passive element
+        const options = { passive: false };
+        const container = containerRef.current;
+        container.addEventListener('mousewheel', handleMouseWheel, options);
+        return () => {
+            container.removeEventListener('mousewheel', handleMouseWheel, options);
+        };
+    }, []);
 
     const containerProps = {
         className: 'image-cropper',
@@ -304,7 +313,6 @@ function ImageCropper(props, ref) {
             onMouseDown: handleMouseDown,
             onFocus: handleFocus,
             onBlur: handleBlur,
-            onWheel: handleMouseWheel,
             onKeyDown: handleKeyDown,
         }
     };
