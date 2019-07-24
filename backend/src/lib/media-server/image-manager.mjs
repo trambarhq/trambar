@@ -4,7 +4,8 @@ import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Sharp from 'sharp';
 import Piexif from "piexifjs";
 import Moment from 'moment';
-import XMLDOM from 'xmldom'; const { DOMParser, XMLSerializer } = XMLDOM;
+import SVGSon from 'svgson';
+
 /**
  * Return metadata of an image file
  *
@@ -166,18 +167,16 @@ async function applyFiltersToSVGDocument(path, filters) {
     }
     // parse the XML doc
     const xml = await FS.readFileAsync(path, 'utf-8');
-    const parser = new DOMParser;
-    const doc = parser.parseFromString(xml);
-    const svg = doc.getElementsByTagName('svg')[0];
-    if (svg) {
+    const svg = await SVGSon.parse(xml);
+    if (svg.name === 'svg') {
         // see what changes are needed
         const params = {};
         applyOperators(params, svgOperators, filters);
 
         // get the dimensions first
-        let width = parseFloat(svg.getAttribute('width')) || 0;
-        let height = parseFloat(svg.getAttribute('height')) || 0;
-        const viewBoxString = svg.getAttribute('viewBox');
+        let width = parseFloat(_.get(svg, 'attributes.width')) || 0;
+        let height = parseFloat(_.get(svg, 'attributes.height')) || 0;
+        const viewBoxString = _.get(svg, 'attributes.viewBox');
         let viewBox;
         if (viewBoxString) {
             viewBox = _.map(_.split(viewBoxString, /\s+/), (s) => {
@@ -227,13 +226,12 @@ async function applyFiltersToSVGDocument(path, filters) {
                 height = params.height;
             }
         }
-        svg.setAttribute('width', width);
-        svg.setAttribute('height', height);
-        svg.setAttribute('viewBox', _.join(viewBox, ' '));
+        _.set(svg, 'attributes.width', String(width));
+        _.set(svg, 'attributes.height', String(height));
+        _.set(svg, 'attributes.viewBox', _.join(viewBox, ' '));
     }
-
-    const serializer = new XMLSerializer;
-    const newXML = serializer.serializeToString(doc);
+    const header = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>`;
+    const newXML = header + SVGSon.stringify(svg);
     return Buffer.from(newXML, 'utf-8');
 }
 

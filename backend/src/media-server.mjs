@@ -576,6 +576,12 @@ async function getFileType(path) {
         const buffer = Buffer.alloc(len);
         await FS.readAsync(fd, buffer, 0, len, 0);
         const info = FileType(buffer);
+        if (info.mime === 'application/xml') {
+            const text = buffer.toString('utf-8');
+            if (text.indexOf('<svg')) {
+                info.mime = 'image/svg+xml';
+            }
+        }
         if (!info) {
             info = {
                 ext: undefined,
