@@ -405,10 +405,12 @@ function Sheet(props) {
             label += ` (${_.join(flags, ', ')})`;
         }
         return (
-            <h2 className="title-toggle" onClick={handleToggleClick}>
-                {t('spreadsheet-summary-sheet-$number-$name', number, label)}
-                {' '}
-                <i className={`fa fa-angle-double-${dir}`} />
+            <h2>
+                <span className="title-toggle" onClick={handleToggleClick}>
+                    {t('spreadsheet-summary-sheet-$number-$name', number, label)}
+                    {' '}
+                    <i className={`fa fa-angle-double-${dir}`} />
+                </span>
             </h2>
         );
     }

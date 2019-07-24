@@ -213,7 +213,6 @@ function WikiContents(props) {
     const { wiki, wikis, env, route } = props;
     const { t } = env.locale;
     const [ open, setOpen ] = useState(() => {
-        return true;
         // show wiki contents when navigated from another wiki
         const prev = route.history[route.history.length - 2];
         if (prev && prev.name === route.name) {
@@ -284,10 +283,12 @@ function WikiContents(props) {
     function renderTitle() {
         const dir = (open) ? 'up' : 'down';
         return (
-            <h2 className="title-toggle" onClick={handleToggleClick}>
-                {t('wiki-summary-page-contents')}
-                {' '}
-                <i className={`fa fa-angle-double-${dir}`} />
+            <h2>
+                <span className="title-toggle" onClick={handleToggleClick}>
+                    {t('wiki-summary-page-contents')}
+                    {' '}
+                    <i className={`fa fa-angle-double-${dir}`} />
+                </span>
             </h2>
         );
     }
