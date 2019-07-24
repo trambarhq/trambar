@@ -101,6 +101,10 @@ const phrases = {
     'image-cropping-cancel': 'Cancel',
     'image-cropping-select': 'OK',
 
+    'image-preview-close': 'Close',
+    'image-preview-dropbox': 'Dropbox',
+    'image-preview-onedrive': 'OneDrive',
+
     'image-selector-choose-from-album': 'Choose from album',
     'image-selector-crop-image': 'Adjust size/position',
     'image-selector-upload-file': 'Upload image',

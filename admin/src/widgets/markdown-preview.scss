@@ -6,6 +6,11 @@
     margin-left: 0.5em;
     position: relative;
 
+    IMG {
+        cursor: pointer;
+        vertical-align: middle;
+    }
+
     .block {
         padding-left: 0.5em;
         padding-right: 0.5em;

@@ -13,8 +13,8 @@ class EnvironmentMonitor extends EventEmitter {
         this.battery = {};
         this.screenWidth = screen.width;
         this.screenHeight = screen.height;
-        this.viewportWidth = viewport.offsetWidth;
-        this.viewportHeight = viewport.offsetHeight;
+        this.viewportWidth = viewport.clientWidth;
+        this.viewportHeight = viewport.clientHeight;
         this.orientation = getOrientation();
         this.devicePixelRatio = window.devicePixelRatio;
         this.webpSupport = isWebpSupported();
@@ -194,8 +194,8 @@ class EnvironmentMonitor extends EventEmitter {
         let viewport = document.body.parentNode;
         this.screenWidth = screen.width;
         this.screenHeight = screen.height;
-        this.viewportWidth = viewport.offsetWidth;
-        this.viewportHeight = viewport.offsetHeight;
+        this.viewportWidth = viewport.clientWidth;
+        this.viewportHeight = viewport.clientHeight;
         this.devicePixelRatio = window.devicePixelRatio;
         this.orientation = getOrientation();
         this.triggerEvent(new EnvironmentMonitorEvent('change', this));

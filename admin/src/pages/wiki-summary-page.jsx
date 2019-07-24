@@ -17,6 +17,7 @@ import { TextField } from '../widgets/text-field.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
 import { OptionList } from '../widgets/option-list.jsx';
 import { MarkdownPreview } from '../widgets/markdown-preview.jsx';
+import { ImagePreviewDialogBox } from '../dialogs/image-preview-dialog-box.jsx';
 import { InputError } from '../widgets/input-error.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
@@ -212,6 +213,7 @@ function WikiContents(props) {
     const { wiki, wikis, env, route } = props;
     const { t } = env.locale;
     const [ open, setOpen ] = useState(() => {
+        return true;
         // show wiki contents when navigated from another wiki
         const prev = route.history[route.history.length - 2];
         if (prev && prev.name === route.name) {
@@ -221,6 +223,7 @@ function WikiContents(props) {
             return !!openedBefore[route.path];
         }
     });
+    const [ selectedImage, setSelectedImage ] = useState(null);
     const shown = useRef(false);
     if (open) {
         shown.current = true;
@@ -253,15 +256,28 @@ function WikiContents(props) {
             return url;
         }
     });
+    const handlePreviewClick = useListener((evt) => {
+        const { tagName, src } = evt.target;
+        if (tagName === 'IMG') {
+            const image = page.image(src);
+            if (image) {
+                setSelectedImage(image);
+            }
+        }
+    });
+    const handleImagePreviewClose = useListener((evt) => {
+        setSelectedImage(null);
+    });
 
     useEffect(() => {
         openedBefore[route.path] = open;
     }, [ route, open ]);
 
     return (
-        <div className="section">
+        <div className="wiki-contents" onClick={handlePreviewClick}>
             {renderTitle()}
             {renderContents()}
+            {renderDialogBox()}
         </div>
     );
 
@@ -288,6 +304,16 @@ function WikiContents(props) {
                 <MarkdownPreview {...props} />
             </CollapsibleContainer>
         );
+    }
+
+    function renderDialogBox() {
+        const props = {
+            show: !!selectedImage,
+            image: selectedImage,
+            env,
+            onClose: handleImagePreviewClose,
+        };
+        return <ImagePreviewDialogBox {...props} />;
     }
 }
 

@@ -1,0 +1,24 @@
+@import '../colors';
+
+.image-preview-dialog-box {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    background-color: $dialog-box-background-color;
+    color: $dialog-box-text-color;
+    padding: 1em 1em 1em 1em;
+    box-shadow: 5px 5px 4px $dialog-box-shadow-color;
+
+    .buttons {
+        flex: 0 0 auto;
+        padding-top: 0.8em;
+
+        .left {
+            float: left;
+        }
+
+        .right {
+            float: right;
+        }
+    }
+}

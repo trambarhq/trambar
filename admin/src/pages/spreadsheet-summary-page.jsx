@@ -18,6 +18,7 @@ import { TextField } from '../widgets/text-field.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
 import { OptionList } from '../widgets/option-list.jsx';
 import { ExcelPreview } from '../widgets/excel-preview.jsx';
+import { ImagePreviewDialogBox } from '../dialogs/image-preview-dialog-box.jsx';
 import { InputError } from '../widgets/input-error.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
@@ -366,9 +367,22 @@ function Sheet(props) {
     const [ open, setOpen ] = useState(() => {
         return !!openedBefore[route.path + number];
     });
+    const [ selectedImage, setSelectedImage ] = useState(null);
 
     const handleToggleClick = useListener((evt) => {
         setOpen(!open);
+    });
+    const handlePreviewClick = useListener((evt) => {
+        const { tagName, src } = evt.target;
+        if (tagName === 'IMG') {
+            const image = sheet.image(src);
+            if (image) {
+                setSelectedImage(image);
+            }
+        }
+    });
+    const handleImagePreviewClose = useListener((evt) => {
+        setSelectedImage(null);
     });
 
     useEffect(() => {
@@ -376,9 +390,10 @@ function Sheet(props) {
     }, [ open, route ]);
 
     return (
-        <div className="sheet">
+        <div className="sheet" onClick={handlePreviewClick}>
             {renderTitle()}
             {renderTable()}
+            {renderDialogBox()}
         </div>
     );
 
@@ -404,6 +419,16 @@ function Sheet(props) {
                 <ExcelPreview sheet={sheet} localized={localized} env={env} />
             </CollapsibleContainer>
         );
+    }
+
+    function renderDialogBox() {
+        const props = {
+            show: !!selectedImage,
+            image: selectedImage,
+            env,
+            onClose: handleImagePreviewClose,
+        };
+        return <ImagePreviewDialogBox {...props} />;
     }
 }
 
