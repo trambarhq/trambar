@@ -1,12 +1,14 @@
 import _ from 'lodash';
-import React, { useState, useEffect } from 'react';
-import { useRichText } from 'trambar-www';
+import React, { useState, useEffect, useMemo } from 'react';
+import { usePlainText, useRichText } from 'trambar-www';
+import * as PlainText from 'common/utils/plain-text.mjs';
 
 import './markdown-preview.scss';
 
 function MarkdownPreview(props) {
     const { page, localized, env, onReference } = props;
     const [ limit, setLimit ] = useState(50);
+    const pt = usePlainText();
     const rt = useRichText({
         devicePixelRatio: env.devicePixelRatio,
         imageHeight: 24,
@@ -27,6 +29,11 @@ function MarkdownPreview(props) {
             return { type, props, children };
         },
     });
+    const directions = useMemo(() => {
+        return _.map(page.blocks, (block) => {
+            return PlainText.detectDirection(pt(block));
+        });
+    }, [ page ]);
 
     useEffect(() => {
         if (page && page.blocks.length > limit) {
@@ -64,11 +71,16 @@ function MarkdownPreview(props) {
                 if (language === 'zz') {
                     classNames.push('off');
                 }
+                if (directions[i + 1] === 'rtl') {
+                    classNames.push('rtl');
+                }
             } else {
                 classNames.push('foreign');
             }
         }
-
+        if (directions[i] === 'rtl') {
+            classNames.push('rtl');
+        }
         const code = block.code();
         if (code && code.language === 'json') {
             try {
@@ -77,7 +89,6 @@ function MarkdownPreview(props) {
                 classNames.push('broken');
             }
         }
-
         return (
             <div key={i} className={classNames.join(' ')}>
                 {rt(block)}

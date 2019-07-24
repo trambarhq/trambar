@@ -1,12 +1,14 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
-import { useRichText } from 'trambar-www';
+import { usePlainText, useRichText } from 'trambar-www';
+import * as PlainText from 'common/utils/plain-text.mjs';
 
 import './excel-preview.scss';
 
 function ExcelPreview(props) {
     const { sheet, localized, env } = props;
     const [ limit, setLimit ] = useState(1000);
+    const pt = usePlainText();
     const rt = useRichText({
         devicePixelRatio: env.devicePixelRatio,
         imageWidth: 100,
@@ -56,13 +58,16 @@ function ExcelPreview(props) {
 
     function renderHeader(column, i) {
         const { name, flags } = column;
+        const classNames = [];
+        if (!localized.includes(column)) {
+            classNames.push('foreign');
+        }
         let label = name;
         if (!_.isEmpty(flags)) {
             label += ` (${_.join(flags, ', ')})`;
         }
-        const className = localized.includes(column) ? undefined : 'foreign';
         return (
-            <th className={className} key={i}>
+            <th key={i} className={classNames.join(' ')}>
                 {label}
             </th>
         );
@@ -77,9 +82,15 @@ function ExcelPreview(props) {
     }
 
     function renderCell(cell, i) {
-        const className = localized.includes(cell) ? undefined : 'foreign';
+        const classNames = [];
+        if (!localized.includes(cell)) {
+            classNames.push('foreign');
+        }
+        if (PlainText.detectDirection(pt(cell)) === 'rtl') {
+            classNames.push('rtl');
+        }
         return (
-            <td className={className} key={i}>
+            <td key={i} className={classNames.join(' ')}>
                 {rt(cell)}
             </td>
         );

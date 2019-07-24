@@ -252,6 +252,28 @@ function findEmoji(string) {
     return m;
 }
 
+let letterCaptureRegExp, rtlCaptureRegExp, rtlDetectionRegExp;
+
+try {
+    letterCaptureRegExp = new RegExp('\\p{Letter}+', 'gu');
+    rtlCaptureRegExp = new RegExp('[\\p{Script=Arabic}\\p{Script=Hebrew}]+', 'gu');
+    rtlDetectionRegExp = new RegExp('[\\p{Script=Arabic}\\p{Script=Hebrew}]', 'u');
+} catch (err) {
+}
+
+function detectDirection(text) {
+    if (letterCaptureRegExp && rtlCaptureRegExp && rtlDetectionRegExp) {
+        if (rtlDetectionRegExp.test(text)) {
+            const letters = text.match(letterCaptureRegExp).join('');
+            const rtlLetters = letters.match(rtlCaptureRegExp).join('');
+            if (rtlLetters.length > (letters.length / 2)) {
+                return 'rtl'
+            }
+        }
+    }
+    return 'ltr';
+}
+
 export {
     renderSurvey,
     renderSurveyResults,
@@ -259,4 +281,5 @@ export {
     renderEmoji,
     findEmoji,
     hasEmojiSupport,
+    detectDirection,
 };

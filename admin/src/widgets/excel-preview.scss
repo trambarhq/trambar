@@ -24,6 +24,11 @@
             &.foreign {
                 background-color: $foreign-text-background;
             }
+
+            &.rtl {
+                direction: rtl;
+                text-align: right;
+            }
         }
 
         TR:first-child {

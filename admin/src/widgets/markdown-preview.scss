@@ -25,6 +25,10 @@
             background-color: $foreign-text-background;
         }
 
+        &.rtl {
+            direction: rtl;
+        }
+
         &.broken {
             background-color: $broken-json-background;
         }
@@ -50,6 +54,14 @@
             &.off {
                 H1 {
                     display: none;
+                }
+            }
+
+            &.rtl {
+                text-align: left;
+
+                H1 {
+                    margin-left: -0.3em;
                 }
             }
         }
