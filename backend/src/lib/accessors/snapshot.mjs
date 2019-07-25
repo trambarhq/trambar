@@ -7,13 +7,16 @@ class Snapshot extends Data {
         this.table = 'snapshot';
         this.columns = {
             ...this.columns,
+            user_id: Number,
             repo_id: Number,
             branch_name: String,
             commit_id: String,
             head: Boolean,
+            ptime: String,
         };
         this.criteria = {
             ...this.criteria,
+            user_id: Number,
             repo_id: Number,
             branch_name: String,
             commit_id: String,
@@ -44,10 +47,12 @@ class Snapshot extends Data {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                repo_id int NULL DEFAULT null,
+                user_id int NOT NULL,
+                repo_id int NOT NULL,
                 branch_name text NOT NULL DEFAULT '',
                 commit_id text NOT NULL DEFAULT '',
                 head bool NOT NULL DEFAULT false,
+                ptime timestamp,
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} (repo_id, branch_name) WHERE deleted = false AND head = true;
@@ -133,11 +138,12 @@ class Snapshot extends Data {
         const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
             const row = rows[index];
-            object.chosen = row.chosen;
+            object.user_id = row.user_id;
             object.repo_id = row.repo_id;
             object.branch_name = row.branch_name;
             object.commit_id = row.commit_id;
             object.head = row.head;
+            object.ptime = row.ptime;
         }
         return objects;
     }

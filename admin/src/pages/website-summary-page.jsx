@@ -15,6 +15,7 @@ import { PushButton } from '../widgets/push-button.jsx';
 import { InstructionBlock } from '../widgets/instruction-block.jsx';
 import { TextField } from '../widgets/text-field.jsx';
 import { OptionList } from '../widgets/option-list.jsx';
+import { SnapshotList } from '../widgets/snapshot-list.jsx';
 import { InputError } from '../widgets/input-error.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
@@ -40,7 +41,7 @@ async function WebsiteSummaryPage(props) {
     const project = await ProjectFinder.findProject(database, projectID);
     render();
     const repos = await RepoFinder.findTemplates(database);
-    const template = _.find(repos, { id: project.template_repo_id });
+    const template = _.find(repos, { id: project.template_repo_id }) || null;
     render();
     const snapshots = await SnapshotFinder.findSnapshots(database, template);
     render();
@@ -156,6 +157,7 @@ function WebsiteSummaryPageSync(props) {
             <UnexpectedError error={error} />
             {renderForm()}
             {renderInstructions()}
+            {renderSnapshots()}
             <ActionConfirmation ref={confirmationRef} env={env} />
         </div>
     );
@@ -306,7 +308,28 @@ function WebsiteSummaryPageSync(props) {
             </div>
         );
     }
+
+    function renderSnapshots() {
+        const sorted = sortSnapshots(snapshots);
+        const props = {
+            database,
+            project,
+            template,
+            snapshots: sorted,
+            env,
+        };
+        return (
+            <div className="snapshots">
+                <h2>Versions</h2>
+                <SnapshotList {...props} />
+            </div>
+        );
+    }
 }
+
+const sortSnapshots = memoizeWeak(null, function(snapshots) {
+    return _.orderBy(snapshots, 'ptime', 'desc');
+});
 
 const component = Relaks.memo(WebsiteSummaryPage);
 

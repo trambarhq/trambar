@@ -12,6 +12,7 @@ import Snapshot from '../accessors/snapshot.mjs';
 
 import * as Transport from './transport.mjs';
 import * as PushReconstructor from './push-reconstructor.mjs';
+import * as UserImporter from './user-importer.mjs';
 
 const availableFileTypes = [ 'www', 'ssr' ];
 const availableFileTypesRE = new RegExp(`^(${availableFileTypes.join('|')})\\/`);
@@ -132,8 +133,8 @@ async function processNewEvents(db, server, repo) {
         repo: repo.name,
     });
     const now = Moment();
+    const lastSnapshots = {};
     let firstEventAge;
-    let lastSnapshot;
     try {
         await Transport.fetchEach(server, url, params, async (glEvent, index, total) => {
             const ctime = glEvent.created_at;
@@ -156,20 +157,24 @@ async function processNewEvents(db, server, repo) {
             }
             const actionName = _.snakeCase(glEvent.action_name);
             if (actionName === 'pushed_to' || actionName === 'pushed_new') {
-                const snapshot = await importSnapshot(db, server, repo, glEvent);
-                if (snapshot) {
-                    lastSnapshot = snapshot;
-                    taskLog.append('commits', snapshot.commit_id);
+                const author = await UserImporter.importUser(db, server, glEvent.author);
+                if (author) {
+                    const snapshot = await importSnapshot(db, server, repo, author, glEvent);
+                    if (snapshot) {
+                        lastSnapshots[snapshot.branch_name] = snapshot;
+                        taskLog.append('commits', snapshot.commit_id);
+                    }
                 }
             }
             taskLog.set('last_event_time', ctime);
             taskLog.report(nom, denom);
         });
 
-        if (lastSnapshot) {
+        for (let [ branch, snapshot ] of _.entries(lastSnapshots)) {
             // clear head flag of other snapshots
             const criteria = {
-                exclude: [ lastSnapshot.id ],
+                exclude: [ snapshot.id ],
+                branch_name: branch,
                 deleted: false,
                 head: true,
             };
@@ -181,7 +186,7 @@ async function processNewEvents(db, server, repo) {
     }
 }
 
-async function importSnapshot(db, server, repo, glEvent) {
+async function importSnapshot(db, server, repo, author, glEvent) {
     let branch, headID, tailID, type, count;
     if (glEvent.push_data) {
         // version 10
@@ -207,10 +212,12 @@ async function importSnapshot(db, server, repo, glEvent) {
     if (containsTemplateFile(push)) {
         try {
             const snapshot = {
+                user_id: author.id,
                 repo_id: repo.id,
                 branch_name: branch,
                 commit_id: headID,
                 head: true,
+                ptime: Moment(glEvent.created_at).toISOString(),
             };
             const snapshotAfter = await Snapshot.insertOne(db, 'global', snapshot);
             return snapshotAfter;

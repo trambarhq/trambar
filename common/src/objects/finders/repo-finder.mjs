@@ -13,6 +13,9 @@ const emptyArray = [];
  * @return {Promise<Repo>}
  */
 async function findRepo(db, id) {
+    if (!id) {
+        return null;
+    }
     return db.findOne({
         schema,
         table,
