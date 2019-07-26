@@ -45,6 +45,7 @@ function Overlay(props) {
         }
     });
     const handleKeyDown = useListener((evt) => {
+        console.log(evt);
         if (evt.keyCode === 27) {   // ESC
             if (onBackgroundClick) {
                 onBackgroundClick(evt);
@@ -99,6 +100,12 @@ function Overlay(props) {
             }
         }
     }, [ show, rendering, container, transitioning ]);
+    useEffect(() => {
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    });
 
     if (container) {
         const classNames = [ 'overlay' ];
@@ -113,7 +120,6 @@ function Overlay(props) {
         const containerProps = {
             className: classNames.join(' '),
             onClick: handleClick,
-            onKeyDown: handleKeyDown,
             onTouchMove: handleTouchMove,
             onTransitionEnd: handleTransitionEnd,
             ...otherProps

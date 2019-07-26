@@ -25,11 +25,14 @@
 
     .sheet {
         clear: both;
+        margin-bottom: -0.5em;
+
+        H2 {
+            margin-bottom: 0.25em;
+        }
 
         .title-toggle {
             cursor: pointer;
-            margin-top: 0.5em;
-            margin-bottom: 0.25em;
 
             &:hover {
                 color: $link-hover-color;
