@@ -12,10 +12,6 @@ function ImagePreviewDialogBox(props) {
     const { database, env, image, onClose } = props;
     const { t } = env.locale;
 
-    const handleOpenClick = useListener((evt) => {
-        window.open(image.source, '_blank');
-    });
-
     return (
         <div className="image-preview-dialog-box">
             {renderImage()}
@@ -49,21 +45,29 @@ function ImagePreviewDialogBox(props) {
         const closeProps = {
             onClick: onClose,
         };
-        const source = getImageSource(image);
-        const openProps = {
-            hidden: !source,
-            onClick: handleOpenClick,
-        };
-        const openLabel = (source) ? t(`image-preview-${source}`) : '';
         return (
             <div className="buttons">
                 <div className="left">
-                    <PushButton {...openProps}>{openLabel}</PushButton>
+                    {renderLink()}
                 </div>
                 <div className="right">
                     <PushButton {...closeProps}>{t('image-preview-close')}</PushButton>
                 </div>
             </div>
+        );
+    }
+
+    function renderLink() {
+        const source = getImageSource(image);
+        if (!source) {
+            return;
+        }
+        return (
+            <a href={image.source} className="link" target="_blank">
+                {t(`image-preview-${source}`)}
+                {' '}
+                <i className="fa fa-external-link" />
+            </a>
         );
     }
 }

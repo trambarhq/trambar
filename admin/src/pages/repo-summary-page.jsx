@@ -64,6 +64,7 @@ function RepoSummaryPageSync(props) {
     const [ problems, reportProblems ] = useValidation(!readOnly);
     const [ confirmationRef, confirm ] = useConfirmation();
     const warnDataLoss = useDataLossWarning(route, env, confirm);
+    const baseURL = _.get(repo, 'details.web_url');
 
     const handleEditClick = useListener((evt) => {
         route.push({ editing: true });
@@ -182,13 +183,26 @@ function RepoSummaryPageSync(props) {
         const props = {
             id: 'name',
             value: draft.get('name', ''),
-            readOnly,
+            readOnly: true,
             env,
         };
         return (
             <TextField {...props}>
                 {t('repo-summary-gitlab-name')}
+                {' '}
+                {renderRepoLink()}
             </TextField>
+        );
+    }
+
+    function renderRepoLink() {
+        if (!baseURL) {
+            return;
+        }
+        return (
+            <a className="link" href={baseURL} target="_blank">
+                <i className="fa fa-external-link" />
+            </a>
         );
     }
 

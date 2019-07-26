@@ -223,7 +223,7 @@ function WebsiteSummaryPageSync(props) {
             readOnly,
             onOptionClick: handleTemplateChange,
         };
-        const list = _.concat([
+        const list = [
             {
                 id: null,
                 name: t('website-summary-template-disabled'),
@@ -232,14 +232,49 @@ function WebsiteSummaryPageSync(props) {
                 id: 0,
                 name: t('website-summary-template-generic')
             }
-        ], repos || []);
+        ];
+        if (repos) {
+            for (let repo of repos) {
+                list.push(repo);
+            }
+        } else {
+            // add placeholder so the control doesn't collapse
+            const id = draft.getCurrent('template_repo_id');
+            list.push({ id, name: '\u00a0' });
+        }
         return (
             <OptionList {...listProps}>
                 <label>
                     {t('website-summary-template')}
+                    {' '}
+                    {renderRepoLink()}
                 </label>
                 {_.map(list, renderTemplateOption)}
             </OptionList>
+        );
+    }
+
+    function renderTemplateOption(repo) {
+        const repoIDCurr = draft.getCurrent('template_repo_id');
+        const repoIDPrev = draft.getOriginal('template_repo_id');
+        const props = {
+            name: repo.id,
+            selected: repoIDCurr === repo.id,
+            previous: repoIDPrev === repo.id,
+        };
+        const label = RepoUtils.getDisplayName(repo, env);
+        return <option key={repo.id} {...props}>{label}</option>;
+    }
+
+    function renderRepoLink() {
+        const url = _.get(template, 'details.web_url');
+        if (!url) {
+            return;
+        }
+        return (
+            <a className="link" href={url} target="_blank">
+                <i className="fa fa-external-link" />
+            </a>
         );
     }
 
@@ -281,18 +316,6 @@ function WebsiteSummaryPageSync(props) {
                 {t('website-summary-traiffic-report-time')}
             </TextField>
         );
-    }
-
-    function renderTemplateOption(repo) {
-        const repoIDCurr = draft.getCurrent('template_repo_id');
-        const repoIDPrev = draft.getOriginal('template_repo_id');
-        const props = {
-            name: repo.id,
-            selected: repoIDCurr === repo.id,
-            previous: repoIDPrev === repo.id,
-        };
-        const label = RepoUtils.getDisplayName(repo, env);
-        return <option key={repo.id} {...props}>{label}</option>;
     }
 
     function renderInstructions() {

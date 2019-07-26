@@ -60,12 +60,9 @@ function WikiSummaryPageSync(props) {
     const { t } = env.locale;
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
+    const baseURL = _.get(repo, 'details.web_url');
 
     const handleEditClick = useListener((evt) => {
-        const baseURL = _.get(repo, 'details.web_url');
-        const slug = _.get(wiki, 'slug');
-        const url = `${baseURL}/wikis/${slug}/edit`;
-        open(url, 'gitlab');
     });
     const handleReturnClick = useListener((evt) => {
         route.push('wiki-list-page', { projectID: project.id });
@@ -155,7 +152,22 @@ function WikiSummaryPageSync(props) {
         return (
             <TextField {...props}>
                 {t('wiki-summary-slug')}
+                {' '}
+                {renderWikiLink()}
             </TextField>
+        );
+    }
+
+    function renderWikiLink() {
+        const slug = _.get(wiki, 'slug');
+        if (!baseURL || !slug) {
+            return;
+        }
+        const url = `${baseURL}/wikis/${slug}`;
+        return (
+            <a className="link" href={url} target="_blank">
+                <i className="fa fa-external-link" />
+            </a>
         );
     }
 
@@ -169,7 +181,20 @@ function WikiSummaryPageSync(props) {
         return (
             <TextField {...props}>
                 {t('wiki-summary-repo')}
+                {' '}
+                {renderRepoLink()}
             </TextField>
+        );
+    }
+
+    function renderRepoLink() {
+        if (!baseURL) {
+            return;
+        }
+        return (
+            <a className="link" href={baseURL} target="_blank">
+                <i className="fa fa-external-link" />
+            </a>
         );
     }
 

@@ -234,7 +234,11 @@ function SpreadsheetListPageSync(props) {
             return <TH id="url">{t('table-heading-url')}</TH>;
         } else {
             const url = spreadsheet.url;
-            return <td>{url}</td>;
+            return (
+                <td>
+                    <a href={url} target="_blank">{url}</a>
+                </td>
+            );
         }
     }
 

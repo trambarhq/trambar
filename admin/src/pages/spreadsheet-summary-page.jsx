@@ -255,7 +255,21 @@ function SpreadsheetSummaryPageSync(props) {
         return (
             <TextField {...props}>
                 {t('spreadsheet-summary-url')}
+                {' '}
+                {renderURLLink()}
             </TextField>
+        );
+    }
+
+    function renderURLLink() {
+        const url = draft.get('url', '');
+        if (!url) {
+            return;
+        }
+        return (
+            <a className="link" href={url} target="_blank">
+                <i className="fa fa-external-link" />
+            </a>
         );
     }
 
