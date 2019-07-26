@@ -49,11 +49,11 @@ async function SnapshotList(props) {
             if (branch === 'master') {
                 url = projectURL;
             } else {
-                url = `${projectURL}${branch}/`
+                url = `${projectURL}(${branch})/`
             }
             id = 'HEAD';
         } else {
-            url = `${projectURL}${commit}/`;
+            url = `${projectURL}(${commit})/`;
             id = commit.substr(0, 8);
         }
 

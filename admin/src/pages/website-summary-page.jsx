@@ -43,7 +43,7 @@ async function WebsiteSummaryPage(props) {
     const repos = await RepoFinder.findTemplates(database);
     const template = _.find(repos, { id: project.template_repo_id }) || null;
     render();
-    const snapshots = await SnapshotFinder.findSnapshots(database, template);
+    const snapshots = await SnapshotFinder.findSnapshots(database, template, 100);
     render();
 
     function render() {
@@ -320,7 +320,7 @@ function WebsiteSummaryPageSync(props) {
         };
         return (
             <div className="snapshots">
-                <h2>Versions</h2>
+                <h2>{t('website-summary-versions')}</h2>
                 <SnapshotList {...props} />
             </div>
         );

@@ -21,14 +21,16 @@
             float: left;
             margin-left: 0.5em;
             margin-top: 0.2em;
+            margin-bottom: 0.2em;
 
             .branch {
                 font-size: 1.75em;
+                vertical-align: middle;
             }
 
             .id {
-                vertical-align: 0.15em;
-                margin-left: 0.5em;
+                vertical-align: middle;
+                margin-left: 0.35em;
             }
         }
 

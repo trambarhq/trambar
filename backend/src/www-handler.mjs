@@ -203,7 +203,7 @@ async function handleSnapshotPageRequest(req, res, next) {
         controlCache(res);
         res.type('html').send(buffer);
 
-        CacheManager.link(page.path, buffer.sourceURLs);
+        CacheManager.link(path, buffer.sourceURLs);
     } catch (err) {
         next(err);
     }

@@ -1182,6 +1182,7 @@ const phrases = {
     'website-summary-timezone': 'Time zone',
     'website-summary-title': 'Website',
     'website-summary-traiffic-report-time': 'Traffic report publication time',
+    'website-summary-versions': 'Versions',
 
     'welcome': 'Welcome!',
 

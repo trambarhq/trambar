@@ -7,10 +7,11 @@ const emptyArray = [];
  *
  * @param  {Database} db
  * @param  {Repo} repo
+ * @param  {Number} limit
  *
  * @return {Promise<Snapshot>}
  */
-function findSnapshots(db, repo) {
+function findSnapshots(db, repo, limit) {
     if (!repo) {
         return emptyArray;
     }
@@ -20,6 +21,7 @@ function findSnapshots(db, repo) {
         criteria: {
             repo_id: repo.id,
             deleted: false,
+            limit,
         },
     });
 }
