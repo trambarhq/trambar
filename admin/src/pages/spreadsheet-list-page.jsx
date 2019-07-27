@@ -166,7 +166,7 @@ function SpreadsheetListPageSync(props) {
 
     function renderRows() {
         const visible = (selection.shown) ? spreadsheets : activeSpreadsheets;
-        const sorted = sortSpreadsheets(spreadsheets, env, sort);
+        const sorted = sortSpreadsheets(visible, env, sort);
         return _.map(sorted, renderRow);
     }
 
@@ -235,7 +235,7 @@ function SpreadsheetListPageSync(props) {
         } else {
             const url = spreadsheet.url;
             return (
-                <td>
+                <td className="no-wrap">
                     <a href={url} target="_blank">{url}</a>
                 </td>
             );
@@ -243,7 +243,7 @@ function SpreadsheetListPageSync(props) {
     }
 
     function renderSheetCountColumn(spreadsheet) {
-        if (!env.isWiderThan('narrow')) {
+        if (!env.isWiderThan('wide')) {
             return null;
         }
         if (!spreadsheet) {

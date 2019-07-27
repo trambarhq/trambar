@@ -234,7 +234,7 @@ async function NavigationTree(props) {
         const page = 'spreadsheet-summary-page';
         let label;
         if (spreadsheet) {
-            label = SpreadsheetUtils.getDisplayName(spreadsheet, env);
+            label = SpreadsheetUtils.getDisplayName(spreadsheet, env) || '-';
         } else {
             return null;
         }

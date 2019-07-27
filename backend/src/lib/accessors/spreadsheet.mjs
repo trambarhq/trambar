@@ -154,19 +154,22 @@ class Spreadsheet extends Data {
      * @return {Promise<Object>}
      */
     async saveUnique(db, schema, object) {
+        console.log('saveUnique')
         // this doesn't work within a transaction
         try {
-            return this.saveOne(db, schema, object);
+            const objectAfter = await this.saveOne(db, schema, object);
+            return objectAfter;
         } catch (err) {
             // unique violation
+            console.log('Code:', err.code);
             if (err.code === '23505') {
                 object = { ...object };
                 const m = /(.*)(\d+)$/.exec(object.name);
                 if (m) {
                     const number = parseInt(m[2]);
-                    object.username = m[1] + (number + 1);
+                    object.name = m[1] + (number + 1);
                 } else {
-                    object.username += '2';
+                    object.name += '2';
                 }
                 return this.saveUnique(db, schema, object);
             }

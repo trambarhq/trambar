@@ -135,7 +135,8 @@ class User extends ExternalData {
     async saveUnique(db, schema, user) {
         // this doesn't work within a transaction
         try {
-            return this.saveOne(db, schema, user);
+            const objectAfter = await this.saveOne(db, schema, user);
+            return objectAfter;
         } catch (err) {
             // unique violation
             if (err.code === '23505') {

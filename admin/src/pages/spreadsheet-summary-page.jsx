@@ -169,14 +169,11 @@ function SpreadsheetSummaryPageSync(props) {
 
     useEffect(() => {
         run(() => {
-            if (spreadsheet) {
-                if (_.isEmpty(spreadsheet.details.sheets)) {
-                    if(!/ms\-excel|spreadsheetml/.test(spreadsheet.details.type)) {
-                        throw new Error('Not an Excel file');
-                    }
-                }
+            const error = _.get(spreadsheet, 'details.error');
+            if (error) {
+                throw new Error(error);
             }
-        })
+        });
     }, [ spreadsheet ]);
 
     warnDataLoss(draft.changed);

@@ -19,56 +19,80 @@ async function retrieve(schema, name, redirection) {
         if (!spreadsheet) {
             throw new HTTPError(404);
         }
-        let changed = false;
-        taskLog.describe(`retreiving ${spreadsheet.url}`);
-        const buffer = await fetchSpreadsheet(spreadsheet);
-        if (buffer) {
-            taskLog.describe(`parsing Excel file`);
-            const { etag, type, filename } = buffer;
-            const workbook = await parseSpreadsheet(buffer);
+        try {
+            let changed = false;
+            taskLog.describe(`retreiving ${spreadsheet.url}`);
+            const buffer = await fetchSpreadsheet(spreadsheet);
+            if (buffer) {
+                taskLog.describe(`parsing Excel file`);
+                const { etag, type, filename } = buffer;
+                const workbook = await parseSpreadsheet(buffer);
 
-            // import media files
-            const mediaImports = findMediaImports(workbook.sheets);
-            const mediaCount = mediaImports.length;
-            let mediaNumber = 1;
-            for (let mediaImport of mediaImports) {
-                const { src } = mediaImport;
-                taskLog.describe(`importing ${src}`);
-                try {
-                    const url = getFileURL(src);
-                    const info = await MediaImporter.importFile(url);
-                    _.assign(mediaImport, info);
-                    taskLog.report(mediaNumber++, mediaCount);
-                } catch (err) {
-                    mediaImport.error = err.message;
+                if (_.isEmpty(workbook.sheets)) {
+                    if(!/ms\-excel|spreadsheetml/.test(type)) {
+                        throw new Error('Not an Excel file');
+                    }
                 }
-            }
 
+                // import media files
+                const mediaImports = findMediaImports(workbook.sheets);
+                const mediaCount = mediaImports.length;
+                let mediaNumber = 1;
+                for (let mediaImport of mediaImports) {
+                    const { src } = mediaImport;
+                    taskLog.describe(`importing ${src}`);
+                    try {
+                        const url = getFileURL(src);
+                        const info = await MediaImporter.importFile(url);
+                        _.assign(mediaImport, info);
+                        taskLog.report(mediaNumber++, mediaCount);
+                    } catch (err) {
+                        mediaImport.error = err.message;
+                    }
+                }
+
+                const spreadsheetChanges = {
+                    id: spreadsheet.id,
+                    details: {
+                        ...spreadsheet.details,
+                        type,
+                        filename,
+                        error: undefined,
+                        ...workbook
+                    },
+                    etag,
+                };
+                if (!spreadsheet.name && buffer.filename) {
+                    // use the filename as the spreadsheet's name
+                    const name = _.kebabCase(_.replace(buffer.filename, /\.\w+$/, ''));
+                    spreadsheetChanges.name = name;
+                }
+                spreadsheet = await Spreadsheet.saveUnique(db, schema, spreadsheetChanges);
+                changed = true;
+            }
+            taskLog.set('name', name);
+            taskLog.set('changed', changed);
+            if (buffer && buffer.filename) {
+                taskLog.set('filename', buffer.filename);
+            }
+            await taskLog.finish();
+
+            if (redirection) {
+                // make URL shorter when we're using project-specific domain name
+                trimURLs(spreadsheet.details.sheets);
+            }
+            return spreadsheet;
+        } catch (err) {
             const spreadsheetChanges = {
                 id: spreadsheet.id,
-                details: { ...spreadsheet.details, type, filename, ...workbook },
-                etag,
+                details: {
+                    ...spreadsheet.details,
+                    error: err.message,
+                }
             };
-            if (!spreadsheet.name && buffer.filename) {
-                // use the filename as the spreadsheet's name
-                const name = _.kebabCase(_.replace(buffer.filename, /\.\w+$/, ''));
-                spreadsheetChanges.name = name;
-            }
-            spreadsheet = await Spreadsheet.saveUnique(db, schema, spreadsheetChanges);
-            changed = true;
+            await Spreadsheet.updateOne(db, schema, spreadsheetChanges);
+            throw err;
         }
-        taskLog.set('name', name);
-        taskLog.set('changed', changed);
-        if (buffer && buffer.filename) {
-            taskLog.set('filename', buffer.filename);
-        }
-        await taskLog.finish();
-
-        if (redirection) {
-            // make URL shorter when we're using project-specific domain name
-            trimURLs(spreadsheet.details.sheets);
-        }
-        return spreadsheet;
     } catch (err) {
         await taskLog.abort(err);
         throw err;

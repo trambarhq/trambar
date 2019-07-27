@@ -5,7 +5,7 @@
 
     .sortable-table {
         #url {
-            width: 32em;
+            width: 36em;
         }
 
         #sheets {
@@ -16,5 +16,10 @@
             width: 12em;
         }
 
+        .no-wrap {
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
     }
 }

@@ -337,7 +337,7 @@ function handleDatabaseChanges(events) {
             const name = previous.name || current.name;
             taskQueue.add(new TaskPurgeSpreadsheet(schema, name));
 
-            if (diff.disabled || diff.deleted) {
+            if (diff.disabled || diff.deleted || diff.url) {
                 if (!current.disabled && !current.deleted) {
                     taskQueue.add(new TaskImportSpreadsheet(schema, name))
                 }

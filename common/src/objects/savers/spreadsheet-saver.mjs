@@ -22,7 +22,7 @@ async function disableSpreadsheet(db, schema, spreadsheet) {
     return spreadsheetAfter;
 }
 
-async function removeSpreadsheets(db, schema, spreadsheet) {
+async function removeSpreadsheets(db, schema, spreadsheets) {
     const changes = _.map(spreadsheets, (spreadsheet) => {
         return { id: spreadsheet.id, deleted: true };
     });
