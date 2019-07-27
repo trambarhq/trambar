@@ -104,7 +104,7 @@ async function downloadFile(source, dstFolder) {
             headers['If-Modified-Since'] = previousDownload.mtime;
         }
     }
-    const response = await CrossFetch(url, { headers });
+    const response = await CrossFetch(url, { headers, timeout: 2500 });
     const { status } = response;
     if (status === 200) {
         // stream contents into temp file

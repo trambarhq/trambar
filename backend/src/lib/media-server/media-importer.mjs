@@ -14,7 +14,7 @@ async function importFile(url, retrievalHeaders) {
     const method = 'post';
     const headers = { 'Content-Type': 'application/json' };
     const body = JSON.stringify({ url, headers: retrievalHeaders });
-    const response = await CrossFetch(importURL, { method, headers, body });
+    const response = await CrossFetch(importURL, { method, headers, body, timeout: 5000 });
     const { status } = response;
     if (status === 200) {
         const info = await response.json();
