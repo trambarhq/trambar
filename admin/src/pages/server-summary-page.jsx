@@ -172,8 +172,13 @@ function ServerSummaryPageSync(props) {
         const autoTitleAfter = t(`server-type-${type}`);
         const title = p(draft.get('details.title'));
         if (!title || title === autoTitleBefore) {
-            const titles = _.set({}, languageCode, autoTitleAfter);
-            draft.set('details.title', titles);
+            let code = languageCode;
+            if (!_.isEmpty(availableLanguageCodes)) {
+                if (!_.includes(availableLanguageCodes, code)) {
+                    code = availableLanguageCodes[0];
+                }
+            }
+            draft.set(`details.title.${code}`, autoTitleAfter);
         }
 
         // derive name from type

@@ -13,8 +13,13 @@ import './multilingual-text-field.scss';
 function MultilingualTextField(props, ref) {
     const { env, type, id, readOnly, value, availableLanguageCodes, children, onChange, ...otherProps } = props;
     const { t, languageCode, directory } = env.locale;
-    const [ selectedLanguageCode, setSelectedLanguageCode ] = useState(() => {
-        // choose initial language
+    const [ selectedLanguageCode, setSelectedLanguageCode ] = useState();
+    const currentLanguageCode = useMemo(() => {
+        // use selected language if it's among the ones available
+        if (_.includes(availableLanguageCodes, selectedLanguageCode)) {
+            return selectedLanguageCode;
+        }
+
         const existingLanguageCodes = _.keys(value);
         if (_.includes(existingLanguageCodes, languageCode)) {
             // if there's existing text of the current language, use it
@@ -33,7 +38,7 @@ function MultilingualTextField(props, ref) {
             // if all else failed, use current language
             return languageCode;
         }
-    });
+    }, [ selectedLanguageCode, languageCode, availableLanguageCodes ]);
     const [ hoverState, setHoverState ] = useState(null);
     const languageCodes = useMemo(() => {
         let existingLanguageCodes = _.keys(value);
@@ -67,11 +72,11 @@ function MultilingualTextField(props, ref) {
             } else {
                 newValue = {};
             }
-            newValue[selectedLanguageCode] = text;
+            newValue[currentLanguageCode] = text;
         } else {
             if (value instanceof Object) {
-                newValue = _.omit(value, selectedLanguageCode);
-                if (!_.includes(availableLanguageCodes, selectedLanguageCode)) {
+                newValue = _.omit(value, currentLanguageCode);
+                if (!_.includes(availableLanguageCodes, currentLanguageCode)) {
                     // choose a new language when text of a no-longer-available
                     // language is removed
                     let language = _.first(languageCodes);
@@ -137,13 +142,13 @@ function MultilingualTextField(props, ref) {
         classNames.push('multiple-languages');
     }
     if (value instanceof Object) {
-        inputProps.value = value[selectedLanguageCode] || '';
+        inputProps.value = value[currentLanguageCode] || '';
     } else if (typeof(value) === 'string') {
         inputProps.value = value;
     } else {
         inputProps.value = '';
     }
-    inputProps.lang = selectedLanguageCode;
+    inputProps.lang = currentLanguageCode;
     inputProps.onChange = handleTextChange;
     return (
         <div className={classNames.join(' ')}>
@@ -170,7 +175,7 @@ function MultilingualTextField(props, ref) {
             className: 'tab',
             lang: language.code,
         };
-        if (language.code === selectedLanguageCode) {
+        if (language.code === currentLanguageCode) {
             props.className += ' selected';
         } else {
             props.onClick = handleLanguageClick;

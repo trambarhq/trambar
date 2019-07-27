@@ -45,7 +45,6 @@ function Overlay(props) {
         }
     });
     const handleKeyDown = useListener((evt) => {
-        console.log(evt);
         if (evt.keyCode === 27) {   // ESC
             if (onBackgroundClick) {
                 onBackgroundClick(evt);
