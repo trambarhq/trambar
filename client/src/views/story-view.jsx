@@ -304,6 +304,7 @@ function StoryView(props) {
             authors,
             currentUser,
             reactions,
+            project,
             repo: findRepo(repos, story),
             database,
             env,

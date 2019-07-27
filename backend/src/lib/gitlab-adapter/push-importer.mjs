@@ -5,6 +5,7 @@ import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.
 
 import * as PushReconstructor from './push-reconstructor.mjs';
 import * as PushDecorator from './push-decorator.mjs';
+import * as SnapshotManager from './snapshot-manager.mjs';
 
 // accessors
 import Story from '../accessors/story.mjs';
@@ -91,6 +92,13 @@ function copyPushProperties(story, system, server, repo, author, push, component
     } else {
         storyType = 'push';
     }
+
+    if (repo.template) {
+        if (SnapshotManager.containsTemplateFile(push)) {
+            storyType = 'snapshot';
+        }
+    }
+
     const defLangCode = Localization.getDefaultLanguageCode(system);
 
     const storyChanges = _.cloneDeep(story) || {};

@@ -96,6 +96,8 @@ function UserActivityList(props) {
                 return t(`user-activity-$name-started-survey`, name);
             case 'task-list':
                 return t(`user-activity-$name-started-task-list`, name);
+            case 'snapshot':
+                return t(`user-activity-$name-modified-website`, name);
             default:
                 return story.type;
         }

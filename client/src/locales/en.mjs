@@ -668,6 +668,9 @@ let americanPhrases = {
     'story-$count-reactions': (count) => {
         return cardinal(count, '1 reaction', '2 reactions');
     },
+    'story-$name-changed-production-website': () => {
+        return `Changed the live version of the project website`;
+    },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `Created branch “${branch}” in project “${repo}”`;
     },
@@ -686,6 +689,9 @@ let americanPhrases = {
     },
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
         return `Created tag “${tag}” in project “${repo}”`;
+    },
+    'story-$name-created-website-version-in-$branch': (name, branch) => {
+        return `Created a new version of the project website in the branch “${branch}”`;
     },
     'story-$name-deleted-$page': (name, page) => {
         return `Deleted wiki page “${page}”`;
@@ -870,6 +876,7 @@ let americanPhrases = {
     'user-activity-$name-joined-repo': 'Joined a git project',
     'user-activity-$name-left-repo': 'Left a git project',
     'user-activity-$name-merged-code': 'Performed a code merge',
+    'user-activity-$name-modified-website': 'Modified project website',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         let audios = cardinal(count, 'a audio clip', '2 audio clips');
         return `Posted ${audios}`;
@@ -921,6 +928,7 @@ let americanPhrases = {
     'user-statistics-legend-repo': 'Repo changes',
     'user-statistics-legend-survey': 'Surveys',
     'user-statistics-legend-tag': 'New tags',
+    'user-statistics-legend-snapshot': 'Website changes',
     'user-statistics-legend-task-list': 'Task lists',
     'user-statistics-legend-wiki': 'Wiki edits',
     'user-statistics-today': 'Today',

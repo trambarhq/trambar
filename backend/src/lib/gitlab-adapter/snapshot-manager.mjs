@@ -249,4 +249,5 @@ function isCommitID(commitID) {
 export {
     retrieveFile,
     processNewEvents,
+    containsTemplateFile,
 };

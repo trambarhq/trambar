@@ -5,12 +5,13 @@ import { useListener, useSaveBuffer, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as Markdown from 'common/utils/markdown.mjs';
 import * as PlainText from 'common/utils/plain-text.mjs';
-import * as StorySaver from 'common/objects/savers/story-saver.mjs';
-import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
 import * as ReactionSaver from 'common/objects/savers/reaction-saver.mjs';
 import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
 import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import * as StorySaver from 'common/objects/savers/story-saver.mjs';
+import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 import Payload from 'common/transport/payload.mjs';
 
 // widgets
@@ -33,7 +34,7 @@ import './story-contents.scss';
  * Component that renders a story's contents. Used by StoryView.
  */
 function StoryContents(props) {
-    const { story, authors, reactions, repo, currentUser } = props;
+    const { story, authors, reactions, repo, project, currentUser } = props;
     const { database, env, access } = props;
     const { t, p, g, f } = env.locale;
     const audioPlayerRef = useRef();
@@ -115,6 +116,8 @@ function StoryContents(props) {
             case 'branch':
             case 'tag':
                 return renderBranchText();
+            case 'snapshot':
+                return renderSnapshotText();
             case 'issue':
                 if (exported) {
                     return renderStoryText();
@@ -332,10 +335,8 @@ function StoryContents(props) {
     function renderPushText() {
         const {
             branch,
-            comment_ids: commitIDs,
             from_branches: sourceBranches
         } = story.details;
-        const commits = _.size(commitIDs);
         const url = (repoAccess) ? RepoUtils.getPushURL(repo, story) : undefined;
         const target = (repoAccess) ? repo.type : undefined;
         let text;
@@ -370,6 +371,30 @@ function StoryContents(props) {
                     <a href={url} target={target}>{text}</a>
                 </p>
                 {renderChanges()}
+            </div>
+        );
+    }
+
+    function renderSnapshotText() {
+        const {
+            branch,
+            commit_after: commitID,
+        } = story.details;
+        let url = ProjectUtils.getWebsiteAddress(project)
+        let text;
+        if (branch === 'master') {
+            text = t(`story-$name-changed-production-website`, authorName);
+        } else {
+            text = t(`story-$name-created-website-version-in-$branch`, authorName, branch);
+            if (url) {
+                url += `(${commitID})/`;
+            }
+        }
+        return (
+            <div className="text push">
+                <p>
+                    <a href={url} target="_blank">{text}</a>
+                </p>
             </div>
         );
     }

@@ -67,6 +67,7 @@ StoryContents.propTypes = {
     authors: PropTypes.arrayOf(PropTypes.object),
     currentUser: PropTypes.object.isRequired,
     reactions: PropTypes.arrayOf(PropTypes.object),
+    project: PropTypes.object,
     repo: PropTypes.object,
 
     database: PropTypes.instanceOf(Database).isRequired,
