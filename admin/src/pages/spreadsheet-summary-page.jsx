@@ -167,6 +167,18 @@ function SpreadsheetSummaryPageSync(props) {
         draft.set('url', url);
     });
 
+    useEffect(() => {
+        run(() => {
+            if (spreadsheet) {
+                if (_.isEmpty(spreadsheet.details.sheets)) {
+                    if(!/ms\-excel|spreadsheetml/.test(spreadsheet.details.type)) {
+                        throw new Error('Not an Excel file');
+                    }
+                }
+            }
+        })
+    }, [ spreadsheet ]);
+
     warnDataLoss(draft.changed);
 
     const title = SpreadsheetUtils.getDisplayName(draft.current, env);

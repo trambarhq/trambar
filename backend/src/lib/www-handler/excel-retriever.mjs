@@ -51,7 +51,7 @@ async function retrieve(schema, name, redirection) {
             };
             if (!spreadsheet.name && buffer.filename) {
                 // use the filename as the spreadsheet's name
-                const name = _.snakeCase(_.replace(buffer.filename, /\.\w+$/, ''));
+                const name = _.kebabCase(_.replace(buffer.filename, /\.\w+$/, ''));
                 spreadsheetChanges.name = name;
             }
             spreadsheet = await Spreadsheet.saveUnique(db, schema, spreadsheetChanges);
