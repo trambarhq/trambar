@@ -17,6 +17,11 @@
         width: 50vw;
         z-index: 100;
         margin-top: 0.2em;
+        pointer-events: none;
+
+        .window {
+            pointer-events: auto;
+        }
     }
 
     &.upward {
