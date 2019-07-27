@@ -294,6 +294,7 @@ function SpreadsheetSummaryPageSync(props) {
         return (
             <TextField {...props}>
                 {t('spreadsheet-summary-name')}
+                <InputError>{t(problems.name)}</InputError>
             </TextField>
         );
     }

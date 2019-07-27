@@ -1165,6 +1165,7 @@ const phrases = {
     'validation-duplicate-role-name': 'A role with that identifier already exists',
     'validation-duplicate-server-name': 'A server with that identifier already exists',
     'validation-duplicate-user-name': 'A user with that name already exists',
+    'validation-duplicate-spreadsheet-name': 'A link with that identifier already exists',
     'validation-illegal-project-name': 'Project identifier cannot be "global", "admin", "public", or "srv"',
     'validation-invalid-timezone': 'Invalid time zone',
     'validation-localhost-is-wrong': '"localhost" is not valid',
