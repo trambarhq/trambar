@@ -11,7 +11,9 @@ import './sortable-table.scss';
  * table can expand to show additional rows.
  */
 function SortableTable(props) {
-    const { children, expandable, expanded, selectable, className, sortColumns, sortDirections, onSort, ...tableProps } = props;
+    const { children, expandable, expanded, selectable,
+            className, sortColumns, sortDirections, transitionRowLimit,
+            onSort, ...tableProps } = props;
     const [ action, setAction ] = useState(null);
     const [ transition, setTransition ] = useState(false);
 
@@ -119,6 +121,9 @@ function SortableTable(props) {
             if (/\bfixed\b/.test(tr.props.className)) {
                 return tr;
             }
+            if (transitionRowLimit && i >= transitionRowLimit) {
+                return tr;
+            }
             const tds = React.Children.toArray(tr.props.children);
             const c = tr.props.className;
             let open = expanded;
@@ -172,6 +177,10 @@ function TH(props) {
 }
 
 const component = React.memo(SortableTable);
+
+component.defaultProps = {
+    transitionRowLimit: 20
+};
 
 export {
     component as default,
