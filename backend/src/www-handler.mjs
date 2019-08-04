@@ -48,14 +48,19 @@ let taskQueue;
 async function start() {
     // start up Express
     const app = Express();
-    app.set('json spaces', 2);
-    app.use(CORS());
+    const corsOptions = {
+        exposedHeaders: [ 'etag' ],
+    };
+    app.use(CORS(corsOptions));
     app.use(redirectToProject);
+    app.set('json spaces', 2);
     app.get('/srv/www/.cache', handleCacheStatusRequest);
     app.get('/srv/www/:schema/geoip', handleGeoIPRequest);
     app.get('/srv/www/:schema/wiki/:repoName/:slug', handleWikiRequest);
-    app.get('/srv/www/:schema/wiki/:slug', handleWikiRequest);
+    app.get('/srv/www/:schema/wiki/:repoName', handleWikiListRequest);
+    app.get('/srv/www/:schema/wiki', handleWikiListRequest);
     app.get('/srv/www/:schema/excel/:name', handleExcelRequest);
+    app.get('/srv/www/:schema/excel', handleExcelListRequest);
     app.get('/srv/www/:schema/:type(images|video|audio)/*', handleMediaRequest);
     app.get('/srv/www/:schema/\\(:tag\\)/*', handleSnapshotFileRequest);
     app.get('/srv/www/:schema/*', handleSnapshotFileRequest);
@@ -152,14 +157,45 @@ async function handleWikiRequest(req, res, next) {
     }
 }
 
+async function handleWikiListRequest(req, res, next) {
+    try {
+        const { schema, repoName } = req.params;
+        const { prefix } = req.query;
+        const entries = await WikiRetriever.discover(schema, repoName, prefix);
+        const urls = entries.map((entry) => {
+            const { repo, slug } = entry;
+            return `wiki/${repo}/${slug}`;
+        });
+        controlCache(res);
+        res.json(urls);
+    } catch (err) {
+        next(err);
+    }
+}
+
 async function handleExcelRequest(req, res, next) {
     try {
         const { schema, name } = req.params;
-        const { redirected } = req;
-        const spreadsheet = await ExcelRetriever.retrieve(schema, name, !!redirected);
+        const spreadsheet = await ExcelRetriever.retrieve(schema, name);
         const data = exportSpreadsheet(spreadsheet);
         controlCache(res, { 's-maxage': 10 }, spreadsheet.etag);
         res.json(data);
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function handleExcelListRequest(req, res, next) {
+    try {
+        const { schema } = req.params;
+        const { prefix } = req.query;
+        const entries = await ExcelRetriever.discover(schema, prefix);
+        const urls = entries.map((entries) => {
+            const { name } = entries;
+            return `excel/${name}`;
+        });
+        controlCache(res);
+        res.json(urls);
     } catch (err) {
         next(err);
     }
@@ -250,14 +286,29 @@ function handleError(err, req, res, next) {
 }
 
 function exportWiki(wiki) {
+    const resources = _.get(wiki, 'details.resources', []);
+    for (let resource of resources) {
+        trimURL(resource);
+    }
     return {
         slug: _.get(wiki, 'slug', ''),
         title: _.get(wiki, 'details.title', ''),
         markdown: _.get(wiki, 'details.content', ''),
+        resources: _.get(wiki, 'details.resources', ''),
     };
 }
 
 function exportSpreadsheet(spreadsheet) {
+    const sheets = _.get(spreadsheet, 'details.sheets', []);
+    for (let sheet of sheets) {
+        for (let row of sheet.rows) {
+            for (let cell of row) {
+                if (cell.url) {
+                    trimURL(cell);
+                }
+            }
+        }
+    }
     return {
         name: _.get(spreadsheet, 'name', ''),
         title: _.get(spreadsheet, 'details.title', ''),
@@ -266,6 +317,14 @@ function exportSpreadsheet(spreadsheet) {
         keywords: _.get(spreadsheet, 'details.keywords', []),
         sheets: _.get(spreadsheet, 'details.sheets', []),
     };
+}
+
+const mediaBaseURL = '/srv/media/';
+
+function trimURL(res) {
+    if (_.startsWith(res.url, mediaBaseURL)) {
+        res.url = res.url.substr(mediaBaseURL.length);
+    }
 }
 
 const defaultCacheControl = {

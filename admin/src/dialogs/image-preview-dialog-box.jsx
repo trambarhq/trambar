@@ -35,7 +35,7 @@ function ImagePreviewDialogBox(props) {
                 devicePixelRatio: env.devicePixelRatio,
                 imageWidth,
                 imageHeight,
-                imageServer: env.address,
+                imageBaseURL: env.address,
             };
             return image.richText(options);
         }

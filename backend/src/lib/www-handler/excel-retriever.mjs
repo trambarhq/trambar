@@ -8,7 +8,31 @@ import * as TaskLog from '../task-log.mjs'
 import Spreadsheet from '../accessors/spreadsheet.mjs';
 import * as MediaImporter from '../media-server/media-importer.mjs';
 
-async function retrieve(schema, name, redirection) {
+async function discover(schema, prefix) {
+    const taskLog = TaskLog.start('excel-discover', {
+        project: schema,
+    });
+    try {
+        const db = await Database.open();
+        const criteria = { deleted: false };
+        const entries = [];
+        const spreadsheets = await Spreadsheet.find(db, schema, criteria, 'name');
+        for (let spreadsheet of spreadsheets) {
+            const { name } = spreadsheet;
+            if (!prefix || _.startsWith(name, prefix)) {
+                entries.push({ name });
+                taskLog.append('name', name);
+            }
+        }
+        await taskLog.finish();
+        return entries;
+    } catch (err) {
+        await taskLog.abort(err);
+        throw err;
+    }
+}
+
+async function retrieve(schema, name) {
     const taskLog = TaskLog.start('excel-retrieve', {
         project: schema,
     });
@@ -77,10 +101,6 @@ async function retrieve(schema, name, redirection) {
             }
             await taskLog.finish();
 
-            if (redirection) {
-                // make URL shorter when we're using project-specific domain name
-                trimURLs(spreadsheet.details.sheets);
-            }
             return spreadsheet;
         } catch (err) {
             const spreadsheetChanges = {
@@ -262,18 +282,6 @@ function findMediaImports(sheets) {
     return list;
 }
 
-function trimURLs(sheets) {
-    for (let sheet of sheets) {
-        for (let row of sheet.rows) {
-            for (let cell of row) {
-                if (_.startsWith(cell.url, '/srv/media')) {
-                    cell.url = cell.url.substr(10);
-                }
-            }
-        }
-    }
-}
-
 const isOneDrive = /^https:\/\/(1drv\.ms|onedrive\.live\.com)\//;
 const isDropbox = /^https:\/\/(www\.dropbox\.com)\//;
 
@@ -313,5 +321,6 @@ function getOneDriveShareURL(url) {
 }
 
 export {
+    discover,
     retrieve,
 };

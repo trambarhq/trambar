@@ -15,7 +15,7 @@ function ExcelPreview(props) {
         imageFilters: {
             sharpen: true
         },
-        imageServer: env.address,
+        imageBaseURL: env.address,
     });
 
     useEffect(() => {

@@ -15,7 +15,7 @@ function MarkdownPreview(props) {
         imageFilters: {
             sharpen: true
         },
-        imageServer: env.address,
+        imageBaseURL: env.address,
         richTextAdjust: (type, props, children) => {
             if (type === 'a') {
                 if (/^[\w\-]+$/.test(props.href)) {
