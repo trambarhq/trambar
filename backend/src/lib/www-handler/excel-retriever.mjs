@@ -170,7 +170,7 @@ async function fetchSpreadsheet(spreadsheet) {
 async function parseSpreadsheet(buffer) {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer);
-    const keywords = _.split(workbook.keywords, /\s+/);
+    const keywords = _.filter(_.split(_.trim(workbook.keywords), /\s+/));
     const title = workbook.title;
     const description = workbook.description;
     const subject = workbook.subject;

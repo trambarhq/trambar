@@ -149,7 +149,7 @@ async function handleWikiRequest(req, res, next) {
     try {
         const { schema, repoName, slug } = req.params;
         const wiki = await WikiRetriever.retrieve(schema, repoName, slug);
-        const data = exportWiki(wiki);
+        const data = exportWiki(wiki, repoName);
         controlCache(res);
         res.json(data);
     } catch (err) {
@@ -285,12 +285,13 @@ function handleError(err, req, res, next) {
     }
 }
 
-function exportWiki(wiki) {
+function exportWiki(wiki, repoName) {
     const resources = _.get(wiki, 'details.resources', []);
     for (let resource of resources) {
         trimURL(resource);
     }
     return {
+        repo: repoName,
         slug: _.get(wiki, 'slug', ''),
         title: _.get(wiki, 'details.title', ''),
         markdown: _.get(wiki, 'details.content', ''),

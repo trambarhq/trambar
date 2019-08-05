@@ -12,7 +12,7 @@ import Wiki from '../accessors/wiki.mjs';
 async function discover(schema, repoName, prefix) {
     const db = await Database.open();
     const criteria = await addRepoCheck(db, repoName, {
-        public: true,
+        chosen: true,
         deleted: false
     });
     const wikis = await Wiki.find(db, schema, criteria, 'slug, external');
