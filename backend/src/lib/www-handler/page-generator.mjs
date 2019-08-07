@@ -7,7 +7,7 @@ import HTTPError from '../common/errors/http-error.mjs';
 
 import * as SnapshotRetriever from './snapshot-retriever.mjs';
 
-async function generate(schema, tag, path, host) {
+async function generate(schema, tag, path) {
     if (!tag) {
         tag = 'master';
     }

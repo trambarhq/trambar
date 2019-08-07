@@ -12,6 +12,7 @@ import DNSCache from 'dnscache';
 import Database from './lib/database.mjs';
 import * as TaskLog from './lib/task-log.mjs'
 import * as Shutdown from './lib/shutdown.mjs';
+import HTTPError from './lib/common/errors/http-error.mjs';
 
 import * as CacheManager from './lib/www-handler/cache-manager.mjs';
 import * as ExcelRetriever from './lib/www-handler/excel-retriever.mjs';
@@ -61,6 +62,7 @@ async function start() {
     app.get('/srv/www/:schema/wiki', handleWikiListRequest);
     app.get('/srv/www/:schema/excel/:name', handleExcelRequest);
     app.get('/srv/www/:schema/excel', handleExcelListRequest);
+    app.get('/srv/www/:schema/meta', handleMetadataRequest);
     app.get('/srv/www/:schema/:type(images|video|audio)/*', handleMediaRequest);
     app.get('/srv/www/:schema/\\(:tag\\)/*', handleSnapshotFileRequest);
     app.get('/srv/www/:schema/*', handleSnapshotFileRequest);
@@ -233,9 +235,8 @@ async function handleSnapshotFileRequest(req, res, next) {
 async function handleSnapshotPageRequest(req, res, next) {
     try {
         const { schema, tag } = req.params;
-        const host = req.headers.host;
         const path = req.params[0];
-        const buffer = await PageGenerator.generate(schema, tag, path, host);
+        const buffer = await PageGenerator.generate(schema, tag, path);
         controlCache(res);
         res.type('html').send(buffer);
 
@@ -261,6 +262,25 @@ async function handleStaticFileRequest(req, res, next) {
         } else {
             next(err);
         }
+    }
+}
+
+async function handleMetadataRequest(req, res, next) {
+    try {
+        const { schema } = req.params;
+        const project = ProjectSettings.find({ name: schema });
+        console.log(schema, project);
+        if (!project) {
+            throw new HTTPError(404);
+        }
+        const meta = {
+            name: project.name,
+            title: project.details.title,
+        };
+        controlCache(res);
+        res.json(meta);
+    } catch (err) {
+        next(err);
     }
 }
 

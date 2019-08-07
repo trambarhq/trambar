@@ -100,9 +100,9 @@ async function retrieve(schema, name) {
                 taskLog.set('filename', buffer.filename);
             }
             await taskLog.finish();
-
             return spreadsheet;
         } catch (err) {
+            // save the error
             const spreadsheetChanges = {
                 id: spreadsheet.id,
                 details: {
@@ -111,7 +111,14 @@ async function retrieve(schema, name) {
                 }
             };
             await Spreadsheet.updateOne(db, schema, spreadsheetChanges);
-            throw err;
+
+            // return existing copy if it's been retrieved before
+            if (spreadsheet && spreadsheet.etag) {
+                await taskLog.abort(err);
+                return spreadsheet;
+            } else {
+                throw err;
+            }
         }
     } catch (err) {
         await taskLog.abort(err);

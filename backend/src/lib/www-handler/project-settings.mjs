@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Project from '../accessors/project.mjs';
 
 const cache = [];
-const columns = 'id, name, settings';
+const columns = 'id, name, details, settings';
 
 async function load(db) {
     const projects = await Project.find(db, 'global', { deleted: false }, columns);
