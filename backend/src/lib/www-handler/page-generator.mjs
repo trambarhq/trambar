@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import ChildProcess from 'child_process';
 import Path from 'path';
 import URL from 'url';
@@ -7,7 +8,7 @@ import HTTPError from '../common/errors/http-error.mjs';
 
 import * as SnapshotRetriever from './snapshot-retriever.mjs';
 
-async function generate(schema, tag, path) {
+async function generate(schema, tag, path, baseURL, target) {
     if (!tag) {
         tag = 'master';
     }
@@ -21,11 +22,15 @@ async function generate(schema, tag, path) {
         taskLog.describe(`retrieving index.js`);
         const codeBuffer = await SnapshotRetriever.retrieve(schema, tag, 'ssr', 'index.js');
         taskLog.describe(`running code in subprocess`);
+
         const env = {
-            PAGE_SCHEMA: schema,
-            PAGE_TAG: tag,
+            DATA_SOURCE_BASE_URL: baseURL,
+            ROUTE_BASE_PATH: URL.parse(baseURL).pathname,
+            ROUTE_PAGE_PATH: path,
+            SSR_TARGET: target,
+            DATABASE_SCHEMA: schema,
+            GIT_TAG: tag,
             PAGE_TYPE: 'ssr',
-            PAGE_PATH: path
         };
         const { body, headers } = await runSubprocess(codeBuffer, env, 5000);
         const html = '<!DOCTYPE html>\n' + body;

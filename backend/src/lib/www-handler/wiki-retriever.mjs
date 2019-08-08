@@ -32,7 +32,6 @@ async function discover(schema, repoName, prefix) {
         }
         if (repo) {
             if (!prefix || _.startsWith(wiki.slug, prefix)) {
-                console.log(repo)
                 entries.push({
                     slug: wiki.slug,
                     repo: repo.name

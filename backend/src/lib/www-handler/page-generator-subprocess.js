@@ -16,24 +16,38 @@ async function run() {
         overrideRequire(preloaded);
 
         const ssr = require('./index.js');
-        const path = process.env.PAGE_PATH;
-        const target = process.env.PAGE_TARGET;
+        const dataSourceBaseURL = process.env.DATA_SOURCE_BASE_URL;
+        const routeBasePath = process.env.ROUTE_BASE_PATH;
+        const routePagePath = process.env.ROUTE_PAGE_PATH;
+        const ssrTarget = process.env.SSR_TARGET;
 
         // create a fetch() that remembers the URLs used
-        const host = 'http://nginx';
-        const vhost = process.env.PAGE_HOST;
+        const baseURLParts = new URL(dataSourceBaseURL);
         const sourceURLs = [];
         const agent = new HTTP.Agent({ keepAlive: true });
-        const fetch = (url, options) => {
-            if (url.startsWith(host)) {
-                sourceURLs.push(url.substr(host.length));
+        const fetchFunc = (url, options) => {
+            sourceURLs.push(url);
+
+            const urlParts = new URL(url);
+            if (urlParts.origin === baseURLParts.origin) {
+                // talk to Nginx without using HTTPS
+                url = 'http://nginx' + urlParts.pathname;
+                if (urlParts.search) {
+                    url += '?' + urlParts.search;
+                }
                 options = { agent, ...options };
-                options.headers = { Host: vhost, ...options.headers };
+                options.headers = { Host: urlParts.host, ...options.headers };
             }
             return CrossFetch(url, options);
         };
-        const options = { host, path, target, fetch };
-        const html = await ssr.render(options);
+
+        const html = await ssr.render({
+            dataSourceBaseURL,
+            routeBasePath,
+            routePagePath,
+            ssrTarget,
+            fetchFunc
+        });
         const stream = new Stream.PassThrough();
         stream.write(`200 OK\n`);
         for (let url of sourceURLs) {
@@ -88,9 +102,9 @@ function overrideRequire(preloaded) {
 function downloadRemote(path) {
     const gitPath = path.substr(2);
     const env = {
-        FILE_SCHEMA: process.env.PAGE_SCHEMA,
-        FILE_TAG: process.env.PAGE_TAG,
-        FILE_TYPE: process.env.PAGE_TYPE,
+        DATABASE_SCHEMA: process.env.DATABASE_SCHEMA,
+        GIT_TAG: process.env.GIT_TAG,
+        PAGE_TYPE: process.env.PAGE_TYPE,
         FILE_PATH: gitPath,
     };
     const nodePath = process.argv[0];

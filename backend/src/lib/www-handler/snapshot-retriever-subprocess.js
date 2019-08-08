@@ -2,9 +2,9 @@ const Stream = require('stream');
 const CrossFetch = require('cross-fetch');
 
 async function run() {
-    const schema = process.env.FILE_SCHEMA;
-    const tag = process.env.FILE_TAG;
-    const type = process.env.FILE_TYPE;
+    const schema = process.env.DATABASE_SCHEMA;
+    const tag = process.env.GIT_TAG;
+    const type = process.env.PAGE_TYPE;
     const path = process.env.FILE_PATH;
 
     const url = `http://gitlab_adapter/internal/retrieve/${schema}/${tag}/${type}/${path}`;

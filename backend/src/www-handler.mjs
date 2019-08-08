@@ -236,7 +236,14 @@ async function handleSnapshotPageRequest(req, res, next) {
     try {
         const { schema, tag } = req.params;
         const path = req.params[0];
-        const buffer = await PageGenerator.generate(schema, tag, path);
+        const target = 'hydrate';
+        const protocol = req.headers['x-forwarded-proto'];
+        const host = req.headers.host;
+        let baseURL = `${protocol}://${host}`;
+        if (!req.redirected) {
+            baseURL += `/srv/www/${schema}`;
+        }
+        const buffer = await PageGenerator.generate(schema, tag, path, baseURL, target);
         controlCache(res);
         res.type('html').send(buffer);
 
