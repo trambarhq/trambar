@@ -7,6 +7,7 @@ const NotificationTypes = [
     'coauthor',
     'bookmark',
     'mention',
+    'snapshot',
     'note',
     'assignment',
     'issue',

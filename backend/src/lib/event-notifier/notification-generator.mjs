@@ -175,6 +175,7 @@ async function getStoryPublicationDetails(db, schema, storyID, notificationType)
         case 'merge':
         case 'branch':
         case 'tag':
+        case 'snapshot':
             // need addition info from story object not contained in event
             const criteria = { id: storyID };
             const story = await Story.findOne(db, schema, criteria, 'details');

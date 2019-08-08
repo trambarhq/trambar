@@ -432,6 +432,9 @@ let americanPhrases = {
     'notification-$name-merged-code-to-$branch': (name, branch) => {
         return `${name} merged changes into “${branch}”`;
     },
+    'notification-$name-modified-project-website': (name) => {
+        return `${name} modified project website`;
+    },
     'notification-$name-opened-an-issue': (name) => {
         return `${name} opened an issue`;
     },
@@ -475,6 +478,7 @@ let americanPhrases = {
     'notification-option-merge': 'When someone merges code into the master branch',
     'notification-option-note': 'When someone posts a note on a commit or issue',
     'notification-option-push': 'When someone pushes code into Git',
+    'notification-option-snapshot': 'When someone made changes to the project website',
     'notification-option-survey': 'When someone posts a survey',
     'notification-option-task-completion': 'When someone completes a task on your list',
     'notification-option-vote': 'When someone answers your survey',

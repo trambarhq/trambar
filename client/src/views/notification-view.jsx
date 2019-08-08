@@ -173,6 +173,8 @@ function getNotificationText(notification, user, env) {
             }
         case 'join-request':
             return t('notification-$name-requested-to-join', name);
+        case 'snapshot':
+            return t('notification-$name-modified-project-website', name);
     }
 }
 

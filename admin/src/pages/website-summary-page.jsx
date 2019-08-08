@@ -333,6 +333,9 @@ function WebsiteSummaryPageSync(props) {
     }
 
     function renderSnapshots() {
+        if (!template) {
+            return null;
+        }
         const sorted = sortSnapshots(snapshots);
         const props = {
             database,

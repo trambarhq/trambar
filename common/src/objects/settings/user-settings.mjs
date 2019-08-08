@@ -45,6 +45,8 @@ if (process.env.NODE_ENV !== 'production') {
             merge: [ String, Boolean ],
             survey: Boolean,
             join_request: Boolean,
+            mention: Boolean,
+            snapshot: Boolean,
             coauthor: Boolean,
         },
         web_alert: {
@@ -61,6 +63,8 @@ if (process.env.NODE_ENV !== 'production') {
             merge: Boolean,
             survey: Boolean,
             join_request: Boolean,
+            mention: Boolean,
+            snapshot: Boolean,
             coauthor: Boolean,
         },
         mobile_alert: {
@@ -77,6 +81,8 @@ if (process.env.NODE_ENV !== 'production') {
             merge: Boolean,
             survey: Boolean,
             join_request: Boolean,
+            mention: Boolean,
+            snapshot: Boolean,
             coauthor: Boolean,
             web_session: Boolean,
         },
