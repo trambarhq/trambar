@@ -28,6 +28,9 @@ class Device extends Data {
         };
         this.eventColumns = {
             ...this.eventColumns,
+            type: String,
+            user_id: Number,
+            session_handle: String,
         };
         this.version = 2;
     }
@@ -115,12 +118,7 @@ class Device extends Data {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
-        await this.createNotificationTriggers(db, schema, [
-            'deleted',
-            'type',
-            'user_id',
-            'session_handle'
-        ]);
+        await this.createNotificationTriggers(db, schema);
     }
 
     /**

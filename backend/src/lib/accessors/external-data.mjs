@@ -135,16 +135,16 @@ class ExternalData extends Data {
 
     /**
      * Add triggers that send notification messages, bundled with values of
-     * the specified properties.
+     * certain columns
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<String>} propNames
      *
      * @return {Promise}
      */
-    async createNotificationTriggers(db, schema, propNames) {
+    async createNotificationTriggers(db, schema) {
         const table = this.getTableName(schema);
+        const propNames = _.keys(this.eventColumns);
         const args = _.map(propNames, (propName) => {
             // use quotes just in case the name is mixed case
             return `"${propName}"`;
