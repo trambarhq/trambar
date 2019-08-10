@@ -9,6 +9,8 @@ import * as Shutdown from './lib/shutdown.mjs';
 import * as Accessors from './lib/schema-manager/accessors.mjs';
 
 import Project from './lib/accessors/project.mjs';
+import Reaction from './lib/accessors/reaction.mjs';
+import Story from './lib/accessors/story.mjs';
 
 import TaskQueue from './lib/task-queue.mjs';
 import {
@@ -267,7 +269,7 @@ async function upgradeSchema(db, schema) {
                 await accessor.upgrade(db, schema, version + 1);
             }
             taskLog.append('applied', `${version} -> ${version + 1}`);
-        }        
+        }
         taskLog.describe(`recreating triggers`);
         for (let accessor of accessors) {
             await accessor.watch(db, schema);
