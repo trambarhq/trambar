@@ -47,9 +47,9 @@ class Spreadsheet extends Data {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                name varchar(128) NOT NULL DEFAULT '',
-                etag varchar(128) NOT NULL DEFAULT '',
-                url varchar(1024) NOT NULL DEFAULT '',
+                name text NOT NULL DEFAULT '',
+                etag text NOT NULL DEFAULT '',
+                url text NOT NULL DEFAULT '',
                 disabled boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
