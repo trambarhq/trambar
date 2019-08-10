@@ -18,6 +18,7 @@ import * as CacheManager from './lib/www-handler/cache-manager.mjs';
 import * as ExcelRetriever from './lib/www-handler/excel-retriever.mjs';
 import * as PageGenerator from './lib/www-handler/page-generator.mjs';
 import * as ProjectSettings from './lib/www-handler/project-settings.mjs';
+import * as RestRetriever from './lib/www-handler/rest-retriever.mjs';
 import * as SnapshotRetriever from './lib/www-handler/snapshot-retriever.mjs';
 import * as TrafficMonitor from './lib/www-handler/traffic-monitor.mjs';
 import * as WikiRetriever from './lib/www-handler/wiki-retriever.mjs';
@@ -62,6 +63,9 @@ async function start() {
     app.get('/srv/www/:schema/wiki', handleWikiListRequest);
     app.get('/srv/www/:schema/excel/:name', handleExcelRequest);
     app.get('/srv/www/:schema/excel', handleExcelListRequest);
+    app.get('/srv/www/:schema/rest/:name/*', handleRestRequest);
+    app.get('/srv/www/:schema/rest/:name', handleRestRequest);
+    app.get('/srv/www/:schema/rest', handleRestListRequest);
     app.get('/srv/www/:schema/meta', handleMetadataRequest);
     app.get('/srv/www/:schema/:type(images|video|audio)/*', handleMediaRequest);
     app.get('/srv/www/:schema/\\(:tag\\)/*', handleSnapshotFileRequest);
@@ -164,9 +168,9 @@ async function handleWikiListRequest(req, res, next) {
         const { schema, repoName } = req.params;
         const { prefix } = req.query;
         const entries = await WikiRetriever.discover(schema, repoName, prefix);
-        const urls = entries.map((entry) => {
+        const urls = _.map(entries, (entry) => {
             const { repo, slug } = entry;
-            return `wiki/${repo}/${slug}`;
+            return `${repo}/${slug}`;
         });
         controlCache(res);
         res.json(urls);
@@ -192,10 +196,39 @@ async function handleExcelListRequest(req, res, next) {
         const { schema } = req.params;
         const { prefix } = req.query;
         const entries = await ExcelRetriever.discover(schema, prefix);
-        const urls = entries.map((entries) => {
-            const { name } = entries;
-            return `excel/${name}`;
-        });
+        const urls = _.map(entries, 'name');
+        controlCache(res);
+        res.json(urls);
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function handleRestRequest(req, res, next) {
+    try {
+        const { schema, name } = req.params;
+        const path = req.params[0]
+        const query = req.query;
+        const data = await RestRetriever.retrieve(schema, name, path, query);
+        let result;
+        if (data instanceof Array) {
+            result = _.map(data, 'id');
+        } else {
+            result = data;
+        }
+        controlCache(res);
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function handleRestListRequest(req, res, next) {
+    try {
+        const { schema } = req.params;
+        const { prefix } = req.query;
+        const entries = await RestRetriever.discover(schema, prefix);
+        const urls = _.map(entries, 'name');
         controlCache(res);
         res.json(urls);
     } catch (err) {
@@ -276,7 +309,6 @@ async function handleMetadataRequest(req, res, next) {
     try {
         const { schema } = req.params;
         const project = ProjectSettings.find({ name: schema });
-        console.log(schema, project);
         if (!project) {
             throw new HTTPError(404);
         }

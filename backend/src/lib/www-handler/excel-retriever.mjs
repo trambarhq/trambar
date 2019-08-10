@@ -9,13 +9,11 @@ import Spreadsheet from '../accessors/spreadsheet.mjs';
 import * as MediaImporter from '../media-server/media-importer.mjs';
 
 async function discover(schema, prefix) {
-    const taskLog = TaskLog.start('excel-discover', {
-        project: schema,
-    });
+    const taskLog = TaskLog.start('excel-discover', { project: schema, prefix });
     try {
         const db = await Database.open();
-        const criteria = { deleted: false };
         const entries = [];
+        const criteria = { deleted: false, disabled: false };
         const spreadsheets = await Spreadsheet.find(db, schema, criteria, 'name');
         for (let spreadsheet of spreadsheets) {
             const { name } = spreadsheet;
@@ -33,12 +31,10 @@ async function discover(schema, prefix) {
 }
 
 async function retrieve(schema, name) {
-    const taskLog = TaskLog.start('excel-retrieve', {
-        project: schema,
-    });
+    const taskLog = TaskLog.start('excel-retrieve', { project: schema, name });
     try {
         const db = await Database.open();
-        const criteria = { name, deleted: false };
+        const criteria = { name, deleted: false, disabled: false };
         let spreadsheet = await Spreadsheet.findOne(db, schema, criteria, '*');
         if (!spreadsheet) {
             throw new HTTPError(404);
@@ -158,19 +154,18 @@ async function fetchSpreadsheet(spreadsheet) {
     } else if (res.status === 304) {
         return null;
     } else {
-        const error = new Error;
+        const args = [ res.status ];
         try {
-            let json = await res.json();
-            for (let key in json.error) {
-                error[key] = json.error[key];
-            }
+            const json = await res.json();
+            args.push(json.error);
         } catch (err) {
             try {
-                error.message = await res.text();
+                const message = await res.text();
+                args.push(message);
             } catch (err) {
             }
         }
-        throw error;
+        throw new HTTPError(...args);
     }
 }
 
