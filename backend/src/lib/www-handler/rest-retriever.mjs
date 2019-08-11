@@ -39,7 +39,7 @@ async function retrieve(schema, name, path, query) {
             throw new HTTPError(404);
         }
         const url = getExternalURL(path, query, rest);
-        const unfiltered = await fetchJSON(url.href);
+        const unfiltered = await fetchJSON(url);
         const data = filterData(unfiltered, url, rest);
         const count = (data instanceof Array) ? data.length : 1;
         taskLog.set('objects', count);
@@ -76,24 +76,9 @@ function getExternalURL(path, query, rest) {
     for (let key in query) {
         url.searchParams.set(key, query[key]);
     }
-    if (rest.type === 'wordpress') {
-        rewriteWordpressURL(url);
-    }
-    return url;
+    return url.href;
 }
 
-function rewriteWordpressURL(url) {
-    // permit retrieval by slug
-    const m = /^(.*?\/(posts|pages|categories|tags|users))\/([\w\-]+)\/?$/.exec(url.pathname);
-    if (m) {
-        const id = parseInt(m[3]);
-        if (id !== id) {
-            url.pathname = m[1];
-            url.searchParams.set('slug', m[3]);
-            url.retrieveBySlug = true;
-        }
-    }
-}
 
 function filterData(data, url, rest) {
     if (rest.type === 'wordpress') {
@@ -104,28 +89,22 @@ function filterData(data, url, rest) {
 
 function filterWordPressData(data, url) {
     if (data instanceof Array) {
-        if (url.retrieveBySlug) {
-            data = data[0];
-        } else {
-            return _.map(data, (object) => {
-                const url = object.slug || object.id;
-                return { url };
-            });
-        }
+        return _.map(data, 'id');
+    } else {
+        const omissions = [
+            '_links',
+            'namespaces',
+            'routes',
+            'authentication',
+            'guid',
+            'date',
+            'modified',
+            'comment_status',
+            'ping_status',
+            'template',
+        ];
+        return _.omit(data, omissions);
     }
-    const omissions = [
-        '_links',
-        'namespaces',
-        'routes',
-        'authentication',
-        'guid',
-        'date',
-        'modified',
-        'comment_status',
-        'ping_status',
-        'template',
-    ];
-    return _.omit(data, omissions);
 }
 
 export {

@@ -210,14 +210,8 @@ async function handleRestRequest(req, res, next) {
         const path = req.params[0]
         const query = req.query;
         const data = await RestRetriever.retrieve(schema, name, path, query);
-        let result;
-        if (data instanceof Array) {
-            result = _.map(data, 'url');
-        } else {
-            result = data;
-        }
         controlCache(res);
-        res.json(result);
+        res.json(data);
     } catch (err) {
         next(err);
     }
