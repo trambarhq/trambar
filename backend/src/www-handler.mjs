@@ -212,7 +212,7 @@ async function handleRestRequest(req, res, next) {
         const data = await RestRetriever.retrieve(schema, name, path, query);
         let result;
         if (data instanceof Array) {
-            result = _.map(data, 'id');
+            result = _.map(data, 'url');
         } else {
             result = data;
         }

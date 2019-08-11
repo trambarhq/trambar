@@ -38,9 +38,9 @@ async function retrieve(schema, name, path, query) {
         if (!rest) {
             throw new HTTPError(404);
         }
-        const url = _.trimEnd(rest.url, ' /') + '/' + path;
-        const unfiltered = await fetchJSON(url);
-        const data = filterData(unfiltered, rest, path);
+        const url = getExternalURL(path, query, rest);
+        const unfiltered = await fetchJSON(url.href);
+        const data = filterData(unfiltered, url, rest);
         const count = (data instanceof Array) ? data.length : 1;
         taskLog.set('objects', count);
         await taskLog.finish();
@@ -71,23 +71,61 @@ async function fetchJSON(url) {
     }
 }
 
-function filterData(data, rest, path) {
+function getExternalURL(path, query, rest) {
+    const url = new URL(path, rest.url);
+    for (let key in query) {
+        url.searchParams.set(key, query[key]);
+    }
     if (rest.type === 'wordpress') {
-        return filterWordPressData(data, path);
+        rewriteWordpressURL(url);
+    }
+    return url;
+}
+
+function rewriteWordpressURL(url) {
+    // permit retrieval by slug
+    const m = /^(.*?\/(posts|pages|categories|tags|users))\/([\w\-]+)\/?$/.exec(url.pathname);
+    if (m) {
+        const id = parseInt(m[3]);
+        if (id !== id) {
+            url.pathname = m[1];
+            url.searchParams.set('slug', m[3]);
+            url.retrieveBySlug = true;
+        }
+    }
+}
+
+function filterData(data, url, rest) {
+    if (rest.type === 'wordpress') {
+        return filterWordPressData(data, url);
     }
     return data;
 }
 
-function filterWordPressData(data, path) {
+function filterWordPressData(data, url) {
     if (data instanceof Array) {
-        return data;
-    } else {
-        const omissions = [ '_links' ];
-        if (!path) {
-            omissions.push('namespaces', 'routes', 'authentication');
+        if (url.retrieveBySlug) {
+            data = data[0];
+        } else {
+            return _.map(data, (object) => {
+                const url = object.slug || object.id;
+                return { url };
+            });
         }
-        return _.omit(data, omissions);
     }
+    const omissions = [
+        '_links',
+        'namespaces',
+        'routes',
+        'authentication',
+        'guid',
+        'date',
+        'modified',
+        'comment_status',
+        'ping_status',
+        'template',
+    ];
+    return _.omit(data, omissions);
 }
 
 export {
