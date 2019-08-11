@@ -90,7 +90,7 @@ async function retrieve(schema, repoName, slug) {
 }
 
 async function addRepoCheck(db, repoName, criteria) {
-    if (repoName) {
+    if (repoName !== undefined) {
         const repo = await Repo.findOne(db, 'global', { name: repoName }, 'external');
         if (!repo) {
             throw new HTTPError(404);

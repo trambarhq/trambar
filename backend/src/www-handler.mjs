@@ -170,7 +170,11 @@ async function handleWikiListRequest(req, res, next) {
         const entries = await WikiRetriever.discover(schema, repoName, prefix);
         const urls = _.map(entries, (entry) => {
             const { repo, slug } = entry;
-            return `${repo}/${slug}`;
+            if (repoName !== undefined) {
+                return slug;
+            } else {
+                return `${repo}/${slug}`;
+            }
         });
         controlCache(res);
         res.json(urls);

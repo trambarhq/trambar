@@ -72,7 +72,7 @@ async function fetchJSON(url) {
 }
 
 function getExternalURL(path, query, rest) {
-    const url = new URL(path, rest.url);
+    const url = new URL(path || '', rest.url);
     for (let key in query) {
         url.searchParams.set(key, query[key]);
     }
