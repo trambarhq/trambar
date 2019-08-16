@@ -9,46 +9,46 @@ import * as MediaImporter from '../media-server/media-importer.mjs';
 import Repo from '../accessors/repo.mjs';
 import Wiki from '../accessors/wiki.mjs';
 
-async function discover(schema, repoName, prefix) {
-    const db = await Database.open();
-    const criteria = await addRepoCheck(db, repoName, {
-        chosen: true,
-        deleted: false
-    });
-    const wikis = await Wiki.find(db, schema, criteria, 'slug, external');
-    const repos = {};
-    const entries = [];
-    for (let wiki of wikis) {
-        const repoLink = ExternalDataUtils.findLinkByRelations(wiki, 'repo');
-        const repoLinkJSON = JSON.stringify(repoLink);
-        let repo = repos[repoLinkJSON];
-        if (repo === undefined) {
-            const repoCriteria = {
-                external_object: repoLink,
-                deleted: false
-            };
-            repo = await Repo.findOne(db, 'global', repoCriteria, 'name');
-            repos[repoLinkJSON] = repo || null;
-        }
-        if (repo) {
-            if (!prefix || _.startsWith(wiki.slug, prefix)) {
-                entries.push({
-                    slug: wiki.slug,
-                    repo: repo.name
-                });
+async function discover(schema, identifier) {
+    const taskLog = TaskLog.start('wiki-discover', { project: schema, identifier });
+    try {
+        const contents = [];
+        const db = await Database.open();
+        const criteria = await addRepoCheck(db, identifier, {
+            chosen: true,
+            deleted: false
+        });
+        const wikis = await Wiki.find(db, schema, criteria, 'slug, external');
+        for (let wiki of wikis) {
+            if (identifier) {
+                contents.push(wiki.slug);
+            } else {
+                // need to look up the repo
+                const repoLink = ExternalDataUtils.findLinkByRelations(wiki, 'repo');
+                const repoCriteria = {
+                    external_object: repoLink,
+                    deleted: false
+                };
+                const repo = await Repo.findOne(db, 'global', repoCriteria, 'name');
+                if (repo) {
+                    contents.push(`${repo.name}/${wiki.slug}`);
+                }
             }
         }
+        const cacheControl = {};
+
+        await taskLog.finish('count', contents.length);
+        return { contents, cacheControl };
+    } catch (err) {
+        await taskLog.abort(err);
     }
-    return entries;
 }
 
-async function retrieve(schema, repoName, slug) {
-    const taskLog = TaskLog.start('wiki-retrieve', {
-        project: schema,
-    });
+async function retrieve(schema, identifier, slug) {
+    const taskLog = TaskLog.start('wiki-retrieve', { project: schema, identifier, slug });
     try {
         const db = await Database.open();
-        const criteria = await addRepoCheck(db, repoName, {
+        const criteria = await addRepoCheck(db, identifier, {
             slug,
             public: true,
             deleted: false,
@@ -58,31 +58,51 @@ async function retrieve(schema, repoName, slug) {
             throw new HTTPError(404);
         }
 
+        let changed = false;
         if (!_.isEmpty(wiki.details.resources)) {
-            const wikiChanges = _.clone(wiki);
+            const wikiChanges = _.cloneDeep(wiki);
             const resources = wikiChanges.details.resources;
-            for (let resource of resources) {
+            for (let res of resources) {
                 // check external image references
-                const { src } = resource;
-                if (/^\w+:/.test(src)) {
+                if (/^\w+:/.test(res.src)) {
                     try {
-                        const info = await MediaImporter.importFile(src);
-                        _.assign(resource, info);
+                        const info = await MediaImporter.importFile(res.src);
+                        _.assign(res, info);
                     } catch (err) {
                     }
                 }
             }
             if (!_.isEqual(wiki, wikiChanges)) {
                 wiki = await Wiki.saveOne(db, schema, wikiChanges);
+                changed = true;
             }
         }
 
-        taskLog.set('slug', slug);
-        if (repoName) {
-            taskLog.set('repo', repoName);
-        }
+        // trim resource URLs
+        const mediaBaseURL = '/srv/media/';
+        _.each(wiki.details.resources, (res) => {
+            if (_.startsWith(res.url, mediaBaseURL)) {
+                res.url = res.url.substr(mediaBaseURL.length);
+            }
+        });
+
+        const contents = {
+            identifier,
+            slug: wiki.slug,
+            title: wiki.details.title || '',
+            markdown: wiki.details.content || '',
+            resources: wiki.details.resources || [],
+        };
+        // expires frequently when wiki links to external images
+        const hasExternal = _.some(contents.resources, (res) => {
+            return /^\w+:/.test(res.src);
+        });
+        const maxAge = (hasExternal) ? 60 : undefined;
+        const cacheControl = { 's-maxage': maxAge };
+
+        taskLog.set('changed', changed);
         await taskLog.finish();
-        return wiki;
+        return { contents, cacheControl };
     } catch (err) {
         await taskLog.abort(err);
         throw err;

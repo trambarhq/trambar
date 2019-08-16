@@ -11,6 +11,7 @@ class Rest extends Data {
             name: String,
             url: String,
             disabled: Boolean,
+            settings: Object,
         };
         this.criteria = {
             ...this.criteria,
@@ -50,6 +51,7 @@ class Rest extends Data {
                 name text NOT NULL DEFAULT '',
                 url text NOT NULL DEFAULT '',
                 disabled boolean NOT NULL DEFAULT false,
+                settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
             CREATE UNIQUE INDEX ON ${table} (name) WHERE deleted = false;

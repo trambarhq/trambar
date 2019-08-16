@@ -7,33 +7,42 @@ import * as TaskLog from '../task-log.mjs'
 
 import Rest from '../accessors/rest.mjs';
 
-async function discover(schema, prefix) {
-    const taskLog = TaskLog.start('rest-discover', { project: schema, prefix });
+async function discover(schema, type) {
+    const taskLog = TaskLog.start('rest-discover', { project: schema, type });
     try {
+        const contents = [];
         const db = await Database.open();
-        const entries = [];
-        const criteria = { deleted: false, disabled: false };
+        const criteria = {
+            deleted: false,
+            disabled: false
+        };
+        if (type) {
+            criteria.type = type;
+        }
         const rests = await Rest.find(db, schema, criteria, 'name');
         for (let rest of rests) {
-            const { name } = rest;
-            if (!prefix || _.startsWith(name, prefix)) {
-                entries.push({ name });
-                taskLog.append('name', name);
-            }
+            contents.push(rest.name);
         }
+        const cacheControl = {};
+
+        taskLog.set('count', contents.length);
         await taskLog.finish();
-        return entries;
+        return { contents, cacheControl };
     } catch (err) {
         await taskLog.abort(err);
         throw err;
     }
 }
 
-async function retrieve(schema, name, path, query) {
-    const taskLog = TaskLog.start('rest-retrieve', { name, path });
+async function retrieve(schema, identifier, path, query) {
+    const taskLog = TaskLog.start('rest-retrieve', { project: schema, identifier, path });
     try {
         const db = await Database.open();
-        const criteria = { name, deleted: false, disabled: false };
+        const criteria = {
+            name: identifier,
+            deleted: false,
+            disabled: false
+        };
         let rest = await Rest.findOne(db, schema, criteria, '*');
         if (!rest) {
             throw new HTTPError(404);
@@ -41,12 +50,19 @@ async function retrieve(schema, name, path, query) {
         const url = getExternalURL(path, query, rest);
         const unfiltered = await fetchJSON(url);
         const data = filterData(unfiltered, url, rest);
-        const count = (data instanceof Array) ? data.length : 1;
-        taskLog.set('objects', count);
+        const contents = (data instanceof Array) ? data : {
+            identifier,
+            rest: data,
+        };
+        const maxAge = _.get(rest, 'settings.max_age', 300);
+        const cacheControl = { 's-maxage': maxAge };
+
+        taskLog.set('objects', _.size(data));
         await taskLog.finish();
-        return data;
+        return { contents, cacheControl };
     } catch (err) {
         await taskLog.abort(err);
+        throw err;
     }
 }
 

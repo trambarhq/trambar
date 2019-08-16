@@ -8,33 +8,39 @@ import * as TaskLog from '../task-log.mjs'
 import Spreadsheet from '../accessors/spreadsheet.mjs';
 import * as MediaImporter from '../media-server/media-importer.mjs';
 
-async function discover(schema, prefix) {
-    const taskLog = TaskLog.start('excel-discover', { project: schema, prefix });
+async function discover(schema) {
+    const taskLog = TaskLog.start('excel-discover', { project: schema });
     try {
+        const contents = [];
         const db = await Database.open();
-        const entries = [];
-        const criteria = { deleted: false, disabled: false };
+        const criteria = {
+            deleted: false,
+            disabled: false
+        };
         const spreadsheets = await Spreadsheet.find(db, schema, criteria, 'name');
         for (let spreadsheet of spreadsheets) {
-            const { name } = spreadsheet;
-            if (!prefix || _.startsWith(name, prefix)) {
-                entries.push({ name });
-                taskLog.append('name', name);
-            }
+            contents.push(spreadsheet.name);
         }
+        const cacheControl = {};
+
+        taskLog.set('count', contents.length);
         await taskLog.finish();
-        return entries;
+        return { contents, cacheControl };
     } catch (err) {
         await taskLog.abort(err);
         throw err;
     }
 }
 
-async function retrieve(schema, name) {
-    const taskLog = TaskLog.start('excel-retrieve', { project: schema, name });
+async function retrieve(schema, identifier) {
+    const taskLog = TaskLog.start('excel-retrieve', { project: schema, identifier });
     try {
         const db = await Database.open();
-        const criteria = { name, deleted: false, disabled: false };
+        const criteria = {
+            name: identifier,
+            deleted: false,
+            disabled: false
+        };
         let spreadsheet = await Spreadsheet.findOne(db, schema, criteria, '*');
         if (!spreadsheet) {
             throw new HTTPError(404);
@@ -90,13 +96,11 @@ async function retrieve(schema, name) {
                 spreadsheet = await Spreadsheet.saveUnique(db, schema, spreadsheetChanges);
                 changed = true;
             }
-            taskLog.set('name', name);
             taskLog.set('changed', changed);
             if (buffer && buffer.filename) {
                 taskLog.set('filename', buffer.filename);
             }
             await taskLog.finish();
-            return spreadsheet;
         } catch (err) {
             // save the error
             const spreadsheetChanges = {
@@ -109,13 +113,33 @@ async function retrieve(schema, name) {
             await Spreadsheet.updateOne(db, schema, spreadsheetChanges);
 
             // return existing copy if it's been retrieved before
-            if (spreadsheet && spreadsheet.etag) {
+            if (spreadsheet && spreadsheet.details.sheets) {
                 await taskLog.abort(err);
-                return spreadsheet;
             } else {
                 throw err;
             }
         }
+
+        // trim resource URLs
+        const mediaBaseURL = '/srv/media/';
+        const mediaImports = findMediaImports(spreadsheet.details.sheets);
+        _.each(mediaImports, (res) => {
+            if (_.startsWith(res.url, mediaBaseURL)) {
+                res.url = res.url.substr(mediaBaseURL.length);
+            }
+        });
+
+        const contents = {
+            name: spreadsheet.name,
+            title: spreadsheet.details.title || '',
+            description: spreadsheet.details.description || '',
+            subject: spreadsheet.details.subject || '',
+            keywords: spreadsheet.details.keywords || [],
+            sheets: spreadsheet.details.sheets || [],
+        };
+        const maxAge = _.get(spreadsheet, 'settings.cache_max_age', 10);
+        const cacheControl = { 's-maxage': maxAge };
+        return { contents, cacheControl };
     } catch (err) {
         await taskLog.abort(err);
         throw err;

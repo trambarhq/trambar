@@ -58,13 +58,13 @@ async function start() {
     app.set('json spaces', 2);
     app.get('/srv/www/.cache', handleCacheStatusRequest);
     app.get('/srv/www/:schema/geoip', handleGeoIPRequest);
-    app.get('/srv/www/:schema/wiki/:repoName/:slug', handleWikiRequest);
-    app.get('/srv/www/:schema/wiki/:repoName', handleWikiListRequest);
+    app.get('/srv/www/:schema/wiki/:identifier/:slug', handleWikiRequest);
+    app.get('/srv/www/:schema/wiki/:identifier', handleWikiListRequest);
     app.get('/srv/www/:schema/wiki', handleWikiListRequest);
-    app.get('/srv/www/:schema/excel/:name', handleExcelRequest);
+    app.get('/srv/www/:schema/excel/:identifier', handleExcelRequest);
     app.get('/srv/www/:schema/excel', handleExcelListRequest);
-    app.get('/srv/www/:schema/rest/:name/*', handleRestRequest);
-    app.get('/srv/www/:schema/rest/:name', handleRestRequest);
+    app.get('/srv/www/:schema/rest/:identifier/*', handleRestRequest);
+    app.get('/srv/www/:schema/rest/:identifier', handleRestRequest);
     app.get('/srv/www/:schema/rest', handleRestListRequest);
     app.get('/srv/www/:schema/meta', handleMetadataRequest);
     app.get('/srv/www/:schema/:type(images|video|audio)/*', handleMediaRequest);
@@ -153,11 +153,9 @@ async function handleGeoIPRequest(req, res, next) {
 
 async function handleWikiRequest(req, res, next) {
     try {
-        const { schema, repoName, slug } = req.params;
-        const wiki = await WikiRetriever.retrieve(schema, repoName, slug);
-        const data = exportWiki(wiki, repoName);
-        controlCache(res);
-        res.json(data);
+        const { schema, identifier, slug } = req.params;
+        const result = await WikiRetriever.retrieve(schema, identifier, slug);
+        sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
     }
@@ -165,19 +163,9 @@ async function handleWikiRequest(req, res, next) {
 
 async function handleWikiListRequest(req, res, next) {
     try {
-        const { schema, repoName } = req.params;
-        const { prefix } = req.query;
-        const entries = await WikiRetriever.discover(schema, repoName, prefix);
-        const urls = _.map(entries, (entry) => {
-            const { repo, slug } = entry;
-            if (repoName !== undefined) {
-                return slug;
-            } else {
-                return `${repo}/${slug}`;
-            }
-        });
-        controlCache(res);
-        res.json(urls);
+        const { schema, identifier } = req.params;
+        const result = await WikiRetriever.discover(schema, identifier);
+        sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
     }
@@ -185,11 +173,9 @@ async function handleWikiListRequest(req, res, next) {
 
 async function handleExcelRequest(req, res, next) {
     try {
-        const { schema, name } = req.params;
-        const spreadsheet = await ExcelRetriever.retrieve(schema, name);
-        const data = exportSpreadsheet(spreadsheet);
-        controlCache(res, { 's-maxage': 10 }, spreadsheet.etag);
-        res.json(data);
+        const { schema, identifier } = req.params;
+        const result = await ExcelRetriever.retrieve(schema, identifier);
+        sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
     }
@@ -198,11 +184,8 @@ async function handleExcelRequest(req, res, next) {
 async function handleExcelListRequest(req, res, next) {
     try {
         const { schema } = req.params;
-        const { prefix } = req.query;
-        const entries = await ExcelRetriever.discover(schema, prefix);
-        const urls = _.map(entries, 'name');
-        controlCache(res);
-        res.json(urls);
+        const result = await ExcelRetriever.discover(schema);
+        sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
     }
@@ -210,12 +193,11 @@ async function handleExcelListRequest(req, res, next) {
 
 async function handleRestRequest(req, res, next) {
     try {
-        const { schema, name } = req.params;
+        const { schema, identifier } = req.params;
         const path = req.params[0]
         const query = req.query;
-        const data = await RestRetriever.retrieve(schema, name, path, query);
-        controlCache(res);
-        res.json(data);
+        const result = await RestRetriever.retrieve(schema, identifier, path, query);
+        sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
     }
@@ -224,11 +206,9 @@ async function handleRestRequest(req, res, next) {
 async function handleRestListRequest(req, res, next) {
     try {
         const { schema } = req.params;
-        const { prefix } = req.query;
-        const entries = await RestRetriever.discover(schema, prefix);
-        const urls = _.map(entries, 'name');
-        controlCache(res);
-        res.json(urls);
+        const { type } = req.query;
+        const result = await RestRetriever.discover(schema, type);
+        sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
     }
@@ -342,49 +322,6 @@ function handleError(err, req, res, next) {
     }
 }
 
-function exportWiki(wiki, repoName) {
-    const resources = _.get(wiki, 'details.resources', []);
-    for (let resource of resources) {
-        trimURL(resource);
-    }
-    return {
-        repo: repoName,
-        slug: _.get(wiki, 'slug', ''),
-        title: _.get(wiki, 'details.title', ''),
-        markdown: _.get(wiki, 'details.content', ''),
-        resources: _.get(wiki, 'details.resources', ''),
-    };
-}
-
-function exportSpreadsheet(spreadsheet) {
-    const sheets = _.get(spreadsheet, 'details.sheets', []);
-    for (let sheet of sheets) {
-        for (let row of sheet.rows) {
-            for (let cell of row) {
-                if (cell.url) {
-                    trimURL(cell);
-                }
-            }
-        }
-    }
-    return {
-        name: _.get(spreadsheet, 'name', ''),
-        title: _.get(spreadsheet, 'details.title', ''),
-        description: _.get(spreadsheet, 'details.description', ''),
-        subject: _.get(spreadsheet, 'details.subject', ''),
-        keywords: _.get(spreadsheet, 'details.keywords', []),
-        sheets: _.get(spreadsheet, 'details.sheets', []),
-    };
-}
-
-const mediaBaseURL = '/srv/media/';
-
-function trimURL(res) {
-    if (_.startsWith(res.url, mediaBaseURL)) {
-        res.url = res.url.substr(mediaBaseURL.length);
-    }
-}
-
 const defaultCacheControl = {
     'public': true,
     'max-age': 0,
@@ -393,7 +330,7 @@ const defaultCacheControl = {
     'proxy-revalidate': false,
 };
 
-function controlCache(res, override, etag) {
+function controlCache(res, override) {
     const params = { ...defaultCacheControl, ...override };
     const items = [];
     for (let [ name, value ] of _.entries(params)) {
@@ -404,9 +341,12 @@ function controlCache(res, override, etag) {
         }
     }
     res.set({ 'Cache-Control': items.join() });
-    if (etag) {
-        res.set({ 'ETag': etag });
-    }
+}
+
+function sendDataQueryResult(res, result) {
+    const { contents, cacheControl } = result;
+    controlCache(res, cacheControl);
+    res.json(contents);
 }
 
 function redirectToProject(req, res, next) {

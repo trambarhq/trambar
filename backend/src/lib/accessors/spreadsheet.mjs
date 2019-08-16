@@ -13,6 +13,7 @@ class Spreadsheet extends Data {
             name: String,
             url: String,
             etag: String,
+            settings: Object,
         };
         this.criteria = {
             ...this.criteria,
@@ -51,6 +52,7 @@ class Spreadsheet extends Data {
                 etag text NOT NULL DEFAULT '',
                 url text NOT NULL DEFAULT '',
                 disabled boolean NOT NULL DEFAULT false,
+                settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
             CREATE UNIQUE INDEX ON ${table} (name) WHERE deleted = false;
