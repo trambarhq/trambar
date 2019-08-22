@@ -130,7 +130,7 @@ async function retrieve(schema, identifier) {
         });
 
         const contents = {
-            name: spreadsheet.name,
+            identifier: spreadsheet.name,
             title: spreadsheet.details.title || '',
             description: spreadsheet.details.description || '',
             subject: spreadsheet.details.subject || '',

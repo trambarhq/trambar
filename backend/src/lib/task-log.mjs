@@ -244,7 +244,7 @@ class TaskLog {
         this.endTime = Moment();
         clearTimeout(this.saveTimeout);
         Shutdown.removeListener(this.shutdownListener);
-        await this.save();
+        const task = await this.save();
         this.output(true);
         if (this.token) {
             _.unset(taskLogHash, [ this.schema, this.token ]);
@@ -260,7 +260,7 @@ class TaskLog {
         if (!this.saving) {
             return null;
         }
-        if (this.noop) {
+        if (this.noop && !this.aborted) {
             return null;
         }
         const db = await Database.open();

@@ -133,7 +133,6 @@ class Story extends ExternalData {
      */
     async upgrade(db, schema, version) {
         if (version === 3) {
-            // adding: template_repo_id
             const table = this.getTableName(schema);
             const sql = `
                 CREATE INDEX ON ${table} (id) WHERE type = 'website-traffic' AND published = false;

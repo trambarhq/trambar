@@ -2,16 +2,16 @@ import _ from 'lodash';
 
 const table = 'notification';
 
-function markNotificationsAsSeen(db, notifications) {
+async function markNotificationsAsSeen(db, notifications) {
     const changes = _.map(notifications, (notification) => {
         return { id: notification.id, seen: true };
     });
-    const notificationsAfter = db.save({ table }, changes);
+    const notificationsAfter = async db.save({ table }, changes);
     return notificationsAfter;
 }
 
-function markNotificationAsSeen(db, notification) {
-    const [ notificationAfter ] = markNotificationsAsSeen(db, [ notification ]);
+async function markNotificationAsSeen(db, notification) {
+    const [ notificationAfter ] = async markNotificationsAsSeen(db, [ notification ]);
     return notificationAfter;
 }
 

@@ -1,8 +1,10 @@
 import _ from 'lodash';
+import { delay } from 'bluebird';
 import Moment from 'moment';
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import Relaks, { useProgress, useListener } from 'relaks';
 import * as TaskFinder from 'common/objects/finders/task-finder.mjs';
+import * as TaskSaver from 'common/objects/savers/task-saver.mjs';
 
 import './task-alert-bar.scss';
 
@@ -11,54 +13,71 @@ import './task-alert-bar.scss';
  * remote server.
  */
 async function TaskAlertBar(props) {
-    const { database, route, env } = props;
-    const { t } = env.locale;
-    const [ lastErrorTime, setLastErrorTime ] = useState(localStorage.last_error_time);
+    const { database } = props;
     const [ show ] = useProgress();
 
-    const handleClick = useListener((evt) => {
-        if (selectedTask.failed) {
-            setLastErrorTime(selectedTask.mtime);
-            localStorage.last_error_time = selectedTask.mtime;
-        }
-    });
-
-    render();
-    let selectedTask;
     try {
+        render();
         const currentUserID = await database.start();
-        const activeStartTime = Moment().subtract(8, 'hour').toISOString();
-        const failureStartTime = lastErrorTime || Moment().subtract(7, 'day').toISOString();
-        const activeTask = await TaskFinder.findActiveTask(database, activeStartTime);
-        const failedTask = await TaskFinder.findFailedTask(database, failureStartTime);
-        selectedTask = activeTask || failedTask;
+        const activeTasks = await TaskFinder.findActiveTasks(database);
+        render();
+        const failedTasks = await TaskFinder.findFailedTasks(database);
+        render();
+
+        function render() {
+            const sprops = { ...props, activeTasks, failedTasks };
+            show(<TaskAlertBarSync {...sprops} />);
+        }
     } catch (err) {
-        if (err.statusCode !== 401) {
+        if (err.statusCode === 401) {
+            show(null);
+        } else {
             throw err;
         }
     }
-    render();
+}
 
-    function render() {
-        const classNames = [ 'task-alert-bar' ];
-        if (selectedTask) {
-            if (selectedTask.failed) {
-                classNames.push('failure');
-            }
-            if (env.startTime > Moment().subtract(2, 'second').toISOString()) {
-                // use a longer delay when page is just loading
-                classNames.push('initial');
-            }
-        } else {
-            classNames.push('hidden');
+function TaskAlertBarSync(props) {
+    const { database, route, env } = props;
+    const { activeTasks, failedTasks } = props;
+    const { t } = env.locale;
+    const selectedTask = _.first(activeTasks) || _.first(failedTasks);
+
+    const handleClick = useListener(async () => {
+        if (!_.isEmpty(failedTasks)) {
+            await TaskSaver.markTasksAsSeen(database, failedTasks);
         }
-        show (
-            <div className={classNames.join(' ')}>
-                {renderMessage()}
-                {renderProgressBar()}
-            </div>
-        );
+    });
+
+    useEffect(() => {
+        if (selectedTask && selectedTask.failed && env.focus) {
+            const timeout = setTimeout(async () => {
+                await TaskSaver.markTaskAsSeen(database, selectedTask);
+            }, 10 * 1000);
+            return () => {
+                clearTimeout(timeout);
+            };
+        }
+    }, [ selectedTask, env.focus ]);
+
+    const classNames = [ 'task-alert-bar' ];
+    if (selectedTask) {
+        if (selectedTask.failed) {
+            classNames.push('failure');
+        }
+        if (env.startTime > Moment().subtract(2, 'second').toISOString()) {
+            // use a longer delay when page is just loading
+            classNames.push('initial');
+        }
+    } else {
+        classNames.push('hidden');
     }
+    return (
+        <div className={classNames.join(' ')}>
+            {renderMessage()}
+            {renderProgressBar()}
+        </div>
+    );
 
     function renderMessage() {
         if (selectedTask) {
