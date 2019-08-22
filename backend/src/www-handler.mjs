@@ -39,10 +39,6 @@ import {
 
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
-const folder = Path.dirname(URL.fileURLToPath(import.meta.url));
-const clientFolder = Path.resolve(`${folder}/../../client/www`);
-const adminFolder = Path.resolve(`${folder}/../../admin/www`);
-
 let server;
 let database;
 let taskQueue;
@@ -267,9 +263,9 @@ async function handleSnapshotPageRequest(req, res, next) {
 async function handleStaticFileRequest(req, res, next) {
     const isAdmin = _.startsWith(req.path, '/admin');
     try {
-        const folder = (isAdmin) ? adminFolder : clientFolder;
-        const file = req.params[0];
-        const path = `${folder}/${file}`;
+        const folder = (isAdmin) ? 'admin' : 'client';
+        const file = req.params[0] || 'index.html';
+        const path = Path.resolve(`../../${folder}/www/${file}`);
         const stats = await FS.stat(path);
         controlCache(res);
         res.sendFile(path);
