@@ -83,13 +83,13 @@ function FrontEnd(props) {
         //dataSource.addEventListener('change', handleRouteChange);
     }, [ dataSource ]);
     useEffect(() => {
-        dataSource.addEventListener('change', setRouteChanged);
+        dataSource.addEventListener('change', setDataChanged);
         routeManager.addEventListener('change', setRouteChanged);
         payloadManager.addEventListener('change', setPayloadsChanged);
         envMonitor.addEventListener('change', setEnvChanged);
         localeManager.addEventListener('change', setLocaleChanged);
         return () => {
-            dataSource.removeEventListener('change', setRouteChanged);
+            dataSource.removeEventListener('change', setDataChanged);
             routeManager.removeEventListener('change', setRouteChanged);
             payloadManager.removeEventListener('change', setPayloadsChanged);
             envMonitor.removeEventListener('change', setEnvChanged);
