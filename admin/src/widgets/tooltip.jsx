@@ -45,7 +45,12 @@ function Tooltip(props) {
                 document.removeEventListener('keydown', handleKeyDown);
             };
         }
-    }, [ active ])
+    }, [ active ]);
+    useEffect(() => {
+        if (disabled && open) {
+            setOpen(false);
+        }
+    }, [ disabled, open ]);
 
     const classNames = [ 'tooltip' ];
     if (live && !disabled) {
