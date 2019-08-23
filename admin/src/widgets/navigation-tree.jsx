@@ -44,16 +44,33 @@ async function NavigationTree(props) {
 
     render();
     const { projectID, userID, roleID, repoID, serverID, spreadsheetID, wikiID } = route.params;
-    const currentUserID = await database.start();
-    const project =  _.isFinite(projectID) ? await ProjectFinder.findProject(database, projectID) : null;
-    const user = _.isFinite(userID) ? await UserFinder.findUser(database, userID) : null;
-    const role = _.isFinite(roleID) ? await RoleFinder.findRole(database, roleID) : null;
-    const repo = _.isFinite(repoID) ? await RepoFinder.findRepo(database, repoID) : null;
-    const server = _.isFinite(serverID) ? await ServerFinder.findServer(database, serverID) : null;
-    const schema = (project) ? project.name : '';
-    const spreadsheet = _.isFinite(spreadsheetID) ? await SpreadsheetFinder.findSpreadsheet(database, schema, spreadsheetID) : null;
-    const wiki = _.isFinite(wikiID) ? await WikiFinder.findWiki(database, schema, wikiID) : null;
+    let project, user, role, repo, server, spreadsheet, wiki;
+    if (database.authorized) {
+        const currentUserID = await database.start();
+        if (_.isFinite(projectID)) {
+            project =  await ProjectFinder.findProject(database, projectID);
+        }
+        if (_.isFinite(userID)) {
+            user = await UserFinder.findUser(database, userID);
+        }
+        if (_.isFinite(roleID)) {
+            role = await RoleFinder.findRole(database, roleID);
+        };
+        if (_.isFinite(repoID)) {
+            repo = await RepoFinder.findRepo(database, repoID);
+        }
+        if (_.isFinite(serverID)) {
+            server = await ServerFinder.findServer(database, serverID);
+        }
+        if (_.isFinite(spreadsheetID) && project) {
+            spreadsheet = await SpreadsheetFinder.findSpreadsheet(database, project.name, spreadsheetID);
+        }
+        if (_.isFinite(wikiID) && project) {
+            wiki = await WikiFinder.findWiki(database, project.name, wikiID);
+        }
+    }
     render();
+    repositionArrow();
 
     function render() {
         const classNames = [ 'navigation-tree' ];
@@ -66,7 +83,7 @@ async function NavigationTree(props) {
                 {_.map(rootNodes, renderNode)}
                 {renderArrow()}
             </div>
-        )
+        );
     }
 
     function renderNode(node, key) {
