@@ -126,6 +126,28 @@ const routes = {
             match.params.module = await import('./pages/spreadsheet-summary-page.jsx' /* webpackChunkName: "page-spreadsheet-summary" */);
         }
     },
+    'rest-list-page': {
+        path: '/projects/${projectID}/website/rest/',
+        query: {
+            edit: '${editing}',
+        },
+        params: { projectID: Number, editing: Boolean },
+        load: async (match) => {
+            match.params.key = match.name;
+            match.params.module = await import('./pages/rest-list-page.jsx' /* webpackChunkName: "page-rest-list" */);
+        }
+    },
+    'rest-summary-page': {
+        path: '/projects/${projectID}/website/rest/${restID}/',
+        query: {
+            edit: '${editing}',
+        },
+        params: { projectID: Number, restID: NumberOrNew, editing: Boolean },
+        load: async (match) => {
+            match.params.key = match.name;
+            match.params.module = await import('./pages/rest-summary-page.jsx' /* webpackChunkName: "page-rest-summary" */);
+        }
+    },
     'role-list-page': {
         path: '/roles/',
         query: {

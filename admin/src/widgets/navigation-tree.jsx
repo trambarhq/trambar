@@ -11,6 +11,8 @@ import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
 import * as ServerUtils from 'common/objects/utils/server-utils.mjs';
 import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
 import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
+import * as RestFinder from 'common/objects/finders/rest-finder.mjs';
+import * as RestUtils from 'common/objects/utils/rest-utils.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 import * as WikiFinder from 'common/objects/finders/wiki-finder.mjs';
@@ -43,8 +45,9 @@ async function NavigationTree(props) {
     }, [ route, env ])
 
     render();
-    const { projectID, userID, roleID, repoID, serverID, spreadsheetID, wikiID } = route.params;
-    let project, user, role, repo, server, spreadsheet, wiki;
+    const { projectID, userID, roleID, repoID } = route.params;
+    const { serverID, spreadsheetID, wikiID, restID } = route.params;
+    let project, user, role, repo, server, spreadsheet, wiki, rest;
     if (database.authorized) {
         const currentUserID = await database.start();
         if (_.isFinite(projectID)) {
@@ -67,6 +70,9 @@ async function NavigationTree(props) {
         }
         if (_.isFinite(wikiID) && project) {
             wiki = await WikiFinder.findWiki(database, project.name, wikiID);
+        }
+        if (_.isFinite(restID) && project) {
+            rest = await RestFinder.findWiki(database, project.name, restID);
         }
     }
     render();
@@ -214,6 +220,7 @@ async function NavigationTree(props) {
         const children = [
             getWikiListNode(level + 1),
             getExcelListNode(level + 1),
+            getRestListNode(level + 1),
         ];
         return { label, page, children, level };
     }
@@ -252,6 +259,26 @@ async function NavigationTree(props) {
         let label;
         if (spreadsheet) {
             label = SpreadsheetUtils.getDisplayName(spreadsheet, env) || '-';
+        } else {
+            return null;
+        }
+        return { label, page, level };
+    }
+
+    function getRestListNode(level) {
+        const page = 'rest-list-page';
+        const label = t('nav-rest-sources');
+        const children = [
+            getRestNode(level + 1),
+        ];
+        return { label, page, children, level };
+    }
+
+    function getRestNode(level) {
+        const page = 'rest-summary-page';
+        let label;
+        if (rest) {
+            label = RestUtils.getDisplayName(rest, env) || '-';
         } else {
             return null;
         }

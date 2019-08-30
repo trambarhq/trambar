@@ -1,15 +1,15 @@
-const table = 'spreadsheet';
+const table = 'rest';
 
 /**
- * Find a spreadsheet by id
+ * Find a REST source by id
  *
  * @param  {Database} db
  * @param  {String} schema
  * @param  {Number} id
  *
- * @return {Promise<Spreadsheet>}
+ * @return {Promise<Rest>}
  */
-function findSpreadsheet(db, schema, id) {
+function findRest(db, schema, id) {
     return db.findOne({
         schema,
         table,
@@ -19,14 +19,14 @@ function findSpreadsheet(db, schema, id) {
 }
 
 /**
- * Find all spreadsheets
+ * Find all REST sources
  *
  * @param  {Database} db
  * @param  {String} schema
  *
- * @return {Promise<Array<Spreadsheet>>}
+ * @return {Promise<Array<Rest>>}
  */
-function findAllSpreadsheets(db, schema) {
+function findAllRests(db, schema) {
     return db.find({
         schema,
         table,
@@ -35,6 +35,6 @@ function findAllSpreadsheets(db, schema) {
 }
 
 export {
-    findSpreadsheet,
-    findAllSpreadsheets,
+    findRest,
+    findAllRests,
 };

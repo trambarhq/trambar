@@ -135,6 +135,7 @@ const phrases = {
     'nav-project-new': 'New project',
     'nav-projects': 'Projects',
     'nav-repositories': 'Repositories',
+    'nav-rest-sources': 'REST sources',
     'nav-role-new': 'New role',
     'nav-roles': 'Roles',
     'nav-server-new': 'New server',
@@ -237,6 +238,45 @@ const phrases = {
     'repository-tooltip-$count': (count) => {
         return cardinal(count, '1 repository', '2 repositories');
     },
+
+    'rest-list-add': 'Add new source',
+    'rest-list-cancel': 'Cancel',
+    'rest-list-confirm-disable-$count': (count) => {
+        let rests = cardinal(count, 'this source', 'these 2 sources');
+        return `Are you sure you want to disable ${rests}?`
+    },
+    'rest-list-confirm-reactivate-$count': (count) => {
+        let rests = cardinal(count, 'this source', 'these 2 sources');
+        return `Are you sure you want to reactivate ${rests}?`
+    },
+    'rest-list-edit': 'Edit source list',
+    'rest-list-save': 'Save source list',
+    'rest-list-status-deleted': 'Deleted',
+    'rest-list-status-disabled': 'Disabled',
+    'rest-list-title': 'REST sources',
+
+    'rest-summary-$title': (title) => {
+        let text = 'REST source';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'rest-summary-add': 'Add new source',
+    'rest-summary-cancel': 'Cancel',
+    'rest-summary-confirm-delete': 'Are you sure you want to delete this source?',
+    'rest-summary-confirm-disable': 'Are you sure you want to disable this source?',
+    'rest-summary-confirm-reactivate': 'Are you sure you want to reactivate this source?',
+    'rest-summary-delete': 'Delete source',
+    'rest-summary-description': 'Description',
+    'rest-summary-disable': 'Disable source',
+    'rest-summary-edit': 'Edit source',
+    'rest-summary-name': 'Identifier',
+    'rest-summary-reactivate': 'Reactivate source',
+    'rest-summary-return': 'Return to source list',
+    'rest-summary-save': 'Save source',
+    'rest-summary-title': 'Title',
+    'rest-summary-url': 'URL',
 
     'role-list-add': 'Add new role',
     'role-list-cancel': 'Cancel',

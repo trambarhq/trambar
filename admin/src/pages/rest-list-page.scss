@@ -1,0 +1,25 @@
+.rest-list-page {
+    .buttons {
+        float: right;
+    }
+
+    .sortable-table {
+        #url {
+            width: 36em;
+        }
+
+        #sheets {
+            width: 6em;
+        }
+
+        #mtime {
+            width: 12em;
+        }
+
+        .no-wrap {
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+    }
+}
