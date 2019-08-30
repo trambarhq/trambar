@@ -18,12 +18,15 @@ class Wiki extends ExternalData {
             slug: String,
             public: Boolean,
             chosen: Boolean,
+
+            search: Object,
         };
         this.eventColumns = {
             ...this.eventColumns,
             slug: String,
             public: Boolean,
             chosen: Boolean,
+            language_codes: Array(String),
         };
         this.version = 3;
     }
@@ -106,6 +109,36 @@ class Wiki extends ExternalData {
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
         await this.createNotificationTriggers(db, schema);
+    }
+
+
+    /**
+     * Add conditions to SQL query based on criteria object
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} criteria
+     * @param  {Object} query
+     *
+     * @return {Promise}
+     */
+    async apply(db, schema, criteria, query) {
+        const { search, ...basic } = criteria;
+        super.apply(basic, query);
+        if (search) {
+            await this.applyTextSearch(db, schema, search, query);
+        }
+    }
+
+    /**
+     * Return SQL expression that yield searchable text
+     *
+     * @param  {String} languageCode
+     *
+     * @return {String}
+     */
+    getSearchableText(languageCode) {
+        return `"extractWikiText"(details, '${languageCode}')`;
     }
 
     /**

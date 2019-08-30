@@ -11,6 +11,8 @@ import * as Accessors from './lib/schema-manager/accessors.mjs';
 import Project from './lib/accessors/project.mjs';
 import Reaction from './lib/accessors/reaction.mjs';
 import Story from './lib/accessors/story.mjs';
+import Spreadsheet from './lib/accessors/spreadsheet.mjs';
+import Wiki from './lib/accessors/wiki.mjs';
 
 import TaskQueue from './lib/task-queue.mjs';
 import {
@@ -56,6 +58,8 @@ async function start() {
         'project',
         'story',
         'reaction',
+        'wiki',
+        'spreadsheet'
     ];
     await db.listen(tables, 'change', handleDatabaseChanges, 0);
 
@@ -131,21 +135,15 @@ async function handleDatabaseChanges(events) {
                 }
                 await deleteSchema(db, name);
             }
-        } else if (event.table === 'story' || event.table === 'reaction') {
-            if (event.op === 'INSERT' || event.op === 'UPDATE') {
-                if (event.diff.language_codes) {
+        } else {
+            if (event.diff.language_codes) {
+                if (event.op === 'INSERT' || event.op === 'UPDATE') {
                     // see if new languages are introduced
                     const languagesBefore = event.previous.language_codes;
                     const languagesAfter = event.current.language_codes;
                     const newLanguages = _.difference(languagesAfter, languagesBefore);
                     if (!_.isEmpty(newLanguages)) {
-                        let accessor;
-                        if (event.table === 'story') {
-                            accessor = Story;
-                        } else if (event.table === 'reaction') {
-                            accessor = Reaction;
-                        }
-                        await addSearchIndices(db, event.schema, accessor, newLanguages);
+                        await addSearchIndices(db, event.schema, event.table, newLanguages);
                     }
                 }
             }
@@ -158,16 +156,17 @@ async function handleDatabaseChanges(events) {
  *
  * @param  {Database} db
  * @param  {String} schema
- * @param  {Accessor} accessor
+ * @param  {String} table
  * @param  {languages} Array<String>
  *
  * @return {Promise<Boolean>}
  */
-async function addSearchIndices(db, schema, accessor, languages) {
+async function addSearchIndices(db, schema, table, languages) {
     const taskLog = TaskLog.start('search-indices-add', { schema });
     try {
+        const accessor = _.find(Accessors.get(schema), { table });
         // make sure we have indices for these languages
-        const existing = await accessor.getTextSearchLanguages(db, event.schema);
+        const existing = await accessor.getTextSearchLanguages(db, schema);
         // take out the ones we have already
         const newLanguages = _.difference(languages, existing);
         // cap number of indices at 4
@@ -179,7 +178,7 @@ async function addSearchIndices(db, schema, accessor, languages) {
             }
         }
         if (!_.isEmpty(newLanguages)) {
-            await accessor.addTextSearchLanguages(db, event.schema, newLanguages);
+            await accessor.addTextSearchLanguages(db, schema, newLanguages);
             taskLog.set('existing', existing);
             taskLog.set('added', newLanguages);
         }

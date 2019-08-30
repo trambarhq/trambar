@@ -9,6 +9,7 @@ class Spreadsheet extends Data {
         this.table = 'spreadsheet';
         this.columns = {
             ...this.columns,
+            language_codes: Array(String),
             disabled: Boolean,
             name: String,
             url: String,
@@ -17,15 +18,19 @@ class Spreadsheet extends Data {
         };
         this.criteria = {
             ...this.criteria,
+            language_codes: Array(String),
             disabled: Boolean,
             name: String,
             url: String,
             etag: String,
+
+            search: Object,
         };
         this.eventColumns = {
             ...this.eventColumns,
             disabled: Boolean,
             name: String,
+            language_codes: Array(String),
         };
         this.version = 3;
     }
@@ -48,6 +53,7 @@ class Spreadsheet extends Data {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
+                language_codes varchar(2)[] NOT NULL DEFAULT '{}'::text[],
                 name text NOT NULL DEFAULT '',
                 etag text NOT NULL DEFAULT '',
                 url text NOT NULL DEFAULT '',
@@ -106,6 +112,35 @@ class Spreadsheet extends Data {
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
         await this.createNotificationTriggers(db, schema);
+    }
+
+    /**
+     * Add conditions to SQL query based on criteria object
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} criteria
+     * @param  {Object} query
+     *
+     * @return {Promise}
+     */
+    async apply(db, schema, criteria, query) {
+        const { search, ...basic } = criteria;
+        super.apply(basic, query);
+        if (search) {
+            await this.applyTextSearch(db, schema, search, query);
+        }
+    }
+
+    /**
+     * Return SQL expression that yield searchable text
+     *
+     * @param  {String} languageCode
+     *
+     * @return {String}
+     */
+    getSearchableText(languageCode) {
+        return `"extractSpreadsheetText"(details, '${languageCode}')`;
     }
 
     /**

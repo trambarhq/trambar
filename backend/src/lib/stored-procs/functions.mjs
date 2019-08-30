@@ -268,6 +268,80 @@ extractStoryText.args = 'type text, details jsonb, external jsonb[], lang text';
 extractStoryText.ret = 'text';
 extractStoryText.flags = 'IMMUTABLE';
 
+/**
+ * Extract text from wiki
+ *
+ * @param  {Object} details
+ * @param  {String} lang
+ *
+ * @return {String}
+ */
+function extractWikiText(details, lang) {
+    var list = [];
+    if (details.content) {
+        list.push(details.content);
+    }
+    if (details.title) {
+        list.push(details.title);
+    }
+    return list.join(' ');
+}
+extractWikiText.args = 'details jsonb, lang text';
+extractWikiText.ret = 'text';
+extractWikiText.flags = 'IMMUTABLE';
+
+/**
+ * Extract text from spreadsheet
+ *
+ * @param  {Object} details
+ * @param  {String} lang
+ *
+ * @return {String}
+ */
+function extractSpreadsheetText(details, lang) {
+    var list = [];
+    if (details.title) {
+        list.push(details.title);
+    }
+    if (details.description) {
+        list.push(details.description);
+    }
+    if (details.subject) {
+        list.push(details.subject);
+    }
+    if (details.keywords) {
+        for (var i = 0; i < details.keywords.length; i++) {
+            list.push(details.keywords[i]);
+        }
+    }
+    if (details.sheets) {
+        for (var i = 0; i < details.sheets.length; i++) {
+            var sheet = details.sheets[i];
+            for (var j = 0; j < sheet.rows.length; j++) {
+                var row = sheet.rows[j];
+                for (var k = 0; k < row.length; k++) {
+                    var cell = row[k];
+                    if (typeof(cell) === 'string') {
+                        list.push(cell);
+                    } else if (typeof(cell) === 'object') {
+                        if (cell.richText instanceof Array) {
+                            var fragments = [];
+                            for (var m = 0; m < cell.richText.length; m++) {
+                                fragments.push(cell.richText[m].text);
+                            }
+                            list.push(fragments.join(''));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return list.join(' ');
+}
+extractSpreadsheetText.args = 'details jsonb, lang text';
+extractSpreadsheetText.ret = 'text';
+extractSpreadsheetText.flags = 'IMMUTABLE';
+
 export {
     lowerCase,
     matchAny,
@@ -280,4 +354,6 @@ export {
     externalIdStrings,
     extractText,
     extractStoryText,
+    extractWikiText,
+    extractSpreadsheetText,
 };

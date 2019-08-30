@@ -77,6 +77,7 @@ async function retrieve(schema, identifier) {
                     }
                 }
 
+                const { languages, ...details } = workbook;
                 const spreadsheetChanges = {
                     id: spreadsheet.id,
                     details: {
@@ -84,8 +85,9 @@ async function retrieve(schema, identifier) {
                         type,
                         filename,
                         error: undefined,
-                        ...workbook
+                        ...details
                     },
+                    language_codes: languages,
                     etag,
                 };
                 if (!spreadsheet.name && buffer.filename) {
@@ -201,6 +203,7 @@ async function parseSpreadsheet(buffer) {
     const description = workbook.description;
     const subject = workbook.subject;
     const sheets = [];
+    const flagLists = [];
     for (let worksheet of workbook.worksheets) {
         const { state, rowCount, columnCount } = worksheet;
         const sheetNameFlags = extractNameFlags(worksheet.name);
@@ -224,6 +227,7 @@ async function parseSpreadsheet(buffer) {
                             sheet.columns.push(column);
                             using[c] = true;
                             importing[c] = (column.flags && column.flags.indexOf('import') !== -1);
+                            flagLists.push(column.flags);
                         }
                     }
                 } else {
@@ -239,9 +243,25 @@ async function parseSpreadsheet(buffer) {
                 }
             }
             sheets.push(sheet);
+            flagLists.push(sheet.flags)
         }
     }
-    return { title, subject, description, keywords, sheets };
+
+    const languages = [];
+    for (let flags of flagLists) {
+        if (flags) {
+            for (let flag of flags) {
+                const m = /^\s*([a-z]{2})(-[a-z]{2})?\s*$/i.exec(flag);
+                if (m) {
+                    const code = _.toLower(m[1]);
+                    if (!_.includes(languages, code) && code !== 'zz') {
+                        languages.push(code);
+                    }
+                }
+            }
+        }
+    }
+    return { title, subject, description, keywords, sheets, languages };
 }
 
 function extractNameFlags(text) {

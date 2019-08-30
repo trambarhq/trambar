@@ -182,7 +182,7 @@ function copyWikiProperties(wiki, system, server, repo, glWikiParsed) {
     const wikiChanges = _.cloneDeep(wiki) || {};
     ExternalDataUtils.inheritLink(wikiChanges, server, repo);
     ExternalDataUtils.importProperty(wikiChanges, server, 'language_codes', {
-        value: [ defLangCode ],
+        value: _.union(glWikiParsed.languages, [ defLangCode ]),
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(wikiChanges, server, 'public', {
@@ -229,6 +229,7 @@ function parseMarkdownWiki(glWiki) {
     // look for references and import images
     const references = [];
     const resources = [];
+    const languages = [];
     for (let blockToken of blockTokens) {
         if (blockToken.children instanceof Array) {
             for (let inlineToken of blockToken.children) {
@@ -236,6 +237,16 @@ function parseMarkdownWiki(glWiki) {
                     references.push(inlineToken.href);
                 } else if (inlineToken.type === 'image') {
                     resources.push({ src: inlineToken.href });
+                }
+            }
+        }
+        if (blockToken.type === 'heading') {
+            const cap = blockToken.captured.trim();
+            const m = /^#\s*([a-z]{2})(-[a-z]{2})?$/i.exec(cap);
+            if (m) {
+                const code = _.toLower(m[1]);
+                if (!_.includes(languages, code) && code !== 'zz') {
+                    languages.push(code);
                 }
             }
         }
@@ -248,6 +259,7 @@ function parseMarkdownWiki(glWiki) {
         content,
         resources,
         references,
+        languages,
         public: false
     };
 }

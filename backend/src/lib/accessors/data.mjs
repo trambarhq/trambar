@@ -857,7 +857,7 @@ class Data {
      * @return {Promise<Array<String>>}
      */
     async getTextSearchLanguages(db, schema) {
-        const languages = _.get(searchLanguages, [ schema, this.table ]);
+        let languages = _.get(searchLanguages, [ schema, this.table ]);
         if (!languages) {
             const prefix = `${this.table}_search_`;
             const sql = `
