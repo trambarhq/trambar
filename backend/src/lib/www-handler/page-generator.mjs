@@ -8,7 +8,7 @@ import HTTPError from '../common/errors/http-error.mjs';
 
 import * as SnapshotRetriever from './snapshot-retriever.mjs';
 
-async function generate(schema, tag, path, baseURL, target) {
+async function generate(schema, tag, path, baseURL, target, lang) {
     if (!tag) {
         tag = 'master';
     }
@@ -16,6 +16,7 @@ async function generate(schema, tag, path, baseURL, target) {
         project: schema,
         tag,
         path,
+        lang,
     });
     try {
         const start = new Date;
@@ -30,7 +31,7 @@ async function generate(schema, tag, path, baseURL, target) {
             SSR_TARGET: target,
             DATABASE_SCHEMA: schema,
             GIT_TAG: tag,
-            PAGE_TYPE: 'ssr',
+            PREFERRED_LANG: lang,
         };
         const { body, headers } = await runSubprocess(codeBuffer, env, 5000);
         const html = '<!DOCTYPE html>\n' + body;

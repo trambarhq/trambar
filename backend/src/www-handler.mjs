@@ -12,6 +12,7 @@ import DNSCache from 'dnscache';
 import Database from './lib/database.mjs';
 import * as TaskLog from './lib/task-log.mjs'
 import * as Shutdown from './lib/shutdown.mjs';
+import * as Localization from './lib/localization.mjs';
 import HTTPError from './lib/common/errors/http-error.mjs';
 
 import * as CacheManager from './lib/www-handler/cache-manager.mjs';
@@ -22,6 +23,8 @@ import * as RestRetriever from './lib/www-handler/rest-retriever.mjs';
 import * as SnapshotRetriever from './lib/www-handler/snapshot-retriever.mjs';
 import * as TrafficMonitor from './lib/www-handler/traffic-monitor.mjs';
 import * as WikiRetriever from './lib/www-handler/wiki-retriever.mjs';
+
+import System from './lib/accessors/system.mjs';
 
 import TaskQueue from './lib/task-queue.mjs';
 import {
@@ -241,6 +244,22 @@ async function handleSnapshotFileRequest(req, res, next) {
 
 async function handleSnapshotPageRequest(req, res, next) {
     try {
+        const { lang } = req.query;
+        if (!lang) {
+            let selected = getBestLanguage(req.headers['accept-language']);
+            if (!selected) {
+                const db = await Database.open();
+                const criteria = { deleted: false };
+                const system = await System.findOne(db, 'global', criteria, '*');
+                selected = Localization.getDefaultLanguageCode(system);
+            }
+            const uri = `${req.path}?lang=${selected}`;
+            res.set({ 'X-Accel-Expires': 0 });
+            res.set({ 'X-Accel-Redirect': uri });
+            res.end();
+            return;
+        }
+
         const { schema, tag } = req.params;
         const path = req.params[0];
         const target = 'hydrate';
@@ -250,7 +269,7 @@ async function handleSnapshotPageRequest(req, res, next) {
         if (!req.redirected) {
             baseURL += `/srv/www/${schema}`;
         }
-        const buffer = await PageGenerator.generate(schema, tag, path, baseURL, target);
+        const buffer = await PageGenerator.generate(schema, tag, path, baseURL, target, lang);
         controlCache(res);
         res.type('html').send(buffer);
 
@@ -272,7 +291,8 @@ async function handleStaticFileRequest(req, res, next) {
     } catch (err) {
         if (err.code === 'ENOENT') {
             const uri = (isAdmin) ? `/admin/index.html` : `/index.html`;
-            res.set('X-Accel-Redirect', uri).end();
+            res.set({ 'X-Accel-Redirect': uri });
+            res.end();
         } else {
             next(err);
         }
@@ -302,7 +322,8 @@ async function handleMediaRequest(req, res, next) {
         const path = req.params[0];
         const type = req.params.type;
         const uri = `/srv/media/${type}/${path}`;
-        res.set('X-Accel-Redirect', uri).end();
+        res.set('X-Accel-Redirect', uri);
+        res.end();
     } catch (err) {
         next(err);
     }
@@ -353,7 +374,8 @@ function redirectToProject(req, res, next) {
             req.redirected = true;
         } else {
             const uri = `/srv/www/${project.name}${req.url}`;
-            res.set('X-Accel-Redirect', uri).end();
+            res.set({ 'X-Accel-Redirect': uri });
+            res.end();
             return;
         }
     } else {
@@ -399,6 +421,22 @@ function handleDatabaseChanges(events) {
             const slug = previous.slug || current.slug;
             taskQueue.add(new TaskPurgeWiki(schema, slug));
         }
+    }
+}
+
+function getBestLanguage(accepted) {
+    const tokens = _.split(accepted, /\s*,\s*/);
+    const list = _.map(tokens, (token) => {
+        const m = /([^;]+);q=(.*)/.exec(token);
+        if (m) {
+            return { language: m[1], qFactor: parseFloat(m[2]) };
+        } else {
+            return { language: token, qFactor: 1 };
+        }
+    });
+    const best = _.last(_.sortBy(list, 'qFactor'));
+    if (best) {
+        return best.language;
     }
 }
 

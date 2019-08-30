@@ -20,6 +20,7 @@ async function run() {
         const routeBasePath = process.env.ROUTE_BASE_PATH;
         const routePagePath = process.env.ROUTE_PAGE_PATH;
         const ssrTarget = process.env.SSR_TARGET;
+        const preferredLanguage = process.env.PREFERRED_LANG;
 
         // create a fetch() that remembers the URLs used
         const baseURLParts = new URL(dataSourceBaseURL);
@@ -46,6 +47,7 @@ async function run() {
             routeBasePath,
             routePagePath,
             ssrTarget,
+            preferredLanguage,
             fetchFunc
         });
         const stream = new Stream.PassThrough();
