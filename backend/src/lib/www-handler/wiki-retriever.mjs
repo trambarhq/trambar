@@ -9,14 +9,16 @@ import * as MediaImporter from '../media-server/media-importer.mjs';
 import Repo from '../accessors/repo.mjs';
 import Wiki from '../accessors/wiki.mjs';
 
-async function discover(schema, identifier) {
+async function discover(schema, identifier, search) {
     const taskLog = TaskLog.start('wiki-discover', { project: schema, identifier });
     try {
         const contents = [];
         const db = await Database.open();
         const criteria = await addRepoCheck(db, identifier, {
-            chosen: true,
-            deleted: false
+            chosen: !search,
+            public: true,
+            deleted: false,
+            search,
         });
         const wikis = await Wiki.find(db, schema, criteria, 'slug, external');
         for (let wiki of wikis) {

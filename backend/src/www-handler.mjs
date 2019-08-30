@@ -163,7 +163,8 @@ async function handleWikiRequest(req, res, next) {
 async function handleWikiListRequest(req, res, next) {
     try {
         const { schema, identifier } = req.params;
-        const result = await WikiRetriever.discover(schema, identifier);
+        const search = await getSearchParameters(req);
+        const result = await WikiRetriever.discover(schema, identifier, search);
         sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
@@ -183,7 +184,8 @@ async function handleExcelRequest(req, res, next) {
 async function handleExcelListRequest(req, res, next) {
     try {
         const { schema } = req.params;
-        const result = await ExcelRetriever.discover(schema);
+        const search = await getSearchParameters(req);
+        const result = await ExcelRetriever.discover(schema, search);
         sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
@@ -246,12 +248,9 @@ async function handleSnapshotPageRequest(req, res, next) {
     try {
         const { lang } = req.query;
         if (!lang) {
-            let selected = getBestLanguage(req.headers['accept-language']);
+            let selected = getPreferredLanguage(req);
             if (!selected) {
-                const db = await Database.open();
-                const criteria = { deleted: false };
-                const system = await System.findOne(db, 'global', criteria, '*');
-                selected = Localization.getDefaultLanguageCode(system);
+                selected = await getDefaultLanguage();
             }
             const uri = `${req.path}?lang=${selected}`;
             res.set({ 'X-Accel-Expires': 0 });
@@ -424,7 +423,22 @@ function handleDatabaseChanges(events) {
     }
 }
 
-function getBestLanguage(accepted) {
+async function getSearchParameters(req) {
+    const text = req.query.search;
+    if (!text) {
+        return;
+    }
+    let lang = req.query.lang;
+    if (lang) {
+        lang = _.toLower(lang.substr(0, 2));
+    } else {
+        lang = await getDefaultLanguage();
+    }
+    return { text, lang };
+}
+
+function getPreferredLanguage(req) {
+    const accepted = req.headers['accept-language'];
     const tokens = _.split(accepted, /\s*,\s*/);
     const list = _.map(tokens, (token) => {
         const m = /([^;]+);q=(.*)/.exec(token);
@@ -438,6 +452,13 @@ function getBestLanguage(accepted) {
     if (best) {
         return best.language;
     }
+}
+
+async function getDefaultLanguage() {
+    const db = await Database.open();
+    const criteria = { deleted: false };
+    const system = await System.findOne(db, 'global', criteria, '*');
+    return Localization.getDefaultLanguageCode(system);
 }
 
 if ('file://' + process.argv[1] === import.meta.url) {

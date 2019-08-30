@@ -8,14 +8,15 @@ import * as TaskLog from '../task-log.mjs'
 import Spreadsheet from '../accessors/spreadsheet.mjs';
 import * as MediaImporter from '../media-server/media-importer.mjs';
 
-async function discover(schema) {
+async function discover(schema, search) {
     const taskLog = TaskLog.start('excel-discover', { project: schema });
     try {
         const contents = [];
         const db = await Database.open();
         const criteria = {
             deleted: false,
-            disabled: false
+            disabled: false,
+            search,
         };
         const spreadsheets = await Spreadsheet.find(db, schema, criteria, 'name');
         for (let spreadsheet of spreadsheets) {
