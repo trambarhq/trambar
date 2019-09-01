@@ -275,7 +275,9 @@ const phrases = {
     'rest-summary-reactivate': 'Reactivate source',
     'rest-summary-return': 'Return to source list',
     'rest-summary-save': 'Save source',
-    'rest-summary-title': 'Title',
+    'rest-summary-type': 'Type',
+    'rest-summary-type-generic': 'Generic',
+    'rest-summary-type-wordpress': 'WordPress',
     'rest-summary-url': 'URL',
 
     'role-list-add': 'Add new role',

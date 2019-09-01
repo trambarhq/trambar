@@ -72,7 +72,7 @@ async function NavigationTree(props) {
             wiki = await WikiFinder.findWiki(database, project.name, wikiID);
         }
         if (_.isFinite(restID) && project) {
-            rest = await RestFinder.findWiki(database, project.name, restID);
+            rest = await RestFinder.findRest(database, project.name, restID);
         }
     }
     render();

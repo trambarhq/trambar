@@ -14,7 +14,6 @@ import { ComboButton } from '../widgets/combo-button.jsx';
 import { InstructionBlock } from '../widgets/instruction-block.jsx';
 import { TextField } from '../widgets/text-field.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
-import { OptionList } from '../widgets/option-list.jsx';
 import { ActivityChart } from '../widgets/activity-chart.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';

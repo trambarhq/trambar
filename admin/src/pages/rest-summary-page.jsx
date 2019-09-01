@@ -7,6 +7,7 @@ import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
 import * as RestFinder from 'common/objects/finders/rest-finder.mjs';
 import * as RestSaver from 'common/objects/savers/rest-saver.mjs';
 import * as RestUtils from 'common/objects/utils/rest-utils.mjs';
+import { RestTypes } from 'common/objects/types/rest-types.mjs';
 import * as HTTPRequest from 'common/transport/http-request.mjs';
 
 // widgets
@@ -137,6 +138,10 @@ function RestSummaryPageSync(props) {
         const url = evt.target.value;
         draft.set('url', url);
     });
+    const handleTypeOptionClick = useListener((evt) => {
+        const type = evt.name;
+        draft.set('type', type);
+    });
 
     warnDataLoss(draft.changed);
 
@@ -207,9 +212,7 @@ function RestSummaryPageSync(props) {
             <div className="form">
                 {renderURLInput()}
                 {renderNameInput()}
-                {renderFilename()}
-                {renderTitle()}
-                {renderDescription()}
+                {renderTypeSelector()}
             </div>
         );
     }
@@ -260,55 +263,34 @@ function RestSummaryPageSync(props) {
         );
     }
 
-    function renderFilename() {
-        if (creating) {
-            return;
-        }
-        const props = {
-            id: 'filename',
-            value: draft.get('details.filename', ''),
-            readOnly: true,
-            env,
+    function renderTypeSelector() {
+        const listProps = {
+            readOnly,
+            onOptionClick: handleTypeOptionClick,
         };
         return (
-            <TextField {...props}>
-                {t('rest-summary-filename')}
-            </TextField>
+            <OptionList {...listProps}>
+                <label>
+                    {t('rest-summary-type')}
+                    <InputError>{t(problems.type)}</InputError>
+                </label>
+                {_.map(RestTypes, renderTypeOption)}
+            </OptionList>
         );
     }
 
-    function renderTitle() {
-        if (creating) {
-            return;
-        }
+    function renderTypeOption(type, i) {
+        const typeCurr = draft.getCurrent('type', '') || 'generic';
+        const typePrev = draft.getOriginal('type', '') || 'generic';
         const props = {
-            id: 'title',
-            value: draft.get('details.title', ''),
-            readOnly: true,
-            env,
+            name: type,
+            selected: (typeCurr === type),
+            previous: (typePrev === type),
         };
         return (
-            <TextField {...props}>
-                {t('rest-summary-title')}
-            </TextField>
-        );
-    }
-
-    function renderDescription() {
-        if (creating) {
-            return;
-        }
-        const props = {
-            id: 'description',
-            value: draft.get('details.description', ''),
-            type: 'textarea',
-            readOnly: true,
-            env,
-        };
-        return (
-            <TextField {...props}>
-                {t('rest-summary-description')}
-            </TextField>
+            <option key={i} {...props}>
+                {t(`rest-summary-type-${type}`)}
+            </option>
         );
     }
 

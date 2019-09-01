@@ -155,7 +155,7 @@ function RestListPageSync(props) {
     function renderHeadings() {
         return (
             <tr>
-                {renderFilenameColumn()}
+                {renderNameColumn()}
                 {renderURLColumn()}
                 {renderModifiedTimeColumn()}
             </tr>
@@ -195,18 +195,18 @@ function RestListPageSync(props) {
         };
         return (
             <tr key={rest.id} {...props}>
-                {renderFilenameColumn(rest)}
+                {renderNameColumn(rest)}
                 {renderURLColumn(rest)}
                 {renderModifiedTimeColumn(rest)}
             </tr>
         );
     }
 
-    function renderFilenameColumn(rest) {
+    function renderNameColumn(rest) {
         if (!rest) {
-            return <TH id="filename">{t('table-heading-filename')}</TH>;
+            return <TH id="filename">{t('table-heading-name')}</TH>;
         } else {
-            const filename = RestUtils.getDisplayName(rest, env) || '-';
+            const name = RestUtils.getDisplayName(rest, env) || '-';
             let url, badge;
             if (selection.shown) {
                 if (selection.isAdding(rest)) {
@@ -219,7 +219,7 @@ function RestListPageSync(props) {
                 const params = { ...route.params, restID: rest.id };
                 url = route.find('rest-summary-page', params);
             }
-            return <td><a href={url}>{filename}</a></td>;
+            return <td><a href={url}>{name}</a></td>;
         }
     }
 

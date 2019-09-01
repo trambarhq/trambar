@@ -16,7 +16,6 @@ import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 import { InstructionBlock } from '../widgets/instruction-block.jsx';
 import { TextField } from '../widgets/text-field.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
-import { OptionList } from '../widgets/option-list.jsx';
 import { ExcelPreview } from '../widgets/excel-preview.jsx';
 import { ImagePreviewDialogBox } from '../dialogs/image-preview-dialog-box.jsx';
 import { InputError } from '../widgets/input-error.jsx';
