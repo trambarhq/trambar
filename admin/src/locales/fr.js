@@ -1141,6 +1141,47 @@ const phrases = {
     'website-summary-title': 'Site web',
 
     'welcome': "Bienvenue!",
+
+    'wiki-list-cancel': "Annuler",
+    'wiki-list-column-last-modified': "Modification",
+    'wiki-list-column-public': "Publique",
+    'wiki-list-column-repo': "Dépôt",
+    'wiki-list-column-title': "Titre",
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, "cette page", "ces 2 pages");
+        return `Êtes-vous sûr de vouloir rendre ${pages} publique?`
+    },
+    'wiki-list-confirm-deselect-$count': (count) => {
+        let pages = cardinal(count, "cette page", "ces 2 pages");
+        return `Êtes-vous sûr de vouloir désélectionner ${pages}?`
+    },
+    'wiki-list-edit': "Editer la liste de pages",
+    'wiki-list-public-always': "toujours",
+    'wiki-list-public-no': "non",
+    'wiki-list-public-referenced': "référencée",
+    'wiki-list-save': "Enregistrer la liste de pages",
+    'wiki-list-title': "Wiki GitLab",
+
+    'wiki-summary-$title': (title) => {
+        let text = "Wiki GitLab";
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'wiki-summary-cancel': "Annuler",
+    'wiki-summary-confirm-select': "Êtes-vous sûr de vouloir rendre cette page publique?",
+    'wiki-summary-confirm-deselect': "Êtes-vous sûr de vouloir désélectionner cette page?",
+    'wiki-summary-edit': "Modifier la page",
+    'wiki-summary-page-contents': "Contenu",
+    'wiki-summary-public': "Publique",
+    'wiki-summary-public-always': "Toujours",
+    'wiki-summary-public-no': "Non",
+    'wiki-summary-public-referenced': "Oui (référencée par une autre page publique)",
+    'wiki-summary-repo': "Identifiant du dépôt",
+    'wiki-summary-return': "Retour à la liste des pages",
+    'wiki-summary-slug': "Slug",
+    'wiki-summary-title': "Titre",
 };
 
 export {

@@ -154,7 +154,7 @@ const phrases = {
     'nav-user-new': 'New user',
     'nav-users': 'Users',
     'nav-website': 'Website',
-    'nav-wikis': 'GitLab wikis',
+    'nav-wiki': 'GitLab wiki',
 
     'project-list-add': 'Add new project',
     'project-list-cancel': 'Cancel',
@@ -1261,19 +1261,19 @@ const phrases = {
     'wiki-list-column-repo': 'Repository',
     'wiki-list-column-title': 'Title',
     'wiki-list-confirm-select-$count': (count) => {
-        let wikis = cardinal(count, 'this wiki', 'these 2 wikis');
-        return `Are you sure you want to make ${wikis} public?`
+        let pages = cardinal(count, 'this page', 'these 2 pages');
+        return `Are you sure you want to make ${pages} public?`
     },
     'wiki-list-confirm-deselect-$count': (count) => {
-        let wikis = cardinal(count, 'this wiki', 'these 2 wikis');
-        return `Are you sure you want to deselect ${wikis}?`
+        let pages = cardinal(count, 'this page', 'these 2 pages');
+        return `Are you sure you want to deselect ${pages}?`
     },
-    'wiki-list-edit': 'Edit wiki list',
+    'wiki-list-edit': 'Edit page list',
     'wiki-list-public-always': 'always',
     'wiki-list-public-no': 'no',
     'wiki-list-public-referenced': 'referenced',
-    'wiki-list-save': 'Save wiki list',
-    'wiki-list-title': 'GitLab wikis',
+    'wiki-list-save': 'Save page list',
+    'wiki-list-title': 'GitLab wiki',
 
     'wiki-summary-$title': (title) => {
         let text = 'GitLab wiki';
@@ -1283,16 +1283,16 @@ const phrases = {
         return text;
     },
     'wiki-summary-cancel': 'Cancel',
-    'wiki-summary-confirm-select': 'Are you sure you want to make this wiki public?',
-    'wiki-summary-confirm-deselect': 'Are you sure you want to deselect this wiki?',
-    'wiki-summary-edit': 'Edit wiki',
+    'wiki-summary-confirm-select': 'Are you sure you want to make this page public?',
+    'wiki-summary-confirm-deselect': 'Are you sure you want to deselect this page?',
+    'wiki-summary-edit': 'Edit page',
     'wiki-summary-page-contents': 'Contents',
     'wiki-summary-public': 'Public',
     'wiki-summary-public-always': 'Always',
     'wiki-summary-public-no': 'No',
     'wiki-summary-public-referenced': 'Yes (referenced by another public page)',
     'wiki-summary-repo': 'Repository identifier',
-    'wiki-summary-return': 'Return to wiki list',
+    'wiki-summary-return': 'Return to page list',
     'wiki-summary-slug': 'Slug',
     'wiki-summary-title': 'Title',
 };

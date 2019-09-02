@@ -227,7 +227,7 @@ async function NavigationTree(props) {
 
     function getWikiListNode(level) {
         const page = 'wiki-list-page';
-        const label = t('nav-wikis');
+        const label = t('nav-wiki');
         const children = [
             getWikiNode(level + 1),
         ];

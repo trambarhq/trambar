@@ -1139,6 +1139,47 @@ const phrases = {
     'website-summary-title': 'Verkkosivusto',
 
     'welcome': 'Tervetuloa!',
+
+    'wiki-list-cancel': 'Peruutta',
+    'wiki-list-column-last-modified': 'Viimeksi muokattu',
+    'wiki-list-column-public': 'Julkinen',
+    'wiki-list-column-repo': 'Arkisto',
+    'wiki-list-column-title': 'Otsikko',
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, 'tämän sivun', 'nämä 2 sivua');
+        return `Haluatko varmasti julkaista ${pages}?`
+    },
+    'wiki-list-confirm-deselect-$count': (count) => {
+        let pages = cardinal(count, 'tämän sivun', 'näiden 2 sivun');
+        return `Haluatko varmasti poistaa ${pages} valinnan?`
+    },
+    'wiki-list-edit': 'Muokkaa sivuluetteloa',
+    'wiki-list-public-always': 'aina',
+    'wiki-list-public-no': 'ei',
+    'wiki-list-public-referenced': 'viittaa',
+    'wiki-list-save': 'Tallenna sivuluettelo',
+    'wiki-list-title': 'GitLab-wiki',
+
+    'wiki-summary-$title': (title) => {
+        let text = 'GitLab-wiki';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'wiki-summary-cancel': 'Peruutta',
+    'wiki-summary-confirm-select': 'Haluatko varmasti julkaista tämän sivun?',
+    'wiki-summary-confirm-deselect': 'Haluatko varmasti poistaa tämän sivun valinnan?',
+    'wiki-summary-edit': 'Muokkaa sivua',
+    'wiki-summary-page-contents': 'Sisällys',
+    'wiki-summary-public': 'Julkinen',
+    'wiki-summary-public-always': 'Aina',
+    'wiki-summary-public-no': 'Ei',
+    'wiki-summary-public-referenced': 'Kyllä (viittaa toinen julkinen sivu)',
+    'wiki-summary-repo': 'Arkiston tunniste',
+    'wiki-summary-return': 'Palaa sivuluetteloon',
+    'wiki-summary-slug': 'Slug',
+    'wiki-summary-title': 'Otsikko',
 };
 
 export {

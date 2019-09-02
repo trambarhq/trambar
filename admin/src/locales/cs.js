@@ -1142,6 +1142,47 @@ const phrases = {
     'website-summary-title': 'Webová stránka',
 
     'welcome': 'Vítejte!',
+
+    'wiki-list-cancel': 'Zrušit',
+    'wiki-list-column-last-modified': 'Změněno',
+    'wiki-list-column-public': 'Veřejná',
+    'wiki-list-column-repo': 'Úložiště',
+    'wiki-list-column-title': 'Titul',
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, 'tuto stránku', 'tyto 2 stránky', 'těchto 5 stránek');
+        return `Opravdu chcete tyto ${pages} zveřejnit?`
+    },
+    'wiki-list-confirm-deselect-$count': (count) => {
+        let pages = cardinal(count, 'této stránky', 'těchto 2 stránek', 'těchto 5 stránek');
+        return `Opravdu chcete zrušit výběr ${pages}?`
+    },
+    'wiki-list-edit': 'Upravit seznam stránek',
+    'wiki-list-public-always': 'vždy',
+    'wiki-list-public-no': 'ne',
+    'wiki-list-public-referenced': 'odkazovaná',
+    'wiki-list-save': 'Uložit seznam stránek',
+    'wiki-list-title': 'Wiki GitLabu',
+
+    'wiki-summary-$title': (title) => {
+        let text = 'Wiki GitLabu';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'wiki-summary-cancel': 'Zrušit',
+    'wiki-summary-confirm-select': 'Opravdu chcete tuto stránku zveřejnit?',
+    'wiki-summary-confirm-deselect': 'Opravdu chcete zrušit výběr této stránky?',
+    'wiki-summary-edit': 'Upravit stránku',
+    'wiki-summary-page-contents': 'Obsah',
+    'wiki-summary-public': 'Veřejná',
+    'wiki-summary-public-always': 'Vždy',
+    'wiki-summary-public-no': 'Ne',
+    'wiki-summary-public-referenced': 'Ano (odkazovaná na jinou veřejnou stránku)',
+    'wiki-summary-repo': 'Identifikátor úložiště',
+    'wiki-summary-return': 'Návrat na seznam stránek',
+    'wiki-summary-slug': 'Slug',
+    'wiki-summary-title': 'Titul',
 };
 
 export {
