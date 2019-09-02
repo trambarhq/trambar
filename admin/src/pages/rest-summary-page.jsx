@@ -143,6 +143,17 @@ function RestSummaryPageSync(props) {
         const type = evt.name;
         draft.set('type', type);
     });
+    const handleMaxAgeChange = useListener((evt) => {
+        const text = _.trim(evt.target.value);
+        if (text) {
+            const maxAge = parseInt(text);
+            if (maxAge === maxAge) {
+                draft.set('settings.max_age', maxAge);
+            }
+        } else {
+            draft.unset('settings.max_age');
+        }
+    });
 
     warnDataLoss(draft.changed);
 
@@ -214,6 +225,7 @@ function RestSummaryPageSync(props) {
                 {renderURLInput()}
                 {renderNameInput()}
                 {renderTypeSelector()}
+                {renderMaxAgeInput()}
             </div>
         );
     }
@@ -221,7 +233,7 @@ function RestSummaryPageSync(props) {
     function renderURLInput() {
         const url = draft.get('url', '');
         const props = {
-            id: 'oauth_callback',
+            id: 'url',
             value: draft.get('url', ''),
             readOnly,
             env,
@@ -279,8 +291,33 @@ function RestSummaryPageSync(props) {
         };
         return (
             <option key={i} {...props}>
-                {t(`rest-summary-type-${type}`)}
+                {t(`rest-type-${type}`)}
             </option>
+        );
+    }
+
+    function renderMaxAgeInput() {
+        const defaultMaxAge = '30';
+        const maxAge = draft.get('settings.max_age');
+        let text = '';
+        if (typeof(maxAge) === 'number') {
+            text = maxAge;
+        } else if (!editing) {
+            text = defaultMaxAge;
+        }
+        const props = {
+            id: 'max_page',
+            value: text,
+            type: 'number',
+            readOnly,
+            env,
+            placeholder: defaultMaxAge,
+            onChange: handleMaxAgeChange,
+        };
+        return (
+            <TextField {...props}>
+                {t('rest-summary-max-age')}
+            </TextField>
         );
     }
 

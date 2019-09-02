@@ -14,6 +14,7 @@
     input[type=url],
     input[type=tel],
     input[type=time],
+    input[type=number],
     textarea {
         display: block;
         width: 100%;
@@ -24,7 +25,8 @@
         padding: 2px 2px 1px 4px;
     }
 
-    input[type=time] {
+    input[type=time],
+    input[type=number] {
         width: inherit;
     }
 
@@ -39,6 +41,7 @@
         input[type=url],
         input[type=tel],
         input[type=time],
+        input[type=number],
         textarea {
             border-color: $text-field-read-only-border-color;
             cursor: text;

@@ -300,14 +300,16 @@ const phrases = {
     'rest-summary-description': 'Description',
     'rest-summary-disable': 'Disable source',
     'rest-summary-edit': 'Edit source',
+    'rest-summary-max-age': 'Max age',
     'rest-summary-name': 'Identifier',
     'rest-summary-reactivate': 'Reactivate source',
     'rest-summary-return': 'Return to source list',
     'rest-summary-save': 'Save source',
     'rest-summary-type': 'Type',
-    'rest-summary-type-generic': 'Generic',
-    'rest-summary-type-wordpress': 'WordPress',
     'rest-summary-url': 'URL',
+
+    'rest-type-generic': 'Generic',
+    'rest-type-wordpress': 'WordPress',
 
     'role-list-add': 'Add new role',
     'role-list-cancel': 'Cancel',

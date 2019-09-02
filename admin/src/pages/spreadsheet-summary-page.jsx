@@ -256,7 +256,7 @@ function SpreadsheetSummaryPageSync(props) {
     function renderURLInput() {
         const url = draft.get('url', '');
         const props = {
-            id: 'oauth_callback',
+            id: 'url',
             value: draft.get('url', ''),
             readOnly,
             env,

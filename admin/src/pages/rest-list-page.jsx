@@ -157,6 +157,7 @@ function RestListPageSync(props) {
             <tr>
                 {renderNameColumn()}
                 {renderURLColumn()}
+                {renderTypeColumn()}
                 {renderModifiedTimeColumn()}
             </tr>
         );
@@ -197,6 +198,7 @@ function RestListPageSync(props) {
             <tr key={rest.id} {...props}>
                 {renderNameColumn(rest)}
                 {renderURLColumn(rest)}
+                {renderTypeColumn(rest)}
                 {renderModifiedTimeColumn(rest)}
             </tr>
         );
@@ -236,6 +238,18 @@ function RestListPageSync(props) {
                     <a href={url} target="_blank">{url}</a>
                 </td>
             );
+        }
+    }
+
+    function renderTypeColumn(rest) {
+        if (!env.isWiderThan('wide')) {
+            return null;
+        }
+        if (!rest) {
+            return <TH id="type">{t('rest-list-column-type')}</TH>;
+        } else {
+            const type = rest.type || 'generic';
+            return <td>{t(`rest-type-${type}`)}</td>
         }
     }
 

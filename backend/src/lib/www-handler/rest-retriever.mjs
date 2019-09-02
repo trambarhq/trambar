@@ -54,7 +54,7 @@ async function retrieve(schema, identifier, path, query) {
             identifier,
             rest: data,
         };
-        const maxAge = _.get(rest, 'settings.max_age', 300);
+        const maxAge = _.get(rest, 'settings.max_age', 30);
         const cacheControl = { 's-maxage': maxAge };
 
         taskLog.set('objects', _.size(data));
