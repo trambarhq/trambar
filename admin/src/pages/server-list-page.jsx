@@ -211,7 +211,7 @@ function ServerListPageSync(props) {
 
     function renderTitleColumn(server) {
         if (!server) {
-            return <TH id="title">{t('table-heading-title')}</TH>;
+            return <TH id="title">{t('server-list-column-title')}</TH>;
         } else {
             const title = ServerUtils.getDisplayName(server, env);
             let url, badge;
@@ -237,7 +237,7 @@ function ServerListPageSync(props) {
 
     function renderTypeColumn(server) {
         if (!server) {
-            return <TH id="type">{t('table-heading-type')}</TH>;
+            return <TH id="type">{t('server-list-column-type')}</TH>;
         } else {
             return <td>{t(`server-type-${server.type}`)}</td>
         }
@@ -248,7 +248,7 @@ function ServerListPageSync(props) {
             return null;
         }
         if (!server) {
-            return <TH id="oauth">{t('table-heading-oauth')}</TH>;
+            return <TH id="oauth">{t('server-list-column-oauth')}</TH>;
         } else {
             const active = hasOAuthCredentials(server);
             return <td>{t(`server-list-oauth-${active}`)}</td>
@@ -260,7 +260,7 @@ function ServerListPageSync(props) {
             return null;
         }
         if (!server) {
-            return <TH id="api">{t('table-heading-api-access')}</TH>;
+            return <TH id="api">{t('server-list-column-api-access')}</TH>;
         } else {
             const active = hasAPICredentials(server);
             return <td>{t(`server-list-api-access-${active}`)}</td>
@@ -272,7 +272,7 @@ function ServerListPageSync(props) {
             return null;
         }
         if (!server) {
-            return <TH id="users">{t('table-heading-users')}</TH>;
+            return <TH id="users">{t('server-list-column-users')}</TH>;
         } else {
             const props = {
                 users: findUsers(users, server),
@@ -289,7 +289,7 @@ function ServerListPageSync(props) {
             return null;
         }
         if (!server) {
-            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+            return <TH id="mtime">{t('server-list-column-last-modified')}</TH>
         } else {
             const props = {
                 time: server.mtime,

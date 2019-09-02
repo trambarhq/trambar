@@ -113,6 +113,15 @@ const phrases = {
     'member-list-add': 'Lisää uusi käyttäjä',
     'member-list-approve-all': 'Hyväksy kaikki pyynnöt',
     'member-list-cancel': 'Peruutta',
+    'member-list-column-date-range': 'Aktiivinen ajanjakso',
+    'member-list-column-email': 'Sähköpostiosoite',
+    'member-list-column-last-modified': 'Viimeksi muokattu',
+    'member-list-column-last-month': 'Viime kuukausi',
+    'member-list-column-name': 'Nimi',
+    'member-list-column-roles': 'Roolit',
+    'member-list-column-this-month': 'Tässä kuussa',
+    'member-list-column-to-date': 'Tähän mennessä',
+    'member-list-column-type': 'Tyyppi',
     'member-list-edit': 'Muokkaa jäsenluetteloa',
     'member-list-reject-all': 'Hylkää kaikki pyynnöt',
     'member-list-save': 'Tallenna jäsenluettelo',
@@ -138,6 +147,14 @@ const phrases = {
 
     'project-list-add': 'Lisää uusi projekti',
     'project-list-cancel': 'Peruutta',
+    'project-list-column-date-range': 'Aktiivinen ajanjakso',
+    'project-list-column-last-modified': 'Viimeksi muokattu',
+    'project-list-column-last-month': 'Viime kuukausi',
+    'project-list-column-name': 'Nimi',
+    'project-list-column-repositories': 'Arkistot',
+    'project-list-column-this-month': 'Tässä kuussa',
+    'project-list-column-to-date': 'Tähän mennessä',
+    'project-list-column-users': 'Käyttäjät',
     'project-list-confirm-archive-$count': (count) => {
         let projects = cardinal(count, 'valitun projektin', 'nämä 2 projektia');
         return `Haluatko letmasti arkistoida ${projects}?`;
@@ -192,6 +209,14 @@ const phrases = {
     },
 
     'repo-list-cancel': 'Peruutta',
+    'repo-list-column-date-range': 'Aktiivinen ajanjakso',
+    'repo-list-column-issue-tracker': 'Raportointityökalu',
+    'repo-list-column-last-modified': 'Viimeksi muokattu',
+    'repo-list-column-last-month': 'Viime kuukausi',
+    'repo-list-column-server': 'Palvelin',
+    'repo-list-column-this-month': 'Tässä kuussa',
+    'repo-list-column-title': 'Nimi',
+    'repo-list-column-to-date': 'Tähän mennessä',
     'repo-list-confirm-remove-$count': (count) => {
         let repositories = cardinal(count, 'tämän arkiston', 'nämä 2 arkistoa');
         return `Haluatko letmasti poistaa ${repositories} projektista?`;
@@ -230,6 +255,9 @@ const phrases = {
 
     'role-list-add': 'Lisää uusi rooli',
     'role-list-cancel': 'Peruutta',
+    'role-list-column-last-modified': 'Viimeksi muokattu',
+    'role-list-column-title': 'Nimi',
+    'role-list-column-users': 'Käyttäjät',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, 'tämän roolin', 'nämä 2 roolia');
         return `Haluatko letmasti deaktivoida ${roles}?`
@@ -281,6 +309,12 @@ const phrases = {
     'server-list-api-access-false': '',
     'server-list-api-access-true': 'Hankittu',
     'server-list-cancel': 'Peruutta',
+    'server-list-column-api-access': 'API-käyttöoikeus',
+    'server-list-column-last-modified': 'Viimeksi muokattu',
+    'server-list-column-oauth': 'OAuth-todennus',
+    'server-list-column-title': 'Nimi',
+    'server-list-column-type': 'Tyyppi',
+    'server-list-column-users': 'Käyttäjät',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'tämän palvelin', 'nämä 2 palvelinta');
         return `Haluatko letmasti deaktivoida ${servers}?`
@@ -394,25 +428,6 @@ const phrases = {
     'sign-in-username': 'Käyttäjätunnus:',
 
     'sign-off-menu-sign-off': 'Kirjaudu ulos',
-
-    'table-heading-api-access': 'API-käyttöoikeus',
-    'table-heading-date-range': 'Aktiivinen ajanjakso',
-    'table-heading-email': 'Sähköpostiosoite',
-    'table-heading-issue-tracker': 'Raportointityökalu',
-    'table-heading-last-modified': 'Viimeksi muokattu',
-    'table-heading-last-month': 'Viime kuukausi',
-    'table-heading-name': 'Nimi',
-    'table-heading-oauth': 'OAuth-todennus',
-    'table-heading-projects': 'Projektit',
-    'table-heading-repositories': 'Arkistot',
-    'table-heading-roles': 'Roolit',
-    'table-heading-server': 'Palvelin',
-    'table-heading-this-month': 'Tässä kuussa',
-    'table-heading-title': 'Nimi',
-    'table-heading-to-date': 'Tähän mennessä',
-    'table-heading-type': 'Tyyppi',
-    'table-heading-username': 'Käyttäjätunnus',
-    'table-heading-users': 'Käyttäjät',
 
     'task-$seconds': (seconds) => {
         return (seconds === 1) ? `1 sekunti` : `${seconds} sekuntia`;
@@ -1021,6 +1036,13 @@ const phrases = {
     'user-list-add': 'Lisää uusi käyttäjä',
     'user-list-approve-all': 'Hyväksy kaikki pyynnöt',
     'user-list-cancel': 'Peruutta',
+    'user-list-column-email': 'Sähköpostiosoite',
+    'user-list-column-last-modified': 'Viimeksi muokattu',
+    'user-list-column-name': 'Nimi',
+    'user-list-column-projects': 'Projektit',
+    'user-list-column-roles': 'Roolit',
+    'user-list-column-type': 'Tyyppi',
+    'user-list-column-users': 'Käyttäjät',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'tämän käyttäjätili', 'nämä 2 käyttäjätilejä');
         return `Haluatko letmasti deaktivoida ${accounts}?`

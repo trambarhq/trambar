@@ -204,7 +204,7 @@ function RoleListPageSync(props) {
 
     function renderTitleColumn(role) {
         if (!role) {
-            return <TH id="title">{t('table-heading-title')}</TH>;
+            return <TH id="title">{t('role-list-column-title')}</TH>;
         } else {
             const title = RoleUtils.getDisplayName(role, env) || '-';
             let url, badge;
@@ -233,7 +233,7 @@ function RoleListPageSync(props) {
             return null;
         }
         if (!role) {
-            return <TH id="users">{t('table-heading-users')}</TH>;
+            return <TH id="users">{t('role-list-column-users')}</TH>;
         } else {
             const props = {
                 users: findUsers(users, role),
@@ -250,7 +250,7 @@ function RoleListPageSync(props) {
             return null;
         }
         if (!role) {
-            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+            return <TH id="mtime">{t('role-list-column-last-modified')}</TH>
         } else {
             const props = {
                 time: role.mtime,

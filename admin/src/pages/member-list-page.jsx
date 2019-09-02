@@ -238,7 +238,7 @@ function MemberListPageSync(props) {
 
     function renderNameColumn(user) {
         if (!user) {
-            return <TH id="name">{t('table-heading-name')}</TH>;
+            return <TH id="name">{t('member-list-column-name')}</TH>;
         } else {
             const name = UserUtils.getDisplayName(user, env);
             let url, badge;
@@ -267,7 +267,7 @@ function MemberListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="type">{t('table-heading-type')}</TH>;
+            return <TH id="type">{t('member-list-column-type')}</TH>;
         } else {
             return <td>{t(`user-list-type-${user.type}`)}</td>;
         }
@@ -278,7 +278,7 @@ function MemberListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="roles">{t('table-heading-roles')}</TH>;
+            return <TH id="roles">{t('member-list-column-roles')}</TH>;
         } else {
             const props = {
                 roles: findRoles(roles, user),
@@ -295,7 +295,7 @@ function MemberListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="email">{t('table-heading-email')}</TH>;
+            return <TH id="email">{t('member-list-column-email')}</TH>;
         } else {
             const contents = '-';
             const email = user.details.email;
@@ -312,7 +312,7 @@ function MemberListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="range">{t('table-heading-date-range')}</TH>
+            return <TH id="range">{t('member-list-column-date-range')}</TH>
         } else {
             const range = _.get(statistics, [ user.id, 'range' ]);
             const start = f(_.get(range, 'start'));
@@ -326,7 +326,7 @@ function MemberListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="last_month">{t('table-heading-last-month')}</TH>
+            return <TH id="last_month">{t('member-list-column-last-month')}</TH>
         } else {
             const props = {
                 statistics: _.get(statistics, [ user.id, 'last_month' ]),
@@ -342,7 +342,7 @@ function MemberListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="this_month">{t('table-heading-this-month')}</TH>
+            return <TH id="this_month">{t('member-list-column-this-month')}</TH>
         } else {
             const props = {
                 statistics: _.get(statistics, [ user.id, 'this_month' ]),
@@ -358,7 +358,7 @@ function MemberListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="to_date">{t('table-heading-to-date')}</TH>
+            return <TH id="to_date">{t('member-list-column-to-date')}</TH>
         } else {
             const props = {
                 statistics: _.get(statistics, [ user.id, 'to_date' ]),
@@ -374,7 +374,7 @@ function MemberListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+            return <TH id="mtime">{t('member-list-column-last-modified')}</TH>
         } else {
             const props = {
                 time: user.mtime,

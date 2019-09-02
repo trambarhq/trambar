@@ -161,6 +161,15 @@ const traditionalPhrases = {
     'member-list-add': '添加用戶',
     'member-list-approve-all': '批准所有請求',
     'member-list-cancel': '取消',
+    'member-list-column-date-range': '活動期間',
+    'member-list-column-email': '電子郵件地址',
+    'member-list-column-last-modified': '上次修改時間',
+    'member-list-column-last-month': '上個月',
+    'member-list-column-name': '名稱',
+    'member-list-column-roles': '角色',
+    'member-list-column-this-month': '本月',
+    'member-list-column-to-date': '至今',
+    'member-list-column-type': '類型',
     'member-list-edit': '編輯成員列表',
     'member-list-reject-all': '拒絕所有請求',
     'member-list-save': '保存成員列表',
@@ -186,6 +195,14 @@ const traditionalPhrases = {
 
     'project-list-add': '添加項目',
     'project-list-cancel': '取消',
+    'project-list-column-date-range': '活動期間',
+    'project-list-column-last-modified': '上次修改時間',
+    'project-list-column-last-month': '上個月',
+    'project-list-column-name': '名稱',
+    'project-list-column-repositories': '數據庫',
+    'project-list-column-this-month': '本月',
+    'project-list-column-to-date': '至今',
+    'project-list-column-users': '用戶',
     'project-list-confirm-archive-$count': (count) => {
         let projects = cardinalT(count, '這個項目', '這三個項目');
         return `你確定要存檔${projects}？`;
@@ -240,6 +257,14 @@ const traditionalPhrases = {
     },
 
     'repo-list-cancel': '取消',
+    'repo-list-column-date-range': '活動期間',
+    'repo-list-column-issue-tracker': '問題追踪器',
+    'repo-list-column-last-modified': '上次修改時間',
+    'repo-list-column-last-month': '上個月',
+    'repo-list-column-server': '服務器',
+    'repo-list-column-this-month': '本月',
+    'repo-list-column-title': '名稱',
+    'repo-list-column-to-date': '至今',
     'repo-list-confirm-remove-$count': (count) => {
         let repos = cardinalT(count, '這個數據庫', '這三個數據庫');
         return `你確定要從項目解除${repos}？`
@@ -278,6 +303,9 @@ const traditionalPhrases = {
 
     'role-list-add': '添加角色',
     'role-list-cancel': '取消',
+    'role-list-column-last-modified': '上次修改時間',
+    'role-list-column-title': '名稱',
+    'role-list-column-users': '用戶',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinalT(count, '這個角色', '這三個角色');
         return `你確定要停用${roles}？`
@@ -329,6 +357,12 @@ const traditionalPhrases = {
     'server-list-api-access-false': '',
     'server-list-api-access-true': '已取得',
     'server-list-cancel': '取消',
+    'server-list-column-api-access': 'API訪問﻿',
+    'server-list-column-last-modified': '上次修改時間',
+    'server-list-column-oauth': 'OAuth認證',
+    'server-list-column-title': '名稱',
+    'server-list-column-type': '類型',
+    'server-list-column-users': '用戶',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinalT(count, '這個服務器', '這三個服務器');
         return `你確定要停用${servers}？`
@@ -442,25 +476,6 @@ const traditionalPhrases = {
     'sign-in-username': '用戶名：',
 
     'sign-off-menu-sign-off': '登出',
-
-    'table-heading-api-access': 'API訪問﻿',
-    'table-heading-date-range': '活動期間',
-    'table-heading-email': '電子郵件地址',
-    'table-heading-issue-tracker': '問題追踪器',
-    'table-heading-last-modified': '上次修改時間',
-    'table-heading-last-month': '上個月',
-    'table-heading-name': '名稱',
-    'table-heading-oauth': 'OAuth認證',
-    'table-heading-projects': '項目',
-    'table-heading-repositories': '數據庫',
-    'table-heading-roles': '角色',
-    'table-heading-server': '服務器',
-    'table-heading-this-month': '本月',
-    'table-heading-title': '名稱',
-    'table-heading-to-date': '至今',
-    'table-heading-type': '類型',
-    'table-heading-username': '用戶名',
-    'table-heading-users': '用戶',
 
     'task-$seconds': (seconds) => {
         return `${seconds}秒`;
@@ -1056,6 +1071,13 @@ const traditionalPhrases = {
     'user-list-add': '添加用戶',
     'user-list-approve-all': '批准所有請求',
     'user-list-cancel': '取消',
+    'user-list-column-email': '電子郵件地址',
+    'user-list-column-last-modified': '上次修改時間',
+    'user-list-column-name': '名稱',
+    'user-list-column-projects': '項目',
+    'user-list-column-roles': '角色',
+    'user-list-column-type': '類型',
+    'user-list-column-username': '用戶名',
     'user-list-confirm-disable-$count': (count) => {
         let users = cardinalT(count, '這個用戶', '這三個用戶');
         return `你確定要關閉${user}？`
@@ -1266,6 +1288,15 @@ const simplifiedPhrases = {
     'member-list-add': '添加用户',
     'member-list-approve-all': '批准所有请求',
     'member-list-cancel': '取消',
+    'member-list-column-date-range': '活动期间',
+    'member-list-column-email': '电子邮件地址',
+    'member-list-column-last-modified': '上次修改时间',
+    'member-list-column-last-month': '上个月',
+    'member-list-column-name': '名称',
+    'member-list-column-roles': '角色',
+    'member-list-column-this-month': '本月',
+    'member-list-column-to-date': '至今',
+    'member-list-column-type': '类型',
     'member-list-edit': '编辑成员列表',
     'member-list-reject-all': '拒绝所有请求',
     'member-list-save': '保存成员列表',
@@ -1291,6 +1322,14 @@ const simplifiedPhrases = {
 
     'project-list-add': '添加项目',
     'project-list-cancel': '取消',
+    'project-list-column-date-range': '活动期间',
+    'project-list-column-last-modified': '上次修改时间',
+    'project-list-column-last-month': '上个月',
+    'project-list-column-name': '名称',
+    'project-list-column-repositories': '数据库',
+    'project-list-column-this-month': '本月',
+    'project-list-column-to-date': '至今',
+    'project-list-column-users': '用户',
     'project-list-confirm-archive-$count': (count) => {
         let projects = cardinalS(count, '这个项目', '这三个项目');
         return `你确定要存档${projects}？`;
@@ -1345,6 +1384,14 @@ const simplifiedPhrases = {
     },
 
     'repo-list-cancel': '取消',
+    'repo-list-column-date-range': '活动期间',
+    'repo-list-column-issue-tracker': '问题追踪器',
+    'repo-list-column-last-modified': '上次修改时间',
+    'repo-list-column-last-month': '上个月',
+    'repo-list-column-server': '服务器',
+    'repo-list-column-this-month': '本月',
+    'repo-list-column-title': '名称',
+    'repo-list-column-to-date': '至今',
     'repo-list-confirm-remove-$count': (count) => {
         let repos = cardinalS(count, '这个数据库', '这三个数据库');
         return `你确定要从项目解除${repos}？`
@@ -1383,6 +1430,9 @@ const simplifiedPhrases = {
 
     'role-list-add': '添加角色',
     'role-list-cancel': '取消',
+    'role-list-column-last-modified': '上次修改时间',
+    'role-list-column-title': '名称',
+    'role-list-column-users': '用户',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinalS(count, '这个角色', '这三个角色');
         return `你确定要停用${roles}？`
@@ -1434,6 +1484,12 @@ const simplifiedPhrases = {
     'server-list-api-access-false': '',
     'server-list-api-access-true': '已取得',
     'server-list-cancel': '取消',
+    'server-list-column-api-access': 'API访问﻿',
+    'server-list-column-last-modified': '上次修改时间',
+    'server-list-column-oauth': 'OAuth认证',
+    'server-list-column-title': '名称',
+    'server-list-column-type': '类型',
+    'server-list-column-users': '用户',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinalS(count, '这个服务器', '这三个服务器')
         return `你确定要停用${servers}？`
@@ -1547,25 +1603,6 @@ const simplifiedPhrases = {
     'sign-in-username': '用户名：',
 
     'sign-off-menu-sign-off': '登出',
-
-    'table-heading-api-access': 'API访问﻿',
-    'table-heading-date-range': '活动期间',
-    'table-heading-email': '电子邮件地址',
-    'table-heading-issue-tracker': '问题追踪器',
-    'table-heading-last-modified': '上次修改时间',
-    'table-heading-last-month': '上个月',
-    'table-heading-name': '名称',
-    'table-heading-oauth': 'OAuth认证',
-    'table-heading-projects': '项目',
-    'table-heading-repositories': '数据库',
-    'table-heading-roles': '角色',
-    'table-heading-server': '服务器',
-    'table-heading-this-month': '本月',
-    'table-heading-title': '名称',
-    'table-heading-to-date': '至今',
-    'table-heading-type': '类型',
-    'table-heading-username': '用户名',
-    'table-heading-users': '用户',
 
     'task-$seconds': (seconds) => {
         return `${seconds}秒`;
@@ -2161,6 +2198,13 @@ const simplifiedPhrases = {
     'user-list-add': '添加用户',
     'user-list-approve-all': '批准所有请求',
     'user-list-cancel': '取消',
+    'user-list-column-email': '电子邮件地址',
+    'user-list-column-last-modified': '上次修改时间',
+    'user-list-column-name': '名称',
+    'user-list-column-projects': '项目',
+    'user-list-column-roles': '角色',
+    'user-list-column-type': '类型',
+    'user-list-column-username': '用户名',
     'user-list-confirm-disable-$count': (count) => {
         let users = cardinalS(count, '这个用户', '这三个用户');
         return `你确定要关闭${users}？`

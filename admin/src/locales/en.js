@@ -123,6 +123,15 @@ const phrases = {
     'member-list-add': 'Add new user',
     'member-list-approve-all': 'Approve all requests',
     'member-list-cancel': 'Cancel',
+    'member-list-column-date-range': 'Active period',
+    'member-list-column-email': 'E-mail',
+    'member-list-column-last-modified': 'Last modified',
+    'member-list-column-last-month': 'Last month',
+    'member-list-column-name': 'Name',
+    'member-list-column-roles': 'Roles',
+    'member-list-column-this-month': 'This month',
+    'member-list-column-to-date': 'To date',
+    'member-list-column-type': 'Type',
     'member-list-edit': 'Edit member list',
     'member-list-reject-all': 'Reject all requests',
     'member-list-save': 'Save member list',
@@ -149,6 +158,14 @@ const phrases = {
 
     'project-list-add': 'Add new project',
     'project-list-cancel': 'Cancel',
+    'project-list-column-date-range': 'Active period',
+    'project-list-column-last-modified': 'Last modified',
+    'project-list-column-last-month': 'Last month',
+    'project-list-column-name': 'Name',
+    'project-list-column-repositories': 'Repositories',
+    'project-list-column-this-month': 'This month',
+    'project-list-column-to-date': 'To date',
+    'project-list-column-users': 'Users',
     'project-list-confirm-archive-$count': (count) => {
         let projects = cardinal(count, 'the selected project', 'these 2 projects');
         return `Are you sure you want to archive ${projects}?`;
@@ -203,6 +220,14 @@ const phrases = {
     },
 
     'repo-list-cancel': 'Cancel',
+    'repo-list-column-date-range': 'Active period',
+    'repo-list-column-issue-tracker': 'Issue tracker',
+    'repo-list-column-last-modified': 'Last modified',
+    'repo-list-column-last-month': 'Last month',
+    'repo-list-column-server': 'Server',
+    'repo-list-column-this-month': 'This month',
+    'repo-list-column-title': 'Name',
+    'repo-list-column-to-date': 'To date',
     'repo-list-confirm-remove-$count': (count) => {
         let repositories = cardinal(count, 'this repository', 'these 2 repositories');
         return `Are you sure you want to remove ${repositories} from the project?`;
@@ -241,6 +266,9 @@ const phrases = {
 
     'rest-list-add': 'Add new source',
     'rest-list-cancel': 'Cancel',
+    'rest-list-column-last-modified': 'Last modified',
+    'rest-list-column-identifier': 'Identifier',
+    'rest-list-column-url': 'URL',
     'rest-list-confirm-disable-$count': (count) => {
         let rests = cardinal(count, 'this source', 'these 2 sources');
         return `Are you sure you want to disable ${rests}?`
@@ -282,6 +310,9 @@ const phrases = {
 
     'role-list-add': 'Add new role',
     'role-list-cancel': 'Cancel',
+    'role-list-column-last-modified': 'Last modified',
+    'role-list-column-title': 'Name',
+    'role-list-column-users': 'Users',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, 'this role', 'these 2 roles');
         return `Are you sure you want to disable ${roles}?`
@@ -333,6 +364,12 @@ const phrases = {
     'server-list-api-access-false': '',
     'server-list-api-access-true': 'Acquired',
     'server-list-cancel': 'Cancel',
+    'server-list-column-api-access': 'API access﻿',
+    'server-list-column-last-modified': 'Last modified',
+    'server-list-column-oauth': 'OAuth authentication',
+    'server-list-column-title': 'Name',
+    'server-list-column-type': 'Type',
+    'server-list-column-users': 'Users',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'this server', 'these 2 servers');
         return `Are you sure you want to disable ${servers}?`
@@ -449,6 +486,10 @@ const phrases = {
 
     'spreadsheet-list-add': 'Add new link',
     'spreadsheet-list-cancel': 'Cancel',
+    'spreadsheet-list-column-filename': 'Filename',
+    'spreadsheet-list-column-last-modified': 'Last modified',
+    'spreadsheet-list-column-sheets': 'Sheets',
+    'spreadsheet-list-column-url': 'URL',
     'spreadsheet-list-confirm-disable-$count': (count) => {
         let spreadsheets = cardinal(count, 'this link', 'these 2 links');
         return `Are you sure you want to disable ${spreadsheets}?`
@@ -493,31 +534,6 @@ const phrases = {
     },
     'spreadsheet-summary-title': 'Title',
     'spreadsheet-summary-url': 'URL',
-
-    'table-heading-api-access': 'API access﻿',
-    'table-heading-date-range': 'Active period',
-    'table-heading-email': 'E-mail',
-    'table-heading-filename': 'Filename',
-    'table-heading-issue-tracker': 'Issue tracker',
-    'table-heading-last-modified': 'Last modified',
-    'table-heading-last-month': 'Last month',
-    'table-heading-name': 'Name',
-    'table-heading-oauth': 'OAuth authentication',
-    'table-heading-projects': 'Projects',
-    'table-heading-public': 'Public',
-    'table-heading-repositories': 'Repositories',
-    'table-heading-roles': 'Roles',
-    'table-heading-repo': 'Repository',
-    'table-heading-server': 'Server',
-    'table-heading-sheets': 'Sheets',
-    'table-heading-slug': 'Slug',
-    'table-heading-this-month': 'This month',
-    'table-heading-title': 'Name',
-    'table-heading-to-date': 'To date',
-    'table-heading-type': 'Type',
-    'table-heading-url': 'URL',
-    'table-heading-username': 'User name',
-    'table-heading-users': 'Users',
 
     'task-$seconds': (seconds) => {
         return (seconds === 1) ? `1 second` : `${seconds} seconds`;
@@ -1126,6 +1142,13 @@ const phrases = {
     'user-list-add': 'Add new user',
     'user-list-approve-all': 'Approve all requests',
     'user-list-cancel': 'Cancel',
+    'user-list-column-email': 'E-mail',
+    'user-list-column-last-modified': 'Last modified',
+    'user-list-column-name': 'Name',
+    'user-list-column-projects': 'Projects',
+    'user-list-column-roles': 'Roles',
+    'user-list-column-type': 'Type',
+    'user-list-column-username': 'User name',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'this user account', 'these 2 user accounts');
         return `Are you sure you want to disable ${accounts}?`
@@ -1230,6 +1253,10 @@ const phrases = {
     'welcome': 'Welcome!',
 
     'wiki-list-cancel': 'Cancel',
+    'wiki-list-column-last-modified': 'Last modified',
+    'wiki-list-column-public': 'Public',
+    'wiki-list-column-repo': 'Repository',
+    'wiki-list-column-title': 'Name',
     'wiki-list-confirm-select-$count': (count) => {
         let wikis = cardinal(count, 'this wiki', 'these 2 wikis');
         return `Are you sure you want to make ${wikis} public?`

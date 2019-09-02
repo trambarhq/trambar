@@ -115,6 +115,15 @@ const phrases = {
     'member-list-add': 'Pridėti naują vartotoją',
     'member-list-approve-all': 'Zatwierdź wszystkie prośby',
     'member-list-cancel': 'Atšaukti',
+    'member-list-column-date-range': 'Aktyvus laikotarpis',
+    'member-list-column-email': 'E-paštas',
+    'member-list-column-last-modified': 'Pakeitimo data',
+    'member-list-column-last-month': 'Praėjusį mėnesį',
+    'member-list-column-name': 'Vardas ir pavardė',
+    'member-list-column-roles': 'Vaidmenys',
+    'member-list-column-this-month': 'Šį mėnesį',
+    'member-list-column-to-date': 'Iki šiol',
+    'member-list-column-type': 'Tipas',
     'member-list-edit': 'Redaguoti narių sąrašą',
     'member-list-reject-all': 'Atmesti visus prašymus',
     'member-list-save': 'Išsaugoti narių sąrašą',
@@ -140,6 +149,14 @@ const phrases = {
 
     'project-list-add': 'Pridėti naują projektą',
     'project-list-cancel': 'Atšaukti',
+    'project-list-column-date-range': 'Aktyvus laikotarpis',
+    'project-list-column-last-modified': 'Pakeitimo data',
+    'project-list-column-last-month': 'Praėjusį mėnesį',
+    'project-list-column-name': 'Vardas ir pavardė',
+    'project-list-column-repositories': 'Saugyklos',
+    'project-list-column-this-month': 'Šį mėnesį',
+    'project-list-column-to-date': 'Iki šiol',
+    'project-list-column-users': 'Vartotojai',
     'project-list-confirm-archive-$count': (count) => {
         let projects = cardinal(count, 'pasirinktą projektą', 'šiuos 2 pasirinktus projektus', 'šiuos 10 pasirinktų projektų');
         return `Ar tikrai norite archyvuoti ${projects}?`;
@@ -194,6 +211,14 @@ const phrases = {
     },
 
     'repo-list-cancel': 'Atšaukti',
+    'repo-list-column-date-range': 'Aktyvus laikotarpis',
+    'repo-list-column-issue-tracker': 'Klaidų sekimas',
+    'repo-list-column-last-modified': 'Pakeitimo data',
+    'repo-list-column-last-month': 'Praėjusį mėnesį',
+    'repo-list-column-server': 'Serveriai',
+    'repo-list-column-this-month': 'Šį mėnesį',
+    'repo-list-column-title': 'Pavadinimas',
+    'repo-list-column-to-date': 'Iki šiol',
     'repo-list-confirm-remove-$count': (count) => {
         let repos = cardinal(count, 'pasirinktą saugyklą', 'šias 2 pasirinktas saugyklas', 'šias 10 pasirinktų saugyklų');
         return `Ar tikrai norite atsieti ${repos} nuo projekto?`;
@@ -283,6 +308,12 @@ const phrases = {
     'server-list-api-access-false': '',
     'server-list-api-access-true': 'Įsigyta',
     'server-list-cancel': 'Atšaukti',
+    'server-list-column-api-access': 'API prieiga',
+    'server-list-column-last-modified': 'Pakeitimo data',
+    'server-list-column-oauth': 'OAuth leidimas',
+    'server-list-column-title': 'Pavadinimas',
+    'server-list-column-type': 'Tipas',
+    'server-list-column-users': 'Vartotojai',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'pasirinktą serverį', 'šiuos 2 pasirinktus serverius', 'šiuos 10 pasirinktų serverių');
         return `Ar tikrai norite deaktyvuoti ${servers}?`
@@ -396,25 +427,6 @@ const phrases = {
     'sign-in-username': 'Vartotojo vardas:',
 
     'sign-off-menu-sign-off': 'Atsijungti',
-
-    'table-heading-api-access': 'API prieiga',
-    'table-heading-date-range': 'Aktyvus laikotarpis',
-    'table-heading-email': 'E-paštas',
-    'table-heading-issue-tracker': 'Klaidų sekimas',
-    'table-heading-last-modified': 'Pakeitimo data',
-    'table-heading-last-month': 'Praėjusį mėnesį',
-    'table-heading-name': 'Vardas ir pavardė',
-    'table-heading-oauth': 'OAuth leidimas',
-    'table-heading-projects': 'Projektai',
-    'table-heading-repositories': 'Saugyklos',
-    'table-heading-roles': 'Vaidmenys',
-    'table-heading-server': 'Serveriai',
-    'table-heading-this-month': 'Šį mėnesį',
-    'table-heading-title': 'Pavadinimas',
-    'table-heading-to-date': 'Iki šiol',
-    'table-heading-type': 'Tipas',
-    'table-heading-username': 'Vartotojo vardas',
-    'table-heading-users': 'Vartotojai',
 
     'task-$seconds': (seconds) => {
         return cardinal(seconds, '1 sekundė', '2 sekundės', '10 sekundžių');
@@ -1011,6 +1023,13 @@ const phrases = {
     'user-list-add': 'Pridėti naują vartotoją',
     'user-list-approve-all': 'Patvirtinti visus prašymus',
     'user-list-cancel': 'Atšaukti',
+    'user-list-column-email': 'E-paštas',
+    'user-list-column-last-modified': 'Pakeitimo data',
+    'user-list-column-name': 'Vardas ir pavardė',
+    'user-list-column-projects': 'Projektai',
+    'user-list-column-roles': 'Vaidmenys',
+    'user-list-column-type': 'Tipas',
+    'user-list-column-username': 'Vartotojo vardas',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'pasirinktą paskyrą', 'šias 2 pasirinktas paskyras', 'šias 10 pasirinktų paskyrų');
         return `Ar tikrai norite deaktyvuoti ${accounts}?`;

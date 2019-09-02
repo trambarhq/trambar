@@ -207,7 +207,7 @@ function SpreadsheetListPageSync(props) {
 
     function renderFilenameColumn(spreadsheet) {
         if (!spreadsheet) {
-            return <TH id="filename">{t('table-heading-filename')}</TH>;
+            return <TH id="filename">{t('spreadsheet-list-column-filename')}</TH>;
         } else {
             const filename = SpreadsheetUtils.getDisplayName(spreadsheet, env) || '-';
             let url, badge;
@@ -231,7 +231,7 @@ function SpreadsheetListPageSync(props) {
             return null;
         }
         if (!spreadsheet) {
-            return <TH id="url">{t('table-heading-url')}</TH>;
+            return <TH id="url">{t('spreadsheet-list-column-url')}</TH>;
         } else {
             const url = spreadsheet.url;
             return (
@@ -247,7 +247,7 @@ function SpreadsheetListPageSync(props) {
             return null;
         }
         if (!spreadsheet) {
-            return <TH id="sheets">{t('table-heading-sheets')}</TH>;
+            return <TH id="sheets">{t('spreadsheet-list-column-sheets')}</TH>;
         } else {
             const props = {
                 spreadsheet,
@@ -264,7 +264,7 @@ function SpreadsheetListPageSync(props) {
             return null;
         }
         if (!spreadsheet) {
-            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+            return <TH id="mtime">{t('spreadsheet-list-column-last-modified')}</TH>
         } else {
             const props = {
                 time: spreadsheet.mtime,

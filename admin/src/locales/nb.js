@@ -113,6 +113,15 @@ const phrases = {
     'member-list-add': 'Legg til ny bruker',
     'member-list-approve-all': 'Godkjenn alle forespørsler',
     'member-list-cancel': 'Avbryt',
+    'member-list-column-date-range': 'Aktiv periode',
+    'member-list-column-email': 'E-post',
+    'member-list-column-last-modified': 'Sist endret',
+    'member-list-column-last-month': 'Forrige måned',
+    'member-list-column-name': 'Navn',
+    'member-list-column-roles': 'Roller',
+    'member-list-column-this-month': 'Denne måneden',
+    'member-list-column-to-date': 'Til dags dato',
+    'member-list-column-type': 'Type',
     'member-list-edit': 'Rediger medlemsliste',
     'member-list-reject-all': 'Avvis alle forespørsler',
     'member-list-save': 'Lagre medlemsliste',
@@ -138,6 +147,14 @@ const phrases = {
 
     'project-list-add': 'Legg til nytt prosjekt',
     'project-list-cancel': 'Avbryt',
+    'project-list-column-date-range': 'Aktiv periode',
+    'project-list-column-last-modified': 'Sist endret',
+    'project-list-column-last-month': 'Forrige måned',
+    'project-list-column-name': 'Navn',
+    'project-list-column-repositories': 'Repositories',
+    'project-list-column-this-month': 'Denne måneden',
+    'project-list-column-to-date': 'Til dags dato',
+    'project-list-column-users': 'Brukere',
     'project-list-confirm-archive-$count': (count) => {
         let projects = cardinal(count, 'det valgte prosjektet', 'disse 2 prosjektene');
         return `Er du sikker på at du vil arkivere ${projects}?`
@@ -192,6 +209,14 @@ const phrases = {
     },
 
     'repo-list-cancel': 'Avbryt',
+    'repo-list-column-date-range': 'Aktiv periode',
+    'repo-list-column-issue-tracker': 'Feilrapporteringssystem',
+    'repo-list-column-last-modified': 'Sist endret',
+    'repo-list-column-last-month': 'Forrige måned',
+    'repo-list-column-server': 'Server',
+    'repo-list-column-this-month': 'Denne måneden',
+    'repo-list-column-title': 'Navn',
+    'repo-list-column-to-date': 'Til dags dato',
     'repo-list-confirm-remove-$count': (count) => {
         let repositories = cardinal(count, 'denne repoen', 'disse 2 repoene');
         return `Er du sikker på at du vil fjerne ${repositories} fra prosjektet?`;
@@ -230,6 +255,9 @@ const phrases = {
 
     'role-list-add': 'Legg til ny rolle',
     'role-list-cancel': 'Avbryt',
+    'role-list-column-last-modified': 'Sist endret',
+    'role-list-column-title': 'Navn',
+    'role-list-column-users': 'Brukere',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, 'denne rollen', 'disse 2 rollene');
         return `Er du sikker på at du vil slette ${roles}?`
@@ -281,6 +309,12 @@ const phrases = {
     'server-list-api-access-false': '',
     'server-list-api-access-true': 'Fikk',
     'server-list-cancel': 'Avbryt',
+    'server-list-column-api-access': 'API-tilgang﻿',
+    'server-list-column-last-modified': 'Sist endret',
+    'server-list-column-oauth': 'OAuth-autentisering',
+    'server-list-column-title': 'Navn',
+    'server-list-column-type': 'Type',
+    'server-list-column-users': 'Brukere',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'denne serveren', 'disse 2 serverene');
         return `Er du sikker på at du vil slette ${servers}?`
@@ -394,25 +428,6 @@ const phrases = {
     'sign-in-username': 'Brukernavn:',
 
     'sign-off-menu-sign-off': 'Logg ut',
-
-    'table-heading-api-access': 'API-tilgang﻿',
-    'table-heading-date-range': 'Aktiv periode',
-    'table-heading-email': 'E-post',
-    'table-heading-issue-tracker': 'Feilrapporteringssystem',
-    'table-heading-last-modified': 'Sist endret',
-    'table-heading-last-month': 'Forrige måned',
-    'table-heading-name': 'Navn',
-    'table-heading-oauth': 'OAuth-autentisering',
-    'table-heading-projects': 'Prosjekter',
-    'table-heading-repositories': 'Repositories',
-    'table-heading-roles': 'Roller',
-    'table-heading-server': 'Server',
-    'table-heading-this-month': 'Denne måneden',
-    'table-heading-title': 'Navn',
-    'table-heading-to-date': 'Til dags dato',
-    'table-heading-type': 'Type',
-    'table-heading-username': 'Brukernavn',
-    'table-heading-users': 'Brukere',
 
     'task-$seconds': (seconds) => {
         return (seconds === 1) ? `1 sekund` : `${seconds} sekunder`;
@@ -1021,6 +1036,13 @@ const phrases = {
     'user-list-add': 'Legg til ny bruker',
     'user-list-approve-all': 'Godkjenn alle forespørsler',
     'user-list-cancel': 'Avbryt',
+    'user-list-column-email': 'E-post',
+    'user-list-column-last-modified': 'Sist endret',
+    'user-list-column-name': 'Navn',
+    'user-list-column-projects': 'Prosjekter',
+    'user-list-column-roles': 'Roller',
+    'user-list-column-type': 'Type',
+    'user-list-column-username': 'Brukernavn',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'denne brukerkontoen', 'disse 2 brukerkontoene');
         return `Er du sikker på at du vil slette ${accounts}?`

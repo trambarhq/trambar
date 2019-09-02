@@ -204,7 +204,7 @@ function RestListPageSync(props) {
 
     function renderNameColumn(rest) {
         if (!rest) {
-            return <TH id="filename">{t('table-heading-name')}</TH>;
+            return <TH id="filename">{t('rest-list-column-identifier')}</TH>;
         } else {
             const name = RestUtils.getDisplayName(rest, env) || '-';
             let url, badge;
@@ -228,7 +228,7 @@ function RestListPageSync(props) {
             return null;
         }
         if (!rest) {
-            return <TH id="url">{t('table-heading-url')}</TH>;
+            return <TH id="url">{t('rest-list-column-url')}</TH>;
         } else {
             const url = rest.url;
             return (
@@ -244,7 +244,7 @@ function RestListPageSync(props) {
             return null;
         }
         if (!rest) {
-            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+            return <TH id="mtime">{t('rest-list-column-last-modified')}</TH>
         } else {
             const props = {
                 time: rest.mtime,

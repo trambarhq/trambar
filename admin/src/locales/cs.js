@@ -116,6 +116,15 @@ const phrases = {
     'member-list-add': 'Přidat nového uživatele',
     'member-list-approve-all': 'Schválit všechny požadavky',
     'member-list-cancel': 'Zrušit',
+    'member-list-column-date-range': 'Aktivní období',
+    'member-list-column-email': 'Emailová adresa',
+    'member-list-column-last-modified': 'Změněno',
+    'member-list-column-last-month': 'Minulý měsíc',
+    'member-list-column-name': 'Jméno',
+    'member-list-column-roles': 'Role',
+    'member-list-column-this-month': 'Tento měsíc',
+    'member-list-column-to-date': 'K datu',
+    'member-list-column-type': 'Typ',
     'member-list-edit': 'Upravit seznam členů',
     'member-list-reject-all': 'Odmítnout všechny požadavky',
     'member-list-save': 'Uložit seznam členů',
@@ -141,6 +150,14 @@ const phrases = {
 
     'project-list-add': 'Přidat nový projekt',
     'project-list-cancel': 'Zrušit',
+    'project-list-column-date-range': 'Aktivní období',
+    'project-list-column-last-modified': 'Změněno',
+    'project-list-column-last-month': 'Minulý měsíc',
+    'project-list-column-name': 'Jméno',
+    'project-list-column-repositories': 'Repozitáře',
+    'project-list-column-this-month': 'Tento měsíc',
+    'project-list-column-to-date': 'K datu',
+    'project-list-column-users': 'Uživatelé',
     'project-list-confirm-archive-$count': (count) => {
         let projects = cardinal(count, 'vybraný projekt', 'tyto 2 projekty', 'těchto 5 projektů');
         return `Opravdu chcete ${projects} archivovat?`;
@@ -195,6 +212,14 @@ const phrases = {
     },
 
     'repo-list-cancel': 'Zrušit',
+    'repo-list-column-date-range': 'Aktivní období',
+    'repo-list-column-issue-tracker': 'Bugtracker',
+    'repo-list-column-last-modified': 'Změněno',
+    'repo-list-column-last-month': 'Minulý měsíc',
+    'repo-list-column-server': 'Server',
+    'repo-list-column-this-month': 'Tento měsíc',
+    'repo-list-column-title': 'Název',
+    'repo-list-column-to-date': 'K datu',
     'repo-list-confirm-remove-$count': (count) => {
         let repositories = cardinal(count, 'tento repozitář', 'tyto 2 repozitáře', 'těchto 5 repozitářů');
         return `Opravdu chcete ${repositories} odstranit z projektu?`;
@@ -233,6 +258,9 @@ const phrases = {
 
     'role-list-add': 'Přidat novou roli',
     'role-list-cancel': 'Zrušit',
+    'role-list-column-last-modified': 'Změněno',
+    'role-list-column-title': 'Název',
+    'role-list-column-users': 'Uživatelé',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, 'tuto roli', 'tyto 2 role', 'těchto 5 rolí');
         return `Opravdu chcete ${roles} deaktivovat?`;
@@ -284,6 +312,12 @@ const phrases = {
     'server-list-api-access-false': '',
     'server-list-api-access-true': 'Získaný',
     'server-list-cancel': 'Zrušit',
+    'server-list-column-api-access': 'Přístup k API',
+    'server-list-column-last-modified': 'Změněno',
+    'server-list-column-oauth': 'Ověření OAuth',
+    'server-list-column-title': 'Název',
+    'server-list-column-type': 'Typ',
+    'server-list-column-users': 'Uživatelé',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'tento server', 'tyto 2 servery', 'těchto 5 serverů');
         return `Opravdu chcete ${servers} deaktivovat?`;
@@ -397,25 +431,6 @@ const phrases = {
     'sign-in-username': 'Uživatelské jméno:',
 
     'sign-off-menu-sign-off': 'Odhlásit se',
-
-    'table-heading-api-access': 'Přístup k API',
-    'table-heading-date-range': 'Aktivní období',
-    'table-heading-email': 'Emailová adresa',
-    'table-heading-issue-tracker': 'Bugtracker',
-    'table-heading-last-modified': 'Změněno',
-    'table-heading-last-month': 'Minulý měsíc',
-    'table-heading-name': 'Jméno',
-    'table-heading-oauth': 'Ověření OAuth',
-    'table-heading-projects': 'Projekty',
-    'table-heading-repositories': 'Repozitáře',
-    'table-heading-roles': 'Role',
-    'table-heading-server': 'Server',
-    'table-heading-this-month': 'Tento měsíc',
-    'table-heading-title': 'Název',
-    'table-heading-to-date': 'K datu',
-    'table-heading-type': 'Typ',
-    'table-heading-username': 'Uživatelské jméno',
-    'table-heading-users': 'Uživatelé',
 
     'task-$seconds': (count) => {
         return cardinal(count, '1 sekunda', '2 sekundy', '5 sekund');
@@ -1024,6 +1039,13 @@ const phrases = {
     'user-list-add': 'Přidat nového uživatele',
     'user-list-approve-all': 'Schválit všechny požadavky',
     'user-list-cancel': 'Zrušit',
+    'user-list-column-email': 'Emailová adresa',
+    'user-list-column-last-modified': 'Změněno',
+    'user-list-column-name': 'Jméno',
+    'user-list-column-projects': 'Projekty',
+    'user-list-column-roles': 'Role',
+    'user-list-column-type': 'Typ',
+    'user-list-column-username': 'Uživatelské jméno',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'tohoto uživatele', 'tyto 2 uživatele', 'těchto 5 uživatelů');
         return `Opravdu chcete ${accounts} deaktivovat?`

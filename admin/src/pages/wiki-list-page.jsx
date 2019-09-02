@@ -189,7 +189,7 @@ function WikiListPageSync(props) {
 
     function renderTitleColumn(wiki) {
         if (!wiki) {
-            return <TH id="title">{t('table-heading-title')}</TH>;
+            return <TH id="title">{t('wiki-list-column-title')}</TH>;
         } else {
             const name = _.get(wiki, 'details.title', '');
             let url, badge;
@@ -217,7 +217,7 @@ function WikiListPageSync(props) {
             return null;
         }
         if (!wiki) {
-            return <TH id="repo">{t('table-heading-repo')}</TH>;
+            return <TH id="repo">{t('wiki-list-column-repo')}</TH>;
         } else {
             const repo = findRepo(repos, wiki);
             let contents;
@@ -241,7 +241,7 @@ function WikiListPageSync(props) {
             return null;
         }
         if (!wiki) {
-            return <TH id="public">{t('table-heading-public')}</TH>;
+            return <TH id="public">{t('wiki-list-column-public')}</TH>;
         } else {
             let state;
             if (wiki.public) {
@@ -262,7 +262,7 @@ function WikiListPageSync(props) {
             return null;
         }
         if (!wiki) {
-            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+            return <TH id="mtime">{t('wiki-list-column-last-modified')}</TH>
         } else {
             const props = {
                 time: wiki.mtime,

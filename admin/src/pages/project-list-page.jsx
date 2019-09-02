@@ -221,7 +221,7 @@ function ProjectListPageSync(props) {
 
     function renderTitleColumn(project) {
         if (!project) {
-            return <TH id="title">{t('table-heading-name')}</TH>;
+            return <TH id="title">{t('project-list-column-name')}</TH>;
         } else {
             let title = p(project.details.title) || project.name;
             let url, badge;
@@ -251,7 +251,7 @@ function ProjectListPageSync(props) {
             return null;
         }
         if (!project) {
-            return <TH id="users">{t('table-heading-users')}</TH>;
+            return <TH id="users">{t('project-list-column-users')}</TH>;
         } else {
             const props = {
                 users: findUsers(users, project),
@@ -269,7 +269,7 @@ function ProjectListPageSync(props) {
             return null;
         }
         if (!project) {
-            return <TH id="repos">{t('table-heading-repositories')}</TH>
+            return <TH id="repos">{t('project-list-column-repositories')}</TH>
         } else {
             const props = {
                 repos: findRepos(repos, project),
@@ -287,7 +287,7 @@ function ProjectListPageSync(props) {
             return null;
         }
         if (!project) {
-            return <TH id="range">{t('table-heading-date-range')}</TH>
+            return <TH id="range">{t('project-list-column-date-range')}</TH>
         } else {
             if (!project.deleted) {
                 const range = _.get(statistics, [ project.id, 'range' ]);
@@ -305,7 +305,7 @@ function ProjectListPageSync(props) {
             return null;
         }
         if (!project) {
-            return <TH id="last_month">{t('table-heading-last-month')}</TH>
+            return <TH id="last_month">{t('project-list-column-last-month')}</TH>
         } else {
             const props = {
                 statistics: _.get(statistics, [ project.id, 'last_month' ]),
@@ -321,7 +321,7 @@ function ProjectListPageSync(props) {
             return null;
         }
         if (!project) {
-            return <TH id="this_month">{t('table-heading-this-month')}</TH>
+            return <TH id="this_month">{t('project-list-column-this-month')}</TH>
         } else {
             const props = {
                 statistics: _.get(statistics, [ project.id, 'this_month' ]),
@@ -337,7 +337,7 @@ function ProjectListPageSync(props) {
             return null;
         }
         if (!project) {
-            return <TH id="to_date">{t('table-heading-to-date')}</TH>
+            return <TH id="to_date">{t('project-list-column-to-date')}</TH>
         } else {
             const props = {
                 statistics: _.get(statistics, [ project.id, 'to_date' ]),
@@ -353,7 +353,7 @@ function ProjectListPageSync(props) {
             return null;
         }
         if (!project) {
-            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+            return <TH id="mtime">{t('project-list-column-last-modified')}</TH>
         } else {
             const props = {
                 time: project.mtime,

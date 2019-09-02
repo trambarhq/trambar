@@ -116,6 +116,15 @@ const phrases = {
     'member-list-add': 'Добавить пользователя',
     'member-list-approve-all': 'Утвердить все запросы',
     'member-list-cancel': 'Отмена',
+    'member-list-column-date-range': 'Активный период',
+    'member-list-column-email': 'Адрес эл. почты',
+    'member-list-column-last-modified': 'Изменено',
+    'member-list-column-last-month': 'Прошлый месяц',
+    'member-list-column-name': 'Имя и фамилия',
+    'member-list-column-roles': 'Роли',
+    'member-list-column-this-month': 'Этот месяц',
+    'member-list-column-to-date': 'До сих пор',
+    'member-list-column-type': 'Тип',
     'member-list-edit': 'Редактировать список членов',
     'member-list-reject-all': 'Отклонить все запросы',
     'member-list-save': 'Сохранить список членов',
@@ -141,6 +150,14 @@ const phrases = {
 
     'project-list-add': 'Добавить проект',
     'project-list-cancel': 'Отмена',
+    'project-list-column-date-range': 'Активный период',
+    'project-list-column-last-modified': 'Изменено',
+    'project-list-column-last-month': 'Прошлый месяц',
+    'project-list-column-name': 'Имя и фамилия',
+    'project-list-column-repositories': 'Репозитория',
+    'project-list-column-this-month': 'Этот месяц',
+    'project-list-column-to-date': 'До сих пор',
+    'project-list-column-users': 'Пользователи',
     'project-list-confirm-archive-$count': (count) => {
         let projects = cardinal(count, 'выбранный проект', 'эти 2 проекта', 'эти 5 проектов');
         return `Вы действительно хотите архивировать ${projects}?`;
@@ -195,6 +212,14 @@ const phrases = {
     },
 
     'repo-list-cancel': 'Отмена',
+    'repo-list-column-date-range': 'Активный период',
+    'repo-list-column-issue-tracker': 'Отслеживание ошибок',
+    'repo-list-column-last-modified': 'Изменено',
+    'repo-list-column-last-month': 'Прошлый месяц',
+    'repo-list-column-server': 'Сервер',
+    'repo-list-column-this-month': 'Этот месяц',
+    'repo-list-column-title': 'Название',
+    'repo-list-column-to-date': 'До сих пор',
     'repo-list-confirm-remove-$count': (count) => {
         let repositories = cardinal(count, 'выбранный репозиторий', 'эти 2 репозитория', 'эти 5 репозиториев');
         return `Вы действительно хотите удалить ${repositories} из проекта?`;
@@ -233,6 +258,9 @@ const phrases = {
 
     'role-list-add': 'Добавить роль',
     'role-list-cancel': 'Отмена',
+    'role-list-column-last-modified': 'Изменено',
+    'role-list-column-title': 'Название',
+    'role-list-column-users': 'Пользователи',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, 'эту роль', 'эти 2 роли', 'эти 5 ролей');
         return `Вы действительно хотите отключить ${roles}?`;
@@ -284,6 +312,12 @@ const phrases = {
     'server-list-api-access-false': '',
     'server-list-api-access-true': 'Получен',
     'server-list-cancel': 'Отмена',
+    'server-list-column-api-access': 'Доступ к API',
+    'server-list-column-last-modified': 'Изменено',
+    'server-list-column-oauth': 'Аутентификация OAuth',
+    'server-list-column-title': 'Название',
+    'server-list-column-type': 'Тип',
+    'server-list-column-users': 'Пользователи',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'выбранный сервер', 'эти 2 сервера', 'эти 5 серверов');
         return `Вы действительно хотите отключить ${servers}?`
@@ -397,25 +431,6 @@ const phrases = {
     'sign-in-username': 'Имя пользователя:',
 
     'sign-off-menu-sign-off': 'Выйти',
-
-    'table-heading-api-access': 'Доступ к API',
-    'table-heading-date-range': 'Активный период',
-    'table-heading-email': 'Адрес эл. почты',
-    'table-heading-issue-tracker': 'Отслеживание ошибок',
-    'table-heading-last-modified': 'Изменено',
-    'table-heading-last-month': 'Прошлый месяц',
-    'table-heading-name': 'Имя и фамилия',
-    'table-heading-oauth': 'Аутентификация OAuth',
-    'table-heading-projects': 'Проекты',
-    'table-heading-repositories': 'Репозитория',
-    'table-heading-roles': 'Роли',
-    'table-heading-server': 'Сервер',
-    'table-heading-this-month': 'Этот месяц',
-    'table-heading-title': 'Название',
-    'table-heading-to-date': 'До сих пор',
-    'table-heading-type': 'Тип',
-    'table-heading-username': 'Имя пользователя',
-    'table-heading-users': 'Пользователи',
 
     'task-$seconds': (seconds) => {
         return cardinal(seconds, '1 секунда', '2 секунды', '5 секунд');
@@ -1024,6 +1039,13 @@ const phrases = {
     'user-list-add': 'Добавить пользователя',
     'user-list-approve-all': 'Утвердить все запросы',
     'user-list-cancel': 'Отмена',
+    'user-list-column-email': 'Адрес эл. почты',
+    'user-list-column-last-modified': 'Изменено',
+    'user-list-column-name': 'Имя и фамилия',
+    'user-list-column-projects': 'Проекты',
+    'user-list-column-roles': 'Роли',
+    'user-list-column-type': 'Тип',
+    'user-list-column-username': 'Имя пользователя',
     'user-list-confirm-disable-$count': (count) => {
         let users = cardinal(count, 'выбранного пользователя', 'этих 2 пользователей');
         return `Вы действительно хотите отключить ${users}?`

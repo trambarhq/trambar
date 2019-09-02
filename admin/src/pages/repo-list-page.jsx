@@ -200,7 +200,7 @@ function RepoListPageSync(props) {
 
     function renderTitleColumn(repo) {
         if (!repo) {
-            return <TH id="title">{t('table-heading-title')}</TH>;
+            return <TH id="title">{t('repo-list-column-title')}</TH>;
         } else {
             const title = p(repo.details.title) || repo.name;
             let url, badge;
@@ -225,7 +225,7 @@ function RepoListPageSync(props) {
 
     function renderServerColumn(repo) {
         if (!repo) {
-            return <TH id="server">{t('table-heading-server')}</TH>
+            return <TH id="server">{t('repo-list-column-server')}</TH>
         } else {
             const server = findServer(servers, repo);
             let contents;
@@ -254,7 +254,7 @@ function RepoListPageSync(props) {
             return null;
         }
         if (!repo) {
-            return <TH id="issue_tracker">{t('table-heading-issue-tracker')}</TH>
+            return <TH id="issue_tracker">{t('repo-list-column-issue-tracker')}</TH>
         } else {
             const enabled = !!repo.details.issues_enabled;
             return <td>{t(`repo-list-issue-tracker-enabled-${enabled}`)}</td>;
@@ -266,7 +266,7 @@ function RepoListPageSync(props) {
             return null;
         }
         if (!repo) {
-            return <TH id="range">{t('table-heading-date-range')}</TH>
+            return <TH id="range">{t('repo-list-column-date-range')}</TH>
         } else {
             const range = _.get(statistics, [ repo.id, 'range' ]);
             const start = f(_.get(range, 'start'));
@@ -280,7 +280,7 @@ function RepoListPageSync(props) {
             return null;
         }
         if (!repo) {
-            return <TH id="last_month">{t('table-heading-last-month')}</TH>
+            return <TH id="last_month">{t('repo-list-column-last-month')}</TH>
         } else {
             const props = {
                 statistics: _.get(statistics, [ repo.id, 'last_month' ]),
@@ -296,7 +296,7 @@ function RepoListPageSync(props) {
             return null;
         }
         if (!repo) {
-            return <TH id="this_month">{t('table-heading-this-month')}</TH>
+            return <TH id="this_month">{t('repo-list-column-this-month')}</TH>
         } else {
             const props = {
                 statistics: _.get(statistics, [ repo.id, 'this_month' ]),
@@ -312,7 +312,7 @@ function RepoListPageSync(props) {
             return null;
         }
         if (!repo) {
-            return <TH id="to_date">{t('table-heading-to-date')}</TH>
+            return <TH id="to_date">{t('repo-list-column-to-date')}</TH>
         } else {
             const props = {
                 statistics: _.get(statistics, [ repo.id, 'to_date' ]),
@@ -327,7 +327,7 @@ function RepoListPageSync(props) {
             return null;
         }
         if (!repo) {
-            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+            return <TH id="mtime">{t('repo-list-column-last-modified')}</TH>
         } else {
             const props = {
                 time: repo.mtime,

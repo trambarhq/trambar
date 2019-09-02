@@ -115,6 +115,15 @@ const phrases = {
     'member-list-add': 'Neuen Benutzer hinzufügen',
     'member-list-approve-all': 'Alle Anfragen genehmigen',
     'member-list-cancel': 'Abbrechen',
+    'member-list-column-date-range': 'Aktive Periode',
+    'member-list-column-email': 'E-Mail-Addresse',
+    'member-list-column-last-modified': 'Bearbeitet',
+    'member-list-column-last-month': 'Letzter Monat',
+    'member-list-column-name': 'Name',
+    'member-list-column-roles': 'Rollen',
+    'member-list-column-this-month': 'Dieser Monat',
+    'member-list-column-to-date': 'Bis heute',
+    'member-list-column-type': 'Typ',
     'member-list-edit': 'Mitgliederliste bearbeiten',
     'member-list-reject-all': 'Alle Anfragen ablehnen',
     'member-list-save': 'Mitgliederliste speichern',
@@ -140,6 +149,14 @@ const phrases = {
 
     'project-list-add': 'Neues Projekt hinzufügen',
     'project-list-cancel': 'Abbrechen',
+    'project-list-column-date-range': 'Aktive Periode',
+    'project-list-column-last-modified': 'Bearbeitet',
+    'project-list-column-last-month': 'Letzter Monat',
+    'project-list-column-name': 'Name',
+    'project-list-column-repositories': 'Repositorys',
+    'project-list-column-this-month': 'Dieser Monat',
+    'project-list-column-to-date': 'Bis heute',
+    'project-list-column-users': 'Benutzer',
     'project-list-confirm-archive-$count': (count) => {
         let projects = cardinal(count, 'das ausgewählte Projekt', 'diese 2 Projekte');
         return `Möchten Sie ${project} wirklich archivieren?`;
@@ -194,6 +211,14 @@ const phrases = {
     },
 
     'repo-list-cancel': 'Abbrechen',
+    'repo-list-column-date-range': 'Aktive Periode',
+    'repo-list-column-issue-tracker': 'Bugtracker',
+    'repo-list-column-last-modified': 'Bearbeitet',
+    'repo-list-column-last-month': 'Letzter Monat',
+    'repo-list-column-server': 'Server',
+    'repo-list-column-this-month': 'Dieser Monat',
+    'repo-list-column-title': 'Name',
+    'repo-list-column-to-date': 'Bis heute',
     'repo-list-confirm-remove-$count': (count) => {
         let repositories = cardinal(count, 'dieses Repository', 'diese 2 Repositorys');
         return `Möchten Sie ${repositories} wirklich aus dem Projekt entfernen?`;
@@ -232,6 +257,9 @@ const phrases = {
 
     'role-list-add': 'Neue Rolle hinzufügen',
     'role-list-cancel': 'Abbrechen',
+    'role-list-column-last-modified': 'Bearbeitet',
+    'role-list-column-title': 'Name',
+    'role-list-column-users': 'Benutzer',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, 'diese Rolle', 'diese 2 Rollen');
         return `Möchten Sie ${roles} wirklich deaktivieren?`
@@ -283,6 +311,12 @@ const phrases = {
     'server-list-api-access-false': '',
     'server-list-api-access-true': 'Erworben',
     'server-list-cancel': 'Abbrechen',
+    'server-list-column-api-access': 'API-Zugriff',
+    'server-list-column-last-modified': 'Bearbeitet',
+    'server-list-column-oauth': 'OAuth-Authentifizierung',
+    'server-list-column-title': 'Name',
+    'server-list-column-type': 'Typ',
+    'server-list-column-users': 'Benutzer',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'diesen Server', 'diese 2 Server');
         return `Möchten Sie ${servers} wirklich deaktivieren?`
@@ -396,25 +430,6 @@ const phrases = {
     'sign-in-username': 'Benutzername:',
 
     'sign-off-menu-sign-off': 'Abmelden',
-
-    'table-heading-api-access': 'API-Zugriff',
-    'table-heading-date-range': 'Aktive Periode',
-    'table-heading-email': 'E-Mail-Addresse',
-    'table-heading-issue-tracker': 'Bugtracker',
-    'table-heading-last-modified': 'Bearbeitet',
-    'table-heading-last-month': 'Letzter Monat',
-    'table-heading-name': 'Name',
-    'table-heading-oauth': 'OAuth-Authentifizierung',
-    'table-heading-projects': 'Projekte',
-    'table-heading-repositories': 'Repositorys',
-    'table-heading-roles': 'Rollen',
-    'table-heading-server': 'Server',
-    'table-heading-this-month': 'Dieser Monat',
-    'table-heading-title': 'Name',
-    'table-heading-to-date': 'Bis heute',
-    'table-heading-type': 'Typ',
-    'table-heading-username': 'Benutzername',
-    'table-heading-users': 'Benutzer',
 
     'task-$seconds': (seconds) => {
         return cardinal(count, '1 Sekunde', '2 Sekunden');
@@ -1035,6 +1050,13 @@ const phrases = {
     'user-list-add': 'Neuen Benutzer hinzufügen',
     'user-list-approve-all': 'Alle Anfragen genehmigen',
     'user-list-cancel': 'Abbrechen',
+    'user-list-column-email': 'E-Mail-Addresse',
+    'user-list-column-last-modified': 'Bearbeitet',
+    'user-list-column-name': 'Name',
+    'user-list-column-projects': 'Projekte',
+    'user-list-column-roles': 'Rollen',
+    'user-list-column-type': 'Typ',
+    'user-list-column-username': 'Benutzername',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'diesen Benutzer', 'diese 2 Benutzer');
         return `Möchten Sie ${accounts} wirklich deaktivieren?`

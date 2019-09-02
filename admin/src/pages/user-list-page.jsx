@@ -219,7 +219,7 @@ function UserListPageSync(props) {
 
     function renderNameColumn(user) {
         if (!user) {
-            return <TH id="name">{t('table-heading-name')}</TH>;
+            return <TH id="name">{t('user-list-column-name')}</TH>;
         } else {
             const name = UserUtils.getDisplayName(user, env);
             let url, badge;
@@ -248,7 +248,7 @@ function UserListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="username">{t('table-heading-username')}</TH>;
+            return <TH id="username">{t('user-list-column-username')}</TH>;
         } else {
             return (
                 <td>{user.username}</td>
@@ -261,7 +261,7 @@ function UserListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="type">{t('table-heading-type')}</TH>;
+            return <TH id="type">{t('user-list-column-type')}</TH>;
         } else {
             return <td>{t(`user-list-type-${user.type}`)}</td>;
         }
@@ -272,7 +272,7 @@ function UserListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="projects">{t('table-heading-projects')}</TH>;
+            return <TH id="projects">{t('user-list-column-projects')}</TH>;
         } else {
             const props = {
                 projects: findProjects(projects, user),
@@ -289,7 +289,7 @@ function UserListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="roles">{t('table-heading-roles')}</TH>;
+            return <TH id="roles">{t('user-list-column-roles')}</TH>;
         } else {
             const props = {
                 roles: findRoles(roles, user),
@@ -306,7 +306,7 @@ function UserListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="email">{t('table-heading-email')}</TH>;
+            return <TH id="email">{t('user-list-column-email')}</TH>;
         } else {
             let contents = '-';
             const email = user.details.email;
@@ -326,7 +326,7 @@ function UserListPageSync(props) {
             return null;
         }
         if (!user) {
-            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+            return <TH id="mtime">{t('user-list-column-last-modified')}</TH>
         } else {
             const props = {
                 time: user.mtime,
