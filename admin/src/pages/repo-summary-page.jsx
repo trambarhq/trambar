@@ -13,6 +13,7 @@ import { PushButton } from '../widgets/push-button.jsx';
 import { ComboButton } from '../widgets/combo-button.jsx';
 import { InstructionBlock } from '../widgets/instruction-block.jsx';
 import { TextField } from '../widgets/text-field.jsx';
+import { URLLink } from '../widgets/url-link.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
 import { ActivityChart } from '../widgets/activity-chart.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
@@ -189,19 +190,8 @@ function RepoSummaryPageSync(props) {
             <TextField {...props}>
                 {t('repo-summary-gitlab-name')}
                 {' '}
-                {renderRepoLink()}
+                <URLLink url={baseURL} />
             </TextField>
-        );
-    }
-
-    function renderRepoLink() {
-        if (!baseURL) {
-            return;
-        }
-        return (
-            <a className="link" href={baseURL} target="_blank">
-                <i className="fa fa-external-link" />
-            </a>
         );
     }
 

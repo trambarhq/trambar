@@ -268,6 +268,7 @@ const phrases = {
     'rest-list-cancel': 'Cancel',
     'rest-list-column-last-modified': 'Last modified',
     'rest-list-column-identifier': 'Identifier',
+    'rest-list-column-type': 'Type',
     'rest-list-column-url': 'URL',
     'rest-list-confirm-disable-$count': (count) => {
         let rests = cardinal(count, 'this source', 'these 2 sources');
@@ -1256,7 +1257,7 @@ const phrases = {
     'wiki-list-column-last-modified': 'Last modified',
     'wiki-list-column-public': 'Public',
     'wiki-list-column-repo': 'Repository',
-    'wiki-list-column-title': 'Name',
+    'wiki-list-column-title': 'Title',
     'wiki-list-confirm-select-$count': (count) => {
         let wikis = cardinal(count, 'this wiki', 'these 2 wikis');
         return `Are you sure you want to make ${wikis} public?`

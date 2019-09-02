@@ -161,8 +161,10 @@ class Spreadsheet extends Data {
             const row = rows[index];
             object.disabled = row.disabled;
             object.name = row.name;
-            object.etag = row.etag;
-            object.url = row.url;
+            if (credentials.unrestricted || process.env.ADMIN_GUEST_MODE) {
+                object.etag = row.etag;
+                object.url = row.url;
+            }
         }
         return objects;
     }

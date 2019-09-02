@@ -171,11 +171,27 @@ class Wiki extends ExternalData {
         for (let [ index, object ] of objects.entries()) {
             const row = rows[index];
             object.language_codes = row.language_codes;
-            object.slug = row.slug;
             object.public = row.public;
             object.chosen = row.chosen;
+            if (object.public || credentials.unrestricted || process.env.ADMIN_GUEST_MODE) {
+                object.slug = row.slug;
+            }
         }
         return objects;
+    }
+
+    /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} spreadsheetReceived
+     * @param  {Object} spreadsheetBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission(spreadsheetReceived, spreadsheetBefore, credentials) {
+        if (credentials.unrestricted) {
+            return;
+        }
+        throw new HTTPError(403);
     }
 }
 

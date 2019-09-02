@@ -138,8 +138,27 @@ class Rest extends Data {
             const row = rows[index];
             object.name = row.name;
             object.type = row.type;
+            object.disabled = row.disabled;
+            if (credentials.unrestricted || process.env.ADMIN_GUEST_MODE) {
+                object.url = row.url;
+                object.settings = row.settings;
+            }
         }
         return objects;
+    }
+
+    /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} serverReceived
+     * @param  {Object} serverBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission(serverReceived, serverBefore, credentials) {
+        if (credentials.unrestricted) {
+            return;
+        }
+        throw new HTTPError(403);
     }
 }
 

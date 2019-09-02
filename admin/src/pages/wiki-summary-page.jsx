@@ -14,6 +14,7 @@ import { ComboButton } from '../widgets/combo-button.jsx';
 import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 import { InstructionBlock } from '../widgets/instruction-block.jsx';
 import { TextField } from '../widgets/text-field.jsx';
+import { URLLink } from '../widgets/url-link.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
 import { OptionList } from '../widgets/option-list.jsx';
 import { MarkdownPreview } from '../widgets/markdown-preview.jsx';
@@ -143,9 +144,11 @@ function WikiSummaryPageSync(props) {
     }
 
     function renderSlug() {
+        const slug = _.get(wiki, 'slug', '');
+        const url = (baseURL && slug) ? `${baseURL}/wikis/${slug}` : '';
         const props = {
             id: 'title',
-            value: _.get(wiki, 'slug', ''),
+            value: slug,
             readOnly: true,
             env,
         };
@@ -153,21 +156,8 @@ function WikiSummaryPageSync(props) {
             <TextField {...props}>
                 {t('wiki-summary-slug')}
                 {' '}
-                {renderWikiLink()}
+                <URLLink url={url} />
             </TextField>
-        );
-    }
-
-    function renderWikiLink() {
-        const slug = _.get(wiki, 'slug');
-        if (!baseURL || !slug) {
-            return;
-        }
-        const url = `${baseURL}/wikis/${slug}`;
-        return (
-            <a className="link" href={url} target="_blank">
-                <i className="fa fa-external-link" />
-            </a>
         );
     }
 
@@ -182,19 +172,8 @@ function WikiSummaryPageSync(props) {
             <TextField {...props}>
                 {t('wiki-summary-repo')}
                 {' '}
-                {renderRepoLink()}
+                <URLLink url={baseURL} />
             </TextField>
-        );
-    }
-
-    function renderRepoLink() {
-        if (!baseURL) {
-            return;
-        }
-        return (
-            <a className="link" href={baseURL} target="_blank">
-                <i className="fa fa-external-link" />
-            </a>
         );
     }
 

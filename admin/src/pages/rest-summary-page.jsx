@@ -16,6 +16,7 @@ import { ComboButton } from '../widgets/combo-button.jsx';
 import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 import { InstructionBlock } from '../widgets/instruction-block.jsx';
 import { TextField } from '../widgets/text-field.jsx';
+import { URLLink } from '../widgets/url-link.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
 import { OptionList } from '../widgets/option-list.jsx';
 import { ImagePreviewDialogBox } from '../dialogs/image-preview-dialog-box.jsx';
@@ -218,6 +219,7 @@ function RestSummaryPageSync(props) {
     }
 
     function renderURLInput() {
+        const url = draft.get('url', '');
         const props = {
             id: 'oauth_callback',
             value: draft.get('url', ''),
@@ -229,20 +231,8 @@ function RestSummaryPageSync(props) {
             <TextField {...props}>
                 {t('rest-summary-url')}
                 {' '}
-                {renderURLLink()}
+                <URLLink url={url} />
             </TextField>
-        );
-    }
-
-    function renderURLLink() {
-        const url = draft.get('url', '');
-        if (!url) {
-            return;
-        }
-        return (
-            <a className="link" href={url} target="_blank">
-                <i className="fa fa-external-link" />
-            </a>
         );
     }
 
