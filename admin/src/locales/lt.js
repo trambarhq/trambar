@@ -1126,6 +1126,47 @@ const phrases = {
     'website-summary-title': 'Interneto svetainė',
 
     'welcome': 'Sveiki!',
+
+    'wiki-list-cancel': 'Atšaukti',
+    'wiki-list-column-last-modified': 'Pakeitimo data',
+    'wiki-list-column-public': 'Viešas',
+    'wiki-list-column-repo': 'Saugykla',
+    'wiki-list-column-title': 'Pavadinimas',
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, 'šį puslapį', 'šiuos 2 puslapius');
+        return `Ar tikrai norite ${pages} paviešinti?`
+    },
+    'wiki-list-confirm-deselect-$count': (count) => {
+        let pages = cardinal(count, 'šio puslapio', 'šių 2 puslapių');
+        return `Ar tikrai norite panaikinti ${pages} žymėjimą?`
+    },
+    'wiki-list-edit': 'Redaguoti puslapių sąrašą',
+    'wiki-list-public-always': 'visada',
+    'wiki-list-public-no': 'ne',
+    'wiki-list-public-referenced': 'nurodytas',
+    'wiki-list-save': 'Išsaugoti puslapių sąrašą',
+    'wiki-list-title': 'GitLab wiki',
+
+    'wiki-summary-$title': (title) => {
+        let text = 'GitLab wiki';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'wiki-summary-cancel': 'Atšaukti',
+    'wiki-summary-confirm-select': 'Ar tikrai norite šį puslapį paviešinti?',
+    'wiki-summary-confirm-deselect': 'Ar tikrai norite panaikinti šio puslapio žymėjimą?',
+    'wiki-summary-edit': 'Redaguoti puslapį',
+    'wiki-summary-page-contents': 'Turinys',
+    'wiki-summary-public': 'Viešas',
+    'wiki-summary-public-always': 'Visada',
+    'wiki-summary-public-no': 'Ne',
+    'wiki-summary-public-referenced': 'Taip (nurodytas kitame viešame puslapyje)',
+    'wiki-summary-repo': 'Saugyklos identifikatorius',
+    'wiki-summary-return': 'Grįžti į puslapių sąrašą',
+    'wiki-summary-slug': 'Slug',
+    'wiki-summary-title': 'Pavadinimas',
 };
 
 export {

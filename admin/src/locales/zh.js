@@ -1174,6 +1174,47 @@ const traditionalPhrases = {
     'website-summary-title': '網站',
 
     'welcome': '歡迎!',
+
+    'wiki-list-cancel': '取消',
+    'wiki-list-column-last-modified': '上次修改時間',
+    'wiki-list-column-public': '公開',
+    'wiki-list-column-repo': '數據庫',
+    'wiki-list-column-title': '標題',
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, '此頁面', '這三頁');
+        return `你確定要將${pages}公開嗎？`
+    },
+    'wiki-list-confirm-deselect-$count': (count) => {
+        let pages = cardinal(count, '此頁面', '這三頁');
+        return `你確定要取消選擇${pages}嗎？`
+    },
+    'wiki-list-edit': '編輯頁面列表',
+    'wiki-list-public-always': '總是',
+    'wiki-list-public-no': '不是',
+    'wiki-list-public-referenced': '鏈接',
+    'wiki-list-save': '保存頁面列表',
+    'wiki-list-title': 'GitLab維基',
+
+    'wiki-summary-$title': (title) => {
+        let text = 'GitLab維基';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'wiki-summary-cancel': '取消',
+    'wiki-summary-confirm-select': '你確定要將此頁面公開嗎？',
+    'wiki-summary-confirm-deselect': '你確定要取消選擇此頁面嗎？',
+    'wiki-summary-edit': '編輯頁面',
+    'wiki-summary-page-contents': '內容',
+    'wiki-summary-public': '公開',
+    'wiki-summary-public-always': '總是',
+    'wiki-summary-public-no': '不是',
+    'wiki-summary-public-referenced': '是（由另一個公共頁面鏈接）',
+    'wiki-summary-repo': '存儲庫標識符',
+    'wiki-summary-return': '返回頁面列表',
+    'wiki-summary-slug': 'Slug',
+    'wiki-summary-title': '標題',
 };
 
 const simplifiedPhrases = {
@@ -2301,6 +2342,47 @@ const simplifiedPhrases = {
     'website-summary-title': '网站',
 
     'welcome': '欢迎!',
+
+    'wiki-list-cancel': '取消',
+    'wiki-list-column-last-modified': '上次修改时间',
+    'wiki-list-column-public': '公开',
+    'wiki-list-column-repo': '数据库',
+    'wiki-list-column-title': '标题',
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, '此页面', '这三页');
+        return `你确定要将${pages}公开吗？`
+    },
+    'wiki-list-confirm-deselect-$count': (count) => {
+        let pages = cardinal(count, '此页面', '这三页');
+        return `你确定要取消选择${pages}吗？`
+    },
+    'wiki-list-edit': '编辑页面列表',
+    'wiki-list-public-always': '总是',
+    'wiki-list-public-no': '不是',
+    'wiki-list-public-referenced': '链接',
+    'wiki-list-save': '保存页面列表',
+    'wiki-list-title': 'GitLab维基',
+
+    'wiki-summary-$title': (title) => {
+        let text = 'GitLab维基';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'wiki-summary-cancel': '取消',
+    'wiki-summary-confirm-select': '你确定要将此页面公开吗？',
+    'wiki-summary-confirm-deselect': '你確定要取消選擇此頁面嗎？',
+    'wiki-summary-edit': '编辑页面',
+    'wiki-summary-page-contents': '内容',
+    'wiki-summary-public': '公开',
+    'wiki-summary-public-always': '总是',
+    'wiki-summary-public-no': '不是',
+    'wiki-summary-public-referenced': '是（由另一个公共页面链接）',
+    'wiki-summary-repo': '存储库标识符',
+    'wiki-summary-return': '返回页面列表',
+    'wiki-summary-slug': 'Slug',
+    'wiki-summary-title': '标题',
 };
 
 export {

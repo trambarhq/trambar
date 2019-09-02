@@ -150,7 +150,7 @@ const phrases = {
     'project-list-column-date-range': 'Aktiv periode',
     'project-list-column-last-modified': 'Sist endret',
     'project-list-column-last-month': 'Forrige måned',
-    'project-list-column-repositories': 'Repositories',
+    'project-list-column-repositories': 'Repoer',
     'project-list-column-this-month': 'Denne måneden',
     'project-list-column-title': 'Navn',
     'project-list-column-to-date': 'Til dags dato',
@@ -1139,6 +1139,48 @@ const phrases = {
     'website-summary-title': 'Nettsted',
 
     'welcome': 'Velkommen!',
+
+    'wiki-list-cancel': 'Avbryt',
+    'wiki-list-column-last-modified': 'Sist endret',
+    'wiki-list-column-public': 'Offentlig',
+    'wiki-list-column-repo': 'Repo',
+    'wiki-list-column-title': 'Tittel',
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, 'denne siden', 'disse 2 sidene');
+        let e = (count === 1) ? '' : 'e';
+        return `Er du sikker på at du vil gjøre ${pages} offentlig${e}?`
+    },
+    'wiki-list-confirm-deselect-$count': (count) => {
+        let pages = cardinal(count, 'denne siden', 'disse 2 sidene');
+        return `Er du sikker på at du vil fjerne markeringen av ${page}?`
+    },
+    'wiki-list-edit': 'Rediger sideliste',
+    'wiki-list-public-always': 'alltid',
+    'wiki-list-public-no': 'nei',
+    'wiki-list-public-referenced': 'referert',
+    'wiki-list-save': 'Lagre sidelisten',
+    'wiki-list-title': 'GitLab wiki',
+
+    'wiki-summary-$title': (title) => {
+        let text = 'GitLab wiki';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'wiki-summary-cancel': 'Avbryt',
+    'wiki-summary-confirm-select': 'Er du sikker på at du vil gjøre denne siden offentlig?',
+    'wiki-summary-confirm-deselect': 'Er du sikker på at du vil fjerne markeringen av denne siden?',
+    'wiki-summary-edit': 'Rediger side',
+    'wiki-summary-page-contents': 'Innhold',
+    'wiki-summary-public': 'Offentlig',
+    'wiki-summary-public-always': 'Alltid',
+    'wiki-summary-public-no': 'Nei',
+    'wiki-summary-public-referenced': 'Ja (referert av en annen offentlig side)',
+    'wiki-summary-repo': 'Repo-identifikator',
+    'wiki-summary-return': 'Gå tilbake til sidelisten',
+    'wiki-summary-slug': 'Slug',
+    'wiki-summary-title': 'Tittel',
 };
 
 export {

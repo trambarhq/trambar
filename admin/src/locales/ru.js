@@ -1142,6 +1142,48 @@ const phrases = {
     'website-summary-title': 'Веб-сайт',
 
     'welcome': 'Добро пожаловать!',
+
+    'wiki-list-cancel': 'Отмена',
+    'wiki-list-column-last-modified': 'Изменено',
+    'wiki-list-column-public': 'Общедоступная',
+    'wiki-list-column-repo': 'Репозиторий',
+    'wiki-list-column-title': 'Титул',
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, 'эту страницу', 'эти 2 страницы', 'эти 5 страниц');
+        let avail = cardinal(count, 'общедоступной', 'общедоступными')
+        return `Вы уверены, что хотите сделать ${pages} ${avail}?`
+    },
+    'wiki-list-confirm-deselect-$count': (count) => {
+        let pages = cardinal(count, 'этой страницы', 'этих 2 страниц', 'этих 5 страниц');
+        return `Вы уверены, что хотите отменить выбор ${pages}?`
+    },
+    'wiki-list-edit': 'Редактировать список страниц',
+    'wiki-list-public-always': 'всегда',
+    'wiki-list-public-no': 'нет',
+    'wiki-list-public-referenced': 'ссылочна',
+    'wiki-list-save': 'Сохранить список страниц',
+    'wiki-list-title': 'Вики GitLab',
+
+    'wiki-summary-$title': (title) => {
+        let text = 'Вики GitLab';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'wiki-summary-cancel': 'Отмена',
+    'wiki-summary-confirm-select': 'Вы уверены, что хотите сделать эту страницу общедоступной?',
+    'wiki-summary-confirm-deselect': 'Вы уверены, что хотите отменить выбор этой страницы?',
+    'wiki-summary-edit': 'Редактировать страницу',
+    'wiki-summary-page-contents': 'Содержание',
+    'wiki-summary-public': 'Общедоступная',
+    'wiki-summary-public-always': 'Всегда',
+    'wiki-summary-public-no': 'Нет',
+    'wiki-summary-public-referenced': 'Да (ссылочна другой общедоступной страницей)',
+    'wiki-summary-repo': 'Идентификатор репозитория',
+    'wiki-summary-return': 'Вернуться к списку страниц',
+    'wiki-summary-slug': 'Slug',
+    'wiki-summary-title': 'Титул',
 };
 
 export {
