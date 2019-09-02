@@ -153,9 +153,9 @@ const phrases = {
     'project-list-column-date-range': 'Aktivní období',
     'project-list-column-last-modified': 'Změněno',
     'project-list-column-last-month': 'Minulý měsíc',
-    'project-list-column-name': 'Jméno',
     'project-list-column-repositories': 'Repozitáře',
     'project-list-column-this-month': 'Tento měsíc',
+    'project-list-column-title': 'Název',
     'project-list-column-to-date': 'K datu',
     'project-list-column-users': 'Uživatelé',
     'project-list-confirm-archive-$count': (count) => {

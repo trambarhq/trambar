@@ -153,9 +153,9 @@ const phrases = {
     'project-list-column-date-range': 'Активный период',
     'project-list-column-last-modified': 'Изменено',
     'project-list-column-last-month': 'Прошлый месяц',
-    'project-list-column-name': 'Имя и фамилия',
     'project-list-column-repositories': 'Репозитория',
     'project-list-column-this-month': 'Этот месяц',
+    'project-list-column-title': 'Название',
     'project-list-column-to-date': 'До сих пор',
     'project-list-column-users': 'Пользователи',
     'project-list-confirm-archive-$count': (count) => {

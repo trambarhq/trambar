@@ -221,7 +221,7 @@ function ProjectListPageSync(props) {
 
     function renderTitleColumn(project) {
         if (!project) {
-            return <TH id="title">{t('project-list-column-name')}</TH>;
+            return <TH id="title">{t('project-list-column-title')}</TH>;
         } else {
             let title = p(project.details.title) || project.name;
             let url, badge;

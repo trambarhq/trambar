@@ -198,9 +198,9 @@ const traditionalPhrases = {
     'project-list-column-date-range': '活動期間',
     'project-list-column-last-modified': '上次修改時間',
     'project-list-column-last-month': '上個月',
-    'project-list-column-name': '名稱',
     'project-list-column-repositories': '數據庫',
     'project-list-column-this-month': '本月',
+    'project-list-column-title': '名稱',
     'project-list-column-to-date': '至今',
     'project-list-column-users': '用戶',
     'project-list-confirm-archive-$count': (count) => {
@@ -1325,9 +1325,9 @@ const simplifiedPhrases = {
     'project-list-column-date-range': '活动期间',
     'project-list-column-last-modified': '上次修改时间',
     'project-list-column-last-month': '上个月',
-    'project-list-column-name': '名称',
     'project-list-column-repositories': '数据库',
     'project-list-column-this-month': '本月',
+    'project-list-column-title': '名称',
     'project-list-column-to-date': '至今',
     'project-list-column-users': '用户',
     'project-list-confirm-archive-$count': (count) => {

@@ -150,9 +150,9 @@ const phrases = {
     'project-list-column-date-range': 'Aktiivinen ajanjakso',
     'project-list-column-last-modified': 'Viimeksi muokattu',
     'project-list-column-last-month': 'Viime kuukausi',
-    'project-list-column-name': 'Nimi',
     'project-list-column-repositories': 'Arkistot',
     'project-list-column-this-month': 'Tässä kuussa',
+    'project-list-column-title': 'Nimi',
     'project-list-column-to-date': 'Tähän mennessä',
     'project-list-column-users': 'Käyttäjät',
     'project-list-confirm-archive-$count': (count) => {

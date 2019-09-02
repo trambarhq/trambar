@@ -161,9 +161,9 @@ const phrases = {
     'project-list-column-date-range': 'Active period',
     'project-list-column-last-modified': 'Last modified',
     'project-list-column-last-month': 'Last month',
-    'project-list-column-name': 'Name',
     'project-list-column-repositories': 'Repositories',
     'project-list-column-this-month': 'This month',
+    'project-list-column-title': 'Name',
     'project-list-column-to-date': 'To date',
     'project-list-column-users': 'Users',
     'project-list-confirm-archive-$count': (count) => {

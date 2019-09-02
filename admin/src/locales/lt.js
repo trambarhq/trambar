@@ -152,9 +152,9 @@ const phrases = {
     'project-list-column-date-range': 'Aktyvus laikotarpis',
     'project-list-column-last-modified': 'Pakeitimo data',
     'project-list-column-last-month': 'Praėjusį mėnesį',
-    'project-list-column-name': 'Vardas ir pavardė',
     'project-list-column-repositories': 'Saugyklos',
     'project-list-column-this-month': 'Šį mėnesį',
+    'project-list-column-title': 'Pavadinimas',
     'project-list-column-to-date': 'Iki šiol',
     'project-list-column-users': 'Vartotojai',
     'project-list-confirm-archive-$count': (count) => {

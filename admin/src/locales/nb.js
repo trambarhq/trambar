@@ -150,9 +150,9 @@ const phrases = {
     'project-list-column-date-range': 'Aktiv periode',
     'project-list-column-last-modified': 'Sist endret',
     'project-list-column-last-month': 'Forrige måned',
-    'project-list-column-name': 'Navn',
     'project-list-column-repositories': 'Repositories',
     'project-list-column-this-month': 'Denne måneden',
+    'project-list-column-title': 'Navn',
     'project-list-column-to-date': 'Til dags dato',
     'project-list-column-users': 'Brukere',
     'project-list-confirm-archive-$count': (count) => {
