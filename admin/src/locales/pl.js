@@ -561,6 +561,11 @@ const phrases = {
 
     'text-field-placeholder-none': 'brak',
 
+    'tooltip-$first-and-$tooltip': (first, tooltip) => {
+        return [ first, ' i ', tooltip ];
+    },
+    'tooltip-more': 'Więcej',
+
     'tz-name-abidjan': 'Abidżan',
     'tz-name-accra': 'Akra',
     'tz-name-acre': 'Acre',
@@ -1078,11 +1083,6 @@ const phrases = {
     'tz-name-zaporozhye': 'Zaporoże',
     'tz-name-zurich': 'Zurych',
 
-    'tooltip-$first-and-$tooltip': (first, tooltip) => {
-        return [ first, ' i ', tooltip ];
-    },
-    'tooltip-more': 'Więcej',
-
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
         let files = cardinal(count, '1 płiku', '2 płików');
         return `Przesyłanie ${files}, pozostało ${size}`;
@@ -1200,13 +1200,13 @@ const phrases = {
     'wiki-list-column-public': 'Publiczna',
     'wiki-list-column-repo': 'Repozytorium',
     'wiki-list-column-title': 'Tytuł',
-    'wiki-list-confirm-select-$count': (count) => {
-        let pages = cardinal(count, 'tę stronę', 'te 2 strony', 'tych 5 stron');
-        return `Czy na pewno chcesz upublicznić ${pages}?`;
-    },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'tę stronę', 'te 2 strony', 'tych 5 stron');
         return `Czy na pewno chcesz odznaczyć ${pages}?`;
+    },
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, 'tę stronę', 'te 2 strony', 'tych 5 stron');
+        return `Czy na pewno chcesz upublicznić ${pages}?`;
     },
     'wiki-list-edit': 'Edytuj listę stron',
     'wiki-list-public-always': 'zawsze',
@@ -1223,8 +1223,8 @@ const phrases = {
         return text;
     },
     'wiki-summary-cancel': 'Anuluj',
-    'wiki-summary-confirm-select': 'Czy na pewno chcesz upublicznić tę stronę?',
     'wiki-summary-confirm-deselect': 'Czy na pewno chcesz odznaczyć tę stronę?',
+    'wiki-summary-confirm-select': 'Czy na pewno chcesz upublicznić tę stronę?',
     'wiki-summary-edit': 'Edytuj stronę',
     'wiki-summary-page-contents': 'Treść',
     'wiki-summary-public': 'Publiczna',

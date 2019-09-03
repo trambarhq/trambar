@@ -313,7 +313,7 @@ function WebsiteSummaryPageSync(props) {
         };
         return (
             <TextField {...props}>
-                {t('website-summary-traiffic-report-time')}
+                {t('website-summary-traffic-report-time')}
             </TextField>
         );
     }

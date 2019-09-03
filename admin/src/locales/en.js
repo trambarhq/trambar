@@ -266,8 +266,8 @@ const phrases = {
 
     'rest-list-add': 'Add new source',
     'rest-list-cancel': 'Cancel',
-    'rest-list-column-last-modified': 'Last modified',
     'rest-list-column-identifier': 'Identifier',
+    'rest-list-column-last-modified': 'Last modified',
     'rest-list-column-type': 'Type',
     'rest-list-column-url': 'URL',
     'rest-list-confirm-disable-$count': (count) => {
@@ -614,6 +614,11 @@ const phrases = {
     },
 
     'text-field-placeholder-none': 'none',
+
+    'tooltip-$first-and-$tooltip': (first, tooltip) => {
+        return [ first, ' and ', tooltip ];
+    },
+    'tooltip-more': 'More',
 
     'tz-name-abidjan': 'Abidjan',
     'tz-name-accra': 'Accra',
@@ -1132,11 +1137,6 @@ const phrases = {
     'tz-name-zaporozhye': 'Zaporozhye',
     'tz-name-zurich': 'Zurich',
 
-    'tooltip-$first-and-$tooltip': (first, tooltip) => {
-        return [ first, ' and ', tooltip ];
-    },
-    'tooltip-more': 'More',
-
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
         let files = cardinal(count, '1 file', '2 files');
         return `Uploading ${files}, ${size} remaining`;
@@ -1232,8 +1232,8 @@ const phrases = {
     'validation-duplicate-project-name': 'A project with that identifier already exists',
     'validation-duplicate-role-name': 'A role with that identifier already exists',
     'validation-duplicate-server-name': 'A server with that identifier already exists',
-    'validation-duplicate-user-name': 'A user with that name already exists',
     'validation-duplicate-spreadsheet-name': 'A link with that identifier already exists',
+    'validation-duplicate-user-name': 'A user with that name already exists',
     'validation-illegal-project-name': 'Project identifier cannot be "global", "admin", "public", or "srv"',
     'validation-invalid-timezone': 'Invalid time zone',
     'validation-localhost-is-wrong': '"localhost" is not valid',
@@ -1250,7 +1250,7 @@ const phrases = {
     'website-summary-template-generic': 'Generic template',
     'website-summary-timezone': 'Time zone',
     'website-summary-title': 'Website',
-    'website-summary-traiffic-report-time': 'Traffic report publication time',
+    'website-summary-traffic-report-time': 'Traffic report publication time',
     'website-summary-versions': 'Versions',
 
     'welcome': 'Welcome!',
@@ -1260,13 +1260,13 @@ const phrases = {
     'wiki-list-column-public': 'Public',
     'wiki-list-column-repo': 'Repository',
     'wiki-list-column-title': 'Title',
-    'wiki-list-confirm-select-$count': (count) => {
-        let pages = cardinal(count, 'this page', 'these 2 pages');
-        return `Are you sure you want to make ${pages} public?`;
-    },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'this page', 'these 2 pages');
         return `Are you sure you want to deselect ${pages}?`;
+    },
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, 'this page', 'these 2 pages');
+        return `Are you sure you want to make ${pages} public?`;
     },
     'wiki-list-edit': 'Edit page list',
     'wiki-list-public-always': 'always',
@@ -1283,8 +1283,8 @@ const phrases = {
         return text;
     },
     'wiki-summary-cancel': 'Cancel',
-    'wiki-summary-confirm-select': 'Are you sure you want to make this page public?',
     'wiki-summary-confirm-deselect': 'Are you sure you want to deselect this page?',
+    'wiki-summary-confirm-select': 'Are you sure you want to make this page public?',
     'wiki-summary-edit': 'Edit page',
     'wiki-summary-page-contents': 'Contents',
     'wiki-summary-public': 'Public',

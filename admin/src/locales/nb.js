@@ -1221,8 +1221,8 @@ const phrases = {
         return text;
     },
     'wiki-summary-cancel': 'Avbryt',
-    'wiki-summary-confirm-select': 'Er du sikker på at du vil gjøre denne siden offentlig?',
     'wiki-summary-confirm-deselect': 'Er du sikker på at du vil fjerne markeringen av denne siden?',
+    'wiki-summary-confirm-select': 'Er du sikker på at du vil gjøre denne siden offentlig?',
     'wiki-summary-edit': 'Rediger side',
     'wiki-summary-page-contents': 'Innhold',
     'wiki-summary-public': 'Offentlig',

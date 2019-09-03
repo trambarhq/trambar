@@ -134,7 +134,7 @@ const phrases = {
     'nav-project-new': 'Uusi projekti',
     'nav-projects': 'Projektit',
     'nav-repositories': 'Arkistot',
-    'nav-rest-sources': 'REST sources',
+    'nav-rest-sources': 'REST-tietolähteet',
     'nav-role-new': 'Uusi rooli',
     'nav-roles': 'Roolit',
     'nav-server-new': 'Uusi palvelin',

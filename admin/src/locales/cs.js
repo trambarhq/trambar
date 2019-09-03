@@ -561,6 +561,11 @@ const phrases = {
 
     'text-field-placeholder-none': 'žádné',
 
+    'tooltip-$first-and-$tooltip': (first, tooltip) => {
+        return [ first, ' a ', tooltip ];
+    },
+    'tooltip-more': 'Více',
+
     'tz-name-abidjan': 'Abidjan',
     'tz-name-accra': 'Accra',
     'tz-name-acre': 'Acre',
@@ -1078,11 +1083,6 @@ const phrases = {
     'tz-name-zaporozhye': 'Záporoží',
     'tz-name-zurich': 'Curych',
 
-    'tooltip-$first-and-$tooltip': (first, tooltip) => {
-        return [ first, ' a ', tooltip ];
-    },
-    'tooltip-more': 'Více',
-
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
         let files = cardinal(count, '1 souboru', '2 souborů');
         return `Nahrávání ${files}, zbývá ${size}`;
@@ -1223,8 +1223,8 @@ const phrases = {
         return text;
     },
     'wiki-summary-cancel': 'Zrušit',
-    'wiki-summary-confirm-select': 'Opravdu chcete tuto stránku zveřejnit?',
     'wiki-summary-confirm-deselect': 'Opravdu chcete zrušit výběr této stránky?',
+    'wiki-summary-confirm-select': 'Opravdu chcete tuto stránku zveřejnit?',
     'wiki-summary-edit': 'Upravit stránku',
     'wiki-summary-page-contents': 'Obsah',
     'wiki-summary-public': 'Veřejná',

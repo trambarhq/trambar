@@ -1224,8 +1224,8 @@ const phrases = {
         return text;
     },
     'wiki-summary-cancel': 'Отмена',
-    'wiki-summary-confirm-select': 'Вы уверены, что хотите сделать эту страницу общедоступной?',
     'wiki-summary-confirm-deselect': 'Вы уверены, что хотите отменить выбор этой страницы?',
+    'wiki-summary-confirm-select': 'Вы уверены, что хотите сделать эту страницу общедоступной?',
     'wiki-summary-edit': 'Редактировать страницу',
     'wiki-summary-page-contents': 'Содержание',
     'wiki-summary-public': 'Общедоступная',

@@ -1255,8 +1255,8 @@ const traditionalPhrases = {
         return text;
     },
     'wiki-summary-cancel': '取消',
-    'wiki-summary-confirm-select': '你確定要將此頁面公開嗎？',
     'wiki-summary-confirm-deselect': '你確定要取消選擇此頁面嗎？',
+    'wiki-summary-confirm-select': '你確定要將此頁面公開嗎？',
     'wiki-summary-edit': '編輯頁面',
     'wiki-summary-page-contents': '內容',
     'wiki-summary-public': '公開',
@@ -2424,8 +2424,8 @@ const simplifiedPhrases = {
         return text;
     },
     'wiki-summary-cancel': '取消',
-    'wiki-summary-confirm-select': '你确定要将此页面公开吗？',
     'wiki-summary-confirm-deselect': '你確定要取消選擇此頁面嗎？',
+    'wiki-summary-confirm-select': '你确定要将此页面公开吗？',
     'wiki-summary-edit': '编辑页面',
     'wiki-summary-page-contents': '内容',
     'wiki-summary-public': '公开',

@@ -571,6 +571,11 @@ const phrases = {
 
     'text-field-placeholder-none': 'keiner',
 
+    'tooltip-$first-and-$tooltip': (first, tooltip) => {
+        return [ first, ' und ', tooltip ];
+    },
+    'tooltip-more': 'Mehr',
+
     'tz-name-abidjan': 'Abidjan',
     'tz-name-accra': 'Accra',
     'tz-name-acre': 'Acre',
@@ -1088,11 +1093,6 @@ const phrases = {
     'tz-name-zaporozhye': 'Zaporozhye',
     'tz-name-zurich': 'Zürich',
 
-    'tooltip-$first-and-$tooltip': (first, tooltip) => {
-        return [ first, ' und ', tooltip ];
-    },
-    'tooltip-more': 'Mehr',
-
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
         let files = cardinal(count, '1 Datei', '2 Dateien');
         let are = (count === 1) ? `wird` : `werden`;
@@ -1234,8 +1234,8 @@ const phrases = {
         return text;
     },
     'wiki-summary-cancel': 'Abbrechen',
-    'wiki-summary-confirm-select': 'Möchten Sie diese Seite wirklich öffentlich machen?',
     'wiki-summary-confirm-deselect': 'Möchten Sie diese Seite wirklich deaktivieren?',
+    'wiki-summary-confirm-select': 'Möchten Sie diese Seite wirklich öffentlich machen?',
     'wiki-summary-edit': 'Seite bearbeiten',
     'wiki-summary-page-contents': 'Inhalt',
     'wiki-summary-public': 'Öffentliche',

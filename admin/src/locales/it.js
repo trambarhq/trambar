@@ -1257,8 +1257,8 @@ const phrases = {
         return text;
     },
     'wiki-summary-cancel': "Annulla",
-    'wiki-summary-confirm-select': "Sei sicuro di voler rendere pubblica questa pagina?",
     'wiki-summary-confirm-deselect': "Sei sicuro di voler deselezionare questa pagina?",
+    'wiki-summary-confirm-select': "Sei sicuro di voler rendere pubblica questa pagina?",
     'wiki-summary-edit': "Modifier la page",
     'wiki-summary-page-contents': "Contenuto",
     'wiki-summary-public': "Pubblica",

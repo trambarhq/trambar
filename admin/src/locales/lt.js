@@ -1207,8 +1207,8 @@ const phrases = {
         return text;
     },
     'wiki-summary-cancel': 'Atšaukti',
-    'wiki-summary-confirm-select': 'Ar tikrai norite šį puslapį paviešinti?',
     'wiki-summary-confirm-deselect': 'Ar tikrai norite panaikinti šio puslapio žymėjimą?',
+    'wiki-summary-confirm-select': 'Ar tikrai norite šį puslapį paviešinti?',
     'wiki-summary-edit': 'Redaguoti puslapį',
     'wiki-summary-page-contents': 'Turinys',
     'wiki-summary-public': 'Viešas',
