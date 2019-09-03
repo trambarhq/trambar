@@ -182,6 +182,7 @@ const traditionalPhrases = {
     'nav-project-new': '新項目',
     'nav-projects': '項目',
     'nav-repositories': '數據庫',
+    'nav-rest-sources': 'REST數據源',
     'nav-role-new': '新角色',
     'nav-roles': '角色',
     'nav-server-new': '新服務器',
@@ -191,7 +192,7 @@ const traditionalPhrases = {
     'nav-user-new': '新用戶',
     'nav-users': '用戶',
     'nav-website': '網站',
-    'nav-wikis': 'GitLab維基',
+    'nav-wiki': 'GitLab維基',
 
     'project-list-add': '添加項目',
     'project-list-cancel': '取消',
@@ -1401,6 +1402,7 @@ const simplifiedPhrases = {
     'nav-project-new': '新项目',
     'nav-projects': '项目',
     'nav-repositories': '数据库',
+    'nav-rest-sources': 'REST数据源',
     'nav-role-new': '新角色',
     'nav-roles': '角色',
     'nav-server-new': '新服务器',
@@ -1410,7 +1412,7 @@ const simplifiedPhrases = {
     'nav-user-new': '新用户',
     'nav-users': '用户',
     'nav-website': '网站',
-    'nav-wikis': 'GitLab维基',
+    'nav-wiki': 'GitLab维基',
 
     'project-list-add': '添加项目',
     'project-list-cancel': '取消',

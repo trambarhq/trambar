@@ -134,6 +134,7 @@ const phrases = {
     'nav-project-new': 'Uusi projekti',
     'nav-projects': 'Projektit',
     'nav-repositories': 'Arkistot',
+    'nav-rest-sources': 'REST sources',
     'nav-role-new': 'Uusi rooli',
     'nav-roles': 'Roolit',
     'nav-server-new': 'Uusi palvelin',
@@ -143,7 +144,7 @@ const phrases = {
     'nav-user-new': 'Uusi käyttäjä',
     'nav-users': 'Käyttäjät',
     'nav-website': 'Verkkosivusto',
-    'nav-wikis': 'GitLab wikit',
+    'nav-wiki': 'GitLab-wiki',
 
     'project-list-add': 'Lisää uusi projekti',
     'project-list-cancel': 'Peruutta',

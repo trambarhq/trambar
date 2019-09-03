@@ -136,6 +136,7 @@ const phrases = {
     'nav-project-new': 'Naujas projektas',
     'nav-projects': 'Projektai',
     'nav-repositories': 'Saugyklos',
+    'nav-rest-sources': 'REST šaltiniai',
     'nav-role-new': 'Naujas vaidmuo',
     'nav-roles': 'Vaidmenys',
     'nav-server-new': 'Naujas serveris',
@@ -145,7 +146,7 @@ const phrases = {
     'nav-user-new': 'Naujas vartotojas',
     'nav-users': 'Vartotojai',
     'nav-website': 'Interneto svetainė',
-    'nav-wikis': 'GitLab vikisvetaines',
+    'nav-wiki': 'GitLab vikisvetaines',
 
     'project-list-add': 'Pridėti naują projektą',
     'project-list-cancel': 'Atšaukti',

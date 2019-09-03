@@ -137,6 +137,7 @@ const phrases = {
     'nav-project-new': 'Nový projekt',
     'nav-projects': 'Projekty',
     'nav-repositories': 'Repozitáře',
+    'nav-rest-sources': 'Zdroje REST',
     'nav-role-new': 'Nová role',
     'nav-roles': 'Role',
     'nav-server-new': 'Nový server',

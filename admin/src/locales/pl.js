@@ -137,6 +137,7 @@ const phrases = {
     'nav-project-new': 'Nowy projekt',
     'nav-projects': 'Projekty',
     'nav-repositories': 'Repozytoria',
+    'nav-rest-sources': 'Źródła REST',
     'nav-role-new': 'Nowa rola',
     'nav-roles': 'Role',
     'nav-server-new': 'Nowy serwer',
@@ -146,7 +147,7 @@ const phrases = {
     'nav-user-new': 'Nowy użytkownik',
     'nav-users': 'Użytkownicy',
     'nav-website': 'Strona internetowa',
-    'nav-wikis': 'Wiki GitLab',
+    'nav-wiki': 'Wiki GitLab',
 
     'project-list-add': 'Dodaj nowy projekt',
     'project-list-cancel': 'Anuluj',
