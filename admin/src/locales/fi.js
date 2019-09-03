@@ -72,7 +72,7 @@ const phrases = {
 
     'confirmation-cancel': 'Peruutta',
     'confirmation-confirm': 'Vahvista',
-    'confirmation-data-loss': 'Haluatko letmasti hylätä tekemäsi muutokset?',
+    'confirmation-data-loss': 'Haluatko varmasti hylätä tekemäsi muutokset?',
 
     'date-range-$start-$end': (start, end) => {
         if (start) {
@@ -157,11 +157,11 @@ const phrases = {
     'project-list-column-users': 'Käyttäjät',
     'project-list-confirm-archive-$count': (count) => {
         let projects = cardinal(count, 'valitun projektin', 'nämä 2 projektia');
-        return `Haluatko letmasti arkistoida ${projects}?`;
+        return `Haluatko varmasti arkistoida ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
         let projects = cardinal(count, 'valitun projektin', 'nämä 2 projektia');
-        return `Haluatko letmasti palauttaa ${projects}?`;
+        return `Haluatko varmasti palauttaa ${projects}?`;
     },
     'project-list-edit': 'Muokkaa projektiluetteloa',
     'project-list-save': 'Tallenna projektiluettelo',
@@ -183,9 +183,9 @@ const phrases = {
     'project-summary-add': 'Lisää uusi projekti',
     'project-summary-archive': 'Arkistoi projektin',
     'project-summary-cancel': 'Peruutta',
-    'project-summary-confirm-archive': 'Haluatko letmasti arkistoida tämän projektin?',
-    'project-summary-confirm-delete': 'Haluatko letmasti poistaa tämän projektin?',
-    'project-summary-confirm-restore': 'Haluatko letmasti palauttaa tämän projektin?',
+    'project-summary-confirm-archive': 'Haluatko varmasti arkistoida tämän projektin?',
+    'project-summary-confirm-delete': 'Haluatko varmasti poistaa tämän projektin?',
+    'project-summary-confirm-restore': 'Haluatko varmasti palauttaa tämän projektin?',
     'project-summary-delete': 'Poista projekti',
     'project-summary-description': 'Kuvaus',
     'project-summary-edit': 'Muokkaa projektia',
@@ -219,7 +219,7 @@ const phrases = {
     'repo-list-column-to-date': 'Tähän mennessä',
     'repo-list-confirm-remove-$count': (count) => {
         let repositories = cardinal(count, 'tämän arkiston', 'nämä 2 arkistoa');
-        return `Haluatko letmasti poistaa ${repositories} projektista?`;
+        return `Haluatko varmasti poistaa ${repositories} projektista?`;
     },
     'repo-list-edit': 'Muokkaa arkistoluetteloa',
     'repo-list-issue-tracker-enabled-false': '',
@@ -235,8 +235,8 @@ const phrases = {
         return text;
     },
     'repo-summary-cancel': 'Peruutta',
-    'repo-summary-confirm-remove': 'Haluatko letmasti poistaa tämän arkiston projektista?',
-    'repo-summary-confirm-restore': 'Haluatko letmasti lisätä tämän arkiston projektiin uudelleen?',
+    'repo-summary-confirm-remove': 'Haluatko varmasti poistaa tämän arkiston projektista?',
+    'repo-summary-confirm-restore': 'Haluatko varmasti lisätä tämän arkiston projektiin uudelleen?',
     'repo-summary-edit': 'Muokkaa arkistoa',
     'repo-summary-gitlab-name': 'GitLab-projektin nimi',
     'repo-summary-issue-tracker': 'Raportointityökalu',
@@ -260,11 +260,11 @@ const phrases = {
     'role-list-column-users': 'Käyttäjät',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, 'tämän roolin', 'nämä 2 roolia');
-        return `Haluatko letmasti deaktivoida ${roles}?`
+        return `Haluatko varmasti deaktivoida ${roles}?`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
         let roles = cardinal(count, 'tämän roolin', 'nämä 2 roolia');
-        return `Haluatko letmasti reaktivoida ${roles}?`
+        return `Haluatko varmasti reaktivoida ${roles}?`;
     },
     'role-list-edit': 'Muokkaa rooliluetteloa',
     'role-list-save': 'Tallenna rooliluettelo',
@@ -281,9 +281,9 @@ const phrases = {
     },
     'role-summary-add': 'Lisää uusi rooli',
     'role-summary-cancel': 'Peruutta',
-    'role-summary-confirm-delete': 'Haluatko letmasti poistaa tämän roolin?',
-    'role-summary-confirm-disable': 'Haluatko letmasti deaktivoida tämän roolin?',
-    'role-summary-confirm-reactivate': 'Haluatko letmasti reaktivoida tämän roolin?',
+    'role-summary-confirm-delete': 'Haluatko varmasti poistaa tämän roolin?',
+    'role-summary-confirm-disable': 'Haluatko varmasti deaktivoida tämän roolin?',
+    'role-summary-confirm-reactivate': 'Haluatko varmasti reaktivoida tämän roolin?',
     'role-summary-delete': 'Poista rooli',
     'role-summary-description': 'Kuvaus',
     'role-summary-disable': 'Deaktivoi roolin',
@@ -317,11 +317,11 @@ const phrases = {
     'server-list-column-users': 'Käyttäjät',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'tämän palvelin', 'nämä 2 palvelinta');
-        return `Haluatko letmasti deaktivoida ${servers}?`
+        return `Haluatko varmasti deaktivoida ${servers}?`;
     },
     'server-list-confirm-reactivate-$count': (count) => {
         let servers = cardinal(count, 'tämän palvelin', 'nämä 2 palvelinta');
-        return `Haluatko letmasti reaktivoida ${servers}?`
+        return `Haluatko varmasti reaktivoida ${servers}?`;
     },
     'server-list-edit': 'Muokkaa palvelinluetteloa',
     'server-list-oauth-false': '',
@@ -339,9 +339,9 @@ const phrases = {
     'server-summary-api-access-not-applicable': 'Ei sovellettavissa',
     'server-summary-api-access-pending': 'Odotetaan käyttäjän toimia',
     'server-summary-cancel': 'Peruutta',
-    'server-summary-confirm-delete': 'Haluatko letmasti poistaa tämän palvelin?',
-    'server-summary-confirm-disable': 'Haluatko letmasti deaktivoida tämän palvelin?',
-    'server-summary-confirm-reactivate': 'Haluatko letmasti reaktivoida tämän palvelin',
+    'server-summary-confirm-delete': 'Haluatko varmasti poistaa tämän palvelin?',
+    'server-summary-confirm-disable': 'Haluatko varmasti deaktivoida tämän palvelin?',
+    'server-summary-confirm-reactivate': 'Haluatko varmasti reaktivoida tämän palvelin',
     'server-summary-delete': 'Poista palvelin',
     'server-summary-disable': 'Deaktivoi palvelin',
     'server-summary-edit': 'Muokkaa palvelinta',
@@ -407,6 +407,57 @@ const phrases = {
     'settings-site-description': 'Kuvaus',
     'settings-site-title': 'Sivuston nimi',
     'settings-title': 'Asetukset',
+
+    'spreadsheet-list-add': 'Lisää uusi linkki',
+    'spreadsheet-list-cancel': 'Peruutta',
+    'spreadsheet-list-column-filename': 'Tiedoston nimi',
+    'spreadsheet-list-column-last-modified': 'Viimeksi muokattu',
+    'spreadsheet-list-column-sheets': 'Arkkia',
+    'spreadsheet-list-column-url': 'URL',
+    'spreadsheet-list-confirm-disable-$count': (count) => {
+        let spreadsheets = cardinal(count, 'tämän linkin', 'nämä linkit');
+        return `Haluatko varmasti deaktivoida ${spreadsheets}?`;
+    },
+    'spreadsheet-list-confirm-reactivate-$count': (count) => {
+        let spreadsheets = cardinal(count, 'tämän linkin', 'nämä linkit');
+        return `Haluatko varmasti aktivoida ${spreadsheets} uudelleen?`;
+    },
+    'spreadsheet-list-edit': 'Muokkaa linkkiluetteloa',
+    'spreadsheet-list-save': 'Tallenna linkkiluettelo',
+    'spreadsheet-list-status-deleted': 'Poistettu',
+    'spreadsheet-list-status-disabled': 'Deaktivoitu',
+    'spreadsheet-list-title': 'Excel-tiedostot',
+
+    'spreadsheet-summary-$title': (title) => {
+        let text = 'Excel-tiedosto';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-add': 'Lisää uusi linkki',
+    'spreadsheet-summary-cancel': 'Peruutta',
+    'spreadsheet-summary-confirm-delete': 'Haluatko varmasti poistaa tämän linkin?',
+    'spreadsheet-summary-confirm-disable': 'Haluatko varmasti deaktivoida tämän linkin?',
+    'spreadsheet-summary-confirm-reactivate': 'Haluatko varmasti aktivoida tämän linkin uudelleen?',
+    'spreadsheet-summary-delete': 'Poista linkki',
+    'spreadsheet-summary-description': 'Kuvaus',
+    'spreadsheet-summary-disable': 'Deaktivoi linkki',
+    'spreadsheet-summary-edit': 'Muokkaa linkkiä',
+    'spreadsheet-summary-filename': 'Tiedoston nimi',
+    'spreadsheet-summary-name': 'Tunniste',
+    'spreadsheet-summary-reactivate': 'Reaktivoi linkki',
+    'spreadsheet-summary-return': 'Palaa linkkiluetteloon',
+    'spreadsheet-summary-save': 'Tallenna linkki',
+    'spreadsheet-summary-sheet-$number-$name': (number, name) => {
+        let text = `Arkki ${number}`;
+        if (name) {
+            text += `: ${name}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-title': 'Otsikko',
+    'spreadsheet-summary-url': 'URL',
 
     'sign-in-$title': (title) => {
         let text = `Kirjaudu sisään`;
@@ -1045,11 +1096,11 @@ const phrases = {
     'user-list-column-users': 'Käyttäjät',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'tämän käyttäjätili', 'nämä 2 käyttäjätilejä');
-        return `Haluatko letmasti deaktivoida ${accounts}?`
+        return `Haluatko varmasti deaktivoida ${accounts}?`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
         let accounts = cardinal(count, 'tämän käyttäjätili', 'nämä 2 käyttäjätilejä');
-        return `Haluatko letmasti reaktivoida ${accounts}?`
+        return `Haluatko varmasti reaktivoida ${accounts}?`;
     },
     'user-list-edit': 'Muokkaa käyttäjäluetteloa',
     'user-list-reject-all': 'Hylkää kaikki pyynnöt',
@@ -1071,9 +1122,9 @@ const phrases = {
     },
     'user-summary-add': 'Lisää uusi käyttäjä',
     'user-summary-cancel': 'Peruutta',
-    'user-summary-confirm-delete': 'Haluatko letmasti poistaa tämän käyttäjätili?',
-    'user-summary-confirm-disable': 'Haluatko letmasti deaktivoida tämän käyttäjätili?',
-    'user-summary-confirm-reactivate': 'Haluatko letmasti reaktivoida tämän käyttäjätili?',
+    'user-summary-confirm-delete': 'Haluatko varmasti poistaa tämän käyttäjätili?',
+    'user-summary-confirm-disable': 'Haluatko varmasti deaktivoida tämän käyttäjätili?',
+    'user-summary-confirm-reactivate': 'Haluatko varmasti reaktivoida tämän käyttäjätili?',
     'user-summary-delete': 'Poista käyttäjätili',
     'user-summary-disable': 'Deaktivoi käyttäjätili',
     'user-summary-edit': 'Muokkaa käyttäjää',
@@ -1147,11 +1198,11 @@ const phrases = {
     'wiki-list-column-title': 'Otsikko',
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, 'tämän sivun', 'nämä 2 sivua');
-        return `Haluatko varmasti julkaista ${pages}?`
+        return `Haluatko varmasti julkaista ${pages}?`;
     },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'tämän sivun', 'näiden 2 sivun');
-        return `Haluatko varmasti poistaa ${pages} valinnan?`
+        return `Haluatko varmasti poistaa ${pages} valinnan?`;
     },
     'wiki-list-edit': 'Muokkaa sivuluetteloa',
     'wiki-list-public-always': 'aina',

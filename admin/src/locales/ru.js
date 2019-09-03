@@ -169,7 +169,7 @@ const phrases = {
     'project-list-edit': 'Редактировать список проектов',
     'project-list-save': 'Сохранить список проектов',
     'project-list-status-archived': 'Архивированный',
-    'project-list-status-deleted': 'Удаленный',
+    'project-list-status-deleted': 'Удален',
     'project-list-title': 'Проекты',
 
     'project-summary-$title': (title) => {
@@ -267,11 +267,11 @@ const phrases = {
     },
     'role-list-confirm-reactivate-$count': (count) => {
         let roles = cardinal(count, 'эту роль', 'эти 2 роли', 'эти 5 ролей');
-        return `Вы действительно хотите реактивировать ${roles}?`
+        return `Вы действительно хотите реактивировать ${roles}?`;
     },
     'role-list-edit': 'Редактировать список ролей',
     'role-list-save': 'Сохранить список ролей',
-    'role-list-status-deleted': 'Удаленный',
+    'role-list-status-deleted': 'Удален',
     'role-list-status-disabled': 'Отключен',
     'role-list-title': 'Роли',
 
@@ -320,17 +320,17 @@ const phrases = {
     'server-list-column-users': 'Пользователи',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'выбранный сервер', 'эти 2 сервера', 'эти 5 серверов');
-        return `Вы действительно хотите отключить ${servers}?`
+        return `Вы действительно хотите отключить ${servers}?`;
     },
     'server-list-confirm-reactivate-$count': (count) => {
         let servers = cardinal(count, 'выбранный сервер', 'эти 2 сервера', 'эти 5 серверов');
-        return `Вы действительно хотите реактивировать ${servers}?`
+        return `Вы действительно хотите реактивировать ${servers}?`;
     },
     'server-list-edit': 'Редактировать список серверов',
     'server-list-oauth-false': '',
     'server-list-oauth-true': 'Включен',
     'server-list-save': 'Сохранить список серверов',
-    'server-list-status-deleted': 'Удаленный',
+    'server-list-status-deleted': 'Удален',
     'server-list-status-disabled': 'Отключен',
     'server-list-title': 'Серверы',
 
@@ -431,6 +431,57 @@ const phrases = {
     'sign-in-username': 'Имя пользователя:',
 
     'sign-off-menu-sign-off': 'Выйти',
+
+    'spreadsheet-list-add': 'Добавить новую ссылку',
+    'spreadsheet-list-cancel': 'Отмена',
+    'spreadsheet-list-column-filename': 'Имя файла',
+    'spreadsheet-list-column-last-modified': 'Изменено',
+    'spreadsheet-list-column-sheets': 'Листы',
+    'spreadsheet-list-column-url': 'URL',
+    'spreadsheet-list-confirm-disable-$count': (count) => {
+        let spreadsheets = cardinal(count, 'эту ссылку', 'эти 2 ссылки', 'эти 5 ссылок');
+        return `Вы уверены, что хотите отключить ${spreadsheets}?`;
+    },
+    'spreadsheet-list-confirm-reactivate-$count': (count) => {
+        let spreadsheets = cardinal(count, 'эту ссылку', 'эти 2 ссылки', 'эти 5 ссылок');
+        return `Вы уверены, что хотите реактивировать ${spreadsheets}?`;
+    },
+    'spreadsheet-list-edit': 'Изменить список ссылок',
+    'spreadsheet-list-save': 'Сохранить список ссылок',
+    'spreadsheet-list-status-deleted': 'Удалена',
+    'spreadsheet-list-status-disabled': 'Отключена',
+    'spreadsheet-list-title': 'Файлы Excel',
+
+    'spreadsheet-summary-$title': (title) => {
+        let text = 'Файл Excel';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-add': 'Добавить новую ссылку',
+    'spreadsheet-summary-cancel': 'Отмена',
+    'spreadsheet-summary-confirm-delete': 'Вы уверены, что хотите удалить эту ссылку?',
+    'spreadsheet-summary-confirm-disable': 'Вы уверены, что хотите отключить эту ссылку?',
+    'spreadsheet-summary-confirm-reactivate': 'Вы уверены, что хотите реактивировать эту ссылку?',
+    'spreadsheet-summary-delete': 'Удалить ссылку',
+    'spreadsheet-summary-description': 'Описание',
+    'spreadsheet-summary-disable': 'Отключить ссылку',
+    'spreadsheet-summary-edit': 'Изменить ссылку',
+    'spreadsheet-summary-filename': 'Имя файла',
+    'spreadsheet-summary-name': 'Идентификатор',
+    'spreadsheet-summary-reactivate': 'Реактивировать ссылку',
+    'spreadsheet-summary-return': 'Вернуться к списку ссылок',
+    'spreadsheet-summary-save': 'Сохранить ссылку',
+    'spreadsheet-summary-sheet-$number-$name': (number, name) => {
+        let text = `Лист ${number}`;
+        if (name) {
+            text += `: ${name}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-title': 'Заглавие',
+    'spreadsheet-summary-url': 'URL',
 
     'task-$seconds': (seconds) => {
         return cardinal(seconds, '1 секунда', '2 секунды', '5 секунд');
@@ -1048,16 +1099,16 @@ const phrases = {
     'user-list-column-username': 'Имя пользователя',
     'user-list-confirm-disable-$count': (count) => {
         let users = cardinal(count, 'выбранного пользователя', 'этих 2 пользователей');
-        return `Вы действительно хотите отключить ${users}?`
+        return `Вы действительно хотите отключить ${users}?`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
         let users = cardinal(count, 'выбранного пользователя', 'этих 2 пользователей');
-        return `Вы действительно хотите реактивировать ${users}?`
+        return `Вы действительно хотите реактивировать ${users}?`;
     },
     'user-list-edit': 'Редактировать список пользователей',
     'user-list-reject-all': 'Отклонить все запросы',
     'user-list-save': 'Сохранить список пользователей',
-    'user-list-status-deleted': 'Удаленный',
+    'user-list-status-deleted': 'Удален',
     'user-list-status-disabled': 'Отключен',
     'user-list-status-pending': 'Ожидание утверждения',
     'user-list-title': 'Пользователи',
@@ -1151,11 +1202,11 @@ const phrases = {
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, 'эту страницу', 'эти 2 страницы', 'эти 5 страниц');
         let avail = cardinal(count, 'общедоступной', 'общедоступными')
-        return `Вы уверены, что хотите сделать ${pages} ${avail}?`
+        return `Вы уверены, что хотите сделать ${pages} ${avail}?`;
     },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'этой страницы', 'этих 2 страниц', 'этих 5 страниц');
-        return `Вы уверены, что хотите отменить выбор ${pages}?`
+        return `Вы уверены, что хотите отменить выбор ${pages}?`;
     },
     'wiki-list-edit': 'Редактировать список страниц',
     'wiki-list-public-always': 'всегда',

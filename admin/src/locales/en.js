@@ -272,11 +272,11 @@ const phrases = {
     'rest-list-column-url': 'URL',
     'rest-list-confirm-disable-$count': (count) => {
         let rests = cardinal(count, 'this source', 'these 2 sources');
-        return `Are you sure you want to disable ${rests}?`
+        return `Are you sure you want to disable ${rests}?`;
     },
     'rest-list-confirm-reactivate-$count': (count) => {
         let rests = cardinal(count, 'this source', 'these 2 sources');
-        return `Are you sure you want to reactivate ${rests}?`
+        return `Are you sure you want to reactivate ${rests}?`;
     },
     'rest-list-edit': 'Edit source list',
     'rest-list-save': 'Save source list',
@@ -318,11 +318,11 @@ const phrases = {
     'role-list-column-users': 'Users',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, 'this role', 'these 2 roles');
-        return `Are you sure you want to disable ${roles}?`
+        return `Are you sure you want to disable ${roles}?`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
         let roles = cardinal(count, 'this role', 'these 2 roles');
-        return `Are you sure you want to reactivate ${roles}?`
+        return `Are you sure you want to reactivate ${roles}?`;
     },
     'role-list-edit': 'Edit role list',
     'role-list-save': 'Save role list',
@@ -375,11 +375,11 @@ const phrases = {
     'server-list-column-users': 'Users',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'this server', 'these 2 servers');
-        return `Are you sure you want to disable ${servers}?`
+        return `Are you sure you want to disable ${servers}?`;
     },
     'server-list-confirm-reactivate-$count': (count) => {
         let servers = cardinal(count, 'this server', 'these 2 servers');
-        return `Are you sure you want to reactivate ${servers}?`
+        return `Are you sure you want to reactivate ${servers}?`;
     },
     'server-list-edit': 'Edit server list',
     'server-list-oauth-false': '',
@@ -495,11 +495,11 @@ const phrases = {
     'spreadsheet-list-column-url': 'URL',
     'spreadsheet-list-confirm-disable-$count': (count) => {
         let spreadsheets = cardinal(count, 'this link', 'these 2 links');
-        return `Are you sure you want to disable ${spreadsheets}?`
+        return `Are you sure you want to disable ${spreadsheets}?`;
     },
     'spreadsheet-list-confirm-reactivate-$count': (count) => {
         let spreadsheets = cardinal(count, 'this link', 'these 2 links');
-        return `Are you sure you want to reactivate ${spreadsheets}?`
+        return `Are you sure you want to reactivate ${spreadsheets}?`;
     },
     'spreadsheet-list-edit': 'Edit link list',
     'spreadsheet-list-save': 'Save link list',
@@ -1154,11 +1154,11 @@ const phrases = {
     'user-list-column-username': 'User name',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'this user account', 'these 2 user accounts');
-        return `Are you sure you want to disable ${accounts}?`
+        return `Are you sure you want to disable ${accounts}?`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
         let accounts = cardinal(count, 'this user account', 'these 2 user accounts');
-        return `Are you sure you want to reactivate ${accounts}?`
+        return `Are you sure you want to reactivate ${accounts}?`;
     },
     'user-list-edit': 'Edit user List',
     'user-list-reject-all': 'Reject all requests',
@@ -1262,11 +1262,11 @@ const phrases = {
     'wiki-list-column-title': 'Title',
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, 'this page', 'these 2 pages');
-        return `Are you sure you want to make ${pages} public?`
+        return `Are you sure you want to make ${pages} public?`;
     },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'this page', 'these 2 pages');
-        return `Are you sure you want to deselect ${pages}?`
+        return `Are you sure you want to deselect ${pages}?`;
     },
     'wiki-list-edit': 'Edit page list',
     'wiki-list-public-always': 'always',

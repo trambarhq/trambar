@@ -262,11 +262,11 @@ const phrases = {
     'role-list-column-users': "Utilisateurs",
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, "ce rôle", "ces 2 rôle");
-        return `Êtes-vous sûr de vouloir désactiver ${roles}?`
+        return `Êtes-vous sûr de vouloir désactiver ${roles}?`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
         let roles = cardinal(count, "ce rôle", "ces 2 rôle");
-        return `Êtes-vous sûr de vouloir réactiver ${roles}?`
+        return `Êtes-vous sûr de vouloir réactiver ${roles}?`;
     },
     'role-list-edit': "Modifier la liste des rôles",
     'role-list-save': "Enregistrer la liste des rôles",
@@ -319,11 +319,11 @@ const phrases = {
     'server-list-column-users': "Utilisateurs",
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, "ce serveur", "ces 2 serveurs");
-        return `Êtes-vous sûr de vouloir désactiver ${servers}?`
+        return `Êtes-vous sûr de vouloir désactiver ${servers}?`;
     },
     'server-list-confirm-reactivate-$count': (count) => {
         let servers = cardinal(count, "ce serveur", "ces 2 serveurs");
-        return `Êtes-vous sûr de vouloir réactiver ${servers}?`
+        return `Êtes-vous sûr de vouloir réactiver ${servers}?`;
     },
     'server-list-edit': "Modifier la liste des serveurs",
     'server-list-oauth-false': "",
@@ -409,6 +409,57 @@ const phrases = {
     'settings-site-description': "Description",
     'settings-site-title': "Nom du site",
     'settings-title': "Paramètres",
+
+    'spreadsheet-list-add': "Ajouter un nouveau lien",
+    'spreadsheet-list-cancel': "Annuler",
+    'spreadsheet-list-column-filename': "Nom de fichier",
+    'spreadsheet-list-column-last-modified': "Modification",
+    'spreadsheet-list-column-sheets': "Feuilles",
+    'spreadsheet-list-column-url': "URL",
+    'spreadsheet-list-confirm-disable-$count': (count) => {
+        let spreadsheets = cardinal(count, "ce lien", "ces 2 liens");
+        return `Êtes-vous sûr de vouloir désactiver ${spreadsheets}?`;
+    },
+    'spreadsheet-list-confirm-reactivate-$count': (count) => {
+        let spreadsheets = cardinal(count, "ce lien", "ces 2 liens");
+        return `Êtes-vous sûr de vouloir réactiver ${spreadsheets}?`;
+    },
+    'spreadsheet-list-edit': "Editer la liste de liens",
+    'spreadsheet-list-save': "Enregistrer la liste de liens",
+    'spreadsheet-list-status-deleted': "Supprimé",
+    'spreadsheet-list-status-disabled': "Désactivé",
+    'spreadsheet-list-title': "Fichiers Excel",
+
+    'spreadsheet-summary-$title': (title) => {
+        let text = 'Fichier Excel';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-add': "Ajouter un nouveau lien",
+    'spreadsheet-summary-cancel': "Annuler",
+    'spreadsheet-summary-confirm-delete': "Êtes-vous sûr de vouloir supprimer ce lien?",
+    'spreadsheet-summary-confirm-disable': "Êtes-vous sûr de vouloir désactiver ce lien?",
+    'spreadsheet-summary-confirm-reactivate': "Êtes-vous sûr de vouloir réactiver ce lien?",
+    'spreadsheet-summary-delete': "Supprimer le lien",
+    'spreadsheet-summary-description': "Description",
+    'spreadsheet-summary-disable': "Désactiver le lien",
+    'spreadsheet-summary-edit': "Modifier le lien",
+    'spreadsheet-summary-filename': "Nom de fichier",
+    'spreadsheet-summary-name': "Identifiant",
+    'spreadsheet-summary-reactivate': "Réactiver le lien",
+    'spreadsheet-summary-return': "Retour à la liste des liens",
+    'spreadsheet-summary-save': "Enregistrer le lien",
+    'spreadsheet-summary-sheet-$number-$name': (number, name) => {
+        let text = `Feuille ${number}`;
+        if (name) {
+            text += `: ${name}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-title': 'Titre',
+    'spreadsheet-summary-url': "URL",
 
     'sign-in-$title': (title) => {
         let text = `Connexion`;
@@ -1047,11 +1098,11 @@ const phrases = {
     'user-list-column-username': "Nom d'utilisateur",
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, "cet utilisateur", "ces 2 utilisateurs");
-        return `Êtes-vous sûr de vouloir désactiver ${accounts}?`
+        return `Êtes-vous sûr de vouloir désactiver ${accounts}?`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
         let accounts = cardinal(count, "cet utilisateur", "ces 2 utilisateurs");
-        return `Êtes-vous sûr de vouloir réactiver ${accounts}?`
+        return `Êtes-vous sûr de vouloir réactiver ${accounts}?`;
     },
     'user-list-edit': "Modifier la liste des utilisateurs",
     'user-list-reject-all': "Rejeter toutes les demandes",
@@ -1149,11 +1200,11 @@ const phrases = {
     'wiki-list-column-title': "Titre",
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, "cette page", "ces 2 pages");
-        return `Êtes-vous sûr de vouloir rendre ${pages} publique?`
+        return `Êtes-vous sûr de vouloir rendre ${pages} publique?`;
     },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, "cette page", "ces 2 pages");
-        return `Êtes-vous sûr de vouloir désélectionner ${pages}?`
+        return `Êtes-vous sûr de vouloir désélectionner ${pages}?`;
     },
     'wiki-list-edit': "Editer la liste de pages",
     'wiki-list-public-always': "toujours",

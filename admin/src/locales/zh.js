@@ -79,7 +79,7 @@ const traditionalPhrases = {
         return `${count}個分支`;
     },
     'activity-tooltip-$count-issue': (count) => {
-        return `${count}個問題`
+        return `${count}個問題`;
     },
     'activity-tooltip-$count-member': (count) => {
         return `${count}個成員變更`;
@@ -91,7 +91,7 @@ const traditionalPhrases = {
         return `${count}個合併請求`;
     },
     'activity-tooltip-$count-milestone': (count) => {
-        return `${count}個里程碑`
+        return `${count}個里程碑`;
     },
     'activity-tooltip-$count-post': (count) => {
         return `${count}個貼文`;
@@ -267,7 +267,7 @@ const traditionalPhrases = {
     'repo-list-column-to-date': '至今',
     'repo-list-confirm-remove-$count': (count) => {
         let repos = cardinalT(count, '這個數據庫', '這三個數據庫');
-        return `你確定要從項目解除${repos}？`
+        return `你確定要從項目解除${repos}？`;
     },
     'repo-list-edit': '編輯數據庫列表',
     'repo-list-issue-tracker-enabled-false': '',
@@ -308,11 +308,11 @@ const traditionalPhrases = {
     'role-list-column-users': '用戶',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinalT(count, '這個角色', '這三個角色');
-        return `你確定要停用${roles}？`
+        return `你確定要停用${roles}？`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
         let roles = cardinalT(count, '這個角色', '這三個角色');
-        return `你確定要啟用${roles}？`
+        return `你確定要啟用${roles}？`;
     },
     'role-list-edit': '編輯角色列表',
     'role-list-save': '保存角色列表',
@@ -365,11 +365,11 @@ const traditionalPhrases = {
     'server-list-column-users': '用戶',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinalT(count, '這個服務器', '這三個服務器');
-        return `你確定要停用${servers}？`
+        return `你確定要停用${servers}？`;
     },
     'server-list-confirm-reactivate-$count': (count) => {
         let servers = cardinalT(count, '這個服務器', '這三個服務器');
-        return `你確定要啟用${servers}？`
+        return `你確定要啟用${servers}？`;
     },
     'server-list-edit': '編輯服務器列表',
     'server-list-oauth-false': '',
@@ -476,6 +476,57 @@ const traditionalPhrases = {
     'sign-in-username': '用戶名：',
 
     'sign-off-menu-sign-off': '登出',
+
+    'spreadsheet-list-add': '添加新鏈接',
+    'spreadsheet-list-cancel': '取消',
+    'spreadsheet-list-column-filename': '文件名',
+    'spreadsheet-list-column-last-modified': '上次修改時間',
+    'spreadsheet-list-column-sheets': '表格',
+    'spreadsheet-list-column-url': 'URL',
+    'spreadsheet-list-confirm-disable-$count': (count) => {
+        let spreadsheets = cardinal(count, '此鏈接', '這兩個鏈接');
+        return `你確定要停用${spreadsheets}嗎？`;
+    },
+    'spreadsheet-list-confirm-reactivate-$count': (count) => {
+        let spreadsheets = cardinal(count, '此鏈接', '這兩個鏈接');
+        return `你確定要重新啟用${spreadsheets}嗎？`;
+    },
+    'spreadsheet-list-edit': '編輯鏈接列表',
+    'spreadsheet-list-save': '保存鏈接列表',
+    'spreadsheet-list-status-deleted': '已刪除',
+    'spreadsheet-list-status-disabled': '已停用',
+    'spreadsheet-list-title': 'Excel文件',
+
+    'spreadsheet-summary-$title': (title) => {
+        let text = 'Excel文件';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-add': '添加新鏈接',
+    'spreadsheet-summary-cancel': '取消',
+    'spreadsheet-summary-confirm-delete': '你確定要刪除此鏈接嗎？',
+    'spreadsheet-summary-confirm-disable': '你確定要停用此鏈接嗎？',
+    'spreadsheet-summary-confirm-reactivate': '你確定要重新啟用此鏈接嗎？',
+    'spreadsheet-summary-delete': '刪除鏈接',
+    'spreadsheet-summary-description': '描述',
+    'spreadsheet-summary-disable': '停用鏈接',
+    'spreadsheet-summary-edit': '編輯鏈接',
+    'spreadsheet-summary-filename': '文件名',
+    'spreadsheet-summary-name': '識別碼',
+    'spreadsheet-summary-reactivate': '重新啟用鏈接',
+    'spreadsheet-summary-return': '返回鏈接列表',
+    'spreadsheet-summary-save': '保存鏈接',
+    'spreadsheet-summary-sheet-$number-$name': (number, name) => {
+        let text = `表格${number}`;
+        if (name) {
+            text += `: ${name}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-title': '標題',
+    'spreadsheet-summary-url': 'URL',
 
     'task-$seconds': (seconds) => {
         return `${seconds}秒`;
@@ -1080,7 +1131,7 @@ const traditionalPhrases = {
     'user-list-column-username': '用戶名',
     'user-list-confirm-disable-$count': (count) => {
         let users = cardinalT(count, '這個用戶', '這三個用戶');
-        return `你確定要關閉${user}？`
+        return `你確定要關閉${user}？`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
         let users = cardinalT(count, '這個用戶', '這三個用戶');
@@ -1182,11 +1233,11 @@ const traditionalPhrases = {
     'wiki-list-column-title': '標題',
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, '此頁面', '這三頁');
-        return `你確定要將${pages}公開嗎？`
+        return `你確定要將${pages}公開嗎？`;
     },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, '此頁面', '這三頁');
-        return `你確定要取消選擇${pages}嗎？`
+        return `你確定要取消選擇${pages}嗎？`;
     },
     'wiki-list-edit': '編輯頁面列表',
     'wiki-list-public-always': '總是',
@@ -1247,7 +1298,7 @@ const simplifiedPhrases = {
         return `${count}个分支`;
     },
     'activity-tooltip-$count-issue': (count) => {
-        return `${count}个问题`
+        return `${count}个问题`;
     },
     'activity-tooltip-$count-member': (count) => {
         return `${count}个成员变更`;
@@ -1259,7 +1310,7 @@ const simplifiedPhrases = {
         return `${count}个合并請求`;
     },
     'activity-tooltip-$count-milestone': (count) => {
-        return `${count}个里程碑`
+        return `${count}个里程碑`;
     },
     'activity-tooltip-$count-post': (count) => {
         return `${count}个贴文`;
@@ -1435,7 +1486,7 @@ const simplifiedPhrases = {
     'repo-list-column-to-date': '至今',
     'repo-list-confirm-remove-$count': (count) => {
         let repos = cardinalS(count, '这个数据库', '这三个数据库');
-        return `你确定要从项目解除${repos}？`
+        return `你确定要从项目解除${repos}？`;
     },
     'repo-list-edit': '编辑数据库列表',
     'repo-list-issue-tracker-enabled-false': '',
@@ -1476,11 +1527,11 @@ const simplifiedPhrases = {
     'role-list-column-users': '用户',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinalS(count, '这个角色', '这三个角色');
-        return `你确定要停用${roles}？`
+        return `你确定要停用${roles}？`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
         let roles = cardinalS(count, '这个角色', '这三个角色');
-        return `你确定要启用${roles}？`
+        return `你确定要启用${roles}？`;
     },
     'role-list-edit': '编辑角色列表',
     'role-list-save': '保存角色列表',
@@ -1533,11 +1584,11 @@ const simplifiedPhrases = {
     'server-list-column-users': '用户',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinalS(count, '这个服务器', '这三个服务器')
-        return `你确定要停用${servers}？`
+        return `你确定要停用${servers}？`;
     },
     'server-list-confirm-reactivate-$count': (count) => {
         let servers = cardinalS(count, '这个服务器', '这三个服务器')
-        return `你确定要启用${servers}？`
+        return `你确定要启用${servers}？`;
     },
     'server-list-edit': '编辑服务器列表',
     'server-list-oauth-false': '',
@@ -2248,11 +2299,11 @@ const simplifiedPhrases = {
     'user-list-column-username': '用户名',
     'user-list-confirm-disable-$count': (count) => {
         let users = cardinalS(count, '这个用户', '这三个用户');
-        return `你确定要关闭${users}？`
+        return `你确定要关闭${users}？`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
         let users = cardinalS(count, '这个用户', '这三个用户');
-        return `你确定要恢复${users}？`
+        return `你确定要恢复${users}？`;
     },
     'user-list-edit': '编辑用户列表',
     'user-list-reject-all': '拒绝所有请求',
@@ -2350,11 +2401,11 @@ const simplifiedPhrases = {
     'wiki-list-column-title': '标题',
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, '此页面', '这三页');
-        return `你确定要将${pages}公开吗？`
+        return `你确定要将${pages}公开吗？`;
     },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, '此页面', '这三页');
-        return `你确定要取消选择${pages}吗？`
+        return `你确定要取消选择${pages}吗？`;
     },
     'wiki-list-edit': '编辑页面列表',
     'wiki-list-public-always': '总是',

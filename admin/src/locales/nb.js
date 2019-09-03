@@ -157,11 +157,11 @@ const phrases = {
     'project-list-column-users': 'Brukere',
     'project-list-confirm-archive-$count': (count) => {
         let projects = cardinal(count, 'det valgte prosjektet', 'disse 2 prosjektene');
-        return `Er du sikker på at du vil arkivere ${projects}?`
+        return `Er du sikker på at du vil arkivere ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
         let projects = cardinal(count, 'det valgte prosjektet', 'disse 2 prosjektene');
-        return `Er du sikker på at du vil gjenopprette ${projects}?`
+        return `Er du sikker på at du vil gjenopprette ${projects}?`;
     },
     'project-list-edit': 'Rediger prosjektliste',
     'project-list-save': 'Lagre prosjektliste',
@@ -260,11 +260,11 @@ const phrases = {
     'role-list-column-users': 'Brukere',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, 'denne rollen', 'disse 2 rollene');
-        return `Er du sikker på at du vil slette ${roles}?`
+        return `Er du sikker på at du vil slette ${roles}?`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
         let roles = cardinal(count, 'denne rollen', 'disse 2 rollene');
-        return `Er du sikker på at du vil reaktivere ${roles}?`
+        return `Er du sikker på at du vil reaktivere ${roles}?`;
     },
     'role-list-edit': 'Rediger rollelisten',
     'role-list-save': 'Lagre rollelisten',
@@ -317,11 +317,11 @@ const phrases = {
     'server-list-column-users': 'Brukere',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'denne serveren', 'disse 2 serverene');
-        return `Er du sikker på at du vil slette ${servers}?`
+        return `Er du sikker på at du vil slette ${servers}?`;
     },
     'server-list-confirm-reactivate-$count': (count) => {
         let servers = cardinal(count, 'denne serveren', 'disse 2 serverene');
-        return `Er du sikker på at du vil reaktivere ${servers}?`
+        return `Er du sikker på at du vil reaktivere ${servers}?`;
     },
     'server-list-edit': 'Rediger serverlisten',
     'server-list-oauth-false': '',
@@ -428,6 +428,57 @@ const phrases = {
     'sign-in-username': 'Brukernavn:',
 
     'sign-off-menu-sign-off': 'Logg ut',
+
+    'spreadsheet-list-add': 'Legg til ny lenke',
+    'spreadsheet-list-cancel': 'Avbryt',
+    'spreadsheet-list-column-filename': 'Filnavn',
+    'spreadsheet-list-column-last-modified': 'Sist endret',
+    'spreadsheet-list-column-sheets': 'Ark',
+    'spreadsheet-list-column-url': 'URL',
+    'spreadsheet-list-confirm-disable-$count': (count) => {
+        let spreadsheets = cardinal(count, 'denne lenken', 'disse 2 lenkene');
+        return `Er du sikker på at du vil deaktivere ${spreadsheets}?`;
+    },
+    'spreadsheet-list-confirm-reactivate-$count': (count) => {
+        let spreadsheets = cardinal(count, 'denne lenken', 'disse 2 lenkene');
+        return `Er du sikker på at du vil aktivere ${spreadsheets} på nytt?`;
+    },
+    'spreadsheet-list-edit': 'Rediger lenkeliste',
+    'spreadsheet-list-save': 'Lagre lenkeliste',
+    'spreadsheet-list-status-deleted': 'Slettet',
+    'spreadsheet-list-status-disabled': 'Deaktivert',
+    'spreadsheet-list-title': 'Excel-filer',
+
+    'spreadsheet-summary-$title': (title) => {
+        let text = 'Excel-fil';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-add': 'Legg til ny lenke',
+    'spreadsheet-summary-cancel': 'Avbryt',
+    'spreadsheet-summary-confirm-delete': 'Er du sikker på at du vil slette denne lenken?',
+    'spreadsheet-summary-confirm-disable': 'Er du sikker på at du vil deaktivere denne lenken?',
+    'spreadsheet-summary-confirm-reactivate': 'Er du sikker på at du vil aktivere denne lenken på nytt?',
+    'spreadsheet-summary-delete': 'Slett lenke',
+    'spreadsheet-summary-description': 'Beskrivelse',
+    'spreadsheet-summary-disable': 'Deaktiver lenke',
+    'spreadsheet-summary-edit': 'Rediger lenke',
+    'spreadsheet-summary-filename': 'Filnavn',
+    'spreadsheet-summary-name': 'Identifikator',
+    'spreadsheet-summary-reactivate': 'Reaktivere lenke',
+    'spreadsheet-summary-return': 'Gå tilbake til lenkelisten',
+    'spreadsheet-summary-save': 'Lagre lenke',
+    'spreadsheet-summary-sheet-$number-$name': (number, name) => {
+        let text = `Ark ${number}`;
+        if (name) {
+            text += `: ${name}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-title': 'Tittel',
+    'spreadsheet-summary-url': 'URL',
 
     'task-$seconds': (seconds) => {
         return (seconds === 1) ? `1 sekund` : `${seconds} sekunder`;
@@ -1045,18 +1096,18 @@ const phrases = {
     'user-list-column-username': 'Brukernavn',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'denne brukerkontoen', 'disse 2 brukerkontoene');
-        return `Er du sikker på at du vil slette ${accounts}?`
+        return `Er du sikker på at du vil slette ${accounts}?`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
         let accounts = cardinal(count, 'denne brukerkontoen', 'disse 2 brukerkontoene');
-        return `Er du sikker på at du vil reaktivere ${accounts}?`
+        return `Er du sikker på at du vil reaktivere ${accounts}?`;
     },
     'user-list-edit': 'Rediger brukerlisten',
-    'user-list-reject-all': 'Reject all requests',
+    'user-list-reject-all': 'Avvis alle forespørsler',
     'user-list-save': 'Lagre brukerlisten',
     'user-list-status-deleted': 'Slettet',
-    'user-list-status-disabled': 'Account disabled',
-    'user-list-status-pending': 'Approval pending',
+    'user-list-status-disabled': 'Konto deaktivert',
+    'user-list-status-pending': 'Venter på godkjenning',
     'user-list-title': 'Brukere',
     'user-list-type-admin': 'Administrator',
     'user-list-type-guest': 'Gjest',
@@ -1148,11 +1199,11 @@ const phrases = {
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, 'denne siden', 'disse 2 sidene');
         let e = (count === 1) ? '' : 'e';
-        return `Er du sikker på at du vil gjøre ${pages} offentlig${e}?`
+        return `Er du sikker på at du vil gjøre ${pages} offentlig${e}?`;
     },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'denne siden', 'disse 2 sidene');
-        return `Er du sikker på at du vil fjerne markeringen av ${page}?`
+        return `Er du sikker på at du vil fjerne markeringen av ${page}?`;
     },
     'wiki-list-edit': 'Rediger sideliste',
     'wiki-list-public-always': 'alltid',

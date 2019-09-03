@@ -262,11 +262,11 @@ const phrases = {
     'role-list-column-users': 'Benutzer',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, 'diese Rolle', 'diese 2 Rollen');
-        return `Möchten Sie ${roles} wirklich deaktivieren?`
+        return `Möchten Sie ${roles} wirklich deaktivieren?`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
         let roles = cardinal(count, 'diese Rolle', 'diese 2 Rollen');
-        return `Möchten Sie ${roles} wirklich reaktivieren?`
+        return `Möchten Sie ${roles} wirklich reaktivieren?`;
     },
     'role-list-edit': 'Rollenliste bearbeiten',
     'role-list-save': 'Rollenliste speichern',
@@ -319,11 +319,11 @@ const phrases = {
     'server-list-column-users': 'Benutzer',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'diesen Server', 'diese 2 Server');
-        return `Möchten Sie ${servers} wirklich deaktivieren?`
+        return `Möchten Sie ${servers} wirklich deaktivieren?`;
     },
     'server-list-confirm-reactivate-$count': (count) => {
         let servers = cardinal(count, 'diesen Server', 'diese 2 Server');
-        return `Möchten Sie ${servers} wirklich reaktivieren?`
+        return `Möchten Sie ${servers} wirklich reaktivieren?`;
     },
     'server-list-edit': 'Serverliste bearbeiten',
     'server-list-oauth-false': '',
@@ -431,6 +431,57 @@ const phrases = {
 
     'sign-off-menu-sign-off': 'Abmelden',
 
+    'spreadsheet-list-add': 'Neuen Link hinzufügen',
+    'spreadsheet-list-cancel': 'Abbrechen',
+    'spreadsheet-list-column-filename': 'Dateiname',
+    'spreadsheet-list-column-last-modified': 'Bearbeitet',
+    'spreadsheet-list-column-sheets': 'Blätter',
+    'spreadsheet-list-column-url': 'URL',
+    'spreadsheet-list-confirm-disable-$count': (count) => {
+        let spreadsheets = cardinal(count, 'diesen Link', 'diese 2 Links');
+        return `Möchten Sie ${spreadsheets} wirklich deaktivieren?`;
+    },
+    'spreadsheet-list-confirm-reactivate-$count': (count) => {
+        let spreadsheets = cardinal(count, 'diesen Link', 'diese 2 Links');
+        return `Möchten Sie ${spreadsheets} wirklich reaktivieren?`;
+    },
+    'spreadsheet-list-edit': 'Linkliste bearbeiten',
+    'spreadsheet-list-save': 'Linkliste speichern',
+    'spreadsheet-list-status-deleted': 'Gelöscht',
+    'spreadsheet-list-status-disabled': 'Deaktiviert',
+    'spreadsheet-list-title': 'Excel-Dateien',
+
+    'spreadsheet-summary-$title': (title) => {
+        let text = 'Excel-Datei';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-add': 'Neuen Link hinzufügen',
+    'spreadsheet-summary-cancel': 'Abbrechen',
+    'spreadsheet-summary-confirm-delete': 'Möchten Sie diesen Link wirklich löschen?',
+    'spreadsheet-summary-confirm-disable': 'Möchten Sie diesen Link wirklich deaktivieren?',
+    'spreadsheet-summary-confirm-reactivate': 'Möchten Sie diesen Link wirklich reaktivieren?',
+    'spreadsheet-summary-delete': 'Link löschen',
+    'spreadsheet-summary-description': 'Beschreibung',
+    'spreadsheet-summary-disable': 'Link deaktivieren',
+    'spreadsheet-summary-edit': 'Link bearbeiten',
+    'spreadsheet-summary-filename': 'Dateiname',
+    'spreadsheet-summary-name': 'Kennung',
+    'spreadsheet-summary-reactivate': 'Link reaktivieren',
+    'spreadsheet-summary-return': 'Zurück zur Linkliste',
+    'spreadsheet-summary-save': 'Link speichern',
+    'spreadsheet-summary-sheet-$number-$name': (number, name) => {
+        let text = `Blatt ${number}`;
+        if (name) {
+            text += `: ${name}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-title': 'Titel',
+    'spreadsheet-summary-url': 'URL',
+
     'task-$seconds': (seconds) => {
         return cardinal(count, '1 Sekunde', '2 Sekunden');
     },
@@ -465,7 +516,7 @@ const phrases = {
         return `${users} ${were} importiert`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        return `Push mit ${count} aus dem Branch “${branch}” des Repositorys “${repo}” wurde importiert.`
+        return `Push mit ${count} aus dem Branch “${branch}” des Repositorys “${repo}” wurde importiert.`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
         return `Commit-Kommentare werden aus dem Repository “${repo}” importiert`;
@@ -1059,11 +1110,11 @@ const phrases = {
     'user-list-column-username': 'Benutzername',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'diesen Benutzer', 'diese 2 Benutzer');
-        return `Möchten Sie ${accounts} wirklich deaktivieren?`
+        return `Möchten Sie ${accounts} wirklich deaktivieren?`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
         let accounts = cardinal(count, 'diesen Benutzer', 'diese 2 Benutzer');
-        return `Möchten Sie ${accounts} wirklich reaktivieren?`
+        return `Möchten Sie ${accounts} wirklich reaktivieren?`;
     },
     'user-list-edit': 'Benutzerliste bearbeiten',
     'user-list-reject-all': 'Alle Anfragen ablehnen',

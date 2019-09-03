@@ -142,11 +142,11 @@ const phrases = {
     'nav-server-new': 'Nový server',
     'nav-servers': 'Servery',
     'nav-settings': 'Nastavení',
-    'nav-spreadsheets': 'Excel files',
+    'nav-spreadsheets': 'Excel soubory',
     'nav-user-new': 'Nový uživatel',
     'nav-users': 'Uživatelé',
     'nav-website': 'Webová stránka',
-    'nav-wikis': 'GitLab wiki',
+    'nav-wiki': 'Wiki GitLab',
 
     'project-list-add': 'Přidat nový projekt',
     'project-list-cancel': 'Zrušit',
@@ -201,7 +201,7 @@ const phrases = {
     'project-summary-new-members-join-user': 'Pravidelní uživatelé mohou požádat o připojení k projektu',
     'project-summary-new-members-manual': 'Členové se přidávají ručně',
     'project-summary-other-actions': 'Jiné akce',
-    'project-summary-restore': 'Obnovit projekt',
+    'project-summary-restore': 'Reaktivovat projekt',
     'project-summary-return': 'Návrat na seznam projektů',
     'project-summary-save': 'Uložit projekt',
     'project-summary-statistics': 'Aktivity',
@@ -246,7 +246,7 @@ const phrases = {
     'repo-summary-issue-tracker-disabled': 'Vypnutý',
     'repo-summary-issue-tracker-enabled': 'Zapnutý',
     'repo-summary-remove': 'Odstranit repozitář',
-    'repo-summary-restore': 'Obnovit repozitář',
+    'repo-summary-restore': 'Reaktivovat repozitář',
     'repo-summary-return': 'Návrat na seznam repozitářů',
     'repo-summary-save': 'Uložit repozitář',
     'repo-summary-statistics': 'Aktivity',
@@ -431,6 +431,57 @@ const phrases = {
     'sign-in-username': 'Uživatelské jméno:',
 
     'sign-off-menu-sign-off': 'Odhlásit se',
+
+    'spreadsheet-list-add': 'Přidat nový odkaz',
+    'spreadsheet-list-cancel': 'Zrušit',
+    'spreadsheet-list-column-filename': 'Název souboru',
+    'spreadsheet-list-column-last-modified': 'Změněno',
+    'spreadsheet-list-column-sheets': 'Tabulky',
+    'spreadsheet-list-column-url': 'URL',
+    'spreadsheet-list-confirm-disable-$count': (count) => {
+        let spreadsheets = cardinal(count, 'tento odkaz', 'tyto 2 odkazy', 'těchto 5 odkazů');
+        return `Opravdu chcete ${spreadsheets} deaktivovat?`;
+    },
+    'spreadsheet-list-confirm-reactivate-$count': (count) => {
+        let spreadsheets = cardinal(count, 'tento odkaz', 'tyto 2 odkazy', 'těchto 5 odkazů');
+        return `Opravdu chcete ${spreadsheets} znovu aktivovat?`;
+    },
+    'spreadsheet-list-edit': 'Upravit seznam odkazů',
+    'spreadsheet-list-save': 'Uložit seznam odkazů',
+    'spreadsheet-list-status-deleted': 'Smazán',
+    'spreadsheet-list-status-disabled': 'Deaktivován',
+    'spreadsheet-list-title': 'Excel soubory',
+
+    'spreadsheet-summary-$title': (title) => {
+        let text = 'Excel soubor';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-add': 'Přidat nový odkaz',
+    'spreadsheet-summary-cancel': 'Zrušit',
+    'spreadsheet-summary-confirm-delete': 'Opravdu chcete tento odkaz smazat?',
+    'spreadsheet-summary-confirm-disable': 'Opravdu chcete tento odkaz deaktivovat?',
+    'spreadsheet-summary-confirm-reactivate': 'Opravdu chcete tento odkaz znovu aktivovat?',
+    'spreadsheet-summary-delete': 'Smazat odkaz',
+    'spreadsheet-summary-description': 'Popis',
+    'spreadsheet-summary-disable': 'Deaktivovat odkaz',
+    'spreadsheet-summary-edit': 'Upravit odkaz',
+    'spreadsheet-summary-filename': 'Název souboru',
+    'spreadsheet-summary-name': 'Identifikátor',
+    'spreadsheet-summary-reactivate': 'Reaktivovat odkaz',
+    'spreadsheet-summary-return': 'Návrat na seznam odkazů',
+    'spreadsheet-summary-save': 'Uložit odkaz',
+    'spreadsheet-summary-sheet-$number-$name': (number, name) => {
+        let text = `Tabulka ${number}`;
+        if (name) {
+            text += `: ${name}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-title': 'Titul',
+    'spreadsheet-summary-url': 'URL',
 
     'task-$seconds': (count) => {
         return cardinal(count, '1 sekunda', '2 sekundy', '5 sekund');
@@ -1048,11 +1099,11 @@ const phrases = {
     'user-list-column-username': 'Uživatelské jméno',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'tohoto uživatele', 'tyto 2 uživatele', 'těchto 5 uživatelů');
-        return `Opravdu chcete ${accounts} deaktivovat?`
+        return `Opravdu chcete ${accounts} deaktivovat?`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
         let accounts = cardinal(count, 'tohoto uživatele', 'tyto 2 uživatele', 'těchto 5 uživatelů');
-        return `Opravdu chcete ${accounts} reaktivovat?`
+        return `Opravdu chcete ${accounts} reaktivovat?`;
     },
     'user-list-edit': 'Upravit seznam uživatelů',
     'user-list-reject-all': 'Odmítnout všechny požadavky',
@@ -1150,11 +1201,11 @@ const phrases = {
     'wiki-list-column-title': 'Titul',
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, 'tuto stránku', 'tyto 2 stránky', 'těchto 5 stránek');
-        return `Opravdu chcete tyto ${pages} zveřejnit?`
+        return `Opravdu chcete tyto ${pages} zveřejnit?`;
     },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'této stránky', 'těchto 2 stránek', 'těchto 5 stránek');
-        return `Opravdu chcete zrušit výběr ${pages}?`
+        return `Opravdu chcete zrušit výběr ${pages}?`;
     },
     'wiki-list-edit': 'Upravit seznam stránek',
     'wiki-list-public-always': 'vždy',

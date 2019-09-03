@@ -262,11 +262,11 @@ const phrases = {
     'role-list-column-users': "Utenti",
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, "il ruolo selezionato", "questi 2 ruoli");
-        return `Sei sicuro di voler disattivare ${roles}?`
+        return `Sei sicuro di voler disattivare ${roles}?`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
         let roles = cardinal(count, "il ruolo selezionato", "questi 2 ruoli");
-        return `Sei sicuro di voler riattivare questo ${roles}?`
+        return `Sei sicuro di voler riattivare questo ${roles}?`;
     },
     'role-list-edit': "Modifica la lista dei ruoli",
     'role-list-save': "Salva la lista dei ruoli",
@@ -319,11 +319,11 @@ const phrases = {
     'server-list-column-users': "Utenti",
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, "il server selezionato", "questi 2 server");
-        return `Sei sicuro di voler disattivare ${servers}?`
+        return `Sei sicuro di voler disattivare ${servers}?`;
     },
     'server-list-confirm-reactivate-$count': (count) => {
         let servers = cardinal(count, "il server selezionato", "questi 2 server");
-        return `Sei sicuro di voler riattivare ${servers}?`
+        return `Sei sicuro di voler riattivare ${servers}?`;
     },
     'server-list-edit': "Modifica la lista dei server",
     'server-list-oauth-false': "",
@@ -410,6 +410,57 @@ const phrases = {
     'settings-site-title': "Nome del sito",
     'settings-title': "Impostazioni",
 
+    'spreadsheet-list-add': "Aggiungi nuovo link",
+    'spreadsheet-list-cancel': "Annulla",
+    'spreadsheet-list-column-filename': "Nome del file",
+    'spreadsheet-list-column-last-modified': "Ultima modifica",
+    'spreadsheet-list-column-sheets': "Fogli",
+    'spreadsheet-list-column-url': "URL",
+    'spreadsheet-list-confirm-disable-$count': (count) => {
+        let spreadsheets = cardinal(count, "questo link", "questi 2 link");
+        return `Sei sicuro di voler disattivare ${spreadsheets}?`;
+    },
+    'spreadsheet-list-confirm-reactivate-$count': (count) => {
+        let spreadsheets = cardinal(count, "questo link", "questi 2 link");
+        return `Sei sicuro di voler riattivare ${spreadsheets}?`;
+    },
+    'spreadsheet-list-edit': "Modifica la lista di link",
+    'spreadsheet-list-save': "Salva la lista di link",
+    'spreadsheet-list-status-deleted': "Eliminato",
+    'spreadsheet-list-status-disabled': "Disattivato",
+    'spreadsheet-list-title': "File Excel",
+
+    'spreadsheet-summary-$title': (title) => {
+        let text = 'File Excel';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-add': "Aggiungi nuovo link",
+    'spreadsheet-summary-cancel': "Annulla",
+    'spreadsheet-summary-confirm-delete': "Sei sicuro di voler eliminare questo link?",
+    'spreadsheet-summary-confirm-disable': "Sei sicuro di voler disattivare questo link?",
+    'spreadsheet-summary-confirm-reactivate': "Sei sicuro di voler riattivare questo link?",
+    'spreadsheet-summary-delete': "Elimina il link",
+    'spreadsheet-summary-description': "Descrizione",
+    'spreadsheet-summary-disable': "Disabilita il link",
+    'spreadsheet-summary-edit': "Modifica il link",
+    'spreadsheet-summary-filename': "Nome del file",
+    'spreadsheet-summary-name': "Identificatore",
+    'spreadsheet-summary-reactivate': "Riattiva il link",
+    'spreadsheet-summary-return': "Ritorna alla lista di link",
+    'spreadsheet-summary-save': "Salva il link",
+    'spreadsheet-summary-sheet-$number-$name': (number, name) => {
+        let text = `Foglio ${number}`;
+        if (name) {
+            text += `: ${name}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-title': "Titolo",
+    'spreadsheet-summary-url': "URL",
+
     'sign-in-$title': (title) => {
         let text = `Accedi`;
         if (title) {
@@ -478,7 +529,7 @@ const phrases = {
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
         let commits = `${count} commit`;
-        return `Si un push con ${commits} è importato dal branch «${branch}» del repository «${repo}»`
+        return `Si un push con ${commits} è importato dal branch «${branch}» del repository «${repo}»`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
         return `Si sta importando i commenti del commit dal repository «${repo}»`;
@@ -1081,18 +1132,18 @@ const phrases = {
     'user-list-column-type': "Tipo",
     'user-list-column-username': "Nome utente",
     'user-list-confirm-disable-$count': (count) => {
-        let accounts = cardinal(count, "l'account utente selezionato", [ "questi", "account utente" ], true);
-        return `Sei sicuro di voler disabilitare ${accounts}?`
+        let accounts = cardinal(count, "l'account utente selezionato", "questi 2 account utente", true);
+        return `Sei sicuro di voler disattivare ${accounts}?`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        let accounts = cardinal(count, "l'account utente selezionato", [ "questi", "account utente" ], true);
-        return `Sei sicuro di voler riattivare questo ${accounts}?`
+        let accounts = cardinal(count, "l'account utente selezionato", "questi 2 account utente", true);
+        return `Sei sicuro di voler riattivare questo ${accounts}?`;
     },
     'user-list-edit': "Modifica la lista degli utenti",
     'user-list-reject-all': "Rifiuta tutte le richieste",
     'user-list-save': "Salva la lista degli utenti",
     'user-list-status-deleted': "Eliminato",
-    'user-list-status-disabled': "Disabilitato",
+    'user-list-status-disabled': "Disattivato",
     'user-list-status-pending': "In attesa",
     'user-list-title': "Utenti",
     'user-list-type-admin': "Amministratore",
@@ -1184,11 +1235,11 @@ const phrases = {
     'wiki-list-column-title': "Titolo",
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, "questa pagina", "queste 2 pagine");
-        return `Sei sicuro di voler rendere pubblica ${pages}?`
+        return `Sei sicuro di voler rendere pubblica ${pages}?`;
     },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, "questa pagina", "queste 2 pagine");
-        return `Sei sicuro di voler deselezionare ${pages}?`
+        return `Sei sicuro di voler deselezionare ${pages}?`;
     },
     'wiki-list-edit': "Modifica la lista di pagine",
     'wiki-list-public-always': "sempre",

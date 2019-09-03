@@ -320,11 +320,11 @@ const phrases = {
     'server-list-column-users': 'Użytkownicy',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'wybrany serwer', 'te 2 wybrane serwery', 'tych 5 wybranych serwerów');
-        return `Czy na pewno chcesz wyłączyć ${servers}?`
+        return `Czy na pewno chcesz wyłączyć ${servers}?`;
     },
     'server-list-confirm-reactivate-$count': (count) => {
         let servers = cardinal(count, 'wybrany serwer', 'te 2 wybrane serwery', 'tych 5 wybranych serwerów');
-        return `Czy na pewno chcesz reaktywować ${servers}?`
+        return `Czy na pewno chcesz reaktywować ${servers}?`;
     },
     'server-list-edit': 'Zmodyfikuj listę serwerów',
     'server-list-oauth-false': '',
@@ -431,6 +431,57 @@ const phrases = {
     'sign-in-username': 'Nazwa użytkownika:',
 
     'sign-off-menu-sign-off': 'Wyloguj się',
+
+    'spreadsheet-list-add': 'Dodaj nowy link',
+    'spreadsheet-list-cancel': 'Anuluj',
+    'spreadsheet-list-column-filename': 'Nazwa pliku',
+    'spreadsheet-list-column-last-modified': 'Zmodyfikowano',
+    'spreadsheet-list-column-sheets': 'Arkuszy',
+    'spreadsheet-list-column-url': 'URL',
+    'spreadsheet-list-confirm-disable-$count': (count) => {
+        let spreadsheets = cardinal(count, 'ten link', 'te 2 linki', 'tych 5 linków');
+        return `Czy na pewno chcesz wyłączyć ${spreadsheets}?`;
+    },
+    'spreadsheet-list-confirm-reactivate-$count': (count) => {
+        let spreadsheets = cardinal(count, 'ten link', 'te 2 linki', 'tych 5 linków');
+        return `Czy na pewno chcesz ponownie aktywować ${spreadsheets}?`;
+    },
+    'spreadsheet-list-edit': 'Edytuj listę linków',
+    'spreadsheet-list-save': 'Zapisz listę linków',
+    'spreadsheet-list-status-deleted': 'Usunięty',
+    'spreadsheet-list-status-disabled': 'Wyłączony',
+    'spreadsheet-list-title': 'Pliki Excel',
+
+    'spreadsheet-summary-$title': (title) => {
+        let text = 'Plik Excel';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-add': 'Dodaj nowy link',
+    'spreadsheet-summary-cancel': 'Anuluj',
+    'spreadsheet-summary-confirm-delete': 'Czy na pewno chcesz usunąć ten link?',
+    'spreadsheet-summary-confirm-disable': 'Czy na pewno chcesz wyłączyć ten link?',
+    'spreadsheet-summary-confirm-reactivate': 'Czy na pewno chcesz ponownie aktywować ten link?',
+    'spreadsheet-summary-delete': 'Usuń link',
+    'spreadsheet-summary-description': 'Opis',
+    'spreadsheet-summary-disable': 'Wyłącz link',
+    'spreadsheet-summary-edit': 'Edytuj link',
+    'spreadsheet-summary-filename': 'Nazwa pliku',
+    'spreadsheet-summary-name': 'Identyfikator',
+    'spreadsheet-summary-reactivate': 'Ponownie aktywuj link',
+    'spreadsheet-summary-return': 'Wróć do listy linków',
+    'spreadsheet-summary-save': 'Zapisz link',
+    'spreadsheet-summary-sheet-$number-$name': (number, name) => {
+        let text = `Arkusz ${number}`;
+        if (name) {
+            text += `: ${name}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-title': 'Tytul',
+    'spreadsheet-summary-url': 'URL',
 
     'task-$seconds': (seconds) => {
         return cardinal(seconds, '1 sekunda', '2 sekundy', '5 sekund');
@@ -1150,11 +1201,11 @@ const phrases = {
     'wiki-list-column-title': 'Tytuł',
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, 'tę stronę', 'te 2 strony', 'tych 5 stron');
-        return `Czy na pewno chcesz upublicznić ${pages}?`
+        return `Czy na pewno chcesz upublicznić ${pages}?`;
     },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'tę stronę', 'te 2 strony', 'tych 5 stron');
-        return `Czy na pewno chcesz odznaczyć ${pages}?`
+        return `Czy na pewno chcesz odznaczyć ${pages}?`;
     },
     'wiki-list-edit': 'Edytuj listę stron',
     'wiki-list-public-always': 'zawsze',

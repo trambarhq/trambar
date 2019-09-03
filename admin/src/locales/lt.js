@@ -316,11 +316,11 @@ const phrases = {
     'server-list-column-users': 'Vartotojai',
     'server-list-confirm-disable-$count': (count) => {
         let servers = cardinal(count, 'pasirinktą serverį', 'šiuos 2 pasirinktus serverius', 'šiuos 10 pasirinktų serverių');
-        return `Ar tikrai norite deaktyvuoti ${servers}?`
+        return `Ar tikrai norite deaktyvuoti ${servers}?`;
     },
     'server-list-confirm-reactivate-$count': (count) => {
         let servers = cardinal(count, 'pasirinktą serverį', 'šiuos 2 pasirinktus serverius', 'šiuos 10 pasirinktų serverių');
-        return `Ar tikrai norite reaktyvuoti ${servers}?`
+        return `Ar tikrai norite reaktyvuoti ${servers}?`;
     },
     'server-list-edit': 'Redaguoti serverių sąrašą',
     'server-list-oauth-false': '',
@@ -427,6 +427,57 @@ const phrases = {
     'sign-in-username': 'Vartotojo vardas:',
 
     'sign-off-menu-sign-off': 'Atsijungti',
+
+    'spreadsheet-list-add': 'Pridėti naują nuorodą',
+    'spreadsheet-list-cancel': 'Atšaukti',
+    'spreadsheet-list-column-filename': 'Failo pavadinimas',
+    'spreadsheet-list-column-last-modified': 'Pakeitimo data',
+    'spreadsheet-list-column-sheets': 'Lapai',
+    'spreadsheet-list-column-url': 'URL',
+    'spreadsheet-list-confirm-disable-$count': (count) => {
+        let spreadsheets = cardinal(count, 'šią nuorodą', 'šias 2 nuorodas', 'šias 10 nuorodų');
+        return `Ar tikrai norite deaktyvuoti ${spreadsheets}?`;
+    },
+    'spreadsheet-list-confirm-reactivate-$count': (count) => {
+        let spreadsheets = cardinal(count, 'this link', 'these 2 links');
+        return `Ar tikrai norite reaktyvuoti ${spreadsheets}?`;
+    },
+    'spreadsheet-list-edit': 'Redaguoti nuorodų sąrašą',
+    'spreadsheet-list-save': 'Išsaugoti nuorodų sąrašą',
+    'spreadsheet-list-status-deleted': 'Ištrintas',
+    'spreadsheet-list-status-disabled': 'Deaktyvuotas',
+    'spreadsheet-list-title': 'Excel failai',
+
+    'spreadsheet-summary-$title': (title) => {
+        let text = 'Excel failas';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-add': 'Pridėti naują nuorodą',
+    'spreadsheet-summary-cancel': 'Atšaukti',
+    'spreadsheet-summary-confirm-delete': 'Ar tikrai norite ištrinti šią nuorodą?',
+    'spreadsheet-summary-confirm-disable': 'Ar tikrai norite deaktyvuoti šią nuorodą?',
+    'spreadsheet-summary-confirm-reactivate': 'Ar tikrai norite reaktyvuoti šią nuorodą?',
+    'spreadsheet-summary-delete': 'Ištrinti nuorodą',
+    'spreadsheet-summary-description': 'Apibūdinimas',
+    'spreadsheet-summary-disable': 'Deaktyvuoti nuorodą',
+    'spreadsheet-summary-edit': 'Redaguoti nuorodą',
+    'spreadsheet-summary-filename': 'Failo pavadinimas',
+    'spreadsheet-summary-name': 'Identifikatorius',
+    'spreadsheet-summary-reactivate': 'Reaktyvuoti nuorodą',
+    'spreadsheet-summary-return': 'Grįžti į nuorodų sąrašą',
+    'spreadsheet-summary-save': 'Išsaugoti nuorodą',
+    'spreadsheet-summary-sheet-$number-$name': (number, name) => {
+        let text = `Lapas ${number}`;
+        if (name) {
+            text += `: ${name}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-title': 'Pavadinimas',
+    'spreadsheet-summary-url': 'URL',
 
     'task-$seconds': (seconds) => {
         return cardinal(seconds, '1 sekundė', '2 sekundės', '10 sekundžių');
@@ -1134,11 +1185,11 @@ const phrases = {
     'wiki-list-column-title': 'Pavadinimas',
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, 'šį puslapį', 'šiuos 2 puslapius');
-        return `Ar tikrai norite ${pages} paviešinti?`
+        return `Ar tikrai norite ${pages} paviešinti?`;
     },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'šio puslapio', 'šių 2 puslapių');
-        return `Ar tikrai norite panaikinti ${pages} žymėjimą?`
+        return `Ar tikrai norite panaikinti ${pages} žymėjimą?`;
     },
     'wiki-list-edit': 'Redaguoti puslapių sąrašą',
     'wiki-list-public-always': 'visada',
