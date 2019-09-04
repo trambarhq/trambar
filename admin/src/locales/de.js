@@ -7,10 +7,12 @@ const phrases = {
     'action-badge-add': 'hinzufügen',
     'action-badge-approve': 'genehmigen',
     'action-badge-archive': 'archivieren',
+    'action-badge-deselect': 'abwählen',
     'action-badge-disable': 'deaktivieren',
     'action-badge-reactivate': 'reaktivieren',
     'action-badge-remove': 'entfernen',
     'action-badge-restore': 'wiederherzustellen',
+    'action-badge-select': 'wählen',
 
     'activity-chart-legend-branch': 'Neue Branchs',
     'activity-chart-legend-issue': 'Probleme',
@@ -96,6 +98,10 @@ const phrases = {
 
     'image-cropping-cancel': 'Abbrechen',
     'image-cropping-select': 'OK',
+
+    'image-preview-close': 'Schließen',
+    'image-preview-dropbox': 'Dropbox',
+    'image-preview-onedrive': 'OneDrive',
 
     'image-selector-choose-from-album': 'Aus dem Album auswählen',
     'image-selector-crop-image': 'Größe / Position anpassen',

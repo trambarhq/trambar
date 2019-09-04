@@ -5,10 +5,12 @@ const phrases = {
     'action-badge-add': "aggiungere",
     'action-badge-approve': "approvare",
     'action-badge-archive': "archiviare",
+    'action-badge-deselect': 'deselezionare',
     'action-badge-disable': "disattivare",
     'action-badge-reactivate': "riattivare",
     'action-badge-remove': "rimuovere",
     'action-badge-restore': "ripristinare",
+    'action-badge-select': 'selezionare',
 
     'activity-chart-legend-branch': "Nuovi branch",
     'activity-chart-legend-issue': "Problemi",
@@ -94,6 +96,10 @@ const phrases = {
 
     'image-cropping-cancel': "Annulla",
     'image-cropping-select': "OK",
+
+    'image-preview-close': 'Chiudi',
+    'image-preview-dropbox': 'Dropbox',
+    'image-preview-onedrive': 'OneDrive',
 
     'image-selector-choose-from-album': "Scegli dall'album",
     'image-selector-crop-image': "Regola dimensione/posizione",

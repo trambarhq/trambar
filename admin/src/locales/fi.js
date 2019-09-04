@@ -5,10 +5,12 @@ const phrases = {
     'action-badge-add': 'lisätään',
     'action-badge-approve': 'hyväksytään',
     'action-badge-archive': 'arkistoidaan',
+    'action-badge-deselect': 'poistetaan',
     'action-badge-disable': 'deaktivoidaan',
     'action-badge-reactivate': 'reaktivoidaan',
     'action-badge-remove': 'poistetaan',
     'action-badge-restore': 'palautetaan',
+    'action-badge-select': 'valitaan',
 
     'activity-chart-legend-branch': 'Branchit',
     'activity-chart-legend-issue': 'Asiat',
@@ -94,6 +96,10 @@ const phrases = {
 
     'image-cropping-cancel': 'Peruutta',
     'image-cropping-select': 'OK',
+
+    'image-preview-close': 'Sulje',
+    'image-preview-dropbox': 'Dropbox',
+    'image-preview-onedrive': 'OneDrive',
 
     'image-selector-choose-from-album': 'Valitse albumista',
     'image-selector-crop-image': 'Säädä koko/sijainti',

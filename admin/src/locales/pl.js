@@ -8,10 +8,12 @@ const phrases = {
     'action-badge-add': 'dodaj',
     'action-badge-approve': 'zatwierdź',
     'action-badge-archive': 'zarchiwizuj',
+    'action-badge-deselect': 'odznacz',
     'action-badge-disable': 'dezaktywuj',
     'action-badge-reactivate': 'reaktywuj',
     'action-badge-remove': 'usuń',
     'action-badge-restore': 'przywróć',
+    'action-badge-select': 'wybierz',
 
     'activity-chart-legend-branch': 'Nowe gałęzi',
     'activity-chart-legend-issue': 'Zgłoszenia błędu',
@@ -97,6 +99,10 @@ const phrases = {
 
     'image-cropping-cancel': 'Anuluj',
     'image-cropping-select': 'OK',
+
+    'image-preview-close': 'Zamknij',
+    'image-preview-dropbox': 'Dropbox',
+    'image-preview-onedrive': 'OneDrive',
 
     'image-selector-choose-from-album': 'Wybierz z albumu',
     'image-selector-crop-image': 'Dostosuj rozmiar/pozycję',

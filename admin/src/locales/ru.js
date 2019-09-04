@@ -8,10 +8,12 @@ const phrases = {
     'action-badge-add': 'добавить',
     'action-badge-approve': 'утверждать',
     'action-badge-archive': 'архивировать',
+    'action-badge-deselect': 'отменить',
     'action-badge-disable': 'отключить',
     'action-badge-reactivate': 'реактивировать',
     'action-badge-remove': 'удалить',
     'action-badge-restore': 'восстановить',
+    'action-badge-select': 'выбрать',
 
     'activity-chart-legend-branch': 'Ветки',
     'activity-chart-legend-issue': 'Отчёты об ошибке',
@@ -97,6 +99,10 @@ const phrases = {
 
     'image-cropping-cancel': 'Отмена',
     'image-cropping-select': 'OK',
+
+    'image-preview-close': 'Закрыть',
+    'image-preview-dropbox': 'Dropbox',
+    'image-preview-onedrive': 'OneDrive',
 
     'image-selector-choose-from-album': 'Выбрать из альбома',
     'image-selector-crop-image': 'Отрегулируйте размер/положение',

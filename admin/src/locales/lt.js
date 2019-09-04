@@ -7,10 +7,12 @@ const phrases = {
     'action-badge-add': 'pridėti',
     'action-badge-approve': 'patvirtinti',
     'action-badge-archive': 'archyvuoti',
+    'action-badge-deselect': 'panaikinti',
     'action-badge-disable': 'deaktyvuoti',
     'action-badge-reactivate': 'reaktyvuoti',
     'action-badge-remove': 'pašalinti',
     'action-badge-restore': 'atkurti',
+    'action-badge-select': 'pasirinkti',
 
     'activity-chart-legend-branch': 'Naujos šakos',
     'activity-chart-legend-issue': 'Klaidos ataskaitos',
@@ -96,6 +98,10 @@ const phrases = {
 
     'image-cropping-cancel': 'Atšaukti',
     'image-cropping-select': 'OK',
+
+    'image-preview-close': 'Uždaryti',
+    'image-preview-dropbox': 'Dropbox',
+    'image-preview-onedrive': 'OneDrive',
 
     'image-selector-choose-from-album': 'Pasirinkti iš albumo',
     'image-selector-crop-image': 'Nustatykite dydį/poziciją',

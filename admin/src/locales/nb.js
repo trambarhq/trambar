@@ -5,10 +5,12 @@ const phrases = {
     'action-badge-add': 'legge til',
     'action-badge-approve': 'godkjenne',
     'action-badge-archive': 'arkiverer',
+    'action-badge-deselect': 'avmarker',
     'action-badge-disable': 'deaktivere',
     'action-badge-reactivate': 'reaktivere',
     'action-badge-remove': 'fjerne',
     'action-badge-restore': 'gjenopprette',
+    'action-badge-select': 'velge',
 
     'activity-chart-legend-branch': 'Nye brancher',
     'activity-chart-legend-issue': 'Problemer',
@@ -94,6 +96,10 @@ const phrases = {
 
     'image-cropping-cancel': 'Avbryt',
     'image-cropping-select': 'OK',
+
+    'image-preview-close': 'Lukk',
+    'image-preview-dropbox': 'Dropbox',
+    'image-preview-onedrive': 'OneDrive',
 
     'image-selector-choose-from-album': 'Velg fra album',
     'image-selector-crop-image': 'Juste størrelse/posisjon',

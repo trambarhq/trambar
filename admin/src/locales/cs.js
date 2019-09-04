@@ -8,10 +8,12 @@ const phrases = {
     'action-badge-add': 'přidat',
     'action-badge-approve': 'schválit',
     'action-badge-archive': 'archivovat',
-    'action-badge-disable': 'deaktivovat',
+    'action-badge-deselect': 'deselect',
+    'action-badge-disable': 'odznačit',
     'action-badge-reactivate': 'reaktivovat',
     'action-badge-remove': 'odstranit',
     'action-badge-restore': 'obnovit',
+    'action-badge-select': 'vybrat',
 
     'activity-chart-legend-branch': 'Nové větve',
     'activity-chart-legend-issue': 'Problémy',
@@ -97,6 +99,10 @@ const phrases = {
 
     'image-cropping-cancel': 'Zrušit',
     'image-cropping-select': 'OK',
+
+    'image-preview-close': 'Zavřít',
+    'image-preview-dropbox': 'Dropbox',
+    'image-preview-onedrive': 'OneDrive',
 
     'image-selector-choose-from-album': 'Vybrat si z alba',
     'image-selector-crop-image': 'Upravit velikost/polohu',

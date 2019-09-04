@@ -53,10 +53,12 @@ const traditionalPhrases = {
     'action-badge-add': '會添加',
     'action-badge-approve': '會批准',
     'action-badge-archive': '會歸檔',
+    'action-badge-deselect': '取消',
     'action-badge-disable': '會停用',
     'action-badge-reactivate': '會啟用',
     'action-badge-remove': '會刪除',
     'action-badge-restore': '會恢復',
+    'action-badge-select': '選擇',
 
     'activity-chart-legend-branch': '分支',
     'activity-chart-legend-issue': '問題',
@@ -142,6 +144,10 @@ const traditionalPhrases = {
 
     'image-cropping-cancel': '取消',
     'image-cropping-select': '選擇',
+
+    'image-preview-close': '關閉',
+    'image-preview-dropbox': 'Dropbox',
+    'image-preview-onedrive': 'OneDrive',
 
     'image-selector-choose-from-album': '從相片集選擇',
     'image-selector-crop-image': '調整大小/位置',
@@ -1273,10 +1279,12 @@ const simplifiedPhrases = {
     'action-badge-add': '会添加',
     'action-badge-approve': '会批准',
     'action-badge-archive': '会归档',
+    'action-badge-deselect': '取消',
     'action-badge-disable': '会停用',
     'action-badge-reactivate': '会启用',
     'action-badge-remove': '会删除',
     'action-badge-restore': '会恢复',
+    'action-badge-select': '选择',
 
     'activity-chart-legend-branch': '分支',
     'activity-chart-legend-issue': '问题',
@@ -1362,6 +1370,10 @@ const simplifiedPhrases = {
 
     'image-cropping-cancel': '取消',
     'image-cropping-select': '选择',
+
+    'image-preview-close': '关闭',
+    'image-preview-dropbox': 'Dropbox',
+    'image-preview-onedrive': 'OneDrive',
 
     'image-selector-choose-from-album': '从相片集选择',
     'image-selector-crop-image': '调整大小/位置',
