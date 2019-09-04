@@ -1181,7 +1181,10 @@ const phrases = {
     'website-summary-template': 'Šablonas',
     'website-summary-template-disabled': 'Išjungta',
     'website-summary-template-generic': 'Bendras šablonas',
+    'website-summary-timezone': 'Laiko zona',
     'website-summary-title': 'Interneto svetainė',
+    'website-summary-traffic-report-time': 'Eismo ataskaitos paskelbimo laikas',
+    'website-summary-versions': 'Versijos',
 
     'welcome': 'Sveiki!',
 

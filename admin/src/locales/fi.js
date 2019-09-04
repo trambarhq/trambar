@@ -1194,7 +1194,10 @@ const phrases = {
     'website-summary-template': 'Sivuston malli',
     'website-summary-template-disabled': 'Deaktivoitu',
     'website-summary-template-generic': 'Yleinen malli',
+    'website-summary-timezone': 'Aikavyöhyke',
     'website-summary-title': 'Verkkosivusto',
+    'website-summary-traffic-report-time': 'Liikenneraportin julkaisuaika',
+    'website-summary-versions': 'Versiot',
 
     'welcome': 'Tervetuloa!',
 

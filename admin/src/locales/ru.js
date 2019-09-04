@@ -1197,7 +1197,10 @@ const phrases = {
     'website-summary-template': 'Шаблон',
     'website-summary-template-disabled': 'Отключен',
     'website-summary-template-generic': 'Общий шаблон',
+    'website-summary-timezone': 'Часовой пояс',
     'website-summary-title': 'Веб-сайт',
+    'website-summary-traffic-report-time': 'Время публикации отчета о трафике',
+    'website-summary-versions': 'Версии',
 
     'welcome': 'Добро пожаловать!',
 

@@ -1208,7 +1208,10 @@ const phrases = {
     'website-summary-template': 'Vorlage',
     'website-summary-template-disabled': 'Deaktiviert',
     'website-summary-template-generic': 'Allgemeine Vorlage',
+    'website-summary-timezone': 'Zeitzone',
     'website-summary-title': 'Webseite',
+    'website-summary-traffic-report-time': 'Veröffentlichungszeit des Verkehrsberichts',
+    'website-summary-versions': 'Versionen',
 
     'welcome': 'Willkommen!',
 

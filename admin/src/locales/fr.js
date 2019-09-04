@@ -1196,7 +1196,10 @@ const phrases = {
     'website-summary-template': "Modèle",
     'website-summary-template-disabled': "Désactivé",
     'website-summary-template-generic': "Modèle générique",
+    'website-summary-timezone': 'Fuseau horaire',
     'website-summary-title': 'Site web',
+    'website-summary-traffic-report-time': 'Heure de publication du rapport de circulation',
+    'website-summary-versions': 'Versions',
 
     'welcome': "Bienvenue!",
 

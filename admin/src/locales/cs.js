@@ -1197,7 +1197,10 @@ const phrases = {
     'website-summary-template': 'Šablona',
     'website-summary-template-disabled': 'Stránka deaktivovaná',
     'website-summary-template-generic': 'Obecná šablona',
+    'website-summary-timezone': 'Časové pásmo',
     'website-summary-title': 'Webová stránka',
+    'website-summary-traffic-report-time': 'Čas zveřejnění dopravní zprávy',
+    'website-summary-versions': 'Verze',
 
     'welcome': 'Vítejte!',
 

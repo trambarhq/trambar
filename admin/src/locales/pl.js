@@ -1197,7 +1197,10 @@ const phrases = {
     'website-summary-template': 'Szablon',
     'website-summary-template-disabled': 'Disabled',
     'website-summary-template-generic': 'Ogólny szablon',
+    'website-summary-timezone': 'Strefa czasowa',
     'website-summary-title': 'Strona internetowa',
+    'website-summary-traffic-report-time': 'Czas publikacji raportu o ruchu',
+    'website-summary-versions': 'Wersje',
 
     'welcome': 'Witamy!',
 

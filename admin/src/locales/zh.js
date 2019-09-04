@@ -1229,7 +1229,10 @@ const traditionalPhrases = {
     'website-summary-template': '網站模板',
     'website-summary-template-disabled': '不使用網站',
     'website-summary-template-generic': '通用模板',
+    'website-summary-timezone': '時區',
     'website-summary-title': '網站',
+    'website-summary-traffic-report-time': '交通報告發佈時間',
+    'website-summary-versions': '版本',
 
     'welcome': '歡迎!',
 
@@ -2404,7 +2407,10 @@ const simplifiedPhrases = {
     'website-summary-template': '网站模板',
     'website-summary-template-disabled': '不使用网站',
     'website-summary-template-generic': '通用模板',
+    'website-summary-timezone': '时区',
     'website-summary-title': '网站',
+    'website-summary-traffic-report-time': '交通报告发布时间',
+    'website-summary-versions': '版本',
 
     'welcome': '欢迎!',
 

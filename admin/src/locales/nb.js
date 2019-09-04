@@ -1194,7 +1194,10 @@ const phrases = {
     'website-summary-template': 'Mal',
     'website-summary-template-disabled': 'Deaktivert',
     'website-summary-template-generic': 'Generisk mal',
+    'website-summary-timezone': 'Tidssone',
     'website-summary-title': 'Nettsted',
+    'website-summary-traffic-report-time': 'Publikasjonstid for trafikkrapport',
+    'website-summary-versions': 'Versjoner',
 
     'welcome': 'Velkommen!',
 

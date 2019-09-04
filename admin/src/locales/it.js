@@ -1231,7 +1231,10 @@ const phrases = {
     'website-summary-template': "Modello",
     'website-summary-template-disabled': "Disattivato",
     'website-summary-template-generic': "Modello generico",
+    'website-summary-timezone': "Fuso orario",
     'website-summary-title': "Sito web",
+    'website-summary-traffic-report-time': "Tempo di pubblicazione del rapporto sul traffico",
+    'website-summary-versions': "Versioni",
 
     'welcome': "Benvenuto!",
 
