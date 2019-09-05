@@ -599,6 +599,11 @@ const traditionalPhrases = {
 
     'text-field-placeholder-none': '空白',
 
+    'tooltip-$first-and-$tooltip': (first, tooltip) => {
+        return [ first, '和', tooltip ];
+    },
+    'tooltip-more': '更多',
+
     'tz-name-abidjan': '阿比讓',
     'tz-name-accra': '阿克拉',
     'tz-name-acre': '阿克里',
@@ -1116,11 +1121,6 @@ const traditionalPhrases = {
     'tz-name-zaporozhye': '扎波羅熱',
     'tz-name-zurich': '蘇黎世',
 
-    'tooltip-$first-and-$tooltip': (first, tooltip) => {
-        return [ first, '和', tooltip ];
-    },
-    'tooltip-more': '更多',
-
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
         let files = cardinalT(count, '一個文件');
         return `上傳${files}，剩下${size}`;
@@ -1216,11 +1216,15 @@ const traditionalPhrases = {
     'validation-duplicate-project-name': '具有該標識符的項目已經存在',
     'validation-duplicate-role-name': '具有該標識符的角色已經存在',
     'validation-duplicate-server-name': '具有該標識符的服務器已經存在',
+    'validation-duplicate-source-name': '具有該標識符的數據源已經存在',
+    'validation-duplicate-spreadsheet-name': '具有該標識符的鏈接已經存在',
     'validation-duplicate-user-name': '具有該用戶名的用戶已經存在',
     'validation-illegal-project-name': '項目標識符不能是《global》，《admin》，《public》，或《srv》',
+    'validation-invalid-timezone': '不正確的時區',
     'validation-localhost-is-wrong': '《localhost》是不正確的',
     'validation-password-for-admin-only': '只有管理員可以使用密碼登錄',
     'validation-required': '需要',
+    'validation-used-by-trambar': '由電車吧使用',
 
     'website-summary-cancel': '取消',
     'website-summary-domain-names': '網站域名',
@@ -1241,13 +1245,13 @@ const traditionalPhrases = {
     'wiki-list-column-public': '公開',
     'wiki-list-column-repo': '數據庫',
     'wiki-list-column-title': '標題',
-    'wiki-list-confirm-select-$count': (count) => {
-        let pages = cardinal(count, '此頁面', '這三頁');
-        return `你確定要將${pages}公開嗎？`;
-    },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, '此頁面', '這三頁');
         return `你確定要取消選擇${pages}嗎？`;
+    },
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, '此頁面', '這三頁');
+        return `你確定要將${pages}公開嗎？`;
     },
     'wiki-list-edit': '編輯頁面列表',
     'wiki-list-public-always': '總是',
@@ -1713,6 +1717,57 @@ const simplifiedPhrases = {
 
     'sign-off-menu-sign-off': '登出',
 
+    'spreadsheet-list-add': '添加新链接',
+    'spreadsheet-list-cancel': '取消',
+    'spreadsheet-list-column-filename': '文件名',
+    'spreadsheet-list-column-last-modified': '上次修改时间',
+    'spreadsheet-list-column-sheets': '表格',
+    'spreadsheet-list-column-url': 'URL',
+    'spreadsheet-list-confirm-disable-$count': (count) => {
+        let spreadsheets = cardinal(count, '此链接', '这两个链接');
+        return `你确定要停用${spreadsheets}吗？ `;
+    },
+    'spreadsheet-list-confirm-reactivate-$count': (count) => {
+        let spreadsheets = cardinal(count, '此链接', '这两个链接');
+        return `你确定要重新启用${spreadsheets}吗？ `;
+    },
+    'spreadsheet-list-edit': '编辑链接列表',
+    'spreadsheet-list-save': '保存链接列表',
+    'spreadsheet-list-status-deleted': '已删除',
+    'spreadsheet-list-status-disabled': '已停用',
+    'spreadsheet-list-title': 'Excel文件',
+
+    'spreadsheet-summary-$title': (title) => {
+        let text = 'Excel文件';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-add': '添加新链接',
+    'spreadsheet-summary-cancel': '取消',
+    'spreadsheet-summary-confirm-delete': '你确定要删除此链接吗？ ',
+    'spreadsheet-summary-confirm-disable': '你确定要停用此链接吗？ ',
+    'spreadsheet-summary-confirm-reactivate': '你确定要重新启用此链接吗？ ',
+    'spreadsheet-summary-delete': '删除链接',
+    'spreadsheet-summary-description': '描述',
+    'spreadsheet-summary-disable': '停用链接',
+    'spreadsheet-summary-edit': '编辑链接',
+    'spreadsheet-summary-filename': '文件名',
+    'spreadsheet-summary-name': '识别码',
+    'spreadsheet-summary-reactivate': '重新启用链接',
+    'spreadsheet-summary-return': '返回链接列表',
+    'spreadsheet-summary-save': '保存链接',
+    'spreadsheet-summary-sheet-$number-$name': (number, name) => {
+        let text = `表格${number}`;
+        if (name) {
+            text += `: ${name}`;
+        }
+        return text;
+    },
+    'spreadsheet-summary-title': '标题',
+    'spreadsheet-summary-url': 'URL',
+
     'task-$seconds': (seconds) => {
         return `${seconds}秒`;
     },
@@ -1776,6 +1831,11 @@ const simplifiedPhrases = {
     },
 
     'text-field-placeholder-none': '沒有',
+
+    'tooltip-$first-and-$tooltip': (first, tooltip) => {
+        return [ first, '和', tooltip ];
+    },
+    'tooltip-more': '更多',
 
     'tz-name-abidjan': '阿比让',
     'tz-name-accra': '阿克拉',
@@ -2294,11 +2354,6 @@ const simplifiedPhrases = {
     'tz-name-zaporozhye': '扎波罗热',
     'tz-name-zurich': '苏黎世',
 
-    'tooltip-$first-and-$tooltip': (first, tooltip) => {
-        return [ first, '和', tooltip ];
-    },
-    'tooltip-more': '更多',
-
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
         let files = cardinalS(count, '一个文件');
         return `上传${files}，剩下${size}`;
@@ -2394,11 +2449,15 @@ const simplifiedPhrases = {
     'validation-duplicate-project-name': '具有该标识符的项目已经存在',
     'validation-duplicate-role-name': '具有该标识符的角色已经存在',
     'validation-duplicate-server-name': '具有该标识符的服务器已经存在',
+    'validation-duplicate-source-name': '具有该标识的数据源已经存在',
+    'validation-duplicate-spreadsheet-name': '具有该标识的链接已经存在',
     'validation-duplicate-user-name': '具有该用户名的用户已经存在',
     'validation-illegal-project-name': '项目标识符不能是《global》，《admin》，《public》，或《srv》',
+    'validation-invalid-timezone': '不正确的时区',
     'validation-localhost-is-wrong': '《localhost》是不正确的',
     'validation-password-for-admin-only': '只有管理员可以使用密码登录',
     'validation-required': '需要',
+    'validation-used-by-trambar': '由电车吧使用',
 
     'website-summary-cancel': '取消',
     'website-summary-domain-names': '网站域名',
@@ -2419,13 +2478,13 @@ const simplifiedPhrases = {
     'wiki-list-column-public': '公开',
     'wiki-list-column-repo': '数据库',
     'wiki-list-column-title': '标题',
-    'wiki-list-confirm-select-$count': (count) => {
-        let pages = cardinal(count, '此页面', '这三页');
-        return `你确定要将${pages}公开吗？`;
-    },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, '此页面', '这三页');
         return `你确定要取消选择${pages}吗？`;
+    },
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, '此页面', '这三页');
+        return `你确定要将${pages}公开吗？`;
     },
     'wiki-list-edit': '编辑页面列表',
     'wiki-list-public-always': '总是',

@@ -567,6 +567,11 @@ const phrases = {
 
     'text-field-placeholder-none': 'нет',
 
+    'tooltip-$first-and-$tooltip': (first, tooltip) => {
+        return [ first, ' и ', tooltip ];
+    },
+    'tooltip-more': 'Более',
+
     'tz-name-abidjan': 'Абиджан',
     'tz-name-accra': 'Акра',
     'tz-name-acre': 'Акри',
@@ -1084,11 +1089,6 @@ const phrases = {
     'tz-name-zaporozhye': 'Запорожье',
     'tz-name-zurich': 'Цюрих',
 
-    'tooltip-$first-and-$tooltip': (first, tooltip) => {
-        return [ first, ' и ', tooltip ];
-    },
-    'tooltip-more': 'Более',
-
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
         let files = cardinal(count, '1 файла', '2 файлов');
         return `Загрузка ${files}, оставшихся ${size}`;
@@ -1181,14 +1181,18 @@ const phrases = {
         return cardinal(count, '1 пользователь', '2 пользователя', '5 пользователей');
     },
 
-    'validation-duplicate-project-name': 'Проект с этим идентификатором уже существует',
-    'validation-duplicate-role-name': 'Роль с этим идентификатором уже существует',
-    'validation-duplicate-server-name': 'Сервер с этим идентификатором уже существует',
+    'validation-duplicate-project-name': 'Проект с таким идентификатором уже существует',
+    'validation-duplicate-role-name': 'Роль с таким идентификатором уже существует',
+    'validation-duplicate-server-name': 'Сервер с таким идентификатором уже существует',
+    'validation-duplicate-source-name': 'Источник с таким идентификатором уже существует',
+    'validation-duplicate-spreadsheet-name': 'Ссылка с таким идентификатором уже существует',
     'validation-duplicate-user-name': 'Пользователь с таким именем уже существует',
     'validation-illegal-project-name': 'Идентификатор проекта не может быть «global», «admin», «public» или «srv»',
+    'validation-invalid-timezone': 'Неверный часовой пояс',
     'validation-localhost-is-wrong': '«localhost» недействителен',
     'validation-password-for-admin-only': 'Только администраторы могут войти с помощью пароля',
     'validation-required': 'Необходимые',
+    'validation-used-by-trambar': 'Используется Трамбар',
 
     'website-summary-cancel': 'Отмена',
     'website-summary-domain-names': 'Доменные имена',
@@ -1209,14 +1213,14 @@ const phrases = {
     'wiki-list-column-public': 'Общедоступная',
     'wiki-list-column-repo': 'Репозиторий',
     'wiki-list-column-title': 'Титул',
+    'wiki-list-confirm-deselect-$count': (count) => {
+        let pages = cardinal(count, 'этой страницы', 'этих 2 страниц', 'этих 5 страниц');
+        return `Вы уверены, что хотите отменить выбор ${pages}?`;
+    },
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, 'эту страницу', 'эти 2 страницы', 'эти 5 страниц');
         let avail = cardinal(count, 'общедоступной', 'общедоступными')
         return `Вы уверены, что хотите сделать ${pages} ${avail}?`;
-    },
-    'wiki-list-confirm-deselect-$count': (count) => {
-        let pages = cardinal(count, 'этой страницы', 'этих 2 страниц', 'этих 5 страниц');
-        return `Вы уверены, что хотите отменить выбор ${pages}?`;
     },
     'wiki-list-edit': 'Редактировать список страниц',
     'wiki-list-public-always': 'всегда',

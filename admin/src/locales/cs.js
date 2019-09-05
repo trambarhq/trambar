@@ -1184,11 +1184,15 @@ const phrases = {
     'validation-duplicate-project-name': 'Projekt s tímto identifikátorem již existuje',
     'validation-duplicate-role-name': 'Role s tímto identifikátorem již existuje',
     'validation-duplicate-server-name': 'Server s tímto identifikátorem již existuje',
+    'validation-duplicate-source-name': 'Zdroj s tímto identifikátorem již existuje',
+    'validation-duplicate-spreadsheet-name': 'Okaz s tímto identifikátorem již existuje',
     'validation-duplicate-user-name': 'Uživatel s tímto uživatelským jménem již existuje',
     'validation-illegal-project-name': 'Identifikátor projektu nemůže být "global", "admin", "public" nebo "srv"',
+    'validation-invalid-timezone': 'Neplatné časové pásmo',
     'validation-localhost-is-wrong': '"localhost" není platné',
     'validation-password-for-admin-only': 'Pouze administrátoři se mohou přihlásit pomocí hesla',
     'validation-required': 'Povinný',
+    'validation-used-by-trambar': 'Používá Trambar',
 
     'website-summary-cancel': 'Zrušit',
     'website-summary-domain-names': 'Doménová jména',
@@ -1209,13 +1213,13 @@ const phrases = {
     'wiki-list-column-public': 'Veřejná',
     'wiki-list-column-repo': 'Úložiště',
     'wiki-list-column-title': 'Titul',
-    'wiki-list-confirm-select-$count': (count) => {
-        let pages = cardinal(count, 'tuto stránku', 'tyto 2 stránky', 'těchto 5 stránek');
-        return `Opravdu chcete tyto ${pages} zveřejnit?`;
-    },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'této stránky', 'těchto 2 stránek', 'těchto 5 stránek');
         return `Opravdu chcete zrušit výběr ${pages}?`;
+    },
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, 'tuto stránku', 'tyto 2 stránky', 'těchto 5 stránek');
+        return `Opravdu chcete tyto ${pages} zveřejnit?`;
     },
     'wiki-list-edit': 'Upravit seznam stránek',
     'wiki-list-public-always': 'vždy',

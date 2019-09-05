@@ -264,6 +264,9 @@ const phrases = {
 
     'role-list-add': 'Pridėti naują vaidmenį',
     'role-list-cancel': 'Atšaukti',
+    'role-list-column-last-modified': 'Pakeitimo data',
+    'role-list-column-title': 'Pavadinimas',
+    'role-list-column-users': 'Vartotojai',
     'role-list-confirm-disable-$count': (count) => {
         let roles = cardinal(count, 'pasirinktą vaidmenį', 'šiuos 2 pasirinktus vaidmenis', 'šiuos 10 pasirinktų vaidmenų');
         return `Ar tikrai norite deaktyvuoti ${roles}?`;
@@ -550,6 +553,11 @@ const phrases = {
     },
 
     'text-field-placeholder-none': 'nieko',
+
+    'tooltip-$first-and-$tooltip': (first, tooltip) => {
+        return [ first, ' ir ', tooltip ];
+    },
+    'tooltip-more': 'Daugiau',
 
     'tz-name-abidjan': 'Abidžanas',
     'tz-name-accra': 'Akra',
@@ -1068,11 +1076,6 @@ const phrases = {
     'tz-name-zaporozhye': 'Zaporožė',
     'tz-name-zurich': 'Ciurichas',
 
-    'tooltip-$first-and-$tooltip': (first, tooltip) => {
-        return [ first, ' ir ', tooltip ];
-    },
-    'tooltip-more': 'Daugiau',
-
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
         let files = cardinal(count, '1 failą', '2 failus', '10 failų');
         return `Siuntimas ${files}, likę ${size}`;
@@ -1168,11 +1171,15 @@ const phrases = {
     'validation-duplicate-project-name': 'Projektas su šiuo identifikatoriumi jau yra',
     'validation-duplicate-role-name': 'Vaidmuo su šiuo identifikatoriumi jau yra',
     'validation-duplicate-server-name': 'Serveris su šiuo identifikatoriumi jau yra',
+    'validation-duplicate-source-name': 'Šaltinis su šiuo identifikatoriumi jau yra',
+    'validation-duplicate-spreadsheet-name': 'Nuoroda su šiuo identifikatoriumi jau yra',
     'validation-duplicate-user-name': 'Vartotojas šiuo vardu jau yra',
     'validation-illegal-project-name': 'Projekto identifikatorius negali būti „global”, „admin”, „public” ar „srv”',
+    'validation-invalid-timezone': 'Neteisinga laiko juosta',
     'validation-localhost-is-wrong': '"localhost" ira netinkamas',
     'validation-password-for-admin-only': 'Tik administratoriai gali prisijungti naudodami slaptažodį',
     'validation-required': 'Privalomas',
+    'validation-used-by-trambar': 'Naudojamas Trambar',
 
     'website-summary-cancel': 'Atšaukti',
     'website-summary-domain-names': 'Domenų vardai',
@@ -1193,13 +1200,13 @@ const phrases = {
     'wiki-list-column-public': 'Viešas',
     'wiki-list-column-repo': 'Saugykla',
     'wiki-list-column-title': 'Pavadinimas',
-    'wiki-list-confirm-select-$count': (count) => {
-        let pages = cardinal(count, 'šį puslapį', 'šiuos 2 puslapius');
-        return `Ar tikrai norite ${pages} paviešinti?`;
-    },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'šio puslapio', 'šių 2 puslapių');
         return `Ar tikrai norite panaikinti ${pages} žymėjimą?`;
+    },
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, 'šį puslapį', 'šiuos 2 puslapius');
+        return `Ar tikrai norite ${pages} paviešinti?`;
     },
     'wiki-list-edit': 'Redaguoti puslapių sąrašą',
     'wiki-list-public-always': 'visada',

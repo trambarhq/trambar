@@ -417,6 +417,27 @@ const phrases = {
     'settings-site-title': "Nome del sito",
     'settings-title': "Impostazioni",
 
+    'sign-in-$title': (title) => {
+        let text = `Accedi`;
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'sign-in-error-access-denied': "Richiesta di accesso rifiutata",
+    'sign-in-error-account-disabled': "L'account è attualmente disabilitato",
+    'sign-in-error-existing-users-only': "Solo il personale autorizzato può accedere a questo sistema",
+    'sign-in-error-restricted-area': "L'utente non è un amministratore",
+    'sign-in-oauth': "Accedi utilizzando OAuth",
+    'sign-in-password': "Password:",
+    'sign-in-problem-incorrect-username-password': "Nome utente o password errati",
+    'sign-in-problem-no-support-for-username-password': "Il sistema non accetta la password",
+    'sign-in-problem-unexpected-error': "Si è verificato un errore imprevisto",
+    'sign-in-submit': "Invia",
+    'sign-in-username': "Nome utente:",
+
+    'sign-off-menu-sign-off': "Disconnettersi",
+
     'spreadsheet-list-add': "Aggiungi nuovo link",
     'spreadsheet-list-cancel': "Annulla",
     'spreadsheet-list-column-filename': "Nome del file",
@@ -467,27 +488,6 @@ const phrases = {
     },
     'spreadsheet-summary-title': "Titolo",
     'spreadsheet-summary-url': "URL",
-
-    'sign-in-$title': (title) => {
-        let text = `Accedi`;
-        if (title) {
-            text += `: ${title}`;
-        }
-        return text;
-    },
-    'sign-in-error-access-denied': "Richiesta di accesso rifiutata",
-    'sign-in-error-account-disabled': "L'account è attualmente disabilitato",
-    'sign-in-error-existing-users-only': "Solo il personale autorizzato può accedere a questo sistema",
-    'sign-in-error-restricted-area': "L'utente non è un amministratore",
-    'sign-in-oauth': "Accedi utilizzando OAuth",
-    'sign-in-password': "Password:",
-    'sign-in-problem-incorrect-username-password': "Nome utente o password errati",
-    'sign-in-problem-no-support-for-username-password': "Il sistema non accetta la password",
-    'sign-in-problem-unexpected-error': "Si è verificato un errore imprevisto",
-    'sign-in-submit': "Invia",
-    'sign-in-username': "Nome utente:",
-
-    'sign-off-menu-sign-off': "Disconnettersi",
 
     'task-$seconds': (seconds) => {
         return (seconds === 1) ? `1 secondo` : `${seconds} secondi`;
@@ -601,6 +601,11 @@ const phrases = {
     },
 
     'text-field-placeholder-none': "nessuno",
+
+    'tooltip-$first-and-$tooltip': (first, tooltip) => {
+        return [ first, ' e ', tooltip ];
+    },
+    'tooltip-more': "Altri",
 
     'tz-name-abidjan': "Abidjan",
     'tz-name-accra': "Accra",
@@ -1119,11 +1124,6 @@ const phrases = {
     'tz-name-zaporozhye': "Zaporozhye",
     'tz-name-zurich': "Zurich",
 
-    'tooltip-$first-and-$tooltip': (first, tooltip) => {
-        return [ first, ' e ', tooltip ];
-    },
-    'tooltip-more': "Altri",
-
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
         return `Caricamento di ${count} file, ${size} rimanenti`;
     },
@@ -1218,11 +1218,15 @@ const phrases = {
     'validation-duplicate-project-name': "Esiste già un progetto con quell'identificatore",
     'validation-duplicate-role-name': "Esiste già un ruolo con quell'identificatore",
     'validation-duplicate-server-name': "Un server con quell'identificatore esiste già",
+    'validation-duplicate-source-name': "Una fonte con quell'identificatore esiste già",
+    'validation-duplicate-spreadsheet-name': "Un link con quell'identificatore esiste già",
     'validation-duplicate-user-name': "Esiste già un utente con quel nome",
     'validation-illegal-project-name': "L'identificatore del progetto non può essere «global», «admin», «public» o «srv»",
+    'validation-invalid-timezone': "Fuso orario non valido",
     'validation-localhost-is-wrong': "«localhost» non è valido",
     'validation-password-for-admin-only': "Solo gli amministratori possono accedere utilizzando la password",
     'validation-required': "Necessario",
+    'validation-used-by-trambar': "Utilizzato da Trambar",
 
     'website-summary-cancel': "Annulla",
     'website-summary-domain-names': "Nomi di dominio",
@@ -1243,13 +1247,13 @@ const phrases = {
     'wiki-list-column-public': "Pubblica",
     'wiki-list-column-repo': "Repository",
     'wiki-list-column-title': "Titolo",
-    'wiki-list-confirm-select-$count': (count) => {
-        let pages = cardinal(count, "questa pagina", "queste 2 pagine");
-        return `Sei sicuro di voler rendere pubblica ${pages}?`;
-    },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, "questa pagina", "queste 2 pagine");
         return `Sei sicuro di voler deselezionare ${pages}?`;
+    },
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, "questa pagina", "queste 2 pagine");
+        return `Sei sicuro di voler rendere pubblica ${pages}?`;
     },
     'wiki-list-edit': "Modifica la lista di pagine",
     'wiki-list-public-always': "sempre",

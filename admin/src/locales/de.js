@@ -148,7 +148,7 @@ const phrases = {
     'nav-server-new': 'Neuer Server',
     'nav-servers': 'Server',
     'nav-settings': 'Einstellungen',
-    'nav-spreadsheetss': 'Excel-Dateien',
+    'nav-spreadsheets': 'Excel-Dateien',
     'nav-user-new': 'Neue Benutzer',
     'nav-users': 'Benutzer',
     'nav-website': 'Webseite',
@@ -1195,11 +1195,15 @@ const phrases = {
     'validation-duplicate-project-name': 'Ein Projekt mit dieser Kennung existiert bereits',
     'validation-duplicate-role-name': 'Eine Rolle mit dieser Kennung existiert bereits',
     'validation-duplicate-server-name': 'Ein Server mit dieser Kennung existiert bereits',
+    'validation-duplicate-source-name': 'Eine Quelle mit dieser Kennung existiert bereits',
+    'validation-duplicate-spreadsheet-name': 'Ein Link mit dieser Kennung existiert bereits',
     'validation-duplicate-user-name': 'Ein Benutzer mit diesem Namen existiert bereits',
     'validation-illegal-project-name': 'Die Projektkennung darf nicht "global", "admin", "public" oder "srv" sein',
+    'validation-invalid-timezone': 'Ungültige Zeitzone',
     'validation-localhost-is-wrong': '"localhost" ist nicht gültig',
     'validation-password-for-admin-only': 'Nur Administratoren können sich mit einem Passwort anmelden',
     'validation-required': 'Erforderlich',
+    'validation-used-by-trambar': 'Wird von der Trambar benutzt',
 
     'website-summary-cancel': 'Abbrechen',
     'website-summary-domain-names': 'Domain Namen',
@@ -1220,13 +1224,13 @@ const phrases = {
     'wiki-list-column-public': 'Öffentliche',
     'wiki-list-column-repo': 'Repository',
     'wiki-list-column-title': 'Titel',
-    'wiki-list-confirm-select-$count': (count) => {
-        let pages = cardinal(count, 'diese Seite', 'diese 2 Seiten');
-        return `Möchten Sie ${pages} wirklich öffentlich machen?`;
-    },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'diese Seite', 'diese 2 Seiten');
         return `Möchten Sie ${pages} wirklich deaktivieren?`;
+    },
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, 'diese Seite', 'diese 2 Seiten');
+        return `Möchten Sie ${pages} wirklich öffentlich machen?`;
     },
     'wiki-list-edit': 'Seitenliste bearbeiten',
     'wiki-list-public-always': 'immer',

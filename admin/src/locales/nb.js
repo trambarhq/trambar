@@ -564,6 +564,11 @@ const phrases = {
 
     'text-field-placeholder-none': 'ingen',
 
+    'tooltip-$first-and-$tooltip': (first, tooltip) => {
+        return [ first, ' og ', tooltip ];
+    },
+    'tooltip-more': 'Flere',
+
     'tz-name-abidjan': 'Abidjan',
     'tz-name-accra': 'Accra',
     'tz-name-acre': 'Acre',
@@ -1081,11 +1086,6 @@ const phrases = {
     'tz-name-zaporozhye': 'Zaporozhye',
     'tz-name-zurich': 'Zürich',
 
-    'tooltip-$first-and-$tooltip': (first, tooltip) => {
-        return [ first, ' og ', tooltip ];
-    },
-    'tooltip-more': 'Flere',
-
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
         let files = cardinal(count, '1 fil', '2 filer');
         return `Laster opp ${files}, ${size} gjenværende`;
@@ -1181,11 +1181,15 @@ const phrases = {
     'validation-duplicate-project-name': 'Et prosjekt med den identifikatoren eksisterer allerede',
     'validation-duplicate-role-name': 'En rolle med den identifikatoren eksisterer allerede',
     'validation-duplicate-server-name': 'En server med den identifikatoren eksisterer allerede',
+    'validation-duplicate-source-name': 'En kilde med den identifikatoren finnes allerede',
+    'validation-duplicate-spreadsheet-name': 'En lenke med den identifikatoren finnes allerede',
     'validation-duplicate-user-name': 'En bruker med det navnet eksisterer allerede',
     'validation-illegal-project-name': 'Prosjektidentifikator kan ikke være "global", "admin", "public" eller "srv"',
+    'validation-invalid-timezone': 'Ugyldig tidssone',
     'validation-localhost-is-wrong': '"localhost" er ikke gyldig',
     'validation-password-for-admin-only': 'Bare administratorer kan logge på med passord',
     'validation-required': 'Påkrevd',
+    'validation-used-by-trambar': 'Brukt av Trambar',
 
     'website-summary-cancel': 'Avbryt',
     'website-summary-domain-names': 'Domenenavn',
@@ -1206,14 +1210,14 @@ const phrases = {
     'wiki-list-column-public': 'Offentlig',
     'wiki-list-column-repo': 'Repo',
     'wiki-list-column-title': 'Tittel',
+    'wiki-list-confirm-deselect-$count': (count) => {
+        let pages = cardinal(count, 'denne siden', 'disse 2 sidene');
+        return `Er du sikker på at du vil fjerne markeringen av ${page}?`;
+    },
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, 'denne siden', 'disse 2 sidene');
         let e = (count === 1) ? '' : 'e';
         return `Er du sikker på at du vil gjøre ${pages} offentlig${e}?`;
-    },
-    'wiki-list-confirm-deselect-$count': (count) => {
-        let pages = cardinal(count, 'denne siden', 'disse 2 sidene');
-        return `Er du sikker på at du vil fjerne markeringen av ${page}?`;
     },
     'wiki-list-edit': 'Rediger sideliste',
     'wiki-list-public-always': 'alltid',

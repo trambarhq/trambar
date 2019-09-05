@@ -1232,6 +1232,7 @@ const phrases = {
     'validation-duplicate-project-name': 'A project with that identifier already exists',
     'validation-duplicate-role-name': 'A role with that identifier already exists',
     'validation-duplicate-server-name': 'A server with that identifier already exists',
+    'validation-duplicate-source-name': 'A data source with that identifier already exists',
     'validation-duplicate-spreadsheet-name': 'A link with that identifier already exists',
     'validation-duplicate-user-name': 'A user with that name already exists',
     'validation-illegal-project-name': 'Project identifier cannot be "global", "admin", "public", or "srv"',

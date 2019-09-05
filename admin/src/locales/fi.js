@@ -415,6 +415,27 @@ const phrases = {
     'settings-site-title': 'Sivuston nimi',
     'settings-title': 'Asetukset',
 
+    'sign-in-$title': (title) => {
+        let text = `Kirjaudu sisään`;
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'sign-in-error-access-denied': 'Hakuhakemus hylättiin',
+    'sign-in-error-account-disabled': 'Tili on tällä hetkellä poissa käytöstä',
+    'sign-in-error-existing-users-only': 'Ainoastaan valtuutettu henkilöstö voi käyttää tätä järjestelmää',
+    'sign-in-error-restricted-area': 'Käyttäjä ei ole järjestelmänvalvoja',
+    'sign-in-oauth': 'Kirjaudu OAuthin kautta',
+    'sign-in-password': 'Salasana:',
+    'sign-in-problem-incorrect-username-password': 'Väärä käyttäjätunnus tai salasana',
+    'sign-in-problem-no-support-for-username-password': 'Järjestelmä ei hyväksy salasanaa',
+    'sign-in-problem-unexpected-error': 'Odottamaton virhe',
+    'sign-in-submit': 'Kirjaudu sisään',
+    'sign-in-username': 'Käyttäjätunnus:',
+
+    'sign-off-menu-sign-off': 'Kirjaudu ulos',
+
     'spreadsheet-list-add': 'Lisää uusi linkki',
     'spreadsheet-list-cancel': 'Peruutta',
     'spreadsheet-list-column-filename': 'Tiedoston nimi',
@@ -465,27 +486,6 @@ const phrases = {
     },
     'spreadsheet-summary-title': 'Otsikko',
     'spreadsheet-summary-url': 'URL',
-
-    'sign-in-$title': (title) => {
-        let text = `Kirjaudu sisään`;
-        if (title) {
-            text += `: ${title}`;
-        }
-        return text;
-    },
-    'sign-in-error-access-denied': 'Hakuhakemus hylättiin',
-    'sign-in-error-account-disabled': 'Tili on tällä hetkellä poissa käytöstä',
-    'sign-in-error-existing-users-only': 'Ainoastaan valtuutettu henkilöstö voi käyttää tätä järjestelmää',
-    'sign-in-error-restricted-area': 'Käyttäjä ei ole järjestelmänvalvoja',
-    'sign-in-oauth': 'Kirjaudu OAuthin kautta',
-    'sign-in-password': 'Salasana:',
-    'sign-in-problem-incorrect-username-password': 'Väärä käyttäjätunnus tai salasana',
-    'sign-in-problem-no-support-for-username-password': 'Järjestelmä ei hyväksy salasanaa',
-    'sign-in-problem-unexpected-error': 'Odottamaton virhe',
-    'sign-in-submit': 'Kirjaudu sisään',
-    'sign-in-username': 'Käyttäjätunnus:',
-
-    'sign-off-menu-sign-off': 'Kirjaudu ulos',
 
     'task-$seconds': (seconds) => {
         return (seconds === 1) ? `1 sekunti` : `${seconds} sekuntia`;
@@ -563,6 +563,11 @@ const phrases = {
     },
 
     'text-field-placeholder-none': 'ei mitään',
+
+    'tooltip-$first-and-$tooltip': (first, tooltip) => {
+        return [ first, ' ja ', tooltip ];
+    },
+    'tooltip-more': 'Lisää',
 
     'tz-name-abidjan': 'Abidjan',
     'tz-name-accra': 'Accra',
@@ -1081,11 +1086,6 @@ const phrases = {
     'tz-name-zaporozhye': 'Zaporozhye',
     'tz-name-zurich': 'Zurich',
 
-    'tooltip-$first-and-$tooltip': (first, tooltip) => {
-        return [ first, ' ja ', tooltip ];
-    },
-    'tooltip-more': 'Lisää',
-
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
         let files = cardinal(count, '1 tiedosto', '2 tiedostoa');
         return `Lataaminen ${files}, ${size} jäljellä`;
@@ -1094,13 +1094,21 @@ const phrases = {
     'user-list-add': 'Lisää uusi käyttäjä',
     'user-list-approve-all': 'Hyväksy kaikki pyynnöt',
     'user-list-cancel': 'Peruutta',
+
+    'user-list-column-email': 'E-mail',
+    'user-list-column-last-modified': 'Last modified',
+    'user-list-column-name': 'Name',
+    'user-list-column-projects': 'Projects',
+    'user-list-column-roles': 'Roles',
+    'user-list-column-type': 'Type',
+
     'user-list-column-email': 'Sähköpostiosoite',
     'user-list-column-last-modified': 'Viimeksi muokattu',
     'user-list-column-name': 'Nimi',
     'user-list-column-projects': 'Projektit',
     'user-list-column-roles': 'Roolit',
     'user-list-column-type': 'Tyyppi',
-    'user-list-column-users': 'Käyttäjät',
+    'user-list-column-username': 'Käyttäjänimi',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'tämän käyttäjätili', 'nämä 2 käyttäjätilejä');
         return `Haluatko varmasti deaktivoida ${accounts}?`;
@@ -1181,11 +1189,15 @@ const phrases = {
     'validation-duplicate-project-name': 'Projekti, jolla on sama tunniste, on jo olemassa',
     'validation-duplicate-role-name': 'Rooli, jolla on sama tunniste, on jo olemassa',
     'validation-duplicate-server-name': 'Palvelin, jolla on sama tunniste, on jo olemassa',
+    'validation-duplicate-source-name': 'Lähde, jolla on tämä tunniste, on jo olemassa',
+    'validation-duplicate-spreadsheet-name': 'Linkki, jolla on tämä tunniste, on jo olemassa',
     'validation-duplicate-user-name': 'Käyttäjä, jolla on kyseinen tunniste, on jo olemassa',
     'validation-illegal-project-name': 'Projektin tunniste ei voi olla “global”, “admin”, “public” tai “srv”',
+    'validation-invalid-timezone': 'Virheellinen aikavyöhyke',
     'validation-localhost-is-wrong': '"localhost" ei ole kelvollinen',
     'validation-password-for-admin-only': 'Vain järjestelmänvalvojat voivat kirjautua salasanalla',
     'validation-required': 'Edellytetään',
+    'validation-used-by-trambar': 'Trambar käyttämä',
 
     'website-summary-cancel': 'Peruutta',
     'website-summary-domain-names': 'Domain-nimet',
@@ -1206,13 +1218,13 @@ const phrases = {
     'wiki-list-column-public': 'Julkinen',
     'wiki-list-column-repo': 'Arkisto',
     'wiki-list-column-title': 'Otsikko',
-    'wiki-list-confirm-select-$count': (count) => {
-        let pages = cardinal(count, 'tämän sivun', 'nämä 2 sivua');
-        return `Haluatko varmasti julkaista ${pages}?`;
-    },
     'wiki-list-confirm-deselect-$count': (count) => {
         let pages = cardinal(count, 'tämän sivun', 'näiden 2 sivun');
         return `Haluatko varmasti poistaa ${pages} valinnan?`;
+    },
+    'wiki-list-confirm-select-$count': (count) => {
+        let pages = cardinal(count, 'tämän sivun', 'nämä 2 sivua');
+        return `Haluatko varmasti julkaista ${pages}?`;
     },
     'wiki-list-edit': 'Muokkaa sivuluetteloa',
     'wiki-list-public-always': 'aina',
@@ -1229,8 +1241,8 @@ const phrases = {
         return text;
     },
     'wiki-summary-cancel': 'Peruutta',
-    'wiki-summary-confirm-select': 'Haluatko varmasti julkaista tämän sivun?',
     'wiki-summary-confirm-deselect': 'Haluatko varmasti poistaa tämän sivun valinnan?',
+    'wiki-summary-confirm-select': 'Haluatko varmasti julkaista tämän sivun?',
     'wiki-summary-edit': 'Muokkaa sivua',
     'wiki-summary-page-contents': 'Sisällys',
     'wiki-summary-public': 'Julkinen',
