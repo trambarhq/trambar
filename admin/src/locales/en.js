@@ -271,12 +271,12 @@ const phrases = {
     'rest-list-column-type': 'Type',
     'rest-list-column-url': 'URL',
     'rest-list-confirm-disable-$count': (count) => {
-        let rests = cardinal(count, 'this source', 'these 2 sources');
-        return `Are you sure you want to disable ${rests}?`;
+        let sources = cardinal(count, 'this source', 'these 2 sources');
+        return `Are you sure you want to disable ${sources}?`;
     },
     'rest-list-confirm-reactivate-$count': (count) => {
-        let rests = cardinal(count, 'this source', 'these 2 sources');
-        return `Are you sure you want to reactivate ${rests}?`;
+        let sources = cardinal(count, 'this source', 'these 2 sources');
+        return `Are you sure you want to reactivate ${sources}?`;
     },
     'rest-list-edit': 'Edit source list',
     'rest-list-save': 'Save source list',

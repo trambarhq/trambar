@@ -260,6 +260,53 @@ const phrases = {
         return cardinal(count, '1 repo', '2 repoer');
     },
 
+    'rest-list-add': 'Legg til ny datakilde',
+    'rest-list-cancel': 'Avbryt',
+    'rest-list-column-identifier': 'Identifikator',
+    'rest-list-column-last-modified': 'Sist endret',
+    'rest-list-column-type': 'Type',
+    'rest-list-column-url': 'URL',
+    'rest-list-confirm-disable-$count': (count) => {
+        let sources = cardinal(count, 'denne kilden', 'disse 2 kildene');
+        return `Er du sikker på at du vil deaktivere ${sources}?`;
+    },
+    'rest-list-confirm-reactivate-$count': (count) => {
+        let sources = cardinal(count, 'denne kilden', 'disse 2 kildene');
+        return `Er du sikker på at du vil aktivere ${sources} på nytt?`;
+    },
+    'rest-list-edit': 'Rediger kildelisten',
+    'rest-list-save': 'Lagre kildelisten',
+    'rest-list-status-deleted': 'Slettet',
+    'rest-list-status-disabled': 'Deaktivert',
+    'rest-list-title': 'REST datakilder',
+
+    'rest-summary-$title': (title) => {
+        let text = 'REST datakilde';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'rest-summary-add': 'Legg til ny datakilde',
+    'rest-summary-cancel': 'Avbryt',
+    'rest-summary-confirm-delete': 'Er du sikker på at du vil slette denne kilden?',
+    'rest-summary-confirm-disable': 'Er du sikker på at du vil deaktivere denne kilden?',
+    'rest-summary-confirm-reactivate': 'Er du sikker på at du vil aktivere denne kilden på nytt?',
+    'rest-summary-delete': 'Slett kilden',
+    'rest-summary-description': 'Beskrivelse',
+    'rest-summary-disable': 'Deaktiver kilden',
+    'rest-summary-edit': 'Rediger kilden',
+    'rest-summary-max-age': 'Maks alder',
+    'rest-summary-name': 'Identifikator',
+    'rest-summary-reactivate': 'Reaktiver kilden',
+    'rest-summary-return': 'Gå tilbake til kildelisten',
+    'rest-summary-save': 'Lagre kilden',
+    'rest-summary-type': 'Type',
+    'rest-summary-url': 'URL',
+
+    'rest-type-generic': 'Generisk',
+    'rest-type-wordpress': 'WordPress',
+
     'role-list-add': 'Legg til ny rolle',
     'role-list-cancel': 'Avbryt',
     'role-list-column-last-modified': 'Sist endret',
@@ -293,8 +340,8 @@ const phrases = {
     'role-summary-confirm-reactivate': 'Er du sikker på at du vil reaktivere denne rollen?',
     'role-summary-delete': 'Slett rollen',
     'role-summary-description': 'Beskrivelse',
-    'role-summary-disable': 'Deaktiver rolle',
-    'role-summary-edit': 'Rediger rolle',
+    'role-summary-disable': 'Deaktiver rollen',
+    'role-summary-edit': 'Rediger rollen',
     'role-summary-name': 'Identifier',
     'role-summary-rating': 'Historie prioritet',
     'role-summary-rating-high': 'Høy',
@@ -302,9 +349,9 @@ const phrases = {
     'role-summary-rating-normal': 'Normal',
     'role-summary-rating-very-high': 'Veldig høy',
     'role-summary-rating-very-low': 'Veldig lav',
-    'role-summary-reactivate': 'Reaktiver rolle',
+    'role-summary-reactivate': 'Reaktiver rollen',
     'role-summary-return': 'Gå tilbake til rollelisten',
-    'role-summary-save': 'Lagre rolle',
+    'role-summary-save': 'Lagre rollen',
     'role-summary-title': 'Navn',
     'role-summary-users': 'Brukere',
 
@@ -468,15 +515,15 @@ const phrases = {
     'spreadsheet-summary-confirm-delete': 'Er du sikker på at du vil slette denne lenken?',
     'spreadsheet-summary-confirm-disable': 'Er du sikker på at du vil deaktivere denne lenken?',
     'spreadsheet-summary-confirm-reactivate': 'Er du sikker på at du vil aktivere denne lenken på nytt?',
-    'spreadsheet-summary-delete': 'Slett lenke',
+    'spreadsheet-summary-delete': 'Slett lenken',
     'spreadsheet-summary-description': 'Beskrivelse',
-    'spreadsheet-summary-disable': 'Deaktiver lenke',
-    'spreadsheet-summary-edit': 'Rediger lenke',
+    'spreadsheet-summary-disable': 'Deaktiver lenken',
+    'spreadsheet-summary-edit': 'Rediger lenken',
     'spreadsheet-summary-filename': 'Filnavn',
     'spreadsheet-summary-name': 'Identifikator',
-    'spreadsheet-summary-reactivate': 'Reaktivere lenke',
+    'spreadsheet-summary-reactivate': 'Reaktivere lenken',
     'spreadsheet-summary-return': 'Gå tilbake til lenkelisten',
-    'spreadsheet-summary-save': 'Lagre lenke',
+    'spreadsheet-summary-save': 'Lagre lenken',
     'spreadsheet-summary-sheet-$number-$name': (number, name) => {
         let text = `Ark ${number}`;
         if (name) {

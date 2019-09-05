@@ -176,7 +176,7 @@ const phrases = {
     'project-list-edit': 'Upravit seznam projektů',
     'project-list-save': 'Uložit seznam projektů',
     'project-list-status-archived': 'Archivovány',
-    'project-list-status-deleted': 'Smazány',
+    'project-list-status-deleted': 'Smazán',
     'project-list-title': 'Projekty',
 
     'project-summary-$title': (title) => {
@@ -262,6 +262,54 @@ const phrases = {
     'repository-tooltip-$count': (count) => {
         return cardinal(count, '1 repozitář', '2 repozitáře', '5 repozitářů');
     },
+
+    'rest-list-add': 'Přidat nový zdroj',
+    'rest-list-cancel': 'Zrušit',
+    'rest-list-column-identifier': 'Identifikátor',
+    'rest-list-column-last-modified': 'Změněno',
+    'rest-list-column-type': 'Typ',
+    'rest-list-column-url': 'URL',
+    'rest-list-confirm-disable-$count': (count) => {
+        let sources = cardinal(count, 'tento zdroj', 'tyto 2 zdroje', 'těchto 5 zdrojů');
+        return `Opravdu chcete ${sources} deaktivovat?`;
+    },
+    'rest-list-confirm-reactivate-$count': (count) => {
+        let sources = cardinal(count, 'tento zdroj', 'tyto 2 zdroje', 'těchto 5 zdrojů');
+        return `Opravdu chcete ${sources} znovu aktivovat?`;
+    },
+    'rest-list-edit': 'Upravit seznam zdrojů',
+    'rest-list-save': 'Uložit seznam zdrojů',
+    'rest-list-status-deleted': 'Smazán',
+    'rest-list-status-disabled': 'Deaktivován',
+    'rest-list-title': 'Zdroje REST',
+
+    'rest-summary-$title': (title) => {
+        let text = 'Zdroj REST';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'rest-summary-add': 'Přidat nový zdroj',
+    'rest-summary-cancel': 'Zrušit',
+
+    'rest-summary-confirm-delete': 'Opravdu chcete tento zdroj smazat?',
+    'rest-summary-confirm-disable': 'Opravdu chcete tento zdroj deaktivovat?',
+    'rest-summary-confirm-reactivate': 'Opravdu chcete tento zdroj znovu aktivovat?',
+    'rest-summary-delete': 'Smazat zdroj',
+    'rest-summary-description': 'Popis',
+    'rest-summary-disable': 'Deaktivovat zdroj',
+    'rest-summary-edit': 'Upravit zdroj',
+    'rest-summary-max-age': 'Maximální věk',
+    'rest-summary-name': 'Identifikátor',
+    'rest-summary-reactivate': 'Reaktivovat zdroj',
+    'rest-summary-return': 'Návrat na seznam zdrojů',
+    'rest-summary-save': 'Uložit zdroj',
+    'rest-summary-type': 'Typ',
+    'rest-summary-url': 'URL',
+
+    'rest-type-generic': 'Obecný',
+    'rest-type-wordpress': 'WordPress',
 
     'role-list-add': 'Přidat novou roli',
     'role-list-cancel': 'Zrušit',
