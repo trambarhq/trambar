@@ -263,6 +263,53 @@ const phrases = {
         return cardinal(count, '1 репозиторий', '2 репозитория', '5 репозиториев');
     },
 
+    'rest-list-add': 'Добавить новый источник',
+    'rest-list-cancel': 'Отмена',
+    'rest-list-column-identifier': 'Идентификатор',
+    'rest-list-column-last-modified': 'Изменено',
+    'rest-list-column-type': 'Тип',
+    'rest-list-column-url': 'URL',
+    'rest-list-confirm-disable-$count': (count) => {
+        let sources = cardinal(count, 'этот источник', 'эти 2 источника', 'эти 5 источников');
+        return `Вы уверены, что хотите отключить ${sources}?`;
+    },
+    'rest-list-confirm-reactivate-$count': (count) => {
+        let sources = cardinal(count, 'этот источник', 'эти 2 источника', 'эти 5 источников');
+        return `Вы уверены, что хотите реактивировать ${sources}?`;
+    },
+    'rest-list-edit': 'Изменить список источников',
+    'rest-list-save': 'Сохранить список источников',
+    'rest-list-status-deleted': 'Удален',
+    'rest-list-status-disabled': 'Отключен',
+    'rest-list-title': 'Источники REST',
+
+    'rest-summary-$title': (title) => {
+        let text = 'Источники REST';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'rest-summary-add': 'Добавить новый источник',
+    'rest-summary-cancel': 'Отмена',
+    'rest-summary-confirm-delete': 'Вы уверены, что хотите удалить этот источник?',
+    'rest-summary-confirm-disable': 'Вы уверены, что хотите отключить этот источник?',
+    'rest-summary-confirm-reactivate': 'Вы уверены, что хотите реактивировать этот источник?',
+    'rest-summary-delete': 'Удалить источник',
+    'rest-summary-description': 'Описание',
+    'rest-summary-disable': 'Отключить источник',
+    'rest-summary-edit': 'Редактировать источник',
+    'rest-summary-max-age': 'Макс возраст',
+    'rest-summary-name': 'Идентификатор',
+    'rest-summary-reactivate': 'Реактивировать источник',
+    'rest-summary-return': 'Вернуться к списку источников',
+    'rest-summary-save': 'Сохранить источник',
+    'rest-summary-type': 'Тип',
+    'rest-summary-url': 'URL',
+
+    'rest-type-generic': 'Общий',
+    'rest-type-wordpress': 'WordPress',
+
     'role-list-add': 'Добавить роль',
     'role-list-cancel': 'Отмена',
     'role-list-column-last-modified': 'Изменено',
@@ -453,7 +500,7 @@ const phrases = {
         let spreadsheets = cardinal(count, 'эту ссылку', 'эти 2 ссылки', 'эти 5 ссылок');
         return `Вы уверены, что хотите реактивировать ${spreadsheets}?`;
     },
-    'spreadsheet-list-edit': 'Изменить список ссылок',
+    'spreadsheet-list-edit': 'Редактировать список ссылок',
     'spreadsheet-list-save': 'Сохранить список ссылок',
     'spreadsheet-list-status-deleted': 'Удалена',
     'spreadsheet-list-status-disabled': 'Отключена',
@@ -474,7 +521,7 @@ const phrases = {
     'spreadsheet-summary-delete': 'Удалить ссылку',
     'spreadsheet-summary-description': 'Описание',
     'spreadsheet-summary-disable': 'Отключить ссылку',
-    'spreadsheet-summary-edit': 'Изменить ссылку',
+    'spreadsheet-summary-edit': 'Редактировать ссылку',
     'spreadsheet-summary-filename': 'Имя файла',
     'spreadsheet-summary-name': 'Идентификатор',
     'spreadsheet-summary-reactivate': 'Реактивировать ссылку',

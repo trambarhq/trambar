@@ -260,6 +260,53 @@ const phrases = {
         return cardinal(count, '1 arkisto', '2 arkistoa');
     },
 
+    'rest-list-add': 'Lisää uusi tietolähde',
+    'rest-list-cancel': 'Peruutta',
+    'rest-list-column-identifier': 'Tunniste',
+    'rest-list-column-last-modified': 'Viimeksi muokattu',
+    'rest-list-column-type': 'Tyyppi',
+    'rest-list-column-url': 'URL',
+    'rest-list-confirm-disable-$count': (count) => {
+        let sources = cardinal(count, 'tämän tietolähteen', 'nämä 2 tietolähdettä');
+        return `Haluatko varmasti deaktivoida ${sources}?`;
+    },
+    'rest-list-confirm-reactivate-$count': (count) => {
+        let sources = cardinal(count, 'tämän tietolähteen', 'nämä 2 tietolähdettä');
+        return `Haluatko varmasti aktivoida ${sources} uudelleen?`;
+    },
+    'rest-list-edit': 'Muokkaa lähdeluetteloa',
+    'rest-list-save': 'Tallenna lähdeluettelo',
+    'rest-list-status-deleted': 'Poistettu',
+    'rest-list-status-disabled': 'Deaktivoitu',
+    'rest-list-title': 'REST-tietolähteet',
+
+    'rest-summary-$title': (title) => {
+        let text = 'REST-tietolähte';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'rest-summary-add': 'Lisää uusi tietolähde',
+    'rest-summary-cancel': 'Peruutta',
+    'rest-summary-confirm-delete': 'Haluatko varmasti poistaa tämän tietolähteen?',
+    'rest-summary-confirm-disable': 'Haluatko varmasti deaktivoida tämän tietolähteen?',
+    'rest-summary-confirm-reactivate': 'Haluatko varmasti aktivoida tämän tietolähteen uudelleen?',
+    'rest-summary-delete': 'Poista tietolähde',
+    'rest-summary-description': 'Kuvaus',
+    'rest-summary-disable': 'Deaktivoi tietolähde',
+    'rest-summary-edit': 'Muokkaa tietolähde',
+    'rest-summary-max-age': 'Enimmäisikä',
+    'rest-summary-name': 'Tunniste',
+    'rest-summary-reactivate': 'Reaktivoi tietolähde',
+    'rest-summary-return': 'Palaa lähdeluetteloon',
+    'rest-summary-save': 'Tallenna tietolähde',
+    'rest-summary-type': 'Typpi',
+    'rest-summary-url': 'URL',
+
+    'rest-type-generic': 'Yleinen',
+    'rest-type-wordpress': 'WordPress',
+
     'role-list-add': 'Lisää uusi rooli',
     'role-list-cancel': 'Peruutta',
     'role-list-column-last-modified': 'Viimeksi muokattu',

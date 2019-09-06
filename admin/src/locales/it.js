@@ -262,6 +262,53 @@ const phrases = {
         return `${count} repository`;
     },
 
+    'rest-list-add': "Aggiungi una nuova fonte",
+    'rest-list-cancel': "Annulla",
+    'rest-list-column-identifier': "Identificatore",
+    'rest-list-column-last-modified': "Ultima modifica",
+    'rest-list-column-type': "Tipo",
+    'rest-list-column-url': "URL",
+    'rest-list-confirm-disable-$count': (count) => {
+        let sources = cardinal(count, "questa fonte", "queste 2 fonti");
+        return `Sei sicuro di voler disattivare ${sources}?`;
+    },
+    'rest-list-confirm-reactivate-$count': (count) => {
+        let sources = cardinal(count, "questa fonte", "queste 2 fonti");
+        return `Sei sicuro di voler riattivare ${sources}?`;
+    },
+    'rest-list-edit': "Modifica la lista delle fonti",
+    'rest-list-save': "Salva la lista delle fonti",
+    'rest-list-status-deleted': "Eliminato",
+    'rest-list-status-disabled': "Disattivato",
+    'rest-list-title': "Fonti REST",
+
+    'rest-summary-$title': (title) => {
+        let text = "Fonte REST";
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'rest-summary-add': "Aggiungi una nuova fonte",
+    'rest-summary-cancel': "Annulla",
+    'rest-summary-confirm-delete': "Sei sicuro di voler eliminare questa fonte?",
+    'rest-summary-confirm-disable': "Sei sicuro di voler disattivare questa fonte?",
+    'rest-summary-confirm-reactivate': "Sei sicuro di voler riattivare questa fonte?",
+    'rest-summary-delete': "Elimina la fonte",
+    'rest-summary-description': "Descrizione",
+    'rest-summary-disable': "Disattiva la fonte",
+    'rest-summary-edit': "Modifica la fonte",
+    'rest-summary-max-age': "Età massima",
+    'rest-summary-name': "Identificatore",
+    'rest-summary-reactivate': "Riattiva la fonte",
+    'rest-summary-return': "Ritorna alla lista delle fonti",
+    'rest-summary-save': "Salva la fonte",
+    'rest-summary-type': "Tipo",
+    'rest-summary-url': "URL",
+
+    'rest-type-generic': "Generico",
+    'rest-type-wordpress': "WordPress",
+
     'role-list-add': "Aggiungi un nuovo ruolo",
     'role-list-cancel': "Annulla",
     'role-list-column-last-modified': "Ultima modifica",

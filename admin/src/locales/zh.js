@@ -308,6 +308,53 @@ const traditionalPhrases = {
         return cardinalT(count, '一個數據庫');
     },
 
+    'rest-list-add': '添加新數據源',
+    'rest-list-cancel': '取消',
+    'rest-list-column-identifier': '識別碼',
+    'rest-list-column-last-modified': '上次修改時間',
+    'rest-list-column-type': '類型',
+    'rest-list-column-url': 'URL',
+    'rest-list-confirm-disable-$count': (count) => {
+        let sources = cardinal(count, '此數據源', '這三個數據源');
+        return `你確定要停用${sources}嗎？`;
+    },
+    'rest-list-confirm-reactivate-$count': (count) => {
+        let sources = cardinal(count, '此數據源', '這三個數據源');
+        return `你確定要重新啟用${sources}嗎？`;
+    },
+    'rest-list-edit': '編輯數據源列表',
+    'rest-list-save': '保存數據源列表',
+    'rest-list-status-deleted': '已刪除',
+    'rest-list-status-disabled': '已停用',
+    'rest-list-title': 'REST數據源',
+
+    'rest-summary-$title': (title) => {
+        let text = 'REST數據源';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'rest-summary-add': '添加新數據源',
+    'rest-summary-cancel': '取消',
+    'rest-summary-confirm-delete': '你確定要刪除此數據源嗎？',
+    'rest-summary-confirm-disable': '你確定要停用此數據源嗎？',
+    'rest-summary-confirm-reactivate': '你確定要重新啟用此數據源嗎？',
+    'rest-summary-delete': '刪除數據源',
+    'rest-summary-description': '描述',
+    'rest-summary-disable': '停用數據源',
+    'rest-summary-edit': '編輯數據源',
+    'rest-summary-max-age': '數據最大年齡',
+    'rest-summary-name': '識別碼',
+    'rest-summary-reactivate': '重新啟用數據源',
+    'rest-summary-return': '返回數據源列表',
+    'rest-summary-save': '保存數據源',
+    'rest-summary-type': '類型',
+    'rest-summary-url': 'URL',
+
+    'rest-type-generic': '通用',
+    'rest-type-wordpress': 'WordPress',
+
     'role-list-add': '添加角色',
     'role-list-cancel': '取消',
     'role-list-column-last-modified': '上次修改時間',
@@ -1540,6 +1587,53 @@ const simplifiedPhrases = {
     'repository-tooltip-$count': (count) => {
         return cardinalS(count, '一个数据库');
     },
+
+    'rest-list-add': '添加新数据源',
+    'rest-list-cancel': '取消',
+    'rest-list-column-identifier': '识别码',
+    'rest-list-column-last-modified': '上次修改时间',
+    'rest-list-column-type': '类型',
+    'rest-list-column-url': 'URL',
+    'rest-list-confirm-disable-$count': (count) => {
+        let sources = cardinal(count, '此数据源', '这三个数据源');
+        return `你确定要停用${sources}吗？ `;
+    },
+    'rest-list-confirm-reactivate-$count': (count) => {
+        let sources = cardinal(count, '此数据源', '这三个数据源');
+        return `你确定要重新启用${sources}吗？ `;
+    },
+    'rest-list-edit': '编辑数据源列表',
+    'rest-list-save': '保存数据源列表',
+    'rest-list-status-deleted': '已删除',
+    'rest-list-status-disabled': '已停用',
+    'rest-list-title': 'REST数据源',
+
+    'rest-summary-$title': (title) => {
+        let text = 'REST数据源';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'rest-summary-add': '添加新数据源',
+    'rest-summary-cancel': '取消',
+    'rest-summary-confirm-delete': '你确定要删除此数据源吗？',
+    'rest-summary-confirm-disable': '你确定要停用此数据源吗？',
+    'rest-summary-confirm-reactivate': '你确定要重新启用此数据源吗？ ',
+    'rest-summary-delete': '删除数据源',
+    'rest-summary-description': '描述',
+    'rest-summary-disable': '停用数据源',
+    'rest-summary-edit': '编辑数据源',
+    'rest-summary-max-age': '数据最大年龄',
+    'rest-summary-name': '识别码',
+    'rest-summary-reactivate': '重新启用数据源',
+    'rest-summary-return': '返回数据源列表',
+    'rest-summary-save': '保存数据源',
+    'rest-summary-type': '类型',
+    'rest-summary-url': 'URL',
+
+    'rest-type-generic': '通用',
+    'rest-type-wordpress': 'WordPress',
 
     'role-list-add': '添加角色',
     'role-list-cancel': '取消',

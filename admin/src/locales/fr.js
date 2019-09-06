@@ -262,6 +262,53 @@ const phrases = {
         return cardinal(count, "1 dépôt", "2 dépôts");
     },
 
+    'rest-list-add': "Ajouter une nouvelle source",
+    'rest-list-cancel': "Annuler",
+    'rest-list-column-identifier': "Identifiant",
+    'rest-list-column-last-modified': "Modification",
+    'rest-list-column-type': "Type",
+    'rest-list-column-url': "URL",
+    'rest-list-confirm-disable-$count': (count) => {
+        let sources = cardinal(count, "cette source", "ces 2 sources");
+        return `Êtes-vous sûr de vouloir désactiver ${sources}?`;
+    },
+    'rest-list-confirm-reactivate-$count': (count) => {
+        let sources = cardinal(count, "cette source", "ces 2 sources");
+        return `Êtes-vous sûr de vouloir réactiver ${sources}?`;
+    },
+    'rest-list-edit': "Editer la liste des sources",
+    'rest-list-save': "Enregistrer la liste des sources",
+    'rest-list-status-deleted': "Supprimé",
+    'rest-list-status-disabled': "Désactivé",
+    'rest-list-title': "Sources REST",
+
+    'rest-summary-$title': (title) => {
+        let text = "Source REST";
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'rest-summary-add': "Ajouter une nouvelle source",
+    'rest-summary-cancel': "Annuler",
+    'rest-summary-confirm-delete': "Êtes-vous sûr de vouloir supprimer cette source?",
+    'rest-summary-confirm-disable': "Êtes-vous sûr de vouloir désactiver cette source?",
+    'rest-summary-confirm-reactivate': "Êtes-vous sûr de vouloir réactiver cette source?",
+    'rest-summary-delete': "Supprimer la source",
+    'rest-summary-description': "Description",
+    'rest-summary-disable': "Désactiver la source",
+    'rest-summary-edit': "Editer la source",
+    'rest-summary-max-age': "Âge maximum",
+    'rest-summary-name': "Identifiant",
+    'rest-summary-reactivate': "Réactiver la source",
+    'rest-summary-return': "Retour à la liste des sources",
+    'rest-summary-save': "Enregistrer la source",
+    'rest-summary-type': "Type",
+    'rest-summary-url': "URL",
+
+    'rest-type-generic': "Générique",
+    'rest-type-wordpress': "WordPress",
+
     'role-list-add': "Ajouter un nouveau rôle",
     'role-list-cancel': "Annuler",
     'role-list-column-last-modified': "Modification",

@@ -262,6 +262,53 @@ const phrases = {
         return cardinal(count, '1 saugykla', '2 saugyklos', '10 saugyklų');
     },
 
+    'rest-list-add': 'Pridėti naują šaltinį',
+    'rest-list-cancel': 'Atšaukti',
+    'rest-list-column-identifier': 'Identifikatorius',
+    'rest-list-column-last-modified': 'Pakeitimo data',
+    'rest-list-column-type': 'Tipas',
+    'rest-list-column-url': 'URL',
+    'rest-list-confirm-disable-$count': (count) => {
+        let sources = cardinal(count, 'šį šaltinį', 'šiuos 2 šaltinius', 'šiuos 10 šaltinių');
+        return `Ar tikrai norite deaktyvuoti ${sources}?`;
+    },
+    'rest-list-confirm-reactivate-$count': (count) => {
+        let sources = cardinal(count, 'šį šaltinį', 'šiuos 2 šaltinius', 'šiuos 10 šaltinių');
+        return `Ar tikrai norite reaktyvuoti ${sources}?`;
+    },
+    'rest-list-edit': 'Redaguoti šaltinių sąrašą',
+    'rest-list-save': 'Išsaugoti šaltinių sąrašą',
+    'rest-list-status-deleted': 'Ištrintas',
+    'rest-list-status-disabled': 'Deaktyvuotas',
+    'rest-list-title': 'REST šaltiniai',
+
+    'rest-summary-$title': (title) => {
+        let text = 'REST šaltinis';
+        if (title) {
+            text += `: ${title}`;
+        }
+        return text;
+    },
+    'rest-summary-add': 'Pridėti naują šaltinį',
+    'rest-summary-cancel': 'Atšaukti',
+    'rest-summary-confirm-delete': 'Ar tikrai norite ištrinti šį šaltinį?',
+    'rest-summary-confirm-disable': 'Ar tikrai norite deaktyvuoti šį šaltinį?',
+    'rest-summary-confirm-reactivate': 'Ar tikrai norite reaktyvuoti šį šaltinį?',
+    'rest-summary-delete': 'Ištrinti šaltinį',
+    'rest-summary-description': 'Aprašymas',
+    'rest-summary-disable': 'Deaktyvuoti šaltinį',
+    'rest-summary-edit': 'Redaguoti šaltinį',
+    'rest-summary-max-age': 'Maksimalus amžius',
+    'rest-summary-name': 'Identifikatorius',
+    'rest-summary-reactivate': 'Reaktyvuoti šaltinį',
+    'rest-summary-return': 'Grįžti į šaltinių sąrašą',
+    'rest-summary-save': 'Išsaugoti šaltinį',
+    'rest-summary-type': 'Tipas',
+    'rest-summary-url': 'URL',
+
+    'rest-type-generic': 'Bendras',
+    'rest-type-wordpress': 'WordPress',
+
     'role-list-add': 'Pridėti naują vaidmenį',
     'role-list-cancel': 'Atšaukti',
     'role-list-column-last-modified': 'Pakeitimo data',
