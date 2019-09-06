@@ -225,11 +225,9 @@ function ServerListPageSync(props) {
                 const params = { serverID: server.id };
                 url = route.find('server-summary-page', params);
             }
-            const iconName = ServerUtils.getIcon(server);
-            const icon = <i className={`fa fa-${iconName} fa-fw`} />;
             return (
                 <td>
-                    <a href={url}>{icon} {title}</a>{badge}
+                    <a href={url}>{title}</a>{badge}
                 </td>
             );
         }
@@ -239,7 +237,14 @@ function ServerListPageSync(props) {
         if (!server) {
             return <TH id="type">{t('server-list-column-type')}</TH>;
         } else {
-            return <td>{t(`server-type-${server.type}`)}</td>
+            const iconName = ServerUtils.getIcon(server);
+            return (
+                <td>
+                    <i className={`fa fa-${iconName} fa-fw`} />
+                    {' '}
+                    {t(`server-type-${server.type}`)}
+                </td>
+            )
         }
     }
 
@@ -268,7 +273,7 @@ function ServerListPageSync(props) {
     }
 
     function renderUsersColumn(server) {
-        if (!env.isWiderThan('standard')) {
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
         if (!server) {

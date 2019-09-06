@@ -285,7 +285,7 @@ function UserListPageSync(props) {
     }
 
     function renderRolesColumn(user) {
-        if (!env.isWiderThan('wide')) {
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
         if (!user) {

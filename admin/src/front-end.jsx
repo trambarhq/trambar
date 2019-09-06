@@ -30,7 +30,7 @@ import './colors.scss';
 const widthDefinitions = {
     'narrow': 700,
     'standard': 1000,
-    'wide': 1400,
+    'wide': 1366,
     'super-wide': 1700,
     'ultra-wide': 2000,
 };

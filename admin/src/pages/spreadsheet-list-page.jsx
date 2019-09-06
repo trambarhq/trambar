@@ -227,7 +227,7 @@ function SpreadsheetListPageSync(props) {
     }
 
     function renderURLColumn(spreadsheet) {
-        if (!env.isWiderThan('standard')) {
+        if (!env.isWiderThan('wide')) {
             return null;
         }
         if (!spreadsheet) {
@@ -243,7 +243,7 @@ function SpreadsheetListPageSync(props) {
     }
 
     function renderSheetCountColumn(spreadsheet) {
-        if (!env.isWiderThan('wide')) {
+        if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!spreadsheet) {

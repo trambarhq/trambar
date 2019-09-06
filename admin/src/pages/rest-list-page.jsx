@@ -226,7 +226,7 @@ function RestListPageSync(props) {
     }
 
     function renderURLColumn(rest) {
-        if (!env.isWiderThan('standard')) {
+        if (!env.isWiderThan('wide')) {
             return null;
         }
         if (!rest) {
@@ -242,7 +242,7 @@ function RestListPageSync(props) {
     }
 
     function renderTypeColumn(rest) {
-        if (!env.isWiderThan('wide')) {
+        if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!rest) {
