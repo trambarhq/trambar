@@ -73,6 +73,7 @@ async function start() {
     app.get('/srv/www/:schema/*', handleSnapshotPageRequest);
     app.get('/admin/*', handleStaticFileRequest);
     app.get('/*', handleStaticFileRequest);
+    app.purge('*', handlePurgeRequest);
 
     app.use(handleError);
 
@@ -322,6 +323,35 @@ async function handleMediaRequest(req, res, next) {
         const type = req.params.type;
         const uri = `/srv/media/${type}/${path}`;
         res.set('X-Accel-Redirect', uri);
+        res.end();
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function handlePurgeRequest(req, res, next) {
+    try {
+        const url = req.url;
+        const method = req.headers['x-purge-method'];
+        let address = req.headers['x-forwarded-for'];
+        if (!address) {
+            address = req.connection.remoteAddress;
+        }
+        if (_.startsWith(address, '::ffff:')) {
+            // remote IP4 -> IP6 prefix
+            address = address.substr(7);
+        }
+        const purges = await RestRetriever.translatePurgeRequest(url, method, address);
+        for (let { schema, identifier, url, method } of purges) {
+            const prefix = `/srv/www/${schema}/data/rest/${identifier}`;
+            let criteria;
+            if (method === 'regex') {
+                criteria = new RegExp(prefix + url);
+            } else if (method === 'default') {
+                criteria = prefix + url;
+            }
+            await CacheManager.purge(criteria);
+        }
         res.end();
     } catch (err) {
         next(err);

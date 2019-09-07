@@ -13,43 +13,61 @@ function link(url, sourceURLs) {
     fileDependencies[url] = sourceURLs;
 }
 
-async function purge(pattern) {
-    const taskLog = TaskLog.start('nginx-cache-purge', {
-        pattern: pattern.toString()
-    });
+async function purge(criteria) {
+    let params, url, pattern, callback;
+    if (typeof(criteria) === 'string') {
+        url = criteria;
+        params = { url };
+    } else if (criteria instanceof RegExp) {
+        pattern = criteria;
+        params = { pattern };
+    } else if (criteria instanceof Function) {
+        callback = criteria;
+        params = { callback: callback.name };
+    } else {
+        return;
+    }
+    const taskLog = TaskLog.start('nginx-cache-purge', params);
     try {
-        const purged = [];
-        if (typeof(pattern) === 'string') {
-            const url = pattern;
-            const md5 = Crypto.createHash('md5').update(url).digest('hex');
-            const success = await removeCacheEntry({ url, md5 });
-            if (success) {
-                purged.push(url);
-            }
-        } else if (pattern instanceof RegExp) {
+        const targets = [];
+        if (url) {
+            targets.push(createCacheEntry(url));
+        } else {
             const cacheEntries = await loadCacheEntries();
-            for (let cacheEntry of cacheEntries) {
-                if (pattern.test(cacheEntry.url)) {
-                    const success = await removeCacheEntry(cacheEntry);
-                    if (success) {
-                        purged.push(cacheEntry.url);
+            if (pattern) {
+                for (let cacheEntry of cacheEntries) {
+                    if (pattern.test(cacheEntry.url)) {
+                        targets.push(cacheEntry);
+                    }
+                }
+            } else if (callback) {
+                for (let cacheEntry of cacheEntries) {
+                    if (callback(cacheEntry.url)) {
+                        targets.push(cacheEntry);
                     }
                 }
             }
         }
 
-        // purge files that're dependent on the purged items
-        for (let [ url, sourceURLs ] of Object.entries(fileDependencies)) {
-            const overlap = _.intersection(sourceURLs, purged);
-            if (!_.isEmpty(overlap)) {
-                const md5 = Crypto.createHash('md5').update(url).digest('hex');
-                const success = await removeCacheEntry({ url, md5 });
-                if (success) {
-                    purged.push(url);
+        // purge pages that're dependent on the items to be purged as well
+        for (let [ pageURL, sourceURLs ] of Object.entries(fileDependencies)) {
+            const hasStaleDependencies = _.some(sourceURLs, (url) => {
+                return _.some(targets, { url });
+            });
+            if (hasStaleDependencies) {
+                if (!_.some(targets, { url: pageURL })) {
+                    targets.push(createCacheEntry(pageURL));
                 }
             }
         }
 
+        const purged = [];
+        for (let target of targets) {
+            const success = await removeCacheEntry(target);
+            if (success) {
+                purged.push(target.url);
+            }
+        }
         if (purged.length > 0) {
             taskLog.set('count', purged.length);
             if (process.env.NODE_ENV !== 'production') {
@@ -66,11 +84,16 @@ async function purge(pattern) {
 let cacheEntriesPromise = null;
 
 async function loadCacheEntries() {
-    if (!cacheEntriesPromise) {
+    const cached = !!cacheEntriesPromise;
+    if (!cached) {
         cacheEntriesPromise = loadCacheEntriesUncached();
     }
     const entries = await cacheEntriesPromise;
-    cacheEntriesPromise = null;
+    if (!cached) {
+        setTimeout(() => {
+            cacheEntriesPromise = null;
+        }, 1000);
+    }
     return entries;
 }
 
@@ -89,6 +112,11 @@ async function loadCacheEntriesUncached() {
 }
 
 const cacheEntryCache = {};
+
+function createCacheEntry(url) {
+    const md5 = Crypto.createHash('md5').update(url).digest('hex');
+    return { url, md5 };
+}
 
 async function loadCacheEntry(md5) {
     try {

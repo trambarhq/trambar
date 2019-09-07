@@ -1,10 +1,12 @@
 import _ from 'lodash';
 import CrossFetch from 'cross-fetch';
+import { promises as DNS } from 'dns';
 import ExcelJS from 'exceljs';
 import Database from '../database.mjs';
 import HTTPError from '../common/errors/http-error.mjs';
-import * as TaskLog from '../task-log.mjs'
+import * as TaskLog from '../task-log.mjs';
 
+import Project from '../accessors/project.mjs';
 import Rest from '../accessors/rest.mjs';
 
 async function discover(schema, type) {
@@ -66,6 +68,38 @@ async function retrieve(schema, identifier, path, query) {
     }
 }
 
+async function translatePurgeRequest(url, method, address) {
+    const results = [];
+    const record = /:/.test(address) ? 'AAAA' : 'A';
+    const db = await Database.open();
+    const criteria = { deleted: false, disabled: false };
+    const projects = await Project.find(db, 'global', criteria, 'name');
+    for (let project of projects) {
+        const schema = project.name;
+        const rests = await Rest.find(db, schema, criteria, '*');
+        for (let rest of rests) {
+            try {
+                const url = new URL(rest.url);
+                const sourceAddress = await DNS.resolve(url.hostname);
+                if (address === sourceAddress) {
+                    const identifier = rest.name;
+                    const untransformed = { schema, identifier, url, method };
+                    const purge = transformPurge(untransformed)
+                    if (purge instanceof Array) {
+                        for (let p of purge) {
+                            results.push(p)
+                        }
+                    } else {
+                        results.push(purge)
+                    }
+                }
+            } catch (err) {
+            }
+        }
+    }
+    return results;
+}
+
 async function fetchJSON(url) {
     const res = await CrossFetch(url);
     if (res.status === 200) {
@@ -95,15 +129,14 @@ function getExternalURL(path, query, rest) {
     return url.href;
 }
 
-
 function filterData(data, url, rest) {
     if (rest.type === 'wordpress') {
-        return filterWordPressData(data, url);
+        return filterWPData(data, url);
     }
     return data;
 }
 
-function filterWordPressData(data, url) {
+function filterWPData(data, url) {
     if (data instanceof Array) {
         return _.map(data, 'id');
     } else {
@@ -123,7 +156,35 @@ function filterWordPressData(data, url) {
     }
 }
 
+function transformPurge(purge, rest) {
+    if (rest.type === 'wordpress') {
+        return transformWPPurge(purge);
+    }
+    return purge;
+}
+
+function transformWPPurge(purge) {
+    if (purge.method === 'regex') {
+        return purge;
+    } else if (purge.method === 'default') {
+        const m = /^(\/wp\-json\/\w+\/\w+\/\w+)\/(\d+)\/$/.exec(purge.url);
+        if (m) {
+            // purge folder listings as well
+            const purgeFolder = {
+                schema: purge.schema,
+                identifier: purge.identifier,
+                url: `${folderPath}/\\??.*`,
+                method: 'regex'
+            };
+            return [ purge, purgeFolder ];
+        }
+    }
+    return [];
+}
+
 export {
     discover,
     retrieve,
+
+    translatePurgeRequest,
 };
