@@ -33,6 +33,8 @@ import {
     TaskPurgeProject,
     TaskPurgeSpreadsheet,
     TaskPurgeWiki,
+    TaskPurgeRest,
+    TaskPurgeRequest,
     TaskPurgeAll,
 
     PeriodicTaskSaveWebsiteTraffic,
@@ -50,22 +52,22 @@ async function start() {
     // start up Express
     const app = Express();
     const corsOptions = {
-        exposedHeaders: [ 'etag' ],
+        exposedHeaders: [ 'etag', 'X-Cache-Status' ],
     };
     app.use(CORS(corsOptions));
+    app.use(redirectToCanonical);
     app.use(redirectToProject);
     app.set('json spaces', 2);
-    app.get('/srv/www/.cache', handleCacheStatusRequest);
-    app.get('/srv/www/:schema/data/geoip', handleGeoIPRequest);
-    app.get('/srv/www/:schema/data/wiki/:identifier/:slug', handleWikiRequest);
-    app.get('/srv/www/:schema/data/wiki/:identifier', handleWikiListRequest);
-    app.get('/srv/www/:schema/data/wiki', handleWikiListRequest);
-    app.get('/srv/www/:schema/data/excel/:identifier', handleExcelRequest);
-    app.get('/srv/www/:schema/data/excel', handleExcelListRequest);
+    app.get('/srv/www/:schema/.cache', handleCacheStatusRequest);
+    app.get('/srv/www/:schema/data/geoip/', handleGeoIPRequest);
+    app.get('/srv/www/:schema/data/wiki/:identifier/:slug/', handleWikiRequest);
+    app.get('/srv/www/:schema/data/wiki/:identifier/', handleWikiListRequest);
+    app.get('/srv/www/:schema/data/wiki/', handleWikiListRequest);
+    app.get('/srv/www/:schema/data/excel/:identifier/', handleExcelRequest);
+    app.get('/srv/www/:schema/data/excel/', handleExcelListRequest);
     app.get('/srv/www/:schema/data/rest/:identifier/*', handleRestRequest);
-    app.get('/srv/www/:schema/data/rest/:identifier', handleRestRequest);
-    app.get('/srv/www/:schema/data/rest', handleRestListRequest);
-    app.get('/srv/www/:schema/data/meta', handleMetadataRequest);
+    app.get('/srv/www/:schema/data/rest/', handleRestListRequest);
+    app.get('/srv/www/:schema/data/meta/', handleMetadataRequest);
     app.get('/srv/www/:schema/:type(images|video|audio)/*', handleMediaRequest);
     app.get('/srv/www/:schema/\\(:tag\\)/*', handleSnapshotFileRequest);
     app.get('/srv/www/:schema/*', handleSnapshotFileRequest);
@@ -97,6 +99,7 @@ async function start() {
     // listen for database change events
     const tables = [
         'project',
+        'rest',
         'snapshot',
         'spreadsheet',
         'wiki',
@@ -127,7 +130,9 @@ async function stop() {
 
 async function handleCacheStatusRequest(req, res, next) {
     try {
-        const text = await CacheManager.stat();
+        const { schema } = req.params;
+        const pattern = new RegExp(`^/srv/www/${schema}/`);
+        const text = await CacheManager.stat(pattern);
         res.set({ 'X-Accel-Expires': 0 });
         res.type('text').send(text);
     } catch (err) {
@@ -280,7 +285,7 @@ async function handleSnapshotPageRequest(req, res, next) {
 }
 
 async function handleStaticFileRequest(req, res, next) {
-    const isAdmin = _.startsWith(req.path, '/admin');
+    const isAdmin = _.startsWith(req.path, '/admin/');
     try {
         const folder = (isAdmin) ? 'admin' : 'client';
         const file = req.params[0] || 'index.html';
@@ -341,17 +346,7 @@ async function handlePurgeRequest(req, res, next) {
             // remote IP4 -> IP6 prefix
             address = address.substr(7);
         }
-        const purges = await RestRetriever.translatePurgeRequest(url, method, address);
-        for (let { schema, identifier, url, method } of purges) {
-            const prefix = `/srv/www/${schema}/data/rest/${identifier}`;
-            let criteria;
-            if (method === 'regex') {
-                criteria = new RegExp(prefix + url);
-            } else if (method === 'default') {
-                criteria = prefix + url;
-            }
-            await CacheManager.purge(criteria);
-        }
+        taskQueue.add(new TaskPurgeRequest(url, method, address));
         res.end();
     } catch (err) {
         next(err);
@@ -393,6 +388,17 @@ function sendDataQueryResult(res, result) {
     const { contents, cacheControl } = result;
     controlCache(res, cacheControl);
     res.json(contents);
+}
+
+function redirectToCanonical(req, res, next) {
+    if (!_.endsWith(req.path, '/')) {
+        if (!Path.extname(req.path)) {
+            const canonical = req.path + '/' + req.url.substr(req.path.length);
+            res.redirect(301, canonical);
+            return;
+        }
+    }
+    next();
 }
 
 function redirectToProject(req, res, next) {
@@ -448,7 +454,11 @@ function handleDatabaseChanges(events) {
             }
         } else if (table === 'wiki') {
             const slug = previous.slug || current.slug;
-            taskQueue.add(new TaskPurgeWiki(schema, slug));
+            const repoID = current.repo_id;
+            taskQueue.add(new TaskPurgeWiki(schema, repoID, slug));
+        } else if (table === 'rest') {
+            const name = previous.name || current.name;
+            taskQueue.add(new TaskPurgeRest(schema, name));
         }
     }
 }

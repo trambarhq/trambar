@@ -9,6 +9,7 @@ import * as TrafficMonitor from './traffic-monitor.mjs';
 
 // accessors
 import Project from '../accessors/project.mjs';
+import Repo from '../accessors/repo.mjs';
 import Snapshot from '../accessors/snapshot.mjs';
 
 const MIN = 60 * 1000;
@@ -40,7 +41,7 @@ class TaskPurgeSnapshotHead extends BasicTask {
         const projects = await getSnapshotProjects(db, snapshot);
         for (let project of projects) {
             const schema = project.name;
-            const pattern = new RegExp(`^/srv/www/${schema}/.*`);
+            const pattern = new RegExp(`^/srv/www/${schema}/`);
             await CacheManager.purge(pattern);
         }
     }
@@ -54,7 +55,7 @@ class TaskPurgeProject extends BasicTask {
 
     async run() {
         const { schema } = this;
-        const pattern = new RegExp(`^/srv/www/${schema}/.*`);
+        const pattern = new RegExp(`^/srv/www/${schema}/`);
         await CacheManager.purge(pattern);
     }
 }
@@ -68,22 +69,73 @@ class TaskPurgeSpreadsheet extends BasicTask {
 
     async run() {
         const { schema, name } = this;
-        const pattern = new RegExp(`^/srv/www/${schema}/excel/${name}`);
+        const pattern = new RegExp(`^/srv/www/${schema}/data/excel/${name}/`);
         await CacheManager.purge(pattern);
+
+        const listPattern = new RegExp(`^/srv/www/${schema}/data/excel/(\\?|$)`);
+        await CacheManager.purge(listPattern);
     }
 }
 
 class TaskPurgeWiki extends BasicTask {
-    constructor(schema, slug) {
+    constructor(schema, repoID, slug) {
         super();
         this.schema = schema;
+        this.repoID = repoID;
         this.slug = slug;
     }
 
     async run() {
-        const { schema, slug } = this;
-        const pattern = new RegExp(`^/srv/www/${schema}/wiki/([^/]+/)?${slug}`);
+        const { schema, repoID, slug } = this;
+        const db = Database.open();
+        const name = await getRepoName(db, repoID);
+        const pattern = new RegExp(`^/srv/www/${schema}/data/wiki/${name}/${slug}/`);
         await CacheManager.purge(pattern);
+
+        const listPattern1 = new RegExp(`^/srv/www/${schema}/data/wiki/${name}/(\\?|$)`);
+        await CacheManager.purge(listPattern1);
+        const listPattern2 = new RegExp(`^/srv/www/${schema}/data/wiki/(\\?|$)`);
+        await CacheManager.purge(listPattern2);
+    }
+}
+
+class TaskPurgeRest extends BasicTask {
+    constructor(schema, name) {
+        super();
+        this.schema = schema;
+        this.name = name;
+    }
+
+    async run() {
+        const { schema, name } = this;
+        const pattern = new RegExp(`^/srv/www/${schema}/data/rest/${name}/`);
+        await CacheManager.purge(pattern);
+
+        const listPattern = new RegExp(`^/srv/www/${schema}/data/rest/(\\?|$)`);
+        await CacheManager.purge(listPattern);
+    }
+}
+
+class TaskPurgeRequest extends BasicTask {
+    constructor(url, method, address) {
+        this.url = url;
+        this.method = method;
+        this.address = address;
+    }
+
+    async run() {
+        const { url, method, address } = this;
+        const purges = await RestRetriever.translatePurgeRequest(url, method, address);
+        for (let { schema, identifier, url, method } of purges) {
+            const prefix = `/srv/www/${schema}/data/rest/${identifier}`;
+            let criteria;
+            if (method === 'regex') {
+                criteria = new RegExp(prefix + url);
+            } else if (method === 'default') {
+                criteria = prefix + url;
+            }
+            await CacheManager.purge(criteria);
+        }
     }
 }
 
@@ -148,6 +200,14 @@ function getSnapshotProjects(db, snapshot) {
     return Project.find(db, 'global', criteria, '*');
 }
 
+function getRepoName(db, repoID) {
+    const criteria = {
+        id: repoID,
+    };
+    const repo = Repo.find(db, 'global', criteria, 'name');
+    return (repo) ? repo.name : '';
+}
+
 export {
     TaskImportSpreadsheet,
 
@@ -155,6 +215,8 @@ export {
     TaskPurgeProject,
     TaskPurgeSpreadsheet,
     TaskPurgeWiki,
+    TaskPurgeRest,
+    TaskPurgeRequest,
     TaskPurgeAll,
 
     PeriodicTaskSaveWebsiteTraffic,

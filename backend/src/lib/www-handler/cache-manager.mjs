@@ -163,12 +163,15 @@ async function removeCacheEntry(entry) {
     }
 }
 
-async function stat() {
+async function stat(pattern) {
     const entries = await loadCacheEntries();
-    if (_.isEmpty(entries)) {
+    const matching = _.filter(entries, (entry) => {
+        return pattern.test(entry.url);
+    });
+    if (_.isEmpty(matching)) {
         return 'EMPTY';
     }
-    const sorted = _.orderBy(entries, 'mtime', 'desc');
+    const sorted = _.orderBy(matching, 'mtime', 'desc');
     const table = new AsciiTable;
     table.setHeading('URL', 'Date', 'Size');
     for (let { url, mtime, size } of sorted) {
