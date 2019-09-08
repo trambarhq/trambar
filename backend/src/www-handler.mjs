@@ -150,7 +150,7 @@ async function handleGeoIPRequest(req, res, next) {
         }
         const country = await TrafficMonitor.recordIP(schema, ip);
         res.set({ 'X-Accel-Expires': 0 });
-        res.type('text').send(country);
+        res.json({ country });
     } catch (err) {
         next(err);
     }
