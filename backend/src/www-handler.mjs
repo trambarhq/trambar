@@ -55,6 +55,7 @@ async function start() {
         exposedHeaders: [ 'etag', 'X-Cache-Status' ],
     };
     app.use(CORS(corsOptions));
+    app.use(Compression());
     app.use(redirectToCanonical);
     app.use(redirectToProject);
     app.set('json spaces', 2);

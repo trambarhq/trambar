@@ -36,7 +36,9 @@ async function run() {
                 if (urlParts.search) {
                     url += '?' + urlParts.search;
                 }
-                options = { agent, ...options };
+                // don't use stale data
+                const headers = { 'Cache-Control': 'stale-while-revalidate=0' };
+                options = { agent, headers, ...options };
                 options.headers = { Host: urlParts.host, ...options.headers };
             }
             return CrossFetch(url, options);
