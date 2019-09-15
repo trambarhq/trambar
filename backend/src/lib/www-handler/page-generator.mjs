@@ -3,6 +3,7 @@ import ChildProcess from 'child_process';
 import Path from 'path';
 import URL from 'url';
 import Stream from 'stream';
+import Events from 'events';
 import * as TaskLog from '../task-log.mjs'
 import HTTPError from '../common/errors/http-error.mjs';
 
@@ -11,6 +12,9 @@ import * as SnapshotRetriever from './snapshot-retriever.mjs';
 async function generate(schema, tag, path, baseURL, target, lang) {
     if (!tag) {
         tag = 'master';
+    }
+    if (!_.startsWith(path, '/')) {
+        path = '/' + path;
     }
     const taskLog = TaskLog.start('page-generate', {
         project: schema,
@@ -72,41 +76,18 @@ async function runSubprocess(input, env, timeLimit) {
     }, timeLimit);
 
     // pipe code into subprocess
-    const inputStream = new Stream.PassThrough();
-    inputStream.end(input);
-    inputStream.pipe(child.stdin);
+    await writeStream(child.stdin, [ input ]);
 
-    const stdoutChunks = [];
-    const stderrChunks = [];
-    const successful = await new Promise((resolve, reject) => {
-        let resolved = false;
-
-        child.on('error', (err) => {
-            if (!resolved) {
-                reject(err);
-                resolved = true;
-            }
-        });
-
-        child.on('exit', (code) => {
-            if (!resolved) {
-                resolve(code === 0);
-                resolved = true;
-            }
-        });
-
-        // save data chunks
-        child.stdout.on('data', (data) => {
-            stdoutChunks.push(data);
-        });
-        child.stderr.on('data', (data) => {
-            stderrChunks.push(data);
-        });
-    });
-    clearTimeout(timeout);
-
-    if (!successful) {
-        let { status, statusText, body } = parseResponse(Buffer.concat(stderrChunks));
+    try {
+        const output = await readStream(child.stdout);
+        clearTimeout(timeout);
+        if (output.length === 0) {
+            throw new Error('WTF?');
+        }
+        return parseResponse(output);
+    } catch (err) {
+        const errorOutput = await readStream(child.stderr);
+        let { status, statusText, body } = parseResponse(errorOutput);
         let message = body || statusText;
         if (child.killed) {
             message = `Script execution exceeded limit (${timeLimit} ms)`;
@@ -114,8 +95,6 @@ async function runSubprocess(input, env, timeLimit) {
         }
         throw new HTTPError(status, message);
     }
-
-    return parseResponse(Buffer.concat(stdoutChunks));
 }
 
 function insertContents(html, ssr) {
@@ -130,6 +109,24 @@ function insertContents(html, ssr) {
     return buffer;
 }
 
+function extractSourceURLs(headers) {
+    const urls = [];
+    for (let header of headers) {
+        const m = /^x-source-url: (.*)/i.exec(header);
+        if (m) {
+            urls.push(m[1]);
+        }
+    }
+    return urls;
+}
+
+/**
+ * Parse a HTTP response
+ *
+ * @param  {Buffer} buffer
+ *
+ * @return {Object}
+ */
 function parseResponse(buffer) {
     const bodyIndex = buffer.indexOf('\n\n');
     let status = 500;
@@ -149,15 +146,38 @@ function parseResponse(buffer) {
     return { status, statusText, headers, body };
 }
 
-function extractSourceURLs(headers) {
-    const urls = [];
-    for (let header of headers) {
-        const m = /^x-source-url: (.*)/i.exec(header);
-        if (m) {
-            urls.push(m[1]);
+/**
+ * Read data from a stream into a buffer
+ *
+ * @param  {ReadableStream} stream
+ *
+ * @return {Promise<Buffer>}
+ */
+async function readStream(stream) {
+    const chunks = [];
+    stream.on('data', (data) => {
+        chunks.push(data);
+    });
+    await Events.once(stream, 'end');
+    return Buffer.concat(chunks);
+}
+
+/**
+ * Write data into a stream
+ *
+ * @param  {WritableStream} stream
+ * @param  {Array<String|Buffer>} chunks
+ *
+ * @return {Promise}
+ */
+async function writeStream(stream, chunks) {
+    for (let chunk of chunks) {
+        if (!stream.write(chunk)) {
+            await Events.once(stream, 'drain');
         }
     }
-    return urls;
+    stream.end();
+    await Events.once(stream, 'finish');
 }
 
 export {

@@ -5,22 +5,24 @@ const HTTP = require('http');
 const Stream = require('stream');
 const CrossFetch = require('cross-fetch');
 const FS = require('fs');
+const Events = require('events');
 
 async function run() {
+    const { stdin, stdout, stderr, env } = process;
     try {
         // read code from stdin
         const preloaded = {}
-        if (!process.stdin.isTTY) {
-            preloaded['./index.js'] = FS.readFileSync(0, 'utf8')
+        if (!stdin.isTTY) {
+            preloaded['./index.js'] = await readStream(stdin);
         }
         overrideRequire(preloaded);
 
         const ssr = require('./index.js');
-        const dataSourceBaseURL = process.env.DATA_SOURCE_BASE_URL;
-        const routeBasePath = process.env.ROUTE_BASE_PATH;
-        const routePagePath = process.env.ROUTE_PAGE_PATH;
-        const ssrTarget = process.env.SSR_TARGET;
-        const preferredLanguage = process.env.PREFERRED_LANG;
+        const dataSourceBaseURL = env.DATA_SOURCE_BASE_URL;
+        const routeBasePath = env.ROUTE_BASE_PATH;
+        const routePagePath = env.ROUTE_PAGE_PATH;
+        const ssrTarget = env.SSR_TARGET;
+        const preferredLanguage = env.PREFERRED_LANG;
 
         // create a fetch() that remembers the URLs used
         const baseURLParts = new URL(dataSourceBaseURL);
@@ -32,14 +34,14 @@ async function run() {
             const urlParts = new URL(url);
             if (urlParts.origin === baseURLParts.origin) {
                 // talk to Nginx without using HTTPS
-                url = 'http://nginx' + urlParts.pathname;
-                if (urlParts.search) {
-                    url += '?' + urlParts.search;
-                }
-                // don't use stale data
-                const headers = { 'Cache-Control': 'stale-while-revalidate=0' };
-                options = { agent, headers, ...options };
-                options.headers = { Host: urlParts.host, ...options.headers };
+                url = 'http://nginx' + urlParts.pathname + urlParts.search;
+                options = { agent, ...options };
+                options.headers = {
+                    ...options.headers,
+                    'Host': urlParts.host,
+                    // don't use stale data
+                    'Cache-Control': 'stale-while-revalidate=0',
+                };
             }
             return CrossFetch(url, options);
         };
@@ -52,28 +54,32 @@ async function run() {
             preferredLanguage,
             fetchFunc
         });
-        const stream = new Stream.PassThrough();
-        stream.write(`200 OK\n`);
+        const chunks = [];
+        chunks.push(`200 OK\n`);
         for (let url of sourceURLs) {
-            stream.write(`x-source-url: ${url}\n`);
+            chunks.push(`x-source-url: ${url}\n`);
         }
-        stream.write('\n');
-        stream.end(html);
-        stream.pipe(process.stdout);
+        chunks.push('\n');
+        chunks.push(html);
+        await writeStream(stdout, chunks);
+        process.exit(0);
     } catch (err) {
         const status = err.status || 500;
         const statusText = err.statusText || 'Internal Server Error';
-        const stream = new Stream.PassThrough();
-        stream.write(`${status} ${statusText}\n`);
-        stream.write(`\n`);
-        stream.write(`${err.message}\n`);
-        stream.pipe(process.stderr);
-        stream.once('end', () => {
-            process.exit(1);
-        });
+        const chunks = [];
+        chunks.push(`${status} ${statusText}\n`);
+        chunks.push(`\n`);
+        chunks.push(`${err.message}\n`);
+        await writeStream(stderr, chunks);
+        process.exit(1);
     }
 }
 
+/**
+ * Override require() so that code can be read from memory
+ *
+ * @param  {Object} preloaded
+ */
 function overrideRequire(preloaded) {
     const resolveFilenameBefore = Module._resolveFilename;
     Module._resolveFilename = function(request, parent, isMain) {
@@ -89,6 +95,9 @@ function overrideRequire(preloaded) {
             let content = preloaded[filename];
             if (!content) {
                 content = downloadRemote(filename);
+            }
+            if (typeof(content) != 'string') {
+                content = content.toString();
             }
             module._compile(content, filename);
             return;
@@ -133,6 +142,13 @@ function downloadRemote(path) {
     return body;
 }
 
+/**
+ * Parse a HTTP response
+ *
+ * @param  {Buffer} buffer
+ *
+ * @return {Object}
+ */
 function parseResponse(buffer) {
     const bodyIndex = buffer.indexOf('\n\n');
     let status = 500;
@@ -150,6 +166,40 @@ function parseResponse(buffer) {
         body = buffer.slice(bodyIndex + 2).toString();
     }
     return { status, statusText, headers, body };
+}
+
+/**
+ * Read data from a stream into a buffer
+ *
+ * @param  {ReadableStream} stream
+ *
+ * @return {Promise<Buffer>}
+ */
+async function readStream(stream) {
+    const chunks = [];
+    stream.on('data', (data) => {
+        chunks.push(data);
+    });
+    await Events.once(stream, 'end');
+    return Buffer.concat(chunks);
+}
+
+/**
+ * Write data into a stream
+ *
+ * @param  {WritableStream} stream
+ * @param  {Array<String|Buffer>} chunks
+ *
+ * @return {Promise}
+ */
+async function writeStream(stream, chunks) {
+    for (let chunk of chunks) {
+        if (!stream.write(chunk)) {
+            await Events.once(stream, 'drain');
+        }
+    }
+    stream.end();
+    await Events.once(stream, 'finish');
 }
 
 run();

@@ -359,9 +359,6 @@ function handleError(err, req, res, next) {
         const status = err.status || err.statusCode || 400;
         res.type('text').status(status).send(err.message);
     }
-    if (process.env.NODE_ENV !== 'production') {
-        console.error(err);
-    }
 }
 
 const defaultCacheControl = {
