@@ -1,5 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
+import { promises as FS } from 'fs';
+import Path from 'path';
 import Database from '../database.mjs';
 import HTTPError from '../common/errors/http-error.mjs';
 import * as TaskLog from '../task-log.mjs';
@@ -35,64 +37,73 @@ async function retrieveFile(schema, tag, type, path) {
         if (!project) {
             throw new HTTPError(404);
         }
-        const repoCriteria = {
-            id: project.template_repo_id,
-            deleted: false,
-        };
-        const repo = await Repo.findOne(db, 'global', repoCriteria, '*');
-        if (!repo) {
-            throw new HTTPError(404);
-        }
-        if (!repo.template) {
-            throw new HTTPError(403);
-        }
-
-        // get the server
-        const repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
-        const serverCriteria = {
-            id: repoLink.server_id,
-            deleted: false,
-            disabled: false,
-        };
-        const server = await Server.findOne(db, 'global', serverCriteria, '*');
-        if (!server) {
-            throw new HTTPError(404);
-        }
-
-        let commitID;
-        if (isCommitID(tag)) {
-            commitID = tag;
-        } else {
-            // a branch name--find the commit at the head
-            const snapshotCriteria = {
-                repo_id: repo.id,
-                branch_name: tag,
-                head: true,
+        let buffer;
+        if (project.template_repo_id) {
+            const repoCriteria = {
+                id: project.template_repo_id,
                 deleted: false,
             };
-            const snapshot = await Snapshot.findOne(db, 'global', snapshotCriteria, '*');
-            if (!snapshot) {
+            const repo = await Repo.findOne(db, 'global', repoCriteria, '*');
+            if (!repo) {
                 throw new HTTPError(404);
             }
-            commitID = snapshot.commit_id;
-        }
+            if (!repo.template) {
+                throw new HTTPError(403);
+            }
 
-        if (!_.includes(availableFileTypes, type)) {
+            // get the server
+            const repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
+            const serverCriteria = {
+                id: repoLink.server_id,
+                deleted: false,
+                disabled: false,
+            };
+            const server = await Server.findOne(db, 'global', serverCriteria, '*');
+            if (!server) {
+                throw new HTTPError(404);
+            }
+
+            let commitID;
+            if (isCommitID(tag)) {
+                commitID = tag;
+            } else {
+                // a branch name--find the commit at the head
+                const snapshotCriteria = {
+                    repo_id: repo.id,
+                    branch_name: tag,
+                    head: true,
+                    deleted: false,
+                };
+                const snapshot = await Snapshot.findOne(db, 'global', snapshotCriteria, '*');
+                if (!snapshot) {
+                    throw new HTTPError(404);
+                }
+                commitID = snapshot.commit_id;
+            }
+
+            if (!_.includes(availableFileTypes, type)) {
+                throw new HTTPError(403);
+            }
+
+            // get file from GitLab
+            const filePath = `${type}/${path}`;
+            taskLog.describe(`retrieving ${filePath} from ${repo.name}`);
+            const projectID = repoLink.project.id;
+            const pathEncoded = encodeURIComponent(filePath);
+            const url = `/projects/${projectID}/repository/files/${pathEncoded}`;
+            const query = { ref: commitID };
+            const file = await Transport.fetch(server, url, query);
+            buffer = Buffer.from(file.content, 'base64');
+            taskLog.set('repo', repo.name);
+            taskLog.set('commit', commitID);
+        } else if (project.template_repo_id === 0) {
+            const folder = Path.resolve('templates/website');
+            const fullPath = `${folder}/${type}/${path}`;
+            buffer = await FS.readFile(fullPath);
+            taskLog.set('generic', true);
+        } else {
             throw new HTTPError(403);
         }
-
-        // get file from GitLab
-        const filePath = `${type}/${path}`;
-        taskLog.describe(`retrieving ${filePath} from ${repo.name}`);
-        const projectID = repoLink.project.id;
-        const pathEncoded = encodeURIComponent(filePath);
-        const url = `/projects/${projectID}/repository/files/${pathEncoded}`;
-        const query = { ref: commitID };
-        const file = await Transport.fetch(server, url, query);
-        const buffer = Buffer.from(file.content, 'base64');
-
-        taskLog.set('repo', repo.name);
-        taskLog.set('commit', commitID);
         await taskLog.finish();
         return buffer;
     } catch (err) {
