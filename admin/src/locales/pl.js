@@ -24,9 +24,11 @@ const phrases = {
     'activity-chart-legend-post': 'Posty',
     'activity-chart-legend-push': 'Wgrywania zmian',
     'activity-chart-legend-repo': 'Zmiany repozytorium',
+    'activity-chart-legend-snapshot': 'Wersje strony internetowej',
     'activity-chart-legend-survey': 'Ankiety',
     'activity-chart-legend-tag': 'Tagi',
     'activity-chart-legend-task-list': 'Listy zadań',
+    'activity-chart-legend-website-traffic': 'Reporty ruchu na stronie',
     'activity-chart-legend-wiki': 'Edycje strony wiki',
 
     'activity-tooltip-$count': (count) => {
@@ -59,6 +61,9 @@ const phrases = {
     'activity-tooltip-$count-repo': (count) => {
         return cardinal(count, '1 zmiana repozytorium', '2 zmiany repozytorium', '5 zmian repozytorium');
     },
+    'activity-tooltip-$count-snapshot': (count) => {
+        return cardinal(count, '1 wersja strony internetowej', '2 wersje strony internetowej', '5 wersji strony internetowej');
+    },
     'activity-tooltip-$count-survey': (count) => {
         return cardinal(count, '1 ankieta', '2 ankiety', '5 ankiet');
     },
@@ -67,6 +72,9 @@ const phrases = {
     },
     'activity-tooltip-$count-task-list': (count) => {
         return cardinal(count, '1 lista zadań', '2 listy zadań', '5 list zadań');
+    },
+    'activity-tooltip-$count-website-traffic': (count) => {
+        return cardinal(count, '1 raport ruchu na stronie', '2 raporty ruchu na stronie', '5 raportów ruchu na stronie');
     },
     'activity-tooltip-$count-wiki': (count) => {
         return cardinal(count, '1 edycja strony wiki', '2 edycje strony wiki', '5 edycji strony wiki');
@@ -524,6 +532,9 @@ const phrases = {
     'spreadsheet-summary-disable': 'Wyłącz link',
     'spreadsheet-summary-edit': 'Edytuj link',
     'spreadsheet-summary-filename': 'Nazwa pliku',
+    'spreadsheet-summary-hidden': 'Wyszukiwanie',
+    'spreadsheet-summary-hidden-false': 'Pojawia się w wynikach wyszukiwania',
+    'spreadsheet-summary-hidden-true': 'Ukryty przed wyszukiwaniem',
     'spreadsheet-summary-name': 'Identyfikator',
     'spreadsheet-summary-reactivate': 'Ponownie aktywuj link',
     'spreadsheet-summary-return': 'Wróć do listy linków',
@@ -1286,7 +1297,11 @@ const phrases = {
     'wiki-summary-cancel': 'Anuluj',
     'wiki-summary-confirm-deselect': 'Czy na pewno chcesz odznaczyć tę stronę?',
     'wiki-summary-confirm-select': 'Czy na pewno chcesz upublicznić tę stronę?',
+    'wiki-summary-deselect': 'Odznacz stronę',
     'wiki-summary-edit': 'Edytuj stronę',
+    'wiki-summary-hidden': 'Wyszukiwanie',
+    'wiki-summary-hidden-false': 'Pojawia się w wynikach wyszukiwania',
+    'wiki-summary-hidden-true': 'Ukryty przed wyszukiwaniem',
     'wiki-summary-page-contents': 'Treść',
     'wiki-summary-public': 'Publiczna',
     'wiki-summary-public-always': 'Zawsze',
@@ -1294,6 +1309,8 @@ const phrases = {
     'wiki-summary-public-referenced': 'Tak (powiązana przez inną stroną publiczną)',
     'wiki-summary-repo': 'Identyfikator repozytorium',
     'wiki-summary-return': 'Wróć do listy stron',
+    'wiki-summary-save': 'Zapisz stronę',
+    'wiki-summary-select': 'Wybierz stronę',
     'wiki-summary-slug': 'Slug',
     'wiki-summary-title': 'Tytuł',
 };

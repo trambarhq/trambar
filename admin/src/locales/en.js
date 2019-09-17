@@ -25,9 +25,11 @@ const phrases = {
     'activity-chart-legend-post': 'Posts',
     'activity-chart-legend-push': 'Code pushes',
     'activity-chart-legend-repo': 'Repository changes',
+    'activity-chart-legend-snapshot': 'Website revisions',
     'activity-chart-legend-survey': 'Surveys',
     'activity-chart-legend-tag': 'Tags',
     'activity-chart-legend-task-list': 'Task lists',
+    'activity-chart-legend-website-traffic': 'Traffic reports',
     'activity-chart-legend-wiki': 'Wiki edits',
 
     'activity-tooltip-$count': (count) => {
@@ -60,6 +62,9 @@ const phrases = {
     'activity-tooltip-$count-repo': (count) => {
         return cardinal(count, '1 repository change', '2 repository changes');
     },
+    'activity-tooltip-$count-snapshot': (count) => {
+        return cardinal(count, '1 website revision', '2 website revisions');
+    },
     'activity-tooltip-$count-survey': (count) => {
         return cardinal(count, '1 survey', '2 surveys');
     },
@@ -68,6 +73,9 @@ const phrases = {
     },
     'activity-tooltip-$count-task-list': (count) => {
         return cardinal(count, '1 task list', '2 task lists');
+    },
+    'activity-tooltip-$count-website-traffic': (count) => {
+        return cardinal(count, '1 traffic report', '2 traffic reports');
     },
     'activity-tooltip-$count-wiki': (count) => {
         return cardinal(count, '1 wiki edit', '2 wiki edits');

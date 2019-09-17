@@ -23,9 +23,11 @@ const phrases = {
     'activity-chart-legend-post': 'Beiträge',
     'activity-chart-legend-push': 'Pushs',
     'activity-chart-legend-repo': 'Repository-Änderungen',
+    'activity-chart-legend-snapshot': 'Website-Überarbeitungen',
     'activity-chart-legend-survey': 'Umfragen',
     'activity-chart-legend-tag': 'Neue Tags',
     'activity-chart-legend-task-list': 'Aufgabenlisten',
+    'activity-chart-legend-website-traffic': 'Verkehrsmeldungen',
     'activity-chart-legend-wiki': 'Wiki-Bearbeitungen',
 
     'activity-tooltip-$count': (count) => {
@@ -58,6 +60,9 @@ const phrases = {
     'activity-tooltip-$count-repo': (count) => {
         return cardinal(count, '1 Repository-Änderung', '2 Repository-Änderungen');
     },
+    'activity-tooltip-$count-snapshot': (count) => {
+        return cardinal(count, '1 Website-Überarbeitung', '2 Website-Überarbeitungen');
+    },
     'activity-tooltip-$count-survey': (count) => {
         return cardinal(count, '1 Umfrage', '2 Umfragen');
     },
@@ -66,6 +71,9 @@ const phrases = {
     },
     'activity-tooltip-$count-task-list': (count) => {
         return cardinal(count, '1 Aufgabenliste', '2 Aufgabenlisten');
+    },
+    'activity-tooltip-$count-website-traffic': (count) => {
+        return cardinal(count, '1 Verkehrsmeldung', '2 Verkehrsmeldungen');
     },
     'activity-tooltip-$count-wiki': (count) => {
         return cardinal(count, '1 Wiki-Bearbeitung', '2 Wiki-Bearbeitungen');
@@ -523,6 +531,9 @@ const phrases = {
     'spreadsheet-summary-disable': 'Link deaktivieren',
     'spreadsheet-summary-edit': 'Link bearbeiten',
     'spreadsheet-summary-filename': 'Dateiname',
+    'spreadsheet-summary-hidden': 'Suche',
+    'spreadsheet-summary-hidden-false': 'Erscheint in den Suchergebnissen',
+    'spreadsheet-summary-hidden-true': 'Versteckt vor der Suche',
     'spreadsheet-summary-name': 'Kennung',
     'spreadsheet-summary-reactivate': 'Link reaktivieren',
     'spreadsheet-summary-return': 'Zurück zur Linkliste',
@@ -1297,7 +1308,11 @@ const phrases = {
     'wiki-summary-cancel': 'Abbrechen',
     'wiki-summary-confirm-deselect': 'Möchten Sie diese Seite wirklich deaktivieren?',
     'wiki-summary-confirm-select': 'Möchten Sie diese Seite wirklich öffentlich machen?',
+    'wiki-summary-deselect': 'Seite abwählen',
     'wiki-summary-edit': 'Seite bearbeiten',
+    'wiki-summary-hidden': 'Suche',
+    'wiki-summary-hidden-false': 'Erscheint in den Suchergebnissen',
+    'wiki-summary-hidden-true': 'Versteckt vor der Suche',
     'wiki-summary-page-contents': 'Inhalt',
     'wiki-summary-public': 'Öffentliche',
     'wiki-summary-public-always': 'Immer',
@@ -1305,6 +1320,8 @@ const phrases = {
     'wiki-summary-public-referenced': 'Ja (von einer anderen öffentlichen Seite referenziert)',
     'wiki-summary-repo': 'Repository-ID',
     'wiki-summary-return': 'Zurück zur Seitenliste',
+    'wiki-summary-save': 'Seite speichern',
+    'wiki-summary-select': 'Seite auswählen',
     'wiki-summary-slug': 'Slug',
     'wiki-summary-title': 'Titel',
 };

@@ -21,9 +21,11 @@ const phrases = {
     'activity-chart-legend-post': 'Viestejä',
     'activity-chart-legend-push': 'Työnnöt',
     'activity-chart-legend-repo': 'Muutokset arkistoon',
+    'activity-chart-legend-snapshot': 'Verkkosivustojen versiot',
     'activity-chart-legend-survey': 'Kyselyt',
     'activity-chart-legend-tag': 'Tagit',
     'activity-chart-legend-task-list': 'Tehtäväluettelot',
+    'activity-chart-legend-website-traffic': 'Liikenneraportit',
     'activity-chart-legend-wiki': 'Wiki-muokkaukset',
 
     'activity-tooltip-$count': (count) => {
@@ -56,6 +58,9 @@ const phrases = {
     'activity-tooltip-$count-repo': (count) => {
         return cardinal(count, '1 muutos arkistoon', '2 muutosta arkistoon');
     },
+    'activity-tooltip-$count-snapshot': (count) => {
+        return cardinal(count, '1 verkkosivuston versio', '2 verkkosivuston versiota');
+    },
     'activity-tooltip-$count-survey': (count) => {
         return cardinal(count, '1 kysely', '2 kyselystä');
     },
@@ -64,6 +69,9 @@ const phrases = {
     },
     'activity-tooltip-$count-task-list': (count) => {
         return cardinal(count, '1 tehtäväluettelo', '2 tehtäväluetteloa');
+    },
+    'activity-tooltip-$count-website-traffic': (count) => {
+        return cardinal(count, '1 liikenneraportti', '2 liikenneraporttia');
     },
     'activity-tooltip-$count-wiki': (count) => {
         return cardinal(count, '1 wiki muokkaus', '2 wiki muokkausta');
@@ -520,6 +528,9 @@ const phrases = {
     'spreadsheet-summary-disable': 'Deaktivoi linkki',
     'spreadsheet-summary-edit': 'Muokkaa linkkiä',
     'spreadsheet-summary-filename': 'Tiedoston nimi',
+    'spreadsheet-summary-hidden': 'Hakutoiminto',
+    'spreadsheet-summary-hidden-false': 'Näkyy hakutuloksissa',
+    'spreadsheet-summary-hidden-true': 'Piilotettu hakutoiminnolta',
     'spreadsheet-summary-name': 'Tunniste',
     'spreadsheet-summary-reactivate': 'Reaktivoi linkki',
     'spreadsheet-summary-return': 'Palaa linkkiluetteloon',
@@ -1290,7 +1301,11 @@ const phrases = {
     'wiki-summary-cancel': 'Peruutta',
     'wiki-summary-confirm-deselect': 'Haluatko varmasti poistaa tämän sivun valinnan?',
     'wiki-summary-confirm-select': 'Haluatko varmasti julkaista tämän sivun?',
+    'wiki-summary-deselect': 'Poista sivun valinta',
     'wiki-summary-edit': 'Muokkaa sivua',
+    'wiki-summary-hidden': 'Hakutoiminto',
+    'wiki-summary-hidden-false': 'Näkyy hakutuloksissa',
+    'wiki-summary-hidden-true': 'Piilotettu hakutoiminnolta',
     'wiki-summary-page-contents': 'Sisällys',
     'wiki-summary-public': 'Julkinen',
     'wiki-summary-public-always': 'Aina',
@@ -1298,6 +1313,8 @@ const phrases = {
     'wiki-summary-public-referenced': 'Kyllä (viittaa toinen julkinen sivu)',
     'wiki-summary-repo': 'Arkiston tunniste',
     'wiki-summary-return': 'Palaa sivuluetteloon',
+    'wiki-summary-save': 'Tallenna sivu',
+    'wiki-summary-select': 'Valitse sivu',
     'wiki-summary-slug': 'Slug',
     'wiki-summary-title': 'Otsikko',
 };

@@ -24,9 +24,11 @@ const phrases = {
     'activity-chart-legend-post': 'Příspěvky',
     'activity-chart-legend-push': 'Přesuny',
     'activity-chart-legend-repo': 'Změny repozitářů',
+    'activity-chart-legend-snapshot': 'Revize webových stránek',
     'activity-chart-legend-survey': 'Ankety',
     'activity-chart-legend-tag': 'Tagy',
     'activity-chart-legend-task-list': 'Seznamy úkolů',
+    'activity-chart-legend-website-traffic': 'Dopravní zprávy',
     'activity-chart-legend-wiki': 'Úpravy wiki',
 
     'activity-tooltip-$count': (count) => {
@@ -59,6 +61,9 @@ const phrases = {
     'activity-tooltip-$count-repo': (count) => {
         return cardinal(count, '1 změna repozitáře', '2 změny repozitářů', '5 změn repozitářů');
     },
+    'activity-tooltip-$count-snapshot': (count) => {
+        return cardinal(count, '1 revize webové stránky', '2 revize webových stránek', '5 revizí webových stránek');
+    },
     'activity-tooltip-$count-survey': (count) => {
         return cardinal(count, '1 anketa', '2 ankety', '5 anket');
     },
@@ -67,6 +72,9 @@ const phrases = {
     },
     'activity-tooltip-$count-task-list': (count) => {
         return cardinal(count, '1 seznam úkolů', '2 seznamy úkolů', '5 seznamů úkolů');
+    },
+    'activity-tooltip-$count-website-traffic': (count) => {
+        return cardinal(count, '1 dopravní zpráva', '2 dopravní zprávy', '5 dopravních zpráv');
     },
     'activity-tooltip-$count-wiki': (count) => {
         return cardinal(count, '1 úprava stránky wiki', '2 úpravy stránek wiki', '5 úprav stránek wiki');
@@ -524,6 +532,9 @@ const phrases = {
     'spreadsheet-summary-disable': 'Deaktivovat odkaz',
     'spreadsheet-summary-edit': 'Upravit odkaz',
     'spreadsheet-summary-filename': 'Název souboru',
+    'spreadsheet-summary-hidden': 'Vyhledávání',
+    'spreadsheet-summary-hidden-false': 'Objeví se ve výsledcích vyhledávání',
+    'spreadsheet-summary-hidden-true': 'Skryté před vyhledáváním',
     'spreadsheet-summary-name': 'Identifikátor',
     'spreadsheet-summary-reactivate': 'Reaktivovat odkaz',
     'spreadsheet-summary-return': 'Návrat na seznam odkazů',
@@ -1286,7 +1297,11 @@ const phrases = {
     'wiki-summary-cancel': 'Zrušit',
     'wiki-summary-confirm-deselect': 'Opravdu chcete zrušit výběr této stránky?',
     'wiki-summary-confirm-select': 'Opravdu chcete tuto stránku zveřejnit?',
+    'wiki-summary-deselect': 'Zrušit výběr stránky',
     'wiki-summary-edit': 'Upravit stránku',
+    'wiki-summary-hidden': 'Vyhledávání',
+    'wiki-summary-hidden-false': 'Objeví se ve výsledcích vyhledávání',
+    'wiki-summary-hidden-true': 'Skryté před vyhledáváním',
     'wiki-summary-page-contents': 'Obsah',
     'wiki-summary-public': 'Veřejná',
     'wiki-summary-public-always': 'Vždy',
@@ -1294,6 +1309,8 @@ const phrases = {
     'wiki-summary-public-referenced': 'Ano (odkazovaná na jinou veřejnou stránku)',
     'wiki-summary-repo': 'Identifikátor úložiště',
     'wiki-summary-return': 'Návrat na seznam stránek',
+    'wiki-summary-save': 'Uložit stránku',
+    'wiki-summary-select': 'Vyberte stránku',
     'wiki-summary-slug': 'Slug',
     'wiki-summary-title': 'Titul',
 };

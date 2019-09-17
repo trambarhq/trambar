@@ -24,9 +24,11 @@ const phrases = {
     'activity-chart-legend-post': 'Сообщения',
     'activity-chart-legend-push': 'Помещения',
     'activity-chart-legend-repo': 'Изменения репозитория',
+    'activity-chart-legend-snapshot': 'Ревизии сайта',
     'activity-chart-legend-survey': 'Опросы',
     'activity-chart-legend-tag': 'теги',
     'activity-chart-legend-task-list': 'Списки задач',
+    'activity-chart-legend-website-traffic': 'Отчеты о трафике',
     'activity-chart-legend-wiki': 'Правки wiki',
 
     'activity-tooltip-$count': (count) => {
@@ -59,6 +61,9 @@ const phrases = {
     'activity-tooltip-$count-repo': (count) => {
         return cardinal(count, '1 изменение репозитория', '2 изменения репозитория', '5 изменений репозитория');
     },
+    'activity-tooltip-$count-snapshot': (count) => {
+        return cardinal(count, '1 ревизия сайта', '2 ревизии сайта', '5 ревизий сайта');
+    },
     'activity-tooltip-$count-survey': (count) => {
         return cardinal(count, '1 опрос', '2 опроса', '5 опросов');
     },
@@ -67,6 +72,9 @@ const phrases = {
     },
     'activity-tooltip-$count-task-list': (count) => {
         return cardinal(count, '1 список задач', '2 списка задач', '5 списков задач');
+    },
+    'activity-tooltip-$count-website-traffic': (count) => {
+        return cardinal(count, '1 отчет о трафике', '2 отчета о трафике', '5 отчетов о трафике');
     },
     'activity-tooltip-$count-wiki': (count) => {
         return cardinal(count, '1 правка wiki', '2 правки wiki', '5 правок wiki');
@@ -523,6 +531,9 @@ const phrases = {
     'spreadsheet-summary-disable': 'Отключить ссылку',
     'spreadsheet-summary-edit': 'Редактировать ссылку',
     'spreadsheet-summary-filename': 'Имя файла',
+    'spreadsheet-summary-hidden': 'Поиск',
+    'spreadsheet-summary-hidden-false': 'Появляется в результатах поиска',
+    'spreadsheet-summary-hidden-true': 'Скрыты от поиска',
     'spreadsheet-summary-name': 'Идентификатор',
     'spreadsheet-summary-reactivate': 'Реактивировать ссылку',
     'spreadsheet-summary-return': 'Вернуться к списку ссылок',
@@ -1286,7 +1297,11 @@ const phrases = {
     'wiki-summary-cancel': 'Отмена',
     'wiki-summary-confirm-deselect': 'Вы уверены, что хотите отменить выбор этой страницы?',
     'wiki-summary-confirm-select': 'Вы уверены, что хотите сделать эту страницу общедоступной?',
+    'wiki-summary-deselect': 'Отменить выбор страницы',
     'wiki-summary-edit': 'Редактировать страницу',
+    'wiki-summary-hidden': 'Поиск',
+    'wiki-summary-hidden-false': 'Появляется в результатах поиска',
+    'wiki-summary-hidden-true': 'Скрыта от поиска',
     'wiki-summary-page-contents': 'Содержание',
     'wiki-summary-public': 'Общедоступная',
     'wiki-summary-public-always': 'Всегда',
@@ -1294,6 +1309,8 @@ const phrases = {
     'wiki-summary-public-referenced': 'Да (ссылочна другой общедоступной страницей)',
     'wiki-summary-repo': 'Идентификатор репозитория',
     'wiki-summary-return': 'Вернуться к списку страниц',
+    'wiki-summary-save': 'Сохранить страницу',
+    'wiki-summary-select': 'Выберите страницу',
     'wiki-summary-slug': 'Slug',
     'wiki-summary-title': 'Титул',
 };
