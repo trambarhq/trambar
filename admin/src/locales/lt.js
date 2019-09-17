@@ -23,9 +23,11 @@ const phrases = {
     'activity-chart-legend-post': 'Įrašai',
     'activity-chart-legend-push': 'Pakeitimų siuntimai',
     'activity-chart-legend-repo': 'Saugyklos pakeitimai',
+    'activity-chart-legend-snapshot': 'Svetainės revizijos',
     'activity-chart-legend-survey': 'Anketos',
     'activity-chart-legend-tag': 'Naujos žymos',
     'activity-chart-legend-task-list': 'Užduočių sąrašai',
+    'activity-chart-legend-website-traffic': 'Eismo ataskaitos',
     'activity-chart-legend-wiki': 'Wiki redagavimai',
 
     'activity-tooltip-$count': (count) => {
@@ -58,6 +60,9 @@ const phrases = {
     'activity-tooltip-$count-repo': (count) => {
         return cardinal(count, '1 saugyklos pakeitimas', '2 saugyklos pakeitimai', '10 saugyklos pakeitimų');
     },
+    'activity-tooltip-$count-snapshot': (count) => {
+        return cardinal(count, '1 svetainės revizija', '2 svetainės revizijos', '10 svetainės revizijų');
+    },
     'activity-tooltip-$count-survey': (count) => {
         return cardinal(count, '1 anketa', '2 anketos', '10 anketų');
     },
@@ -66,6 +71,9 @@ const phrases = {
     },
     'activity-tooltip-$count-task-list': (count) => {
         return cardinal(count, '1 užduočių sąrašas', '2 užduočių sąrašai', '10 užduočių sąrašų');
+    },
+    'activity-tooltip-$count-website-traffic': (count) => {
+        return cardinal(count, '1  eismo ataskaita', '2 eismo ataskaitos', '10 eismo ataskaitų');
     },
     'activity-tooltip-$count-wiki': (count) => {
         return cardinal(count, '1 wiki redagavimas', '2 wiki redagavimai', '10 wiki redagavimų');
@@ -522,6 +530,9 @@ const phrases = {
     'spreadsheet-summary-disable': 'Deaktyvuoti nuorodą',
     'spreadsheet-summary-edit': 'Redaguoti nuorodą',
     'spreadsheet-summary-filename': 'Failo pavadinimas',
+    'spreadsheet-summary-hidden': 'Paieška',
+    'spreadsheet-summary-hidden-false': 'Atsiranda paieškos rezultatuose',
+    'spreadsheet-summary-hidden-true': 'Paslėpta nuo paieškos',
     'spreadsheet-summary-name': 'Identifikatorius',
     'spreadsheet-summary-reactivate': 'Reaktyvuoti nuorodą',
     'spreadsheet-summary-return': 'Grįžti į nuorodų sąrašą',
@@ -1272,7 +1283,11 @@ const phrases = {
     'wiki-summary-cancel': 'Atšaukti',
     'wiki-summary-confirm-deselect': 'Ar tikrai norite panaikinti šio puslapio žymėjimą?',
     'wiki-summary-confirm-select': 'Ar tikrai norite šį puslapį paviešinti?',
+    'wiki-summary-deselect': 'Panaikinkti puslapio pasirinkimą',
     'wiki-summary-edit': 'Redaguoti puslapį',
+    'wiki-summary-hidden': 'Paieška',
+    'wiki-summary-hidden-false': 'Atsiranda paieškos rezultatuose',
+    'wiki-summary-hidden-true': 'Paslėpta nuo paieškos',
     'wiki-summary-page-contents': 'Turinys',
     'wiki-summary-public': 'Viešas',
     'wiki-summary-public-always': 'Visada',
@@ -1280,6 +1295,8 @@ const phrases = {
     'wiki-summary-public-referenced': 'Taip (nurodytas kitame viešame puslapyje)',
     'wiki-summary-repo': 'Saugyklos identifikatorius',
     'wiki-summary-return': 'Grįžti į puslapių sąrašą',
+    'wiki-summary-save': 'Išsaugoti puslapį',
+    'wiki-summary-select': 'Pasirinkite puslapį',
     'wiki-summary-slug': 'Slug',
     'wiki-summary-title': 'Pavadinimas',
 };

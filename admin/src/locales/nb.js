@@ -21,9 +21,11 @@ const phrases = {
     'activity-chart-legend-post': 'Innlegg',
     'activity-chart-legend-push': 'Pusher',
     'activity-chart-legend-repo': 'Repo endringer',
+    'activity-chart-legend-snapshot': 'Nettstedsrevisjoner',
     'activity-chart-legend-survey': 'Undersøkelser',
     'activity-chart-legend-tag': 'Tagger',
     'activity-chart-legend-task-list': 'Oppgavelister',
+    'activity-chart-legend-website-traffic': 'Trafikkmeldinger',
     'activity-chart-legend-wiki': 'Wiki redigeringer',
 
     'activity-tooltip-$count': (count) => {
@@ -56,6 +58,9 @@ const phrases = {
     'activity-tooltip-$count-repo': (count) => {
         return cardinal(count, '1 repo endring', '2 repo endringer');
     },
+    'activity-tooltip-$count-snapshot': (count) => {
+        return cardinal(count, '1 nettstedrevisjon', '2 nettstedrevisjoner');
+    },
     'activity-tooltip-$count-survey': (count) => {
         return cardinal(count, '1 undersøkelse', '2 undersøkelser');
     },
@@ -64,6 +69,9 @@ const phrases = {
     },
     'activity-tooltip-$count-task-list': (count) => {
         return cardinal(count, '1 oppgaveliste', '2 oppgavelister');
+    },
+    'activity-tooltip-$count-website-traffic': (count) => {
+        return cardinal(count, '1 trafikkmelding', '2 trafikkmeldinger');
     },
     'activity-tooltip-$count-wiki': (count) => {
         return cardinal(count, '1 wiki redigering', '2 wiki redigeringer');
@@ -520,6 +528,9 @@ const phrases = {
     'spreadsheet-summary-disable': 'Deaktiver lenken',
     'spreadsheet-summary-edit': 'Rediger lenken',
     'spreadsheet-summary-filename': 'Filnavn',
+    'spreadsheet-summary-hidden': 'Søk',
+    'spreadsheet-summary-hidden-false': 'Vises i søkeresultatene',
+    'spreadsheet-summary-hidden-true': 'Skjult for søk',
     'spreadsheet-summary-name': 'Identifikator',
     'spreadsheet-summary-reactivate': 'Reaktivere lenken',
     'spreadsheet-summary-return': 'Gå tilbake til lenkelisten',
@@ -1283,7 +1294,11 @@ const phrases = {
     'wiki-summary-cancel': 'Avbryt',
     'wiki-summary-confirm-deselect': 'Er du sikker på at du vil fjerne markeringen av denne siden?',
     'wiki-summary-confirm-select': 'Er du sikker på at du vil gjøre denne siden offentlig?',
-    'wiki-summary-edit': 'Rediger side',
+    'wiki-summary-deselect': 'Fjern markeringen av siden',
+    'wiki-summary-edit': 'Rediger siden',
+    'wiki-summary-hidden': 'Søk',
+    'wiki-summary-hidden-false': 'Vises i søkeresultatene',
+    'wiki-summary-hidden-true': 'Skjult for søk',
     'wiki-summary-page-contents': 'Innhold',
     'wiki-summary-public': 'Offentlig',
     'wiki-summary-public-always': 'Alltid',
@@ -1291,9 +1306,12 @@ const phrases = {
     'wiki-summary-public-referenced': 'Ja (referert av en annen offentlig side)',
     'wiki-summary-repo': 'Repo-identifikator',
     'wiki-summary-return': 'Gå tilbake til sidelisten',
+    'wiki-summary-save': 'Lagre siden',
+    'wiki-summary-select': 'Velg siden',
     'wiki-summary-slug': 'Slug',
     'wiki-summary-title': 'Tittel',
 };
+
 
 export {
     phrases,

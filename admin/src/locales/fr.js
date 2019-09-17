@@ -7,12 +7,12 @@ const phrases = {
     'action-badge-add': "ajouter",
     'action-badge-approve': "approuver",
     'action-badge-archive': "archiver",
-    'action-badge-deselect': 'désélectionner',
+    'action-badge-deselect': "désélectionner",
     'action-badge-disable': "désactiver",
     'action-badge-reactivate': "réactiver",
     'action-badge-remove': "supprimer",
     'action-badge-restore': "restaurer",
-    'action-badge-select': 'select',
+    'action-badge-select': "sélectionner",
 
     'activity-chart-legend-branch': "Nouvelles branches",
     'activity-chart-legend-issue': "Problèmes",
@@ -23,9 +23,11 @@ const phrases = {
     'activity-chart-legend-post': "Messages",
     'activity-chart-legend-push': "Poussées de code",
     'activity-chart-legend-repo': "Modification de dépôt",
+    'activity-chart-legend-snapshot': "Révisions du site",
     'activity-chart-legend-survey': "Sondages",
     'activity-chart-legend-tag': "étiquettes",
     'activity-chart-legend-task-list': "Listes de tâches",
+    'activity-chart-legend-website-traffic': "Rapports de circulation",
     'activity-chart-legend-wiki': "Éditions wiki",
 
     'activity-tooltip-$count': (count) => {
@@ -58,6 +60,9 @@ const phrases = {
     'activity-tooltip-$count-repo': (count) => {
         return cardinal(count, "1 modification de dépôt", "2 modifications de dépôt");
     },
+    'activity-tooltip-$count-snapshot': (count) => {
+        return cardinal(count, "1 révision du site", "2 révisions du site");
+    },
     'activity-tooltip-$count-survey': (count) => {
         return cardinal(count, "1 sondage", "2 sondages");
     },
@@ -66,6 +71,9 @@ const phrases = {
     },
     'activity-tooltip-$count-task-list': (count) => {
         return cardinal(count, "1 liste de tâches", "2 listes de tâches");
+    },
+    'activity-tooltip-$count-website-traffic': (count) => {
+        return cardinal(count, "1 révision du site", "2 révisions du site");
     },
     'activity-tooltip-$count-wiki': (count) => {
         return cardinal(count, "1 édition wiki", "2 éditions wiki");
@@ -99,9 +107,9 @@ const phrases = {
     'image-cropping-cancel': "Annuler",
     'image-cropping-select': "OK",
 
-    'image-preview-close': 'Fermer',
-    'image-preview-dropbox': 'Dropbox',
-    'image-preview-onedrive': 'OneDrive',
+    'image-preview-close': "Fermer",
+    'image-preview-dropbox': "Dropbox",
+    'image-preview-onedrive': "OneDrive",
 
     'image-selector-choose-from-album': "Choisir parmi l'album",
     'image-selector-crop-image': "Ajuster la taille/position",
@@ -522,6 +530,9 @@ const phrases = {
     'spreadsheet-summary-disable': "Désactiver le lien",
     'spreadsheet-summary-edit': "Modifier le lien",
     'spreadsheet-summary-filename': "Nom de fichier",
+    'spreadsheet-summary-hidden': "Recherche",
+    'spreadsheet-summary-hidden-false': "Apparaît dans les résultats de recherche",
+    'spreadsheet-summary-hidden-true': "Caché de la recherche",
     'spreadsheet-summary-name': "Identifiant",
     'spreadsheet-summary-reactivate': "Réactiver le lien",
     'spreadsheet-summary-return': "Retour à la liste des liens",
@@ -533,7 +544,7 @@ const phrases = {
         }
         return text;
     },
-    'spreadsheet-summary-title': 'Titre',
+    'spreadsheet-summary-title': "Titre",
     'spreadsheet-summary-url': "URL",
 
     'task-$seconds': (seconds) => {
@@ -1284,7 +1295,11 @@ const phrases = {
     'wiki-summary-cancel': "Annuler",
     'wiki-summary-confirm-deselect': "Êtes-vous sûr de vouloir désélectionner cette page?",
     'wiki-summary-confirm-select': "Êtes-vous sûr de vouloir rendre cette page publique?",
+    'wiki-summary-deselect': "Désélectionner la page",
     'wiki-summary-edit': "Modifier la page",
+    'wiki-summary-hidden': "Recherche",
+    'wiki-summary-hidden-false': "Apparaît dans les résultats de recherche",
+    'wiki-summary-hidden-true': "Caché de la recherche",
     'wiki-summary-page-contents': "Contenu",
     'wiki-summary-public': "Publique",
     'wiki-summary-public-always': "Toujours",
@@ -1292,6 +1307,8 @@ const phrases = {
     'wiki-summary-public-referenced': "Oui (référencée par une autre page publique)",
     'wiki-summary-repo': "Identifiant du dépôt",
     'wiki-summary-return': "Retour à la liste des pages",
+    'wiki-summary-save': "Enregistrer la page",
+    'wiki-summary-select': "Sélectionner la page",
     'wiki-summary-slug': "Slug",
     'wiki-summary-title': "Titre",
 };

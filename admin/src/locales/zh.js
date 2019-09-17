@@ -69,9 +69,11 @@ const traditionalPhrases = {
     'activity-chart-legend-post': '貼文',
     'activity-chart-legend-push': '推送',
     'activity-chart-legend-repo': '數據庫修改',
+    'activity-chart-legend-snapshot': '網站修訂',
     'activity-chart-legend-survey': '調查',
     'activity-chart-legend-tag': '標籤',
     'activity-chart-legend-task-list': '任務列表',
+    'activity-chart-legend-website-traffic': '網站流量報告',
     'activity-chart-legend-wiki': 'wiki修改',
 
     'activity-tooltip-$count': (count) => {
@@ -104,6 +106,9 @@ const traditionalPhrases = {
     'activity-tooltip-$count-repo': (count) => {
         return `${count}個數據庫變更`;
     },
+    'activity-tooltip-$count-snapshot': (count) => {
+        return `${count}個網站修訂`;
+    },
     'activity-tooltip-$count-survey': (count) => {
         return `${count}個調查`;
     },
@@ -112,6 +117,9 @@ const traditionalPhrases = {
     },
     'activity-tooltip-$count-task-list': (count) => {
         return `${count}個任務列表`;
+    },
+    'activity-tooltip-$count-website-traffic': (count) => {
+        return `${count}個網站流量報告`;
     },
     'activity-tooltip-$count-wiki': (count) => {
         return `${count}個wiki修改`;
@@ -568,6 +576,9 @@ const traditionalPhrases = {
     'spreadsheet-summary-disable': '停用鏈接',
     'spreadsheet-summary-edit': '編輯鏈接',
     'spreadsheet-summary-filename': '文件名',
+    'spreadsheet-summary-hidden': '搜索',
+    'spreadsheet-summary-hidden-false': '出現在搜索結果中',
+    'spreadsheet-summary-hidden-true': '不會在搜索結果中出現',
     'spreadsheet-summary-name': '識別碼',
     'spreadsheet-summary-reactivate': '重新啟用鏈接',
     'spreadsheet-summary-return': '返回鏈接列表',
@@ -1317,7 +1328,11 @@ const traditionalPhrases = {
     'wiki-summary-cancel': '取消',
     'wiki-summary-confirm-deselect': '你確定要取消選擇此頁面嗎？',
     'wiki-summary-confirm-select': '你確定要將此頁面公開嗎？',
+    'wiki-summary-deselect': '取消選擇頁面',
     'wiki-summary-edit': '編輯頁面',
+    'wiki-summary-hidden': '搜索',
+    'wiki-summary-hidden-false': '出現在搜索結果中',
+    'wiki-summary-hidden-true': '不會在搜索結果中出現',
     'wiki-summary-page-contents': '內容',
     'wiki-summary-public': '公開',
     'wiki-summary-public-always': '總是',
@@ -1325,6 +1340,8 @@ const traditionalPhrases = {
     'wiki-summary-public-referenced': '是（由另一個公共頁面鏈接）',
     'wiki-summary-repo': '存儲庫標識符',
     'wiki-summary-return': '返回頁面列表',
+    'wiki-summary-save': '保存頁面',
+    'wiki-summary-select': '選擇頁面',
     'wiki-summary-slug': 'Slug',
     'wiki-summary-title': '標題',
 };
@@ -1349,9 +1366,11 @@ const simplifiedPhrases = {
     'activity-chart-legend-post': '贴文',
     'activity-chart-legend-push': '推送',
     'activity-chart-legend-repo': '数据库修改',
+    'activity-chart-legend-snapshot': '网站修订',
     'activity-chart-legend-survey': '调查',
     'activity-chart-legend-tag': '标签',
     'activity-chart-legend-task-list': '任务列表',
+    'activity-chart-legend-website-traffic': '网站流量报告',
     'activity-chart-legend-wiki': 'wiki修改',
 
     'activity-tooltip-$count': (count) => {
@@ -1384,6 +1403,9 @@ const simplifiedPhrases = {
     'activity-tooltip-$count-repo': (count) => {
         return `${count}个数据库变更`;
     },
+    'activity-tooltip-$count-snapshot': (count) => {
+        return `${count}个网站修订`;
+    },
     'activity-tooltip-$count-survey': (count) => {
         return `${count}个调查`;
     },
@@ -1393,6 +1415,9 @@ const simplifiedPhrases = {
     'activity-tooltip-$count-task-list': (count) => {
         return `${count}个任务列表`;
     },
+    'activity-tooltip-$count-website-traffic': (count) => {
+        return `${count}个网站流量报告`;
+    },
     'activity-tooltip-$count-wiki': (count) => {
         return `${count}个wiki修改`;
     },
@@ -1848,6 +1873,9 @@ const simplifiedPhrases = {
     'spreadsheet-summary-disable': '停用链接',
     'spreadsheet-summary-edit': '编辑链接',
     'spreadsheet-summary-filename': '文件名',
+    'spreadsheet-summary-hidden': '搜索',
+    'spreadsheet-summary-hidden-false': '出现在搜索结果中',
+    'spreadsheet-summary-hidden-true': '不会在搜索结果中出现',
     'spreadsheet-summary-name': '识别码',
     'spreadsheet-summary-reactivate': '重新启用链接',
     'spreadsheet-summary-return': '返回链接列表',
@@ -2597,7 +2625,11 @@ const simplifiedPhrases = {
     'wiki-summary-cancel': '取消',
     'wiki-summary-confirm-deselect': '你確定要取消選擇此頁面嗎？',
     'wiki-summary-confirm-select': '你确定要将此页面公开吗？',
+    'wiki-summary-deselect': '取消选择页面',
     'wiki-summary-edit': '编辑页面',
+    'wiki-summary-hidden': '搜索',
+    'wiki-summary-hidden-false': '出现在搜索结果中',
+    'wiki-summary-hidden-true': '不会在搜索结果中出现',
     'wiki-summary-page-contents': '内容',
     'wiki-summary-public': '公开',
     'wiki-summary-public-always': '总是',
@@ -2605,6 +2637,8 @@ const simplifiedPhrases = {
     'wiki-summary-public-referenced': '是（由另一个公共页面链接）',
     'wiki-summary-repo': '存储库标识符',
     'wiki-summary-return': '返回页面列表',
+    'wiki-summary-save': '保存页面',
+    'wiki-summary-select': '选择页面',
     'wiki-summary-slug': 'Slug',
     'wiki-summary-title': '标题',
 };
