@@ -11,6 +11,7 @@ class Wiki extends ExternalData {
             slug: String,
             public: Boolean,
             chosen: Boolean,
+            hidden: Boolean,
         };
         this.criteria = {
             ...this.criteria,
@@ -18,15 +19,17 @@ class Wiki extends ExternalData {
             slug: String,
             public: Boolean,
             chosen: Boolean,
+            hidden: Boolean,
 
             search: Object,
         };
         this.eventColumns = {
             ...this.eventColumns,
+            language_codes: Array(String),
             slug: String,
             public: Boolean,
             chosen: Boolean,
-            language_codes: Array(String),
+            hidden: Boolean,
         };
         this.version = 3;
     }
@@ -53,6 +56,7 @@ class Wiki extends ExternalData {
                 slug varchar(256) NOT NULL,
                 public boolean NOT NULL DEFAULT false,
                 chosen boolean NOT NULL DEFAULT false,
+                hidden boolean NOT NULL DEFAULT false,
                 external jsonb[] NOT NULL DEFAULT '{}',
                 exchange jsonb[] NOT NULL DEFAULT '{}',
                 itime timestamp,
@@ -154,6 +158,8 @@ class Wiki extends ExternalData {
         return (subscription.area === 'admin');
     }
 
+
+
     /**
      * Export database row to client-side code, omitting sensitive or
      * unnecessary information
@@ -174,6 +180,7 @@ class Wiki extends ExternalData {
             object.public = row.public;
             object.chosen = row.chosen;
             if (object.public || credentials.unrestricted || process.env.ADMIN_GUEST_MODE) {
+                object.hidden = row.hidden;
                 object.slug = row.slug;
             }
         }
@@ -183,11 +190,11 @@ class Wiki extends ExternalData {
     /**
      * Throw an exception if modifications aren't permitted
      *
-     * @param  {Object} spreadsheetReceived
-     * @param  {Object} spreadsheetBefore
+     * @param  {Object} wikiReceived
+     * @param  {Object} wikiBefore
      * @param  {Object} credentials
      */
-    checkWritePermission(spreadsheetReceived, spreadsheetBefore, credentials) {
+    checkWritePermission(wikiReceived, wikiBefore, credentials) {
         if (credentials.unrestricted) {
             return;
         }

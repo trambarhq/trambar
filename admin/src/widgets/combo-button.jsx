@@ -51,10 +51,12 @@ function ComboButton(props) {
     function renderMainButton() {
         const options = React.Children.toArray(children);
         let selectedOption = _.find(options, (option) => {
-            return option.props.name === selected;
+            return option.props.name === selected && !option.props.hidden;
         });
         if (!selectedOption) {
-            selectedOption = _.first(options);
+            selectedOption = _.find(options, (option) => {
+                return !option.props.hidden;
+            });
         }
         const props = _.omit(selectedOption.props, 'separator');
         props.className = props.className ? `main ${props.className}`: 'main';

@@ -25,7 +25,10 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
 import {
+    useDraftBuffer,
+    useValidation,
     useConfirmation,
+    useDataLossWarning,
 } from '../hooks.mjs';
 
 import './wiki-summary-page.scss';
@@ -59,11 +62,22 @@ function WikiSummaryPageSync(props) {
     const { schema, system, project, wiki, wikis, repo } = props;
     const { database, route, env, editing } = props;
     const { t } = env.locale;
+    const readOnly = !editing;
+    const draft = useDraftBuffer({
+        original: wiki || {},
+        reset: readOnly,
+    });
+    const [ problems, reportProblems ] = useValidation(!readOnly);
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
     const baseURL = _.get(repo, 'details.web_url');
 
     const handleEditClick = useListener((evt) => {
+        route.replace({ editing: true });
+    });
+    const handleCancelClick = useListener((evt) => {
+        route.replace({ editing: undefined });
     });
     const handleReturnClick = useListener((evt) => {
         route.push('wiki-list-page', { projectID: project.id });
@@ -78,8 +92,21 @@ function WikiSummaryPageSync(props) {
         run(async () => {
             await confirm(t('wiki-summary-confirm-deselect'));
             await WikiSaver.deselectWiki(database, schema, wiki);
-            handleReturnClick();
         });
+    });
+    const handleSaveClick = useListener((evt) => {
+        run(async () => {
+            const problems = {};
+            reportProblems(problems);
+
+            const wikiAfter = await WikiSaver.saveWiki(database, schema, draft.current);
+            warnDataLoss(false);
+            route.replace({ editing: undefined });
+        });
+    });
+    const handleHiddenOptionClick = useListener((evt) => {
+        const hidden = (evt.name === 'true');
+        draft.set('hidden', hidden);
     });
 
     const title = _.get(wiki, 'details.title', '');
@@ -95,27 +122,42 @@ function WikiSummaryPageSync(props) {
     );
 
     function renderButtons() {
-        const chosen = wiki && wiki.chosen;
-        let preselected;
-        return (
-            <div className="buttons">
-                <ComboButton preselected={preselected}>
-                    <option name="return" onClick={handleReturnClick}>
-                        {t('wiki-summary-return')}
-                    </option>
-                    <option name="select" hidden={chosen} onClick={handleSelectClick}>
-                        {t('wiki-summary-select')}
-                    </option>
-                    <option name="deselect" hidden={!chosen} onClick={handleDeselectClick}>
-                        {t('wiki-summary-deselect')}
-                    </option>
-                </ComboButton>
-                {' '}
-                <PushButton className="emphasis" disabled={!wiki || !repo} onClick={handleEditClick}>
-                    {t('wiki-summary-edit')}
-                </PushButton>
-            </div>
-        );
+        if (readOnly) {
+            const chosen = wiki && wiki.chosen;
+            let preselected;
+            return (
+                <div className="buttons">
+                    <ComboButton preselected={preselected}>
+                        <option name="return" onClick={handleReturnClick}>
+                            {t('wiki-summary-return')}
+                        </option>
+                        <option name="select" hidden={chosen} onClick={handleSelectClick}>
+                            {t('wiki-summary-select')}
+                        </option>
+                        <option name="deselect" hidden={!chosen} onClick={handleDeselectClick}>
+                            {t('wiki-summary-deselect')}
+                        </option>
+                    </ComboButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!wiki || !repo} onClick={handleEditClick}>
+                        {t('wiki-summary-edit')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            const { changed } = draft;
+            return (
+                <div className="buttons">
+                    <PushButton onClick={handleCancelClick}>
+                        {t('wiki-summary-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
+                        {t('wiki-summary-save')}
+                    </PushButton>
+                </div>
+            );
+        }
     }
 
     function renderForm() {
@@ -125,6 +167,7 @@ function WikiSummaryPageSync(props) {
                 {renderSlug()}
                 {renderRepo()}
                 {renderPublic()}
+                {renderHiddenSelector()}
             </div>
         );
     }
@@ -200,6 +243,36 @@ function WikiSummaryPageSync(props) {
             <TextField {...props}>
                 {t('wiki-summary-public')}
             </TextField>
+        );
+    }
+
+    function renderHiddenSelector() {
+        const listProps = {
+            readOnly,
+            onOptionClick: handleHiddenOptionClick,
+        };
+        return (
+            <OptionList {...listProps}>
+                <label>
+                    {t('wiki-summary-hidden')}
+                </label>
+                {_.map([ false, true ], renderHiddenOption)}
+            </OptionList>
+        );
+    }
+
+    function renderHiddenOption(hidden, i) {
+        const hiddenCurr = draft.getCurrent('hidden', false);
+        const hiddenPrev = draft.getOriginal('hidden', false);
+        const props = {
+            name: hidden,
+            selected: (hiddenCurr === hidden),
+            previous: (hiddenPrev === hidden),
+        };
+        return (
+            <option key={i} {...props}>
+                {t(`wiki-summary-hidden-${hidden}`)}
+            </option>
         );
     }
 

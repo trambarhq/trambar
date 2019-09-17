@@ -11,6 +11,7 @@ class Spreadsheet extends Data {
             ...this.columns,
             language_codes: Array(String),
             disabled: Boolean,
+            hidden: Boolean,
             name: String,
             url: String,
             etag: String,
@@ -20,6 +21,7 @@ class Spreadsheet extends Data {
             ...this.criteria,
             language_codes: Array(String),
             disabled: Boolean,
+            hidden: Boolean,
             name: String,
             url: String,
             etag: String,
@@ -28,9 +30,10 @@ class Spreadsheet extends Data {
         };
         this.eventColumns = {
             ...this.eventColumns,
-            disabled: Boolean,
-            name: String,
             language_codes: Array(String),
+            disabled: Boolean,
+            hidden: Boolean,
+            name: String,
         };
         this.version = 3;
     }
@@ -58,6 +61,7 @@ class Spreadsheet extends Data {
                 etag text NOT NULL DEFAULT '',
                 url text NOT NULL DEFAULT '',
                 disabled boolean NOT NULL DEFAULT false,
+                hidden boolean NOT NULL DEFAULT false,
                 settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
@@ -162,6 +166,7 @@ class Spreadsheet extends Data {
             object.disabled = row.disabled;
             object.name = row.name;
             if (credentials.unrestricted || process.env.ADMIN_GUEST_MODE) {
+                object.hidden = row.hidden;
                 object.etag = row.etag;
                 object.url = row.url;
             }

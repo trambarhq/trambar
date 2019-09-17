@@ -15,11 +15,15 @@ async function discover(schema, identifier, search) {
         const contents = [];
         const db = await Database.open();
         const criteria = await addRepoCheck(db, identifier, {
-            chosen: !search,
             public: true,
             deleted: false,
-            search,
         });
+        if (search) {
+            criteria.hidden = false;
+            criteria.search = search;
+        } else {
+            criteria.chosen = true;
+        }
         const wikis = await Wiki.find(db, schema, criteria, 'slug, external');
         for (let wiki of wikis) {
             if (identifier) {

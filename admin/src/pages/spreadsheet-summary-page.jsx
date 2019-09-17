@@ -15,6 +15,7 @@ import { ComboButton } from '../widgets/combo-button.jsx';
 import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 import { InstructionBlock } from '../widgets/instruction-block.jsx';
 import { TextField } from '../widgets/text-field.jsx';
+import { OptionList } from '../widgets/option-list.jsx';
 import { URLLink } from '../widgets/url-link.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
 import { ExcelPreview } from '../widgets/excel-preview.jsx';
@@ -26,7 +27,6 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 // custom hooks
 import {
     useDraftBuffer,
-    useSelectionBuffer,
     useValidation,
     useConfirmation,
     useDataLossWarning,
@@ -166,6 +166,10 @@ function SpreadsheetSummaryPageSync(props) {
         const url = evt.target.value;
         draft.set('url', url);
     });
+    const handleHiddenOptionClick = useListener((evt) => {
+        const hidden = (evt.name === 'true');
+        draft.set('hidden', hidden);
+    });
 
     useEffect(() => {
         run(() => {
@@ -249,6 +253,7 @@ function SpreadsheetSummaryPageSync(props) {
                 {renderFilename()}
                 {renderTitle()}
                 {renderDescription()}
+                {renderHiddenSelector()}
             </div>
         );
     }
@@ -337,6 +342,36 @@ function SpreadsheetSummaryPageSync(props) {
             <TextField {...props}>
                 {t('spreadsheet-summary-description')}
             </TextField>
+        );
+    }
+
+    function renderHiddenSelector() {
+        const listProps = {
+            readOnly,
+            onOptionClick: handleHiddenOptionClick,
+        };
+        return (
+            <OptionList {...listProps}>
+                <label>
+                    {t('spreadsheet-summary-hidden')}
+                </label>
+                {_.map([ false, true ], renderHiddenOption)}
+            </OptionList>
+        );
+    }
+
+    function renderHiddenOption(hidden, i) {
+        const hiddenCurr = draft.getCurrent('hidden', false);
+        const hiddenPrev = draft.getOriginal('hidden', false);
+        const props = {
+            name: hidden,
+            selected: (hiddenCurr === hidden),
+            previous: (hiddenPrev === hidden),
+        };
+        return (
+            <option key={i} {...props}>
+                {t(`spreadsheet-summary-hidden-${hidden}`)}
+            </option>
         );
     }
 

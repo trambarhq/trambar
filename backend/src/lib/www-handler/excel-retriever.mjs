@@ -16,8 +16,11 @@ async function discover(schema, search) {
         const criteria = {
             deleted: false,
             disabled: false,
-            search,
         };
+        if (search) {
+            criteria.hidden = false;
+            criteria.search = search;
+        }
         const spreadsheets = await Spreadsheet.find(db, schema, criteria, 'name');
         for (let spreadsheet of spreadsheets) {
             contents.push(spreadsheet.name);
