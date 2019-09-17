@@ -134,7 +134,7 @@ function WebsiteSummaryPageSync(props) {
     });
     const handleReportTimeChange = useListener((evt) => {
         let time = evt.target.value || '00:00';
-        if (label === '00:00') {
+        if (time === '00:00') {
             // the defauft is handled a bit different
             // 00:00 will actually be interpreted as 23:59:59
             time = undefined;
