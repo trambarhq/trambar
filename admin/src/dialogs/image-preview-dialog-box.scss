@@ -8,6 +8,7 @@
     color: $dialog-box-text-color;
     padding: 1em 1em 1em 1em;
     box-shadow: 5px 5px 4px $dialog-box-shadow-color;
+    user-select: none;
 
     .buttons {
         flex: 0 0 auto;

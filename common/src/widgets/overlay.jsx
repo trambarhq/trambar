@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useLastAcceptable } from 'relaks';
 import ReactDOM from 'react-dom';
-import { useListener } from 'relaks';
+import { useListener, useLastAcceptable } from 'relaks';
 
 import './overlay.scss';
 

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import Relaks, { useListener } from 'relaks';
 
@@ -9,7 +8,7 @@ import { PushButton } from '../widgets/push-button.jsx';
 import './image-preview-dialog-box.scss';
 
 function ImagePreviewDialogBox(props) {
-    const { database, env, image, onClose } = props;
+    const { env, image, onClose } = props;
     const { t } = env.locale;
 
     return (

@@ -43,6 +43,7 @@
 
     A {
         cursor: default;
+        user-select: none;
 
         &:link, &:visited {
             color: $navigation-text-color;

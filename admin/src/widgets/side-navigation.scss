@@ -38,6 +38,7 @@
         left: 0;
         background-color: $navigation-background-color;
         transition: bottom 1s linear 1s;
+        user-select: none;
 
         .button {
             position: relative;
