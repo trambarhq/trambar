@@ -73,7 +73,11 @@ function ProjectSummaryPageSync(props) {
         route.replace({ editing: true });
     });
     const handleCancelClick = useListener((evt) => {
-        route.replace({ editing: undefined });
+        if (creating) {
+            handleReturnClick();
+        } else {
+            route.replace({ editing: undefined });
+        }
     });
     const handleAddClick = useListener((evt) => {
         route.push({ editing: true, projectID: 'new' });
