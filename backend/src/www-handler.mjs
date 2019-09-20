@@ -247,6 +247,10 @@ async function handleSnapshotFileRequest(req, res, next) {
         controlCache(res);
         res.type(ext).send(buffer);
     } catch (err) {
+        if (req.params[0] === 'favicon.ico') {
+            res.sendStatus(204);
+            return;
+        }
         next(err);
     }
 }
