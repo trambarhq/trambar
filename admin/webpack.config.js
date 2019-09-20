@@ -75,7 +75,13 @@ module.exports = {
             {
                 test: /\.(js|jsx|mjs)$/,
                 loader: 'babel-loader',
-                exclude: /node_modules/,
+                exclude: function(path) {
+                    if (/node_modules/.test(path)) {
+                        if (!/trambar\-www/.test(path)) {
+                            return true;
+                        }
+                    }
+                },
                 type: 'javascript/auto',
                 query: {
                     presets: [

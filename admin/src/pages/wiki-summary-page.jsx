@@ -109,6 +109,8 @@ function WikiSummaryPageSync(props) {
         draft.set('hidden', hidden);
     });
 
+    warnDataLoss(draft.changed);
+
     const title = _.get(wiki, 'details.title', '');
     return (
         <div className="wiki-summary-page">
