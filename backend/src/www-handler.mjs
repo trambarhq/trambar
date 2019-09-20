@@ -3,7 +3,7 @@ import './lib/common/utils/lodash-extra.mjs';
 import Moment from 'moment';
 import { promises as FS } from 'fs';
 import Path from 'path';
-import URL from 'url';
+import QueryString from 'querystring';
 import Express from 'express';
 import CORS from 'cors';
 import Compression from 'compression';
@@ -259,7 +259,9 @@ async function handleSnapshotPageRequest(req, res, next) {
             if (!selected) {
                 selected = await getDefaultLanguage();
             }
-            const uri = `${req.path}?lang=${selected}`;
+            const vars = { ...req.query, lang: selected };
+            const qs = QueryString.stringify(vars);
+            const uri = `${req.path}?${qs}`;
             res.set({ 'X-Accel-Expires': 0 });
             res.set({ 'X-Accel-Redirect': uri });
             res.end();
@@ -267,7 +269,8 @@ async function handleSnapshotPageRequest(req, res, next) {
         }
 
         const { schema, tag } = req.params;
-        const path = req.params[0];
+        const qs = QueryString.stringify(req.query);
+        const path = `/${req.params[0]}?${qs}`;
         const target = 'hydrate';
         const protocol = req.headers['x-forwarded-proto'];
         const host = req.headers.host;

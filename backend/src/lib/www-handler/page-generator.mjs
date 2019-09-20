@@ -13,9 +13,6 @@ async function generate(schema, tag, path, baseURL, target, lang) {
     if (!tag) {
         tag = 'master';
     }
-    if (!_.startsWith(path, '/')) {
-        path = '/' + path;
-    }
     const taskLog = TaskLog.start('page-generate', {
         project: schema,
         tag,
