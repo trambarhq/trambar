@@ -259,6 +259,8 @@ async function NavigationTree(props) {
         let label;
         if (spreadsheet) {
             label = SpreadsheetUtils.getDisplayName(spreadsheet, env) || '-';
+        } else if (spreadsheetID === 'new') {
+            label = <i>{t('nav-spreadsheet-new')}</i>;
         } else {
             return null;
         }
@@ -279,6 +281,8 @@ async function NavigationTree(props) {
         let label;
         if (rest) {
             label = RestUtils.getDisplayName(rest, env) || '-';
+        } else if (restID === 'new') {
+            label = <i>{t('nav-rest-source-new')}</i>;
         } else {
             return null;
         }
