@@ -108,6 +108,10 @@ function RestSummaryPageSync(props) {
         run(async () => {
             try {
                 const problems = {};
+                const name = draft.get('name');
+                if (!name) {
+                    problems.name = 'validation-required';
+                }
                 reportProblems(problems);
 
                 const restAfter = await RestSaver.saveRest(database, schema, draft.current);
