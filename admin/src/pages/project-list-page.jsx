@@ -76,7 +76,7 @@ function ProjectListPageSync(props) {
         route.replace({ editing: undefined });
     });
     const handleAddClick = useListener((evt) => {
-        route.push('project-summary-page', { editing: true, projectID: 'new' });
+        route.push('project-summary-page', { projectID: 'new' });
     });
     const handleSaveClick = useListener((evt) => {
         run(async () => {

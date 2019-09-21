@@ -80,7 +80,7 @@ function ProjectSummaryPageSync(props) {
         }
     });
     const handleAddClick = useListener((evt) => {
-        route.push({ editing: true, projectID: 'new' });
+        route.push({ projectID: 'new' });
     });
     const handleReturnClick = useListener((evt) => {
         route.push('project-list-page');
