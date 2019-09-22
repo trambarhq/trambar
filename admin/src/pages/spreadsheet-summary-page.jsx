@@ -23,6 +23,7 @@ import { ImagePreviewDialogBox } from '../dialogs/image-preview-dialog-box.jsx';
 import { InputError } from '../widgets/input-error.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
+import { LoadingAnimation } from '../widgets/loading-animation.jsx';
 
 // custom hooks
 import {
@@ -391,7 +392,18 @@ function SpreadsheetSummaryPageSync(props) {
 
     function renderSheets() {
         if (excel) {
-            return _.map(excel.sheets, renderSheet);
+            if (!_.isEmpty(excel.sheets)) {
+                return _.map(excel.sheets, renderSheet);
+            } else {
+                const error = _.get(spreadsheet, 'details.error');
+                if (!error) {
+                    return (
+                        <div className="sheet">
+                            <LoadingAnimation />
+                        </div>
+                    );
+                }
+            }
         }
     }
 
