@@ -60,7 +60,7 @@ function RestSummaryPageSync(props) {
     const readOnly = !editing && !creating;
     const [ adding, setAdding ] = useState(false);
     const draft = useDraftBuffer({
-        original: rest || {},
+        original: rest || { type: 'wordpress' },
         reset: readOnly,
     });
     const [ problems, reportProblems ] = useValidation(!readOnly);
@@ -128,7 +128,7 @@ function RestSummaryPageSync(props) {
                 route.replace({ editing: undefined, restID: restAfter.id });
             } catch (err) {
                 if (err.statusCode === 409) {
-                    reportProblems({ name: 'validation-duplicate-rest-name' });
+                    reportProblems({ name: 'validation-duplicate-source-name' });
                 } else {
                     throw err;
                 }
@@ -142,6 +142,23 @@ function RestSummaryPageSync(props) {
     const handleURLChange = useListener((evt) => {
         const url = evt.target.value;
         draft.set('url', url);
+    });
+    const handleURLBlur = useListener((evt) => {
+        try {
+            const url = draft.get('url');
+            const urlParts = new URL(url);
+            const type = draft.get('type');
+            if (type === 'wordpress') {
+                if (urlParts.pathname === '/') {
+                    urlParts.pathname = '/wp-json/';
+                }
+            }
+            const newURL = urlParts.toString();
+            if (url !== newURL) {
+                draft.set('url', newURL);
+            }
+        } catch (err) {
+        }
     });
     const handleTypeOptionClick = useListener((evt) => {
         const type = evt.name;
@@ -242,6 +259,7 @@ function RestSummaryPageSync(props) {
             readOnly,
             env,
             onChange: handleURLChange,
+            onBlur: handleURLBlur,
         };
         return (
             <TextField {...props}>
