@@ -232,10 +232,13 @@ function RestListPageSync(props) {
         if (!rest) {
             return <TH id="url">{t('rest-list-column-url')}</TH>;
         } else {
-            const url = rest.url;
+            let url;
+            if (!selection.shown) {
+                url = rest.url;
+            }
             return (
                 <td className="no-wrap">
-                    <a href={url} target="_blank">{url}</a>
+                    <a href={url} target="_blank">{rest.url}</a>
                 </td>
             );
         }

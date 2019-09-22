@@ -233,10 +233,13 @@ function SpreadsheetListPageSync(props) {
         if (!spreadsheet) {
             return <TH id="url">{t('spreadsheet-list-column-url')}</TH>;
         } else {
-            const url = spreadsheet.url;
+            let url;
+            if (!selection.shown) {
+                url = spreadsheet.url;
+            }
             return (
                 <td className="no-wrap">
-                    <a href={url} target="_blank">{url}</a>
+                    <a href={url} target="_blank">{spreadsheet.url}</a>
                 </td>
             );
         }
