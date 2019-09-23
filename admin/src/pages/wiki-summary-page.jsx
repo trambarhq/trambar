@@ -319,7 +319,7 @@ function WikiContents(props) {
     }, [ wiki, shown.current ]);
     const pageLocalized = useMemo(() => {
         if (page) {
-            return page.filter(env.locale.localeCode);
+            return page.filter(env.locale.localeCode, true);
         }
     }, [ page, env.locale ]);
 

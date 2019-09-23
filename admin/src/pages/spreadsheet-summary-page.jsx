@@ -92,7 +92,7 @@ function SpreadsheetSummaryPageSync(props) {
     }, [ spreadsheet ]);
     const excelLocalized = useMemo(() => {
         if (excel) {
-            return excel.filter(env.locale.localeCode);
+            return excel.filter(env.locale.localeCode, true);
         }
     }, [ excel, env.locale ]);
 
