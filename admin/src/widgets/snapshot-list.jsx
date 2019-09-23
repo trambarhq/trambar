@@ -89,10 +89,16 @@ async function SnapshotList(props) {
     }
 
     function renderGeneric() {
+        const url = projectURL;
+        const classNames = [ 'snapshot', 'head', 'master' ];
         return (
-            <div className="generic">
-
-            </div>
+            <a href={url} target="_blank">
+                <div className={classNames.join(' ')}>
+                    <div className="commit">
+                        <span className="branch">{t('website-summary-template-generic')}</span>
+                    </div>
+                </div>
+            </a>
         );
     }
 }

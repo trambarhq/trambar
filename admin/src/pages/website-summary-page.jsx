@@ -333,8 +333,8 @@ function WebsiteSummaryPageSync(props) {
     }
 
     function renderSnapshots() {
-        if (!template) {
-            return null;
+        if (!snapshots && (!project || !!project.template_repo_id)) {
+            return;
         }
         const sorted = sortSnapshots(snapshots);
         const props = {
