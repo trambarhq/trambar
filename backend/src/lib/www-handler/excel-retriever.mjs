@@ -16,9 +16,9 @@ async function discover(schema, search) {
         const criteria = {
             deleted: false,
             disabled: false,
+            hidden: false,
         };
         if (search) {
-            criteria.hidden = false;
             criteria.search = search;
         }
         const spreadsheets = await Spreadsheet.find(db, schema, criteria, 'name');

@@ -17,9 +17,9 @@ async function discover(schema, identifier, search) {
         const criteria = await addRepoCheck(db, identifier, {
             public: true,
             deleted: false,
+            hidden: false,
         });
         if (search) {
-            criteria.hidden = false;
             criteria.search = search;
         } else {
             criteria.chosen = true;
