@@ -118,6 +118,7 @@ function WikiSummaryPageSync(props) {
             <h2>{t('wiki-summary-$title', title)}</h2>
             <UnexpectedError error={error} />
             {renderForm()}
+            {renderInstructions()}
             {renderContents()}
             <ActionConfirmation ref={confirmationRef} env={env} />
         </div>
@@ -283,6 +284,20 @@ function WikiSummaryPageSync(props) {
             const props = { wiki, wikis, route, env };
             return <WikiContents {...props} />
         }
+    }
+
+    function renderInstructions() {
+        const instructionProps = {
+            folder: 'wiki',
+            topic: 'wiki-summary',
+            hidden: readOnly,
+            env,
+        };
+        return (
+            <div className="instructions">
+                <InstructionBlock {...instructionProps} />
+            </div>
+        );
     }
 }
 

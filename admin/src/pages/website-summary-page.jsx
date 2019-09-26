@@ -240,7 +240,9 @@ function WebsiteSummaryPageSync(props) {
         } else {
             // add placeholder so the control doesn't collapse
             const id = draft.getCurrent('template_repo_id');
-            list.push({ id, name: '\u00a0' });
+            if (id) {
+                list.push({ id, name: '\u00a0' });
+            }
         }
         return (
             <OptionList {...listProps}>

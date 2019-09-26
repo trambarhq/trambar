@@ -128,10 +128,10 @@ function FrontEnd(props) {
             routeManager.replace('start-page', {}, { schema: null });
         };
         dataSource.addEventListener('stupefaction', handleStupefaction);
-        dataSource.addEventListener('stupefaction', handleViolation);
+        dataSource.addEventListener('violation', handleViolation);
         return () => {
             dataSource.removeEventListener('stupefaction', handleStupefaction);
-            dataSource.removeEventListener('stupefaction', handleViolation);
+            dataSource.removeEventListener('violation', handleViolation);
         };
     }, [ dataSource, routeManager ])
     useEffect(() => {
