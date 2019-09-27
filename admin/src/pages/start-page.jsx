@@ -1,88 +1,44 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import * as SystemFinder from 'objects/finders/system-finder';
+import React from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
+import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 
 import './start-page.scss';
 
-/**
- * Asynchronous component that retrieves data needed by the Start page.
- *
- * @extends AsyncComponent
- */
-class StartPage extends AsyncComponent {
-    static displayName = 'StartPage';
+async function StartPage(props) {
+    const { database, route, env } = props;
+    const { t } = env.locale;
+    const [ show ] = useProgress();
 
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, env } = this.props;
-        let db = database.use({ by: this });
-        let props = {
-            env,
-        };
-        let currentUserID = await db.start();
-        let system = await SystemFinder.findSystem(db);
-        if (_.isEmpty(system)) {
-            // wait for welcome message to transition out
-            props.onAnimationEnd = async (evt) => {
-                await route.replace('settings-page', { editing: true });
-            };
+    const handleAnimationEnd = useListener((evt) => {
+        route.replace('settings-page', { editing: true });
+    });
+
+    render();
+    const currentUserID = await database.start();
+    const system = await SystemFinder.findSystem(database);
+    if (!_.isEmpty(system)) {
+        await route.replace('project-list-page');
+        return null;
+    }
+    render();
+
+    function render() {
+        if (!system) {
+            show(null);
         } else {
-            await route.replace('project-list-page');
+            show(
+                <div className="start-page" onAnimationEnd={handleAnimationEnd}>
+                    <h2>{t('welcome')}</h2>
+                </div>
+            );
         }
-        return <StartPageSync {...props} />;
     }
 }
 
-/**
- * Synchronous component that actually renders the Start page.
- *
- * @extends PureComponent
- */
-class StartPageSync extends PureComponent {
-    static displayName = 'StartPageSync';
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { env, stage, onAnimationEnd } = this.props;
-        let { t } = env.locale;
-        return (
-            <div className={`start-page ${stage}`} onAnimationEnd={onAnimationEnd}>
-                <h2>{t('welcome')}</h2>
-            </div>
-        );
-    }
-}
+const component = Relaks.memo(StartPage);
 
 export {
-    StartPage as default,
-    StartPage,
-    StartPageSync,
+    component as default,
+    component as StartPage,
 };
-
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    StartPage.propTypes = {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    StartPage.propType = {
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

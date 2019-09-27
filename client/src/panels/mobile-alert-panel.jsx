@@ -1,128 +1,63 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import NotificationTypes, { AdminNotificationTypes } from 'objects/types/notification-types';
-import * as UserUtils from 'objects/utils/user-utils';
+import React, { useCallback } from 'react';
+import { useListener } from 'relaks';
+import NotificationTypes, { AdminNotificationTypes } from 'common/objects/types/notification-types.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import OptionButton from 'widgets/option-button';
+import { SettingsPanel } from '../widgets/settings-panel.jsx';
+import { OptionButton } from '../widgets/option-button.jsx';
 
 import './mobile-alert-panel.scss';
 
 /**
  * Panel for controling the sending of alerts to the user's mobile phone.
- *
- * @extends PureComponent
  */
-class MobileAlertPanel extends PureComponent {
-    static displayName = 'MobileAlertPanel';
-
-    /**
-     * Change a property of the user object
-     *
-     * @param  {String} path
-     * @param  {*} value
-     */
-    setUserProperty(path, value) {
-        let { currentUser, onChange } = this.props;
-        if (!currentUser) {
-            return;
-        }
-        let userAfter = _.decoupleSet(currentUser, path, value);
-        if (onChange) {
-            onChange({
-                type: 'change',
-                target: this,
-                user: userAfter
-            });
-        }
+function MobileAlertPanel(props) {
+    const { env, userDraft, repos } = props;
+    const { t } = env.locale;
+    let types = NotificationTypes;
+    let userType = userDraft.get('type');
+    if (userType !== 'admin') {
+        types = _.without(types, AdminNotificationTypes);
     }
+    types = _.concat(types, 'web-session');
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        return (
-            <SettingsPanel className="mobile-alert">
-                <header>
-                    <div className="icon">
-                        <i className="fa fa-tablet" />
-                        <i className="fa fa-exclamation-circle icon-overlay" />
-                    </div>
-                    {' '}
-                    {t('settings-mobile-alert')}
-                </header>
-                <body>
-                    {this.renderOptions()}
-                </body>
-            </SettingsPanel>
-        );
-    }
+    const handleOptionClick = useCallback((evt) => {
+        const optionName = evt.currentTarget.id;
+        userDraft.toggle(`settings.mobile_alert.${optionName}`);
+    });
 
-    /**
-     * Render notification options
-     *
-     * @return {Array<ReactElement>}
-     */
-    renderOptions() {
-        let { currentUser } = this.props;
-        let types = NotificationTypes;
-        let userType = _.get(currentUser, 'type');
-        if (userType !== 'admin') {
-            types = _.without(types, AdminNotificationTypes);
-        }
-        types = _.concat(types, 'web-session');
-        return _.map(types, (type, i) => {
-            return this.renderOption(type, i);
-        });
-    }
+    return (
+        <SettingsPanel className="mobile-alert">
+            <header>
+                <div className="icon">
+                    <i className="fa fa-tablet" />
+                    <i className="fa fa-exclamation-circle icon-overlay" />
+                </div>
+                {' '}
+                {t('settings-mobile-alert')}
+            </header>
+            <body>
+                {_.map(types, renderOption)}
+            </body>
+        </SettingsPanel>
+    );
 
-    /**
-     * Render notification option button
-     *
-     * @param  {String} type
-     * @param  {Number} index
-     *
-     * @return {ReactElement}
-     */
-    renderOption(type, index) {
-        let { env, currentUser, repos } = this.props;
-        let { t } = env.locale;
-        let optionName = _.snakeCase(type);
-        let settings = _.get(currentUser, 'settings', {});
-        let notificationEnabled = !!_.get(settings, `notification.${optionName}`);
-        let alertEnabled = !!_.get(settings, `mobile_alert.${optionName}`);
-        let canReceive = UserUtils.canReceiveNotification(currentUser, repos, type);
-        let buttonProps = {
+    function renderOption(type, index) {
+        const optionName = _.snakeCase(type);
+        const notificationEnabled = userDraft.get(`settings.notification.${optionName}`, false);
+        const alertEnabled = userDraft.get(`settings.mobile_alert.${optionName}`, false);
+        const canReceive = UserUtils.canReceiveNotification(userDraft.current, repos, type);
+        const buttonProps = {
             label: t(`notification-option-${type}`),
             selected: alertEnabled && (notificationEnabled || type === 'web-session'),
             hidden: !canReceive,
             disabled: !(notificationEnabled || type === 'web-session'),
-            onClick: this.handleOptionClick,
+            onClick: handleOptionClick,
             id: optionName,
         };
         return <OptionButton key={index} {...buttonProps} />
-    }
-
-    /**
-     * Called when an option is clicked
-     */
-    handleOptionClick = (evt) => {
-        let { currentUser } = this.props;
-        let optionName = evt.currentTarget.id;
-        let optionPath = `mobile_alert.${optionName}`;
-        let settings = _.clone(_.get(currentUser, 'settings', {}));
-        let enabled = !!_.get(settings, optionPath);
-        if (enabled) {
-            _.unset(settings, optionPath);
-        } else {
-            _.set(settings, optionPath, true);
-        }
-        this.setUserProperty('settings', settings);
     }
 }
 
@@ -130,15 +65,3 @@ export {
     MobileAlertPanel as default,
     MobileAlertPanel,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    MobileAlertPanel.propTypes = {
-        currentUser: PropTypes.object,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        onChange: PropTypes.func,
-    }
-}

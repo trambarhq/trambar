@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { Component } from 'react';
 
-require('./error-boundary.scss');
+import './error-boundary.scss';
 
 /**
  * Component for trapping JavaScript exeception encountered during rendering
@@ -83,14 +83,3 @@ export {
     ErrorBoundary as default,
     ErrorBoundary,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ErrorBoundary.propTypes = {
-        env: PropTypes.instanceOf(Environment).isRequired,
-        showError: PropTypes.bool,
-    };
-}

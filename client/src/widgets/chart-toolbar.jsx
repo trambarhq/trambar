@@ -1,112 +1,57 @@
-import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 // widgets
-import HeaderButton from 'widgets/header-button';
+import { HeaderButton } from './header-button.jsx';
 
 import './chart-toolbar.scss';
 
 /**
  * Toolbar with buttons for changing the chart type.
- *
- * @extends PureComponent
  */
-class ChartToolbar extends PureComponent {
-    static displayName = 'ChartToolbar';
+function ChartToolbar(props) {
+    const { env, chartType, onAction } = props;
+    const { t } = env.locale;
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { env, chartType } = this.props;
-        let { t } = env.locale;
-        let barChartProps = {
-            label: t('statistics-bar'),
-            icon: 'bar-chart',
-            highlighted: (chartType === 'bar'),
-            onClick: this.handleBarChartClick,
-        };
-        let lineChartProps = {
-            label: t('statistics-line'),
-            icon: 'line-chart',
-            highlighted: (chartType === 'line'),
-            onClick: this.handleLineChartClick,
-        };
-        let pieChartProps = {
-            label: t('statistics-pie'),
-            icon: 'pie-chart',
-            highlighted: (chartType === 'pie'),
-            onClick: this.handlePieChartClick,
-        };
-        return (
-            <div className="chart-toolbar">
-                <HeaderButton {...barChartProps} />
-                <HeaderButton {...lineChartProps} />
-                <HeaderButton {...pieChartProps} />
-            </div>
-        );
-    }
-
-    /**
-     * Inform parent component that certain action should occur
-     *
-     * @param  {String} action
-     * @param  {Object|undefined} props
-     */
-    triggerActionEvent(action, props) {
-        let { onAction } = this.props;
+    const handleClick = useListener((evt) => {
+        const value = evt.currentTarget.getAttribute('data-type');
+        const action = 'chart-type-set';
         if (onAction) {
-            onAction(_.extend({
-                type: 'action',
-                target: this,
-                action,
-            }, props));
+            onAction({ action, value });
         }
-    }
+    });
 
-    /**
-     * Called when user clicks bar chart button
-     *
-     * @param  {Event} evt
-     */
-    handleBarChartClick = (evt) => {
-        this.triggerActionEvent('chart-type-set', { value: 'bar' });
-    }
-
-    /**
-     * Called when user clicks bar chart button
-     *
-     * @param  {Event} evt
-     */
-    handleLineChartClick = (evt) => {
-        this.triggerActionEvent('chart-type-set', { value: 'line' });
-    }
-
-    /**
-     * Called when user clicks bar chart button
-     *
-     * @param  {Event} evt
-     */
-    handlePieChartClick = (evt) => {
-        this.triggerActionEvent('chart-type-set', { value: 'pie' });
-    }
+    const barChartProps = {
+        label: t('statistics-bar'),
+        icon: 'bar-chart',
+        highlighted: (chartType === 'bar'),
+        'data-type': 'bar',
+        onClick: handleClick,
+    };
+    const lineChartProps = {
+        label: t('statistics-line'),
+        icon: 'line-chart',
+        highlighted: (chartType === 'line'),
+        'data-type': 'line',
+        onClick: handleClick,
+    };
+    const pieChartProps = {
+        label: t('statistics-pie'),
+        icon: 'pie-chart',
+        highlighted: (chartType === 'pie'),
+        'data-type': 'pie',
+        onClick: handleClick,
+    };
+    return (
+        <div className="chart-toolbar">
+            <HeaderButton {...barChartProps} />
+            <HeaderButton {...lineChartProps} />
+            <HeaderButton {...pieChartProps} />
+        </div>
+    );
 }
 
 export {
     ChartToolbar as default,
     ChartToolbar,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ChartToolbar.propTypes = {
-        chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
-        env: PropTypes.instanceOf(Environment).isRequired,
-        onAction: PropTypes.func,
-    };
-}

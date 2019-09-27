@@ -7,11 +7,11 @@ import './option-button.scss';
  * an icon next to it.
  */
 function OptionButton(props) {
-    let { id, label, url, target, hidden, disabled, onClick } = props;
+    const { id, label, url, target, hidden, disabled, onClick } = props;
     if (hidden) {
         return null;
     }
-    let anchorProps = {
+    const anchorProps = {
         className: buttonClasses(props),
         id,
         href: url,
@@ -20,18 +20,14 @@ function OptionButton(props) {
     };
     return (
         <a {...anchorProps}>
-            <div className="icon">
-                <i className={iconClasses(props)} />
-            </div>
-            <div className="label">
-                {label}
-            </div>
+            <div className="icon"><i className={iconClasses(props)} /></div>
+            <div className="label">{label}</div>
         </a>
     )
 }
 
 function buttonClasses(props) {
-    let classNames = [ 'option-button' ];
+    const classNames = [ 'option-button' ];
     if (props.className) {
         classNames.push(props.className);
     }
@@ -45,7 +41,7 @@ function buttonClasses(props) {
 }
 
 function iconClasses(props) {
-    let classNames = [ 'fa' ];
+    const classNames = [ 'fa' ];
     if (props.icon) {
         classNames.push(`fa-${props.icon}`);
     } else {
@@ -67,21 +63,3 @@ export {
     OptionButton as default,
     OptionButton,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    OptionButton.propTypes = {
-        label: PropTypes.node,
-        id: PropTypes.string,
-        icon: PropTypes.string,
-        iconOn: PropTypes.string,
-        iconOff: PropTypes.string,
-        url: PropTypes.string,
-        target: PropTypes.string,
-        hidden: PropTypes.bool,
-        selected: PropTypes.bool,
-        disabled: PropTypes.bool,
-        onClick: PropTypes.func,
-    };
-}

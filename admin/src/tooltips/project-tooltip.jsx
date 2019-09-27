@@ -1,68 +1,53 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import React from 'react';
+import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
 
 // widgets
-import Tooltip from 'widgets/tooltip';
+import { Tooltip } from '../widgets/tooltip.jsx';
 
 import './project-tooltip.scss';
 
 /**
  * Tooltip showing a list of projects.
- *
- * @extends PureComponent
  */
-class ProjectTooltip extends PureComponent {
-    static displayName = 'ProjectTooltip';
-
-    render() {
-        let { route, env, projects, disabled } = this.props;
-        let { t, p } = env.locale;
-        if (!projects) {
-            return null;
-        }
-        let first = '-';
-        if (projects.length > 0) {
-            // list the first project
-            let project0 = projects[0]
-            let url0;
-            if (!disabled) {
-                url0 = route.find('project-summary-page', {
-                    projectID: project0.id,
-                });
-            }
-            let title0 = p(project0.details.title) || project0.name;
-            first = <a href={url0} key={0}>{title0}</a>;
-            projects = _.slice(projects, 1);
-        }
-        let contents;
-        if (projects.length > 0) {
-            let ellipsis;
-            let label = t('project-tooltip-$count-others', projects.length);
-            if (projects.length > 10) {
-                projects = _.slice(projects, 0, 10);
-                ellipsis = <div className="ellipsis"><i className="fa fa-ellipsis-v" /></div>;
-            }
-            let list = _.map(projects, (project, i) => {
-                let url = route.find('project-summary-page', { project: project.id });
-                let title = p(project.details.title) || project.name;
-                return (
-                    <div className="item" key={i}>
-                        <a href={url}>
-                            {title}
-                        </a>
+function ProjectTooltip(props) {
+    const { route, env, projects, disabled } = props;
+    const { t, p } = env.locale;
+    if (!projects) {
+        return null;
+    }
+    const list = _.map(projects, (project, i) => {
+        const title = ProjectUtils.getDisplayName(project, env);
+        const url = route.find('project-summary-page', {
+            projectID: project.id
+        });
+        return (
+            <div className="item" key={project.id}>
+                <a href={disabled ? undefined : url}>{title}</a>
+            </div>
+        );
+    });
+    let contents = '-';
+    if (list.length > 0) {
+        const firstElement = list.shift();
+        const first = firstElement.props.children;
+        if (list.length > 0) {
+            const label = t('project-tooltip-$count-others', list.length);
+            const max = 10;
+            if (list.length > max) {
+                list.splice(max);
+                list.push(
+                    <div className="ellipsis" key={0}>
+                        <i className="fa fa-ellipsis-v" />
                     </div>
                 );
-            });
-            let listURL = route.find('project-list-page', {});
-            let tooltip = (
+            }
+            const listURL = route.find('project-list-page', {});
+            const tooltip = (
                 <Tooltip className="project" disabled={disabled || list.length === 0} key={1}>
                     <inline>{label}</inline>
                     <window>
                         {list}
-                        {ellipsis}
                         <div className="bottom">
                             <a href={listURL}>{t('tooltip-more')}</a>
                         </div>
@@ -73,21 +58,11 @@ class ProjectTooltip extends PureComponent {
         } else {
             contents = first;
         }
-        return <span>{contents}</span>;
     }
+    return <span>{contents}</span>;
 }
 
 export {
     ProjectTooltip as default,
     ProjectTooltip,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ProjectTooltip.propTypes = {
-        projects: PropTypes.arrayOf(PropTypes.object),
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

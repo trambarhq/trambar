@@ -1,93 +1,123 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import * as UserUtils from 'objects/utils/user-utils';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import HeaderButton from 'widgets/header-button';
-import OptionButton from 'widgets/option-button';
-import UserSelectionDialogBox from 'dialogs/user-selection-dialog-box';
-import IssueDialogBox from 'dialogs/issue-dialog-box';
+import { HeaderButton } from '../widgets/header-button.jsx';
+import { OptionButton } from '../widgets/option-button.jsx';
+import { UserSelectionDialogBox } from '../dialogs/user-selection-dialog-box';
+import { IssueDialogBox } from '../dialogs/issue-dialog-box';
 
 import './story-editor-options.scss';
 
 /**
  * Component responsible for the handling of story options. Used by StoryEditor.
- *
- * @extends PureComponent
  */
-class StoryEditorOptions extends PureComponent {
-    static displayName = 'StoryEditorOptions';
+function StoryEditorOptions(props) {
+    const { story, repos, currentUser, options } = props;
+    const { database, route, env, section, onComplete } = props;
+    const { t } = env.locale;
+    const [ selectingRecipients, selectRecipients ] = useState(false);
+    const [ enteringIssueDetails, enterIssueDetails ] = useState(false);
+    const handleAddBookmarkClick = useListener((evt) => {
+        const list = options.get('recipients');
+        const self = _.find(list, { id: currentUser });
+        const newList = (self) ? _.without(list, self) : _.concat(list, currentUser);
+        options.set('recipients', newList);
+        done();
+    });
+    const handleHideClick = useListener((evt) => {
+        const hidding = !options.get('hidden');
+        options.set('hidden', hidding);
+        done();
+    });
+    const handleSendBookmarkClick = useListener((evt) => {
+        selectRecipients(true);
+    });
+    const handleRecipientsSelect = useListener((evt) => {
+        const { selection } = evt;
+        options.set('recipients', selection);
+        selectRecipients(false);
+        done();
+    });
+    const handleRecipientsCancel = useListener((evt) => {
+        selectRecipients(false);
+    });
+    const handleAddIssueClick = useListener((evt) => {
+        enterIssueDetails(true);
+    });
+    const handleIssueConfirm = useListener((evt) => {
+        const { issue } = evt;
+        options.set('issue', issue);
+        enterIssueDetails(false);
+        done();
+    });
+    const handleIssueCancel = useListener((evt) => {
+        enterIssueDetails(false);
+    });
+    const handleShowMediaPreviewClick = useListener((evt) => {
+        options.set('preview', 'media');
+        done();
+    });
+    const handleShowTextPreviewClick = useListener((evt) => {
+        options.set('preview', 'text');
+        done();
+    });
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            selectingRecipients: false,
-            enteringIssueDetails: false,
-        };
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { section } = this.props;
-        if (section === 'both') {
-            return (
-                <div className="story-editor-options">
-                    {this.renderButtons('main')}
-                    <div className="border" />
-                    {this.renderButtons('preview')}
-                </div>
-            );
-        } else {
-            return (
-                <div className="story-editor-options">
-                    {this.renderButtons(section)}
-                </div>
-            );
+    function done() {
+        if (onComplete) {
+            onComplete({});
         }
     }
 
-    /**
-     * Render list of buttons belonging to specified section
-     *
-     * @param  {String} section
-     *
-     * @return {ReactElement}
-     */
-    renderButtons(section) {
-        let { env, options, currentUser, story, repos } = this.props;
-        let { t } = env.locale;
+    if (section === 'both') {
+        return (
+            <div className="story-editor-options">
+                {renderButtons('main')}
+                <div className="border" />
+                {renderButtons('preview')}
+            </div>
+        );
+    } else {
+        return (
+            <div className="story-editor-options">
+                {renderButtons(section)}
+            </div>
+        );
+    }
+
+    function renderButtons(section) {
         if (section === 'main') {
-            let access = 'read-write';
-            let bookmarking = (currentUser) ? _.includes(options.bookmarkRecipients, currentUser.id) : false;
-            let otherRecipients = (currentUser) ? _.without(options.bookmarkRecipients, currentUser.id) : [];
-            let bookmarkProps = {
+            const access = 'read-write';
+            const recipients = options.get('recipients');
+            const self = _.find(recipients, { id: currentUser.id });
+            const bookmarkProps = {
                 label: t('option-add-bookmark'),
-                selected: bookmarking,
-                onClick: this.handleBookmarkClick,
+                selected: !!self,
+                hidden: !UserUtils.canCreateBookmark(currentUser, story, access),
+                onClick: handleAddBookmarkClick,
             };
-            let sendBookmarkProps = {
+            const otherRecipients = _.reject(recipients, { id: currentUser.id });
+            const sendBookmarkProps = {
                 label: _.isEmpty(otherRecipients)
                     ? t('option-send-bookmarks')
-                    : t('option-send-bookmarks-to-$count-users', _.size(otherRecipients)),
+                    : t('option-send-bookmarks-to-$count-users', otherRecipients.length),
                 hidden: !UserUtils.canSendBookmarks(currentUser, story, access),
-                selected: !_.isEmpty(otherRecipients),
-                onClick: this.handleSendBookmarkClick,
+                selected: !_.isEmpty(otherRecipients) || selectingRecipients,
+                onClick: handleSendBookmarkClick,
             };
-            let addIssueProps = {
+            const addIssueProps = {
                 label: t('option-add-issue'),
-                selected: !!options.issueDetails,
                 hidden: !UserUtils.canAddIssue(currentUser, story, repos, access),
-                onClick: this.handleAddIssueClick,
+                selected: !!options.get('issue') || enteringIssueDetails,
+                onClick: handleAddIssueClick,
             };
-            let hidePostProps = {
+            const hidePostProps = {
                 label: t('option-hide-story'),
-                selected: options.hidePost,
                 hidden: !UserUtils.canHideStory(currentUser, story, access),
-                onClick: this.handleHidePostClick,
+                selected: options.get('hidden'),
+                onClick: handleHideClick,
             };
             return (
                 <div className={section}>
@@ -95,20 +125,20 @@ class StoryEditorOptions extends PureComponent {
                     <OptionButton {...sendBookmarkProps} />
                     <OptionButton {...addIssueProps} />
                     <OptionButton {...hidePostProps} />
-                    {this.renderRecipientDialogBox()}
-                    {this.renderIssueDialogBox()}
+                    {renderRecipientDialogBox()}
+                    {renderIssueDialogBox()}
                 </div>
             );
         } else if (section === 'preview') {
-            let mediaProps = {
+            const mediaProps = {
                 label: t('option-show-media-preview'),
-                selected: options.preview === 'media' || !options.preview,
-                onClick: this.handleShowMediaPreviewClick,
+                selected: options.get('preview') === 'media' || !options.get('preview'),
+                onClick: handleShowMediaPreviewClick,
             };
             let textProps = {
                 label: t('option-show-text-preview'),
-                selected: options.preview === 'text',
-                onClick: this.handleShowTextPreviewClick,
+                selected: options.get('preview') === 'text',
+                onClick: handleShowTextPreviewClick,
             };
             return (
                 <div className={section}>
@@ -119,244 +149,36 @@ class StoryEditorOptions extends PureComponent {
         }
     }
 
-    /**
-     * Render dialog for selecting users
-     *
-     * @return {ReactElement}
-     */
-    renderRecipientDialogBox() {
-        let { database, route, env, options } = this.props;
-        let { selectingRecipients } = this.state;
-        let props = {
+    function renderRecipientDialogBox() {
+        let selection = options.get('recipients');
+        if (options.get('bookmarked')) {
+            selection = _.concat(selection, currentUser);
+        }
+        const props = {
             show: selectingRecipients,
-            selection: options.bookmarkRecipients,
-
+            selection,
             database,
             route,
             env,
-
-            onSelect: this.handleRecipientsSelect,
-            onCancel: this.handleRecipientsCancel,
+            onSelect: handleRecipientsSelect,
+            onCancel: handleRecipientsCancel,
         };
         return <UserSelectionDialogBox {...props} />;
     }
 
-    /**
-     * Render dialog for entering issue details
-     *
-     * @return {ReactElement}
-     */
-    renderIssueDialogBox() {
-        let { env, options, currentUser, story, repos } = this.props;
-        let { enteringIssueDetails } = this.state;
-        let props = {
+    function renderIssueDialogBox() {
+        const props = {
             show: enteringIssueDetails,
             allowDeletion: true,
             currentUser,
             story,
-            issue: options.issueDetails,
+            issue: options.get('issue'),
             repos,
             env,
-            onConfirm: this.handleIssueConfirm,
-            onCancel: this.handleIssueCancel,
+            onConfirm: handleIssueConfirm,
+            onCancel: handleIssueCancel,
         };
         return <IssueDialogBox {...props} />;
-    }
-
-    /**
-     * Inform parent component that options have been changed
-     *
-     * @param  {Object} options
-     */
-    triggerChangeEvent(options) {
-        let { onChange } = this.props;
-        if (onChange) {
-            onChange({
-                type: 'change',
-                target: this,
-                options,
-            });
-        }
-    }
-
-    /**
-     * Inform parent component the action requested is either done or canceled
-     */
-    triggerCompleteEvent() {
-        let { onComplete } = this.props;
-        if (onComplete) {
-            onComplete({
-                type: 'complete',
-                target: this,
-            });
-        }
-    }
-
-    /**
-     * Open dialog box for selecting user
-     *
-     * @param  {Event} evt
-     */
-    openSelectionDialogBox(evt) {
-        let { selectingRecipients } = this.state;
-        if (!selectingRecipients) {
-            this.setState({ selectingRecipients: true });
-        }
-    }
-
-    /**
-     * Close dialog box
-     */
-    closeSelectionDialogBox() {
-        let { selectingRecipients } = this.state;
-        if (selectingRecipients) {
-            this.setState({ selectingRecipients: false });
-        }
-    }
-
-    /**
-     * Open dialog box for entering issue details
-     *
-     * @param  {Event} evt
-     */
-    openIssueDialogBox(evt) {
-        let { enteringIssueDetails } = this.state;
-        if (!enteringIssueDetails) {
-            this.setState({ enteringIssueDetails: true });
-        }
-    }
-
-    /**
-     * Close dialog box
-     */
-    closeIssueDialogBox() {
-        let { enteringIssueDetails } = this.state;
-        if (enteringIssueDetails) {
-            this.setState({ enteringIssueDetails: false });
-        }
-    }
-
-    /**
-     * Called when user clicks on bookmark post button
-     *
-     * @param  {Event} evt
-     */
-    handleBookmarkClick = (evt) => {
-        let { options, currentUser } = this.props;
-        options = _.clone(options);
-        let userID = currentUser.id;
-        if (_.includes(options.bookmarkRecipients, userID)) {
-            options.bookmarkRecipients = _.difference(options.bookmarkRecipients, [ userID ]);
-        } else {
-            options.bookmarkRecipients = _.union(options.bookmarkRecipients, [ userID ]);
-        }
-        this.triggerChangeEvent(options);
-        this.triggerCompleteEvent();
-    }
-
-    /**
-     * Called when user clicks on send bookmark button
-     *
-     * @param  {Event} evt
-     */
-    handleSendBookmarkClick = (evt) => {
-        this.openSelectionDialogBox(evt);
-    }
-
-    /**
-     * Called when user clicks on add issue to tracker button
-     *
-     * @param  {Event} evt
-     */
-    handleAddIssueClick = (evt) => {
-        this.openIssueDialogBox(evt);
-    }
-
-    /**
-     * Called when user clicks on hide post button
-     *
-     * @param  {Event} evt
-     */
-    handleHidePostClick = (evt) => {
-        let { options } = this.props;
-        options = _.clone(options);
-        options.hidePost = !options.hidePost;
-        this.triggerChangeEvent(options);
-        this.triggerCompleteEvent();
-    }
-
-    /**
-     * Called when user finishes selecting user
-     *
-     * @param  {Object} evt
-     */
-    handleRecipientsSelect = (evt) => {
-        let { options } = this.props;
-        options = _.clone(options);
-        options.bookmarkRecipients = evt.selection;
-        this.triggerChangeEvent(options);
-        this.triggerCompleteEvent();
-        this.closeSelectionDialogBox();
-    }
-
-    /**
-     * Called when user cancel user selection
-     *
-     * @param  {Object} evt
-     */
-    handleRecipientsCancel = (evt) => {
-        this.triggerCompleteEvent();
-        this.closeSelectionDialogBox();
-    }
-
-    /**
-     * Called when user finishes entering issue details
-     *
-     * @param  {Object} evt
-     */
-    handleIssueConfirm = (evt) => {
-        let { options } = this.props;
-        options = _.clone(options);
-        options.issueDetails = evt.issue;
-        this.triggerChangeEvent(options);
-        this.triggerCompleteEvent();
-        this.closeIssueDialogBox();
-    }
-
-    /**
-     * Called when user cancel editing of issue details
-     *
-     * @param  {Object} evt
-     */
-    handleIssueCancel = (evt) => {
-        this.triggerCompleteEvent();
-        this.closeIssueDialogBox();
-    }
-
-    /**
-     * Called when user clicks show media button
-     *
-     * @param  {Event} evt
-     */
-    handleShowMediaPreviewClick = (evt) => {
-        let { options } = this.props;
-        options = _.clone(options);
-        options.preview = 'media';
-        this.triggerChangeEvent(options);
-        this.triggerCompleteEvent();
-    }
-
-    /**
-     * Called when user clicks show preview button
-     *
-     * @param  {Event} evt
-     */
-    handleShowTextPreviewClick = (evt) => {
-        let { options } = this.props;
-        options = _.clone(options);
-        options.preview = 'text';
-        this.triggerChangeEvent(options);
-        this.triggerCompleteEvent();
     }
 }
 
@@ -368,26 +190,3 @@ export {
     StoryEditorOptions as default,
     StoryEditorOptions,
 };
-
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    StoryEditorOptions.propTypes = {
-        section: PropTypes.oneOf([ 'main', 'preview', 'both' ]),
-        story: PropTypes.object.isRequired,
-        repos: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        options: PropTypes.object.isRequired,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onChange: PropTypes.func,
-        onComplete: PropTypes.func,
-    };
-}

@@ -1,71 +1,68 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
+import React from 'react';
+import Relaks, { useProgress } from 'relaks';
 import Moment from 'moment';
-import * as StatisticsFinder from 'objects/finders/statistics-finder';
-import * as UserFinder from 'objects/finders/user-finder';
+import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 // widgets
-import Calendar from 'widgets/calendar';
+import { Calendar } from './calendar.jsx';
 
 import './calendar-bar.scss';
 
 /**
- * Asynchroous component that retrieces daily stats needed for rendering the
- * calendar bar.
- *
- * @extends AsyncComponent
+ * Component in top nav that shows a list of calendars, used to navigate
+ * to news of a particular date.
  */
-class CalendarBar extends AsyncComponent {
-    static displayName = 'CalendarBar';
+async function CalendarBar(props) {
+    const { database, route, env, settings } = props;
+    const db = database.use({ by: this });
+    const selection = route.params.date;
+    const [ show ] = useProgress();
 
-    /**
-     * Render component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, env, settings } = this.props;
-        let db = database.use({ by: this });
-        let props = {
-            settings,
-            route,
-            env,
-        };
-        // don't let the component be empty initially
-        meanwhile.show(<CalendarBarSync {...props} />, 'initial');
-        let currentUserID = await db.start();
-        let currentUser = await  UserFinder.findUser(db, currentUserID);
-        let params = _.clone(settings.statistics);
-        if (params.user_id === 'current') {
-            params.user_id = currentUser.id;
-        }
-        if (params.public === 'guest') {
-            params.public = (currentUser.type === 'guest');
-        }
-        props.dailyActivities = await StatisticsFinder.find(db, params);
-        return <CalendarBarSync {...props} />;
+    render();
+    const currentUserID = await db.start();
+    const currentUser = await UserFinder.findUser(db, currentUserID);
+    const params = { ...settings.statistics };
+    if (params.user_id === 'current') {
+        params.user_id = currentUser.id;
     }
-}
+    if (params.public === 'guest') {
+        params.public = (currentUser.type === 'guest');
+    }
+    const dailyActivities = await StatisticsFinder.find(db, params);
+    render();
 
-/**
- * Synchronous component that actually draws the calendar bar.
- *
- * @extends PureComponent
- */
-class CalendarBarSync extends PureComponent {
-    static displayName = 'CalendarBarSync';
+    function render() {
+        const months = getMonths();
+        show(
+            <div className="calendar-bar">
+                {_.map(months, renderCalendar)}
+            </div>
+        , 'initial');
+    }
 
-    render() {
-        let { route, env, dailyActivities } = this.props;
-        let endOfThisMonth = Moment().endOf('month');
-        let months = [];
+    function renderCalendar(mon, i) {
+        const { year, month, showYear } = mon;
+        const props = { year, month, showYear, selection, env };
+        const handleDateURL = (evt) => {
+            const activities = _.get(dailyActivities, [ 'daily', evt.date ]);
+            if (activities) {
+                const params = { date: evt.date, ...settings.route };
+                const url = route.find(route.name, params);
+                return url;
+            }
+        };
+        const key = `${year}-${month}`;
+        return <Calendar key={key} {...props} onDateURL={handleDateURL} />;
+    }
+
+    function getMonths() {
+        const endOfThisMonth = Moment().endOf('month');
+        const months = [];
+        const startTime = _.get(dailyActivities, 'range.start');
+        const endTime = _.get(dailyActivities, 'range.end');
         let multiyear = false;
-        let startTime = _.get(dailyActivities, 'range.start');
-        let endTime = _.get(dailyActivities, 'range.end');
-        let selectedDate = route.params.date;
         if (startTime && endTime) {
             let s = Moment(startTime).startOf('month');
             let e = Moment(endTime).endOf('month');
@@ -90,64 +87,16 @@ class CalendarBarSync extends PureComponent {
             });
         }
         months.reverse();
-        let calendars = _.map(months, (month, index) => {
-            let props = {
-                year: month.year,
-                month: month.month,
-                showYear: multiyear,
-                selection: selectedDate,
-                env,
-                onDateURL: this.handleDateURL,
-            };
-            return <Calendar key={index} {...props} />;
-        });
-        return (
-            <div className="calendar-bar">
-                {calendars}
-            </div>
-        );
-    }
-
-    /**
-     * Called when calendar needs the URL for the
-     *
-     * @param  {Object} evt
-     *
-     * @return {String|undefined}
-     */
-    handleDateURL = (evt) => {
-        let { route, dailyActivities, settings } = this.props;
-        let activities = _.get(dailyActivities, [ 'daily', evt.date ]);
-        if (activities) {
-            let params = _.assign({ date: evt.date }, settings.route);
-            let url = route.find(route.name, params);
-            return url;
+        for (let month of months) {
+            month.showYear = multiyear;
         }
+        return months;
     }
 }
+
+const component = Relaks.memo(CalendarBar);
 
 export {
-    CalendarBar as default,
-    CalendarBar,
+    component as default,
+    component as CalendarBar,
 };
-
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    CalendarBar.propTypes = {
-        settings: PropTypes.object.isRequired,
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    CalendarBarSync.propTypes = {
-        settings: PropTypes.object.isRequired,
-        dailyActivities: PropTypes.object,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

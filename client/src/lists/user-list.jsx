@@ -1,107 +1,76 @@
 import _ from 'lodash';
-import Moment from 'moment';
-import React, { PureComponent } from 'react';
-import { memoizeWeak } from 'utils/memoize';
-import * as UserUtils from 'objects/utils/user-utils';
+import React, { useState } from 'react';
+import { useListener, useSaveBuffer } from 'relaks';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import SmartList from 'widgets/smart-list';
-import UserView from 'views/user-view';
-import ErrorBoundary from 'widgets/error-boundary';
+import { SmartList } from 'common/widgets/smart-list.jsx';
+import { UserView } from '../views/user-view.jsx';
+import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import './user-list.scss';
 
 /**
  * A list of users. Parent component must supply all needed data.
- *
- * @extends PureComponent
  */
-class UserList extends PureComponent {
-    static displayName = 'UserList';
-    static viewOptions = {};
+function UserList(props) {
+    const { database, route, env } = props;
+    const { users, roles, listings, stories, dailyActivities, currentUser } = props;
+    const { scrollToUserID, selectedDate, link } = props;
+    const viewOptions = useSaveBuffer({
+        original: {},
+        preserve: (base, ours) => {
+            const json = JSON.stringify(ours);
+            sessionStorage.user_view_options = json;
+            console.log(sessionStorage.user_view_options);
+        },
+        restore: (base) => {
+            try {
+                const json = sessionStorage.user_view_options;
+                console.log(JSON.parse(json));
+                return JSON.parse(json);
+            } catch (err){
+            }
+        },
+        compare: _.isEqual,
+    });
+    console.log(viewOptions.current);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            viewOptions: UserList.viewOptions,
-        };
+    const handleUserIdentity = useListener((evt) => {
+        return getAnchor(evt.item.id);
+    });
+    const handleUserRender = (evt) => {
+        return renderUser(evt.item, evt.needed, evt.previousHeight, evt.estimatedHeight);
+    };
+    const handleUserAnchorChange = useListener((evt) => {
+        const scrollToUserID = _.get(evt.item, 'id');
+        route.replace({ scrollToUserID });
+    });
+
+    function getAnchor(userID) {
+        return (userID) ? `user-${userID}` : undefined;
     }
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { route, env, users, scrollToUserID } = this.props;
-        let anchorUserID = scrollToUserID;
-        let smartListProps = {
-            items: sortUsers(users, env),
-            offset: 16,
-            behind: 4,
-            ahead: 8,
-            anchor: (anchorUserID) ? `user-${anchorUserID}` : undefined,
+    const smartListProps = {
+        items: sortUsers(users, env),
+        offset: 16,
+        behind: 4,
+        ahead: 8,
+        anchor: getAnchor(scrollToUserID),
 
-            onIdentity: this.handleUserIdentity,
-            onRender: this.handleUserRender,
-            onAnchorChange: this.handleUserAnchorChange,
-        };
-        return (
-            <div className="user-list">
-                <SmartList {...smartListProps} />
-            </div>
-        );
-    }
+        onIdentity: handleUserIdentity,
+        onRender: handleUserRender,
+        onAnchorChange: handleUserAnchorChange,
+    };
+    return (
+        <div className="user-list">
+            <SmartList {...smartListProps} />
+        </div>
+    );
 
-    /**
-     * Change the URL hash so page is anchor at given story
-     *
-     * @param  {Number|undefined} scrollToUserID
-     */
-    reanchorAtUser(scrollToUserID) {
-        let { route } = this.props;
-        let params = {
-            scrollToUserID,
-        };
-        route.reanchor(params);
-    }
-
-    /**
-     * Return identifier for item
-     *
-     * @param  {Object} evt
-     *
-     * @return {String}
-     */
-    handleUserIdentity = (evt) => {
-        return `user-${evt.item.id}`;
-    }
-
-    /**
-     * Render a user view component in response to event fired by SmartList
-     *
-     * @param  {Object} evt
-     *
-     * @return {ReactElement}
-     */
-    handleUserRender = (evt) => {
-        let {
-            database,
-            route,
-            env,
-            currentUser,
-            roles,
-            stories,
-            dailyActivities,
-            listings,
-            selectedDate,
-            link,
-        } = this.props;
-        let { viewOptions } = this.state;
-        if (evt.needed) {
-            let user = evt.item;
-            let userRoles = findRoles(roles, user);
-            let userDailyActivities = _.get(dailyActivities, user.id);
+    function renderUser(user, needed, previousHeight, estimatedHeight) {
+        if (needed) {
             let userStories;
             if (listings) {
                 let listing = findListing(listings, user);
@@ -112,10 +81,10 @@ class UserList extends PureComponent {
             if (userStories && userStories.length > 5) {
                 userStories = _.slice(userStories, -5);
             }
-            let userProps = {
+            const userProps = {
                 user,
-                roles: userRoles,
-                dailyActivities: userDailyActivities,
+                roles: findRoles(roles, user),
+                dailyActivities: _.get(dailyActivities, user.id),
                 stories: userStories,
                 options: viewOptions,
                 currentUser,
@@ -124,7 +93,6 @@ class UserList extends PureComponent {
                 env,
                 selectedDate,
                 link,
-                onOptionChange: this.handleOptionChange,
             };
             return (
                 <ErrorBoundary env={env}>
@@ -132,34 +100,16 @@ class UserList extends PureComponent {
                 </ErrorBoundary>
             );
         } else {
-            let height = evt.previousHeight || evt.estimatedHeight || 100;
+            const height = previousHeight || estimatedHeight || 100;
             return <div className="user-view" style={{ height }} />;
         }
     }
-
-    /**
-     * Called when a different user is positioned at the top of the viewport
-     *
-     * @param  {Object} evt
-     */
-    handleUserAnchorChange = (evt) => {
-        let { route } = this.props;
-        this.reanchorAtUser((evt.item) ? evt.item.id : undefined);
-    }
-
-    /**
-     * Called when the user change chart options
-     *
-     * @param  {Object} evt
-     */
-    handleOptionChange = (evt) => {
-        this.setState({ viewOptions: evt.options });
-        UserList.viewOptions = evt.options;
-    }
 }
 
+let savedViewOptions = {};
+
 const sortUsers = memoizeWeak(null, function(users, env) {
-    let name = (user) => {
+    const name = (user) => {
         return UserUtils.getDisplayName(user, env);
     };
     return _.orderBy(users, [ name ], [ 'asc' ]);
@@ -202,28 +152,3 @@ export {
     UserList as default,
     UserList,
 };
-
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    UserList.propTypes = {
-        scrollToUserID: PropTypes.number,
-        users: PropTypes.arrayOf(PropTypes.object),
-        roles: PropTypes.arrayOf(PropTypes.object),
-        dailyActivities: PropTypes.object,
-        listings: PropTypes.arrayOf(PropTypes.object),
-        stories: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        selectedDate: PropTypes.string,
-        today: PropTypes.string,
-        link: PropTypes.oneOf([ 'user', 'team' ]),
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

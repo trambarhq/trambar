@@ -10,6 +10,7 @@
     max-height: 60vh;
     padding: 1em 1em 1em 1em;
     box-shadow: 5px 5px 4px $dialog-box-shadow-color;
+    user-select: none;
 
     .scrollable {
         flex: 1 1 auto;

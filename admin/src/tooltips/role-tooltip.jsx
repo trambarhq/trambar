@@ -1,67 +1,53 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React from 'react';
+import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
 
 // widgets
-import Tooltip from 'widgets/tooltip';
+import { Tooltip } from '../widgets/tooltip.jsx';
 
 import './role-tooltip.scss';
 
 /**
  * Tooltip showing a list of roles.
- *
- * @extends PureComponent
  */
-class RoleTooltip extends PureComponent {
-    static displayName = 'RoleTooltip';
-
-    render() {
-        let { route, env, roles, disabled } = this.props;
-        let { t, p } = env.locale;
-        if (!roles) {
-            return null;
-        }
-        let first = '-';
-        if (roles.length > 0) {
-            // list the first role
-            let role0 = roles[0]
-            let url0;
-            if (!disabled) {
-                url0 = route.find('role-summary-page', {
-                   roleID: role0.id,
-                });
-            }
-            let title0 = p(role0.details.title) || role0.name;
-            first = <a href={url0} key={0}>{title0}</a>;
-            roles = _.slice(roles, 1);
-        }
-        let contents;
-        if (roles.length > 0) {
-            let ellipsis;
-            let label = t('role-tooltip-$count-others', roles.length);
-            if (roles.length > 10) {
-                roles = _.slice(roles, 0, 10);
-                ellipsis = <div className="ellipsis"><i className="fa fa-ellipsis-v" /></div>;
-            }
-            let list = _.map(roles, (role, i) => {
-                let url = route.find('role-summary-page', {
-                    roleID: role.id,
-                });
-                let title = p(role.details.title) || role.name;
-                return (
-                    <div className="item" key={i}>
-                        <a href={url}>
-                            {title}
-                        </a>
+function RoleTooltip(props) {
+    const { route, env, roles, disabled } = props;
+    const { t, p } = env.locale;
+    if (!roles) {
+        return null;
+    }
+    const list = _.map(roles, (role, i) => {
+        const name = RoleUtils.getDisplayName(role, env);
+        const url = route.find('role-summary-page', {
+            roleID: role.id,
+        });
+        return (
+            <div className="item" key={role.id}>
+                <a href={disabled ? undefined : url}>{name}</a>
+            </div>
+        );
+    });
+    let contents = '-';
+    if (list.length > 0) {
+        const firstElement = list.shift();
+        const first = firstElement.props.children;
+        if (list.length > 0) {
+            const label = t('role-tooltip-$count-others', list.length);
+            const max = 10;
+            if (list.length > max) {
+                list.splice(max);
+                list.push(
+                    <div className="ellipsis" key={0}>
+                        <i className="fa fa-ellipsis-v" />
                     </div>
                 );
-            });
-            let listURL = route.find('role-list-page');
-            let tooltip = (
+            }
+            const listURL = route.find('role-list-page');
+            const tooltip = (
                 <Tooltip className="role" disabled={disabled || list.length === 0} key={1}>
                     <inline>{label}</inline>
                     <window>
                         {list}
-                        {ellipsis}
                         <div className="bottom">
                             <a href={listURL}>{t('tooltip-more')}</a>
                         </div>
@@ -72,25 +58,11 @@ class RoleTooltip extends PureComponent {
         } else {
             contents = first;
         }
-        return <span>{contents}</span>;
     }
+    return <span>{contents}</span>;
 }
 
 export {
     RoleTooltip as default,
     RoleTooltip,
 };
-
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    RoleTooltip.propTypes = {
-        roles: PropTypes.arrayOf(PropTypes.object),
-        disabled: PropTypes.bool,
-        route: PropTypes.object.isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

@@ -1,35 +1,29 @@
 import _ from 'lodash';
-import Promise from 'promise';
-import React, { PureComponent } from 'react';
-import Chartist from 'widgets/chartist';
+import React from 'react';
+import Chartist from 'common/widgets/chartist.jsx';
 import Moment from 'moment';
-import { memoizeWeak } from 'utils/memoize';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
 
-import StoryTypes from 'objects/types/story-types';
+import StoryTypes from 'common/objects/types/story-types.mjs';
 
 import './activity-chart.scss';
 
 /**
  * Bar chart showing daily activities.
- *
- * @extends PureComponent
  */
-class ActivityChart extends PureComponent {
-    static displayName = 'ActivityChart';
+function ActivityChart(props) {
+    const { env, statistics, children } = props;
+    const { t } = env.locale;
 
-    render() {
-        let { children } = this.props;
-        return (
-            <div className="activity-chart">
-                <h2>{children}</h2>
-                {this.renderLegend()}
-                {this.renderChart()}
-            </div>
-        );
-    }
+    return (
+        <div className="activity-chart">
+            <h2>{children}</h2>
+            {renderLegend()}
+            {renderChart()}
+        </div>
+    );
 
-    renderChart() {
-        let { env, statistics } = this.props;
+    function renderChart() {
         if (!statistics) {
             return (
                 <div className="scroll-container">
@@ -37,11 +31,11 @@ class ActivityChart extends PureComponent {
                 </div>
             );
         }
-        let today = Moment(env.date);
-        let rangeStart = Moment(statistics.range.start);
-        let rangeEnd = Moment(statistics.range.end);
+        const today = Moment(env.date);
+        const rangeStart = Moment(statistics.range.start);
+        const rangeEnd = Moment(statistics.range.end);
 
-        let endOfThisMonth = today.clone().endOf('month');
+        const endOfThisMonth = today.clone().endOf('month');
         let startDate = rangeStart.clone().startOf('month');
         let endDate = rangeEnd.clone().endOf('month');
 
@@ -54,11 +48,11 @@ class ActivityChart extends PureComponent {
             endDate.add(1, 'month');
         }
 
-        let dates = getDateStrings(startDate, endDate);
-        let series = getActivitySeries(statistics.daily, dates);
-        let upperRange = getUpperRange(series, true);
-        let labels = getDateStrings(startDate, endDate);
-        let chartProps = {
+        const dates = getDateStrings(startDate, endDate);
+        const series = getActivitySeries(statistics.daily, dates);
+        const upperRange = getUpperRange(series, true);
+        const labels = getDateStrings(startDate, endDate);
+        const chartProps = {
             type: 'bar',
             data: { labels, series },
             options: {
@@ -73,7 +67,7 @@ class ActivityChart extends PureComponent {
                 low: 0,
                 axisX: {
                     labelInterpolationFnc(date) {
-                        let day = getDay(date);
+                        const day = getDay(date);
                         if (day === 1) {
                             return date;
                         } else if (day > 10 && date == env.date){
@@ -83,9 +77,9 @@ class ActivityChart extends PureComponent {
                     }
                 },
             },
-            onDraw: this.handleDraw,
+            onDraw: draw,
         };
-        let width = Math.round(labels.length * 0.75) + 'em';
+        const width = Math.round(labels.length * 0.75) + 'em';
         return (
             <div className="scroll-container">
                 <div className="contents" style={{ width }}>
@@ -95,39 +89,31 @@ class ActivityChart extends PureComponent {
         );
     }
 
-    /**
-     * Render legend for data series
-     *
-     * @return {ReactElement}
-     */
-    renderLegend() {
-        let { env, statistics } = this.props;
-        let { t } = env.locale;
+    function renderLegend() {
         if (!statistics) {
             return null;
         }
-        let stats = statistics.to_date;
-        let indices = {};
+        const stats = statistics.to_date;
+        const indices = {};
         _.each(StoryTypes, (type, index) => {
             if (stats[type] > 0) {
                 indices[type] = index;
             }
         });
-        let items = _.map(indices, (index, type) => {
-            let props = {
+        const items = _.map(indices, (index, type) => {
+            const props = {
                 series: String.fromCharCode('a'.charCodeAt(0) + index),
                 label: t(`activity-chart-legend-${type}`),
             };
             return <LegendItem key={index} {...props} />;
         });
         if (_.isEmpty(items)) {
-            items = '\u00a0';
+            items.push('\u00a0');
         }
         return <div className="legend">{items}</div>;
     }
 
-    handleDraw = (cxt) => {
-        let { env } = this.props;
+    function draw(cxt) {
         // move y-axis to the right side
         if(cxt.type === 'label' && cxt.axis.units.pos === 'y') {
             cxt.element.attr({
@@ -137,8 +123,8 @@ class ActivityChart extends PureComponent {
         // style grid line differently when it's the first day
         // of the month or today
         if (cxt.type === 'grid' && cxt.axis.units.pos === 'x') {
-            let date = cxt.axis.ticks[cxt.index];
-            let day = getDay(date);
+            const date = cxt.axis.ticks[cxt.index];
+            const day = getDay(date);
             if (day === 1) {
                 cxt.element.addClass('month-start');
             } else if (date === env.date) {
@@ -148,20 +134,35 @@ class ActivityChart extends PureComponent {
     }
 }
 
-let getDateStrings = memoizeWeak(null, function(startDate, endDate) {
-    let dates = [];
+function LegendItem(props) {
+    return (
+        <div className="item">
+            <svg className="ct-chart-bar" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+                <g className={`ct-series ct-series-${props.series}`}>
+                    <line className="ct-bar" x1={0} y1={5} x2={10} y2={5} />
+                </g>
+            </svg>
+            <span className="label">
+                {props.label}
+            </span>
+        </div>
+    )
+}
+
+const getDateStrings = memoizeWeak(null, function(startDate, endDate) {
+    const dates = [];
     for (let d = startDate.clone(); d <= endDate; d.add(1, 'day')) {
         dates.push(d.format('YYYY-MM-DD'));
     }
     return dates;
 });
 
-let getDateLabels = memoizeWeak(null, function(startDate, endDate) {
-    let labels = [];
+const getDateLabels = memoizeWeak(null, function(startDate, endDate) {
+    const labels = [];
     for (let d = startDate.clone(); d <= endDate; d.add(1, 'month')) {
         labels.push(d.format('ll'));
 
-        let days = d.daysInMonth();
+        const days = d.daysInMonth();
         for (let i = 1; i < days; i++) {
             labels.push(null);
         }
@@ -169,12 +170,12 @@ let getDateLabels = memoizeWeak(null, function(startDate, endDate) {
     return labels;
 });
 
-let getActivitySeries = memoizeWeak(null, function(activities, dates) {
+const getActivitySeries = memoizeWeak(null, function(activities, dates) {
     return _.map(StoryTypes, (type) => {
         // don't include series that are completely empty
         let empty = true;
-        let series = _.map(dates, (date) => {
-            let value = _.get(activities, [ date, type ], 0);
+        const series = _.map(dates, (date) => {
+            const value = _.get(activities, [ date, type ], 0);
             if (value) {
                 empty = false;
             }
@@ -184,10 +185,10 @@ let getActivitySeries = memoizeWeak(null, function(activities, dates) {
     });
 });
 
-let getUpperRange = memoizeWeak(0, function(series, additive) {
+const getUpperRange = memoizeWeak(0, function(series, additive) {
     let highest = 0;
     if (additive) {
-        let sums = [];
+        const sums = [];
         _.each(series, (values) => {
             _.each(values, (value, index) => {
                 sums[index] = (sums[index]) ? sums[index] + value : value;
@@ -198,7 +199,7 @@ let getUpperRange = memoizeWeak(0, function(series, additive) {
         }
     } else {
         _.each(series, (values) => {
-            let max = _.max(values);
+            const max = _.max(values);
             if (max > highest) {
                 highest = max;
             }
@@ -217,34 +218,10 @@ function getDay(date) {
     return parseInt(date.substr(8));
 }
 
-function LegendItem(props) {
-    return (
-        <div className="item">
-            <svg className="ct-chart-bar" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
-                <g className={`ct-series ct-series-${props.series}`}>
-                    <line className="ct-bar" x1={0} y1={5} x2={10} y2={5} />
-                </g>
-            </svg>
-            <span className="label">
-                {props.label}
-            </span>
-        </div>
-    )
-}
+const component = React.memo(ActivityChart);
 
 export {
-    ActivityChart as default,
-    ActivityChart,
+    component as default,
+    component as ActivityChart,
     LegendItem,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ActivityChart.propTypes = {
-        statistics: PropTypes.object,
-        env: PropTypes.instanceOf(Environment),
-    };
-}

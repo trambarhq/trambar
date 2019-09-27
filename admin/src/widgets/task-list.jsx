@@ -1,84 +1,161 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import ComponentRefs from 'utils/component-refs';
-import * as TaskFinder from 'objects/finders/task-finder';
+import React, { useState, useRef, useEffect } from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as TaskFinder from 'common/objects/finders/task-finder.mjs';
 
 // widgets
-import SmartList from 'widgets/smart-list';
+import SmartList from 'common/widgets/smart-list.jsx';
 
 import './task-list.scss';
 
 /**
  * A list of server tasks that were performed previously or are currently in
  * progress. This is the asynchronous part that retrieves the necessary data.
- *
- * @extends AsyncComponent
  */
-class TaskList extends AsyncComponent {
-    static displayName = 'TaskList';
+async function TaskList(props) {
+    const { database, env, server, scrollToTaskID } = props;
+    const { t } = env.locale;
+    const [ show ] = useProgress();
+    const [ expandedTaskIDs, setExpandedTaskIDs ] = useState((scrollToTaskID) ? [ scrollToTaskID ] : []);
+    const container = useRef();
 
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, env, server, scrollToTaskID } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let props = {
-            server,
-            env,
-            scrollToTaskID,
-        };
-        meanwhile.show(<TaskListSync {...props} />);
-        let currentUserID = await db.start();
-        if (server) {
-            props.tasks = await TaskFinder.findServerTasks(db, server);
+    const handleTaskIdentity = useListener((evt) => {
+        return `task-${evt.item.id}`;
+    });
+    const handleTaskRender = useListener((evt) => {
+        if (evt.needed) {
+            return renderTask(evt.item);
+        } else {
+            return <div className="task" />;
         }
-        return <TaskListSync {...props} />;
-    }
-}
+    });
+    const handleTaskClick = useListener((evt) => {
+        let taskID = parseInt(evt.currentTarget.getAttribute('data-task-id'));
+        const list = _.toggle(expandedTaskIDs, taskID);
+        setExpandedTaskIDs(list);
+    });
 
-/**
- * Synchronous component that actually renders the task list.
- *
- * @extends PureComponent
- */
-class TaskListSync extends PureComponent {
-    static displayName = 'TaskListSync';
+    useEffect(() => {
+        if (scrollToTaskID) {
+            container.current.scrollIntoView();
+        }
+    }, [])
 
-    constructor(props) {
-        super(props);
-        let { scrollToTaskID } = props;
-        this.components = ComponentRefs({
-            container: HTMLDivElement,
-        });
-        this.state = {
-            expandedTaskIDs: (scrollToTaskID) ? [ scrollToTaskID ] : [],
+    render();
+    const currentUserID = await database.start();
+    const tasks = await TaskFinder.findServerTasks(database, server);
+    render();
+
+    function render() {
+        const smartListProps = {
+            items: sortTasks(tasks),
+            offset: 5,
+            behind: 20,
+            ahead: 20,
+            anchor: (scrollToTaskID) ? `task-${scrollToTaskID}` : undefined,
+
+            onIdentity: handleTaskIdentity,
+            onRender: handleTaskRender,
         };
+        show(
+            <div className="task-list" ref={container}>
+                <SmartList {...smartListProps} />
+            </div>
+        , 'initial');
+    }
+
+    function renderTask(task) {
+        const classNames = [ 'task' ];
+        if (task.failed) {
+            classNames.push('failure');
+        }
+        if (_.includes(expandedTaskIDs, task.id)) {
+            classNames.push('expanded');
+        }
+        return (
+            <div className={classNames.join(' ')}>
+                <div className="summary" data-task-id={task.id} onClick={handleTaskClick}>
+                    {renderStartTime(task)}
+                    {renderMessage(task)}
+                    {renderProgress(task)}
+                </div>
+                {renderDetails(task)}
+            </div>
+        );
+    }
+
+    function renderStartTime(task) {
+        const time = Moment(task.ctime).format('YYYY-MM-DD HH:mm:ss');
+        return <div className="start-time">{time}</div>;
     }
 
     /**
-     * Return text message describing task
+     * Render a brief description of the task
      *
      * @param  {Task} task
      *
-     * @return {String}
+     * @return {ReactElement}
      */
-    getMessage(task) {
-        let { env } = this.props;
-        let { t } = env.locale;
+    function renderMessage(task) {
+        let message = getMessage(task);
+        let badge;
+        if (!message) {
+            message = task.action + ' (noop)';
+        }
+        if (task.failed) {
+            badge = <i className="fa fa-exclamation-triangle" />;
+        }
+        return <div className="message">{message}{badge}</div>;
+    }
+
+    function renderProgress(task) {
+        if (task.completion === 100 && task.etime) {
+            const duration = Moment(task.etime) - Moment(task.ctime);
+            const seconds = Math.ceil(duration / 1000);
+            return <div className="duration">{t('task-$seconds', seconds)}</div>;
+        } else {
+            const percent = task.completion + '%';
+            return (
+                <div className="progress-bar-frame">
+                    <div className="bar" style={{ width: percent }} />
+                </div>
+            );
+        }
+    }
+
+    function renderDetails(task) {
+        if (!_.includes(expandedTaskIDs, task.id)) {
+            return null;
+        }
+        const message = getDetails(task);
+        return (
+            <div>
+                <div className="details">{message}</div>
+                {renderError(task)}
+            </div>
+        );
+    }
+
+    function renderError(task) {
+        if (!task.failed) {
+            return null;
+        }
+        let error = _.get(task, 'details.error.stack');
+        if (!error) {
+            error = _.get(task, 'details.error.message');
+        }
+        return <div className="error">{error}</div>;
+    }
+
+    function getMessage(task) {
         if (task.completion === 100) {
-            let repo = task.options.repo;
-            let branch = task.options.branch;
-            let added = _.size(task.details.added);
-            let deleted = _.size(task.details.deleted);
-            let modified = _.size(task.details.modified);
+            const repo = task.options.repo;
+            const branch = task.options.branch;
+            const added = _.size(task.details.added);
+            const deleted = _.size(task.details.deleted);
+            const modified = _.size(task.details.modified);
             switch (task.action) {
                 case 'gitlab-repo-import':
                     if (added) {
@@ -114,7 +191,7 @@ class TaskListSync extends PureComponent {
                     return t('task-imported-$count-merge-request-comments-from-$repo', added, repo);
             }
         } else {
-            let repo = task.options.repo;
+            const repo = task.options.repo;
             switch (task.action) {
                 case 'gitlab-repo-import':
                     return t('task-importing-repos');
@@ -138,16 +215,7 @@ class TaskListSync extends PureComponent {
         }
     }
 
-    /**
-     * Return text describing task in greater details
-     *
-     * @param  {Task} task
-     *
-     * @return {String}
-     */
-    getDetails(task) {
-        let { env } = this.props;
-        let { t } = env.locale;
+    function getDetails(task) {
         switch (task.action) {
             case 'gitlab-repo-import':
             case 'gitlab-user-import':
@@ -163,211 +231,9 @@ class TaskListSync extends PureComponent {
                 return '';
         }
     }
-
-    /**
-     * Render component if it's active
-     *
-     * @return {ReactElement|null}
-     */
-    render() {
-        let { tasks, scrollToTaskID } = this.props;
-        let { setters } = this.components;
-        let smartListProps = {
-            items: sortTasks(tasks),
-            offset: 5,
-            behind: 20,
-            ahead: 20,
-            anchor: (scrollToTaskID) ? `task-${scrollToTaskID}` : undefined,
-
-            onIdentity: this.handleTaskIdentity,
-            onRender: this.handleTaskRender,
-        };
-        return (
-            <div className="task-list" ref={setters.container}>
-                <SmartList {...smartListProps} />
-            </div>
-        );
-    }
-
-    /**
-     * Render a task
-     *
-     * @param  {Task} task
-     *
-     * @return {ReactElement|null}
-     */
-    renderTask(task) {
-        let { expandedTaskIDs } = this.state;
-        let className = 'task';
-        if (task.failed) {
-            className += ' failure';
-        }
-        if (_.includes(expandedTaskIDs, task.id)) {
-            className += ' expanded';
-        }
-        return (
-            <div className={className}>
-                <div className="summary" data-task-id={task.id} onClick={this.handleTaskClick}>
-                    {this.renderStartTime(task)}
-                    {this.renderMessage(task)}
-                    {this.renderProgress(task)}
-                </div>
-                {this.renderDetails(task)}
-            </div>
-        );
-    }
-
-    /**
-     * Render the task's start time
-     *
-     * @param  {Task} task
-     *
-     * @return {ReactElement}
-     */
-    renderStartTime(task) {
-        let time = Moment(task.ctime).format('YYYY-MM-DD HH:mm:ss');
-        return <div className="start-time">{time}</div>;
-    }
-
-    /**
-     * Render a brief description of the task
-     *
-     * @param  {Task} task
-     *
-     * @return {ReactElement}
-     */
-    renderMessage(task) {
-        let message = this.getMessage(task);
-        let badge;
-        if (!message) {
-            message = task.action + ' (noop)';
-        }
-        if (task.failed) {
-            badge = <i className="fa fa-exclamation-triangle" />;
-        }
-        return <div className="message">{message}{badge}</div>;
-    }
-
-    /**
-     * Render progress bar if task hasn't finished yet
-     *
-     * @param  {Task} task
-     *
-     * @return {ReactElement|null}
-     */
-    renderProgress(task) {
-        let { env } = this.props;
-        let { t } = env.locale;
-        if (task.completion === 100 && task.etime) {
-            let duration = Moment(task.etime) - Moment(task.ctime);
-            let seconds = Math.ceil(duration / 1000);
-            return <div className="duration">{t('task-$seconds', seconds)}</div>;
-        } else {
-            let percent = task.completion + '%';
-            return (
-                <div className="progress-bar-frame">
-                    <div className="bar" style={{ width: percent }} />
-                </div>
-            );
-        }
-    }
-
-    /**
-     * Render details of a task if it's expanded
-     *
-     * @param  {Task} task
-     *
-     * @return {ReactElement|null}
-     */
-    renderDetails(task) {
-        let { expandedTaskIDs } = this.state;
-        if (!_.includes(expandedTaskIDs, task.id)) {
-            return null;
-        }
-        let message = this.getDetails(task);
-        return (
-            <div>
-                <div className="details">{message}</div>
-                {this.renderError(task)}
-            </div>
-        );
-    }
-
-    /**
-     * Render error if task failed with one
-     *
-     * @param  {Task} task
-     *
-     * @return {ReactElement|null}
-     */
-    renderError(task) {
-        if (!task.failed) {
-            return null;
-        }
-        let error = _.get(task, 'details.error.stack');
-        if (!error) {
-            error = _.get(task, 'details.error.message');
-        }
-        return <div className="error">{error}</div>;
-    }
-
-    /**
-     * Scroll component into view if a task is specified by a hash
-     */
-    componentDidMount() {
-        let { scrollToTaskID } = this.props;
-        let { container } = this.components;
-        if (scrollToTaskID) {
-            if (container) {
-                container.scrollIntoView();
-            }
-        }
-    }
-
-    /**
-     * Called when SmartList wants an item's id
-     *
-     * @param  {Object} evt
-     *
-     * @return {String}
-     */
-    handleTaskIdentity = (evt) => {
-        return `task-${evt.item.id}`;
-    }
-
-    /**
-     * Called when SmartList wants to render an item
-     *
-     * @param  {Object} evt
-     *
-     * @return {ReactElement}
-     */
-    handleTaskRender = (evt) => {
-        if (evt.needed) {
-            return this.renderTask(evt.item);
-        } else {
-            return <div className="task" />;
-        }
-    }
-
-    /**
-     * Called when user clicks on a task
-     *
-     * @param  {Event} evt
-     */
-    handleTaskClick = (evt) => {
-        let { expandedTaskIDs } = this.state;
-        let taskID = parseInt(evt.currentTarget.getAttribute('data-task-id'));
-        if (_.includes(expandedTaskIDs, taskID)) {
-            expandedTaskIDs = _.without(expandedTaskIDs, taskID);
-        } else {
-            expandedTaskIDs = _.concat(expandedTaskIDs, taskID);
-        }
-        this.setState({ expandedTaskIDs });
-    }
 }
 
-let sortTasks = memoizeWeak(null, function(tasks) {
+const sortTasks = memoizeWeak(null, function(tasks) {
     return _.orderBy(tasks, 'id', 'desc');
 });
 
@@ -394,27 +260,9 @@ function pushItem(list, text, className) {
     );
 }
 
+const component = Relaks.memo(TaskList);
+
 export {
-    TaskList as default,
-    TaskList,
-    TaskListSync,
+    component as default,
+    component as TaskList,
 };
-
-import Database from 'data/database';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    TaskList.propTypes = {
-        scrollToTaskID: PropTypes.number,
-        server: PropTypes.object,
-        database: PropTypes.instanceOf(Database).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    TaskListSync.propTypes = {
-        scrollToTaskID: PropTypes.number,
-        tasks: PropTypes.arrayOf(PropTypes.object),
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

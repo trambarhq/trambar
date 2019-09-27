@@ -14,12 +14,14 @@ function ActionBadge(props) {
         case 'approve':
         case 'restore':
         case 'reactivate':
+        case 'select':
             className += ' add';
             icon = 'plus';
             break;
         case 'remove':
         case 'archive':
         case 'disable':
+        case 'deselect':
             className += ' remove';
             icon = 'times';
             break;
@@ -40,14 +42,3 @@ export {
     ActionBadge as default,
     ActionBadge
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ActionBadge.propTypes = {
-        type: PropTypes.string.isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

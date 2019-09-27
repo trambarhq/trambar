@@ -1,5 +1,4 @@
-**Name** - The project name is used a label for buttons in the *Start* page. It
-also appears in the
+**Name** - The project name is used a label for buttons in the *Start* page. 
 
 **Identifier** - The project identifier should be composed of simply Latin
 letters, digits, and dashes. It's used as the name of the database in

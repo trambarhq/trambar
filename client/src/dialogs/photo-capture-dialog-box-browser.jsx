@@ -1,209 +1,90 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import RelaksMediaCapture from 'relaks-media-capture';
+import React from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import LiveVideo from 'widgets/live-video';
-import DeviceSelector from 'widgets/device-selector';
-import DevicePlaceholder from 'widgets/device-placeholder';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { LiveVideo } from 'common/widgets/live-video.jsx';
+import { DeviceSelector } from '../widgets/device-selector.jsx';
+import { DevicePlaceholder } from '../widgets/device-placeholder.jsx';
+
+// custom hooks
+import {
+    useMediaCapture,
+} from '../hooks';
 
 import './photo-capture-dialog-box-browser.scss';
 
 /**
  * Dialog box for taking a picture in the web browser.
- *
- * @extends AsyncComponent
  */
-class PhotoCaptureDialogBoxBrowser extends AsyncComponent {
-    constructor(props) {
-        super(props);
-        let options = {
-            video: true,
-            audio: false,
-            preferredDevice: 'front',
-            watchVolume: false,
-            captureImageOnly: true,
-        };
-        this.capture = new RelaksMediaCapture(options);
-    }
+async function PhotoCaptureDialogBoxBrowser(props) {
+    const { env, payloads, onCapture, onClose } = props;
+    const { t } = env.locale;
+    const [ show ] = useProgress(50, 50);
+    const capture = useMediaCapture({
+        video: true,
+        audio: false,
+        preferredDevice: 'front',
+        watchVolume: false,
+        captureImageOnly: true,
+    });
 
-    /**
-     * Render component asynchronously
-     *
-     * @param  {Meanwhile}  meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { env, show } = this.props;
-        meanwhile.delay(50, 50);
-        let props = {
-            env,
-            show,
-            onSnap: this.handleSnap,
-            onClear: this.handleClear,
-            onChoose: this.handleChoose,
-            onAccept: this.handleAccept,
-            onCancel: this.handleCancel,
-        };
-        if (show) {
-            this.capture.activate();
-            do {
-                props.status = this.capture.status;
-                props.devices = this.capture.devices;
-                props.chosenDeviceID = this.capture.chosenDeviceID;
-                props.liveVideo = this.capture.liveVideo;
-                props.capturedImage = this.capture.capturedImage;
-                meanwhile.show(<PhotoCaptureDialogBoxBrowserSync {...props} />);
-                await this.capture.change();
-            } while (this.capture.active);
-        }
-        return <PhotoCaptureDialogBoxBrowserSync {...props} />;
-    }
-
-    /**
-     * Deactivate media capture object when dialog box is hidden
-     */
-    componentDidUpdate(prevProps, prevState) {
-        if (prevProps.show) {
-            setTimeout(() => {
-                let { show } = this.props;
-                if (!show) {
-                    this.capture.deactivate();
-                    this.capture.clear();
-                }
-            }, 500);
-        }
-    }
-
-    /**
-     * Deactivate media capture object when component unmounts
-     */
-    componentWillUnmount() {
-        this.capture.deactivate();
-    }
-
-    /**
-     * Called when user wants to capture the camera input
-     *
-     * @param  {Event} evt
-     */
-    handleSnap = (evt) => {
-        this.capture.snap();
-    }
-
-    /**
-     * Called when user wants to start over
-     *
-     * @param  {Event} evt
-     */
-    handleClear = (evt) => {
-        this.capture.clear();
-    }
-
-    /**
-     * Called when user selects a different input device
-     *
-     * @param  {Object} evt
-     */
-    handleChoose = (evt) => {
-        this.capture.choose(evt.id);
-    }
-
-    /**
-     * Called when user closes the dialog box
-     *
-     * @param  {Event} evt
-     */
-    handleCancel = (evt) => {
-        let { onClose } = this.props;
+    const handleSnapClick = useListener((evt) => capture.snap());
+    const handleRetakeClick = useListener((evt) => capture.clear());
+    const handleCancelClick = useListener((evt) => {
         if (onClose) {
-            onClose({
-                type: 'cancel',
-                target: this,
-            });
+            onClose({});
         }
-    }
-
-    /**
-     * Called when user accepts the captured image
-     *
-     * @param  {Event} evt
-     */
-    handleAccept = (evt) => {
-        let { payloads, onCapture } = this.props;
+    });
+    const handleAcceptClick = useListener((evt) => {
         if (onCapture) {
-            let { capturedImage } = this.capture;
-            let payload = payloads.add('image');
+            const { capturedImage } = capture;
+            const payload = payloads.add('image');
             payload.attachFile(capturedImage.blob);
-            let resource = {
+            const resource = {
                 type: 'image',
                 payload_token: payload.id,
                 width: capturedImage.width,
                 height: capturedImage.height,
-                format: _.last(_.split(this.capture.options.imageMIMEType, '/')),
+                format: _.last(_.split(capture.options.imageMIMEType, '/')),
             };
-            onCapture({
-                type: 'capture',
-                target: this,
-                resource
-            });
+            onCapture({ resource });
         }
-        this.capture.deactivate();
-        this.handleCancel();
-    }
-}
+        handleCancelClick();
+    })
+    const handleDeviceSelection = useListener((evt) => capture.choose(evt.id));
 
-/**
- * Synchronous component that actually draws the interface
- *
- * @extends PureComponent
- */
-class PhotoCaptureDialogBoxBrowserSync extends PureComponent {
-    static displayName = 'PhotoCaptureDialogBoxBrowserSync';
+    do {
+        render();
+        await capture.change();
+    } while (capture.active);
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { show, onCancel } = this.props;
-        let overlayProps = { show, onBackgroundClick: onCancel };
-        return (
-            <Overlay {...overlayProps}>
-                <div className="photo-capture-dialog-box">
-                    <div className="container">
-                        {this.renderView()}
+    function render() {
+        show(
+            <div className="photo-capture-dialog-box">
+                <div className="container">
+                    {renderView()}
+                </div>
+                <div className="controls">
+                    <div className="left">
+                        {renderDeviceSelector()}
                     </div>
-                    <div className="controls">
-                        <div className="left">
-                            {this.renderDeviceSelector()}
-                        </div>
-                        <div className="right">
-                            {this.renderButtons()}
-                        </div>
+                    <div className="right">
+                        {renderButtons()}
                     </div>
                 </div>
-            </Overlay>
+            </div>
         );
     }
 
-    /**
-     * Render either live video or captured image
-     *
-     * @return {ReactElement}
-     */
-    renderView() {
-        let { status, liveVideo, capturedImage } = this.props;
+    function renderView() {
+        const { status, liveVideo, capturedImage } = capture;
         switch (status) {
             case 'acquiring':
             case 'denied':
-                let placeholderProps = {
+                const placeholderProps = {
                     blocked: (status === 'denied'),
                     icon: 'camera',
                 };
@@ -211,7 +92,7 @@ class PhotoCaptureDialogBoxBrowserSync extends PureComponent {
             case 'initiating':
                 return <LiveVideo muted />;
             case 'previewing':
-                let liveVideoProps = {
+                const liveVideoProps = {
                     srcObject: liveVideo.stream,
                     width: liveVideo.width,
                     height: liveVideo.height,
@@ -219,7 +100,7 @@ class PhotoCaptureDialogBoxBrowserSync extends PureComponent {
                 };
                 return <LiveVideo  {...liveVideoProps} />;
             case 'captured':
-                let previewImageProps = {
+                const previewImageProps = {
                     className: 'preview',
                     src: capturedImage.url,
                     width: capturedImage.width,
@@ -229,44 +110,32 @@ class PhotoCaptureDialogBoxBrowserSync extends PureComponent {
         }
     }
 
-    /**
-     * Render a dropdown if there're multiple devices
-     *
-     * @return {ReactElement|null}
-     */
-    renderDeviceSelector() {
-        let { env, devices, chosenDeviceID, onChoose } = this.props;
-        let props = {
+    function renderDeviceSelector() {
+        const { devices, chosenDeviceID } = capture;
+        const props = {
             type: 'video',
             chosenDeviceID,
             devices,
             env,
-            onSelect: onChoose,
+            onSelect: handleDeviceSelection,
         };
         return <DeviceSelector {...props} />;
     }
 
-    /**
-     * Render buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, status } = this.props;
-        let { onCancel, onSnap, onClear, onAccept } = this.props;
-        let { t } = env.locale;
+    function renderButtons() {
+        const { status } = capture;
         switch (status) {
             case 'acquiring':
             case 'denied':
             case 'initiating':
             case 'previewing':
-                let cancelButtonProps = {
+                const cancelButtonProps = {
                     label: t('photo-capture-cancel'),
-                    onClick: onCancel,
+                    onClick: handleCancelClick,
                 };
-                let snapButtonProps = {
+                const snapButtonProps = {
                     label: t('photo-capture-snap'),
-                    onClick: onSnap,
+                    onClick: handleSnapClick,
                     disabled: (status !== 'previewing'),
                     emphasized: (status === 'previewing'),
                 };
@@ -277,13 +146,13 @@ class PhotoCaptureDialogBoxBrowserSync extends PureComponent {
                     </div>
                 );
             case 'captured':
-                let retakeButtonProps = {
+                const retakeButtonProps = {
                     label: t('photo-capture-retake'),
-                    onClick: onClear,
+                    onClick: handleRetakeClick,
                 };
-                let acceptButtonProps = {
+                const acceptButtonProps = {
                     label: t('photo-capture-accept'),
-                    onClick: onAccept,
+                    onClick: handleAcceptClick,
                     emphasized: true,
                 };
                 return (
@@ -296,58 +165,11 @@ class PhotoCaptureDialogBoxBrowserSync extends PureComponent {
     }
 }
 
+const component = Overlay.create(
+    Relaks.memo(PhotoCaptureDialogBoxBrowser)
+);
+
 export {
-    PhotoCaptureDialogBoxBrowser as default,
-    PhotoCaptureDialogBoxBrowser,
-    PhotoCaptureDialogBoxBrowserSync,
+    component as default,
+    component as PhotoCaptureDialogBoxBrowser,
 };
-
-import Payloads from 'transport/payloads';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    PhotoCaptureDialogBoxBrowser.propTypes = {
-        show: PropTypes.bool,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onClose: PropTypes.func,
-        onCapture: PropTypes.func,
-    };
-    PhotoCaptureDialogBoxBrowserSync.propTypes = {
-        show: PropTypes.bool,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        status: PropTypes.oneOf([
-            'acquiring',
-            'denied',
-            'initiating',
-            'previewing',
-            'captured',
-        ]),
-        liveVideo: PropTypes.shape({
-            stream: PropTypes.instanceOf(Object).isRequired,
-            width: PropTypes.number.isRequired,
-            height: PropTypes.number.isRequired,
-        }),
-        capturedImage: PropTypes.shape({
-            url: PropTypes.string.isRequired,
-            blob: PropTypes.instanceOf(Blob).isRequired,
-            width: PropTypes.number.isRequired,
-            height: PropTypes.number.isRequired,
-        }),
-        devices: PropTypes.arrayOf(PropTypes.shape({
-            id: PropTypes.string,
-            label: PropTypes.string,
-        })),
-        chosenDeviceID: PropTypes.string,
-
-        onChoose: PropTypes.func,
-        onCancel: PropTypes.func,
-        onSnap: PropTypes.func,
-        onClear: PropTypes.func,
-        onAccept: PropTypes.func,
-    };
-}

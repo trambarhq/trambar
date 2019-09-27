@@ -1,5 +1,4 @@
-import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Moment from 'moment';
 
 import './time.scss';
@@ -8,121 +7,70 @@ import './time.scss';
  * Component for rendering the publication time of a story or reaction.
  * Depending on how long ago it was, it'll display either the amount of time
  * elapsed since or an actual date.
- *
- * @extends PureComponent
  */
-class Time extends PureComponent {
-    static displayName = 'Time';
+function Time(props) {
+    const { env, time, compact } = props;
+    const { t } = env.locale;
+    const [ updateTime, setUpdateTime ] = useState();
+    const then = useMemo(() => Moment(time), [ time ]);
 
-    /**
-     * Enable or disable periodic updating of relative time
-     *
-     * @param  {Boolean} enabled
-     */
-    static updateRelativeTime(enabled) {
-        if (updateInterval) {
-            clearInterval(updateInterval);
-            updateInterval = 0;
-        }
-        if (enabled) {
-            updateInterval = setInterval(updateTime, 15 * 1000);
-        }
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { env, time, compact } = this.props;
-        let { t } = env.locale;
-        let className = 'older';
-        let then = Moment(time);
-        let text;
-        if (time >= env.getRelativeDate(-10, 'day')) {
-            // call getRelativeDate() so we have an ISO date string
-            if (time >= env.getRelativeDate(0, 'day')) {
-                let now = Moment();
-                let elapsed = (now - then) * (1 / 1000);
-                if (elapsed < 60) {
-                    text = t('time-just-now');
-                } else if (elapsed < 60 * 60) {
-                    let minutes = Math.floor(elapsed * (1 / 60));
-                    if (compact) {
-                        text = t('time-$min-ago', minutes);
-                    } else {
-                        text = t('time-$minutes-ago', minutes);
-                    }
-                } else {
-                    let hours = Math.floor(elapsed * (1 / 3600));
-                    if (compact) {
-                        text = t('time-$hr-ago', hours);
-                    } else {
-                        text = t('time-$hours-ago', hours);
-                    }
-                }
-                className = 'today';
-            } else if (time >= env.getRelativeDate(-1, 'day')) {
-                className = 'yesterday';
-                text = t('time-yesterday');
-            } else {
-                for (let day = 2; day <= 10; day++) {
-                    if (time >= env.getRelativeDate(-day, 'day')) {
-                        text = t('time-$days-ago', day);
-                        break;
-                    }
-                }
-            }
-        } else {
-            text = then.format((compact) ? 'll' : 'LL');
-        }
-        let title = then.format((compact) ? 'lll' : 'LLL');
-        return <span className={`time ${className}`} title={title}>{text}</span>;
-    }
-
-    /**
-     * Add update hook on mount
-     */
-    componentDidMount() {
-        this.componentDidUpdate();
-    }
-
-    /**
-     * Update the time periodically if it's published today
-     */
-    componentDidUpdate(prevProps, prevState) {
-        let { env, time } = this.props;
+    let className = 'older';
+    let text;
+    let updateAfter = 0;
+    if (time >= env.getRelativeDate(-10, 'day')) {
+        // call getRelativeDate() so we have an ISO date string
         if (time >= env.getRelativeDate(0, 'day')) {
-            if (!_.includes(recentComponents, this)) {
-                recentComponents.push(this);
+            const now = Moment();
+            const elapsed = (now - then) * (1 / 1000);
+            if (elapsed < 60) {
+                text = t('time-just-now');
+                updateAfter = 20;
+            } else if (elapsed < 60 * 60) {
+                let minutes = Math.floor(elapsed * (1 / 60));
+                if (compact) {
+                    text = t('time-$min-ago', minutes);
+                } else {
+                    text = t('time-$minutes-ago', minutes);
+                }
+                updateAfter = 60;
+            } else {
+                let hours = Math.floor(elapsed * (1 / 3600));
+                if (compact) {
+                    text = t('time-$hr-ago', hours);
+                } else {
+                    text = t('time-$hours-ago', hours);
+                }
+                updateAfter = 60 * 10;
             }
+            className = 'today';
+        } else if (time >= env.getRelativeDate(-1, 'day')) {
+            className = 'yesterday';
+            text = t('time-yesterday');
+            updateAfter = 60 * 60 * 1;
         } else {
-            _.pull(recentComponents, this);
+            for (let day = 2; day <= 10; day++) {
+                if (time >= env.getRelativeDate(-day, 'day')) {
+                    text = t('time-$days-ago', day);
+                    break;
+                }
+            }
+            updateAfter = 60 * 60 * 1;
         }
+    } else {
+        text = then.format((compact) ? 'll' : 'LL');
     }
+    const title = then.format((compact) ? 'lll' : 'LLL');
 
-    /**
-     * Remove update hook on unmount
-     */
-    componentWillUnmount() {
-        _.pull(recentComponents, this);
-    }
-}
-
-let recentComponents = [];
-
-function updateTime() {
-    // copy the list as components can be removed during an update
-    let list = recentComponents.slice();
-    _.each(list, (component) => {
-        if (component) {
-            component.forceUpdate();
+    useEffect(() => {
+        if (updateAfter) {
+            setTimeout(() => {
+                setUpdateTime(new Date);
+            }, updateAfter * 1000);
         }
-    });
-}
+    }, [ updateAfter ]);
 
-let updateInterval = 0;
+    return <span className={`time ${className}`} title={title}>{text}</span>;
+}
 
 Time.defaultProps = {
     compact: false,
@@ -132,15 +80,3 @@ export {
     Time as default,
     Time,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    Time.propTypes = {
-        time: PropTypes.string,
-        compact: PropTypes.bool,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

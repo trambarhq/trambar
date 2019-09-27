@@ -1,12 +1,13 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import * as UserUtils from 'objects/utils/user-utils';
+import React from 'react';
+import { useListener } from 'relaks';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import Scrollable from 'widgets/scrollable';
-import ProfileImage from 'widgets/profile-image';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from './push-button.jsx';
+import { Scrollable } from './scrollable.jsx';
+import { ProfileImage } from './profile-image.jsx';
 
 import './multiple-user-names.scss';
 
@@ -14,87 +15,77 @@ import './multiple-user-names.scss';
  * Component that renders a small pop-up window showing a list of users when
  * the mouse pointer goes over a label. The list is truncated when it's long.
  * Clicking on the label brings up the full list in a dialog box.
- *
- * @extends PureComponent
  */
-class MultipleUserNames extends PureComponent {
-    static displayName = 'MultipleUserNames';
+function MultipleUserNames(props) {
+    const { env, users, label, className } = props;
+    const { t, p } = env.locale;
+    const [ showingPopUp, showPopUp ] = useState(false);
+    const [ showingDialogBox, showDialogBox ] = useState(false);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            showingPopUp: false,
-            showingDialogBox: false,
-        };
+    const handleMouseEnter = useListener((evt) => {
+        showPopUp(true);
+    });
+    const handleMouseLeave = useListener((evt) => {
+        showPopUp(false);
+    });
+    const handleClick = useListener((evt) => {
+        showPopUp(false);
+        showDialogBox(true);
+    });
+    const handleDialogBoxClose = useListener((evt) => {
+        showDialogBox(false);
+    });
+
+    const classNames = [ 'multiple-user-names' ];
+    if (className) {
+        classNames.push(className);
     }
+    const containerProps = {
+        className: classNames.join(' '),
+        onMouseEnter: handleMouseEnter,
+        onMouseLeave: handleMouseLeave,
+    };
+    const labelProps = {
+        className: 'label',
+        onClick: handleClick,
+    };
+    return (
+        <span {...containerProps}>
+            <span {...labelProps}>{label}</span>
+            {renderPopUp()}
+            {renderDialogBox()}
+        </span>
+    )
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { label, className } = this.props;
-        className = 'multiple-user-names' + ((className) ? ` ${className}` : '');
-        let containerProps = {
-            className,
-            onMouseEnter: this.handleMouseEnter,
-            onMouseLeave: this.handleMouseLeave,
-        };
-        let labelProps = {
-            className: 'label',
-            onClick: this.handleClick,
-        };
-        return (
-            <span {...containerProps}>
-                <span {...labelProps}>{label}</span>
-                {this.renderPopUp()}
-                {this.renderDialogBox()}
-            </span>
-        )
-    }
-
-    /**
-     * Render mouse rollover popup
-     *
-     * @return {ReactElement|null}
-     */
-    renderPopUp() {
-        let { showingPopUp, popupLimit } = this.state;
+    function renderPopUp() {
         if (!showingPopUp) {
             return null;
         }
         return (
             <div className="popup-container">
                 <div className="popup">
-                    {this.renderUserList(popupLimit)}
+                    {renderUserList()}
                 </div>
             </div>
         );
     }
 
-    /**
-     * Render overlay that appears when user clicks on the label
-     *
-     * @return {ReactElement|null}
-     */
-    renderDialogBox() {
-        let { showingDialogBox } = this.state;
-        let overlayProps = {
+    function renderDialogBox() {
+        const overlayProps = {
             show: showingDialogBox,
-            onBackgroundClick: this.handleDialogBoxClose,
+            onBackgroundClick: handleDialogBoxClose,
         };
-        let buttonProps = {
+        const buttonProps = {
             label: 'OK',
             emphasized: true,
-            onClick: this.handleDialogBoxClose,
+            onClick: handleDialogBoxClose,
         };
         return (
             <Overlay {...overlayProps}>
                 <div className="multiple-user-names-dialog-box">
                     <Scrollable>
                         <div className="list">
-                            {this.renderUserList()}
+                            {renderUserList()}
                         </div>
                     </Scrollable>
                     <div className="buttons">
@@ -105,98 +96,38 @@ class MultipleUserNames extends PureComponent {
         );
     }
 
-    /**
-     * Render user list
-     *
-     * @param  {Number} limit
-     *
-     * @return {Array<ReactElement>}
-     */
-    renderUserList(limit) {
-        let { env, users } = this.props;
-        let { t, p } = env.locale;
-        users = _.sortBy(users, (user) => {
+    function renderUserList() {
+        const sorted = _.sortBy(users, (user) => {
             return p(user.details.name);
         });
-        if (users.length > limit) {
-            let chunk = _.slice(users, limit);
-            let elements = _.map(chunk, (user) => {
-                return this.renderUser(user);
-            });
+        const chunk = _.slice(sorted, popupLimit);
+        const elements = _.map(chunk, (user) => {
+            return this.renderUser(user);
+        });
+        if (sorted.length > limit) {
             elements.push(
                 <div key={0} className="more">
                     {t('list-$count-more', users.length - chunk.length)}
                 </div>
             );
-            return elements;
-        } else {
-            return _.map(users, (user) => {
-                return this.renderUser(user);
-            });
         }
+        return elements;
     }
 
-    /**
-     * Render user profile image and name
-     *
-     * @param  {User} user
-     *
-     * @return {ReactElement}
-     */
-    renderUser(user) {
-        let { env } = this.props;
-        let userProps = { user, env };
+    function renderUser(user) {
+        const userProps = { user, env };
         return <User key={user.id} {...userProps} />;
     }
 
-    /**
-     * Called when mouse cursor enters the label
-     *
-     * @param  {Event} evt
-     */
-    handleMouseEnter = (evt) => {
-        this.setState({ showingPopUp: true });
-    }
-
-    /**
-     * Called when mouse cursor exits the label
-     *
-     * @param  {Event} evt
-     */
-    handleMouseLeave = (evt) => {
-        this.setState({ showingPopUp: false });
-    }
-
-    /**
-     * Called when user clicks on label
-     *
-     * @param  {Event} evt
-     */
-    handleClick = (evt) => {
-        this.setState({ showingPopUp: false, showingDialogBox: true });
-    }
-
-    /**
-     * Called when user clicks the OK button or outside the dialog box
-     *
-     * @param  {Event} evt
-     */
-    handleDialogBoxClose = (evt) => {
-        this.setState({ showingDialogBox: false });
-    }
 }
 
 /**
  * Stateless component that renders a user's profile image and name.
  */
 function User(props) {
-    let { env, user } = props;
-    let classNames = [ 'user' ];
-    let imageProps = {
-        user,
-        env,
-        size: 'small',
-    };
+    const { env, user } = props;
+    const classNames = [ 'user' ];
+    const imageProps = { user, env, size: 'small' };
     let name = UserUtils.getDisplayName(user, env);
     return (
         <div className={classNames.join(' ')}>
@@ -214,18 +145,3 @@ export {
     MultipleUserNames as default,
     MultipleUserNames,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    MultipleUserNames.propTypes = {
-        label: PropTypes.string,
-        title: PropTypes.string,
-        users: PropTypes.arrayOf(PropTypes.object).isRequired,
-        popupLimit: PropTypes.number,
-
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

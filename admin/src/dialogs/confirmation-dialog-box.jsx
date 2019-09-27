@@ -1,112 +1,49 @@
-import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
 
 import './confirmation-dialog-box.scss';
 
 /**
  * Confirmation dialog box
- *
- * @extends PureComponent
  */
-class ConfirmationDialogBox extends PureComponent {
-    static displayName = 'ConfirmationDialogBox';
+function ConfirmationDialogBox(props) {
+    const { env, show, dangerous, children, onCancel, onConfirm } = props;
+    const { t } = env.locale;
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            show: true,
-            dangerous: true,
-        };
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { env, show, dangerous, children } = this.props;
-        let { t } = env.locale;
-        let overlayProps = {
-            show,
-            onBackgroundClick: this.handleCancelClick,
-        };
-        let cancelProps = {
-            className: 'cancel',
-            onClick: this.handleCancelClick
-        };
-        let confirmProps = {
-            className: dangerous ? 'danger' : 'emphasis',
-            onClick: this.handleConfirmClick
-        };
-        return (
-            <Overlay {...overlayProps}>
-                <div className="confirmation-dialog-box">
-                    <div className="message">{children}</div>
-                    <div className="buttons">
-                        <PushButton {...cancelProps}>
-                            {t('confirmation-cancel')}
-                        </PushButton>
-                        {' '}
-                        <PushButton {...confirmProps}>
-                            {t('confirmation-confirm')}
-                        </PushButton>
-                    </div>
-                </div>
-            </Overlay>
-        );
-    }
-
-    /**
-     * Called when user clicks cancel button or outside the dialog
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = (evt) => {
-        let { onCancel } = this.props;
+    const handleCancelClick = useListener((evt) => {
         if (onCancel) {
-            onCancel({
-                type: 'cancel',
-                target: this,
-            });
+            onCancel({});
         }
-    }
-
-    /**
-     * Called when user clicks confirm button
-     *
-     * @param  {Event} evt
-     */
-    handleConfirmClick = (evt) => {
-        let { onConfirm } = this.props;
+    });
+    const handleConfirmClick = useListener((evt) => {
         if (onConfirm) {
-            onConfirm({
-                type: 'confirm',
-                target: this,
-            });
+            onConfirm({});
         }
-    }
+    });
+
+    return (
+        <div className="confirmation-dialog-box">
+            <div className="message">{children}</div>
+            <div className="buttons">
+                <PushButton className="cancel" onClick={handleCancelClick}>
+                    {t('confirmation-cancel')}
+                </PushButton>
+                {' '}
+                <PushButton className={dangerous ? 'danger' : 'emphasis'} onClick={handleConfirmClick}>
+                    {t('confirmation-confirm')}
+                </PushButton>
+            </div>
+        </div>
+    );
 }
+
+const component = Overlay.create(ConfirmationDialogBox);
 
 export {
-    ConfirmationDialogBox as default,
-    ConfirmationDialogBox,
+    component as default,
+    component as ConfirmationDialogBox,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ConfirmationDialogBox.propTypes = {
-        show: PropTypes.bool,
-        dangerous: PropTypes.bool,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        onConfirm: PropTypes.func,
-        onCancel: PropTypes.func,
-    };
-}

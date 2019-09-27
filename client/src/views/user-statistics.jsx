@@ -1,173 +1,127 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import Chartist, { Svg } from 'widgets/chartist';
+import React, { useMemo } from 'react';
+import { useListener } from 'relaks';
+import Chartist, { Svg } from 'common/widgets/chartist.jsx';
 import Moment from 'moment';
-import { memoizeWeak, memoizeStrong } from 'utils/memoize';
-import StoryTypes from 'objects/types/story-types';
+import { memoizeWeak, memoizeStrong } from 'common/utils/memoize.mjs';
+import StoryTypes from 'common/objects/types/story-types.mjs';
 
 import './user-statistics.scss';
 
 /**
  * Component for rendering a user's statistics. Used by UserView.
- *
- * @extends PureComponent
  */
-class UserStatistics extends PureComponent {
-    static displayName = 'UserStatistics';
-
-    constructor(props) {
-        super(props);
-        this.state = {
-            dates: [],
-            labels: [],
-            series: [],
-            indices: [],
-            upperRange: 0,
-            selectedDateIndex: -1,
-        };
-        this.updateSeries(this.state, props);
-    }
-
-    /**
-     * Update data and labels on props change
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { env } = this.props;
-        let diff = _.shallowDiff(nextProps, this.props);
-        let needUpdate = false;
-        if (diff.chartRange || diff.dailyActivities || diff.selectedDate) {
-            needUpdate = true;
-        } else if (diff.env) {
-            if (env.date !== nextProps.env.date) {
-                needUpdate = true;
-            }
-        }
-        if (needUpdate) {
-            let nextState = _.clone(this.state);
-            this.updateSeries(nextState, nextProps);
-            this.setState(nextState);
-        }
-    }
-
-    /**
-     * Update data and labels
-     *
-     * @param  {Object} nextState
-     * @param  {Object} nextProps
-     */
-    updateSeries(nextState, nextProps) {
-        let { env, selectedDate, dailyActivities, chartType, chartRange } = nextProps;
-        let { t, localeCode } = env.locale;
-        let date = selectedDate || env.date;
-        let activities = _.get(dailyActivities, 'daily', {});
+function UserStatistics(props) {
+    const { user, dailyActivities } = props;
+    const { route, env, selectedDate, chartType, chartRange } = props;
+    const { t, localeCode } = env.locale;
+    const activities = _.get(dailyActivities, 'daily', {});
+    const range = _.get(dailyActivities, 'range');
+    const date = selectedDate || env.date;
+    const dates = useMemo(() => {
         switch (chartRange) {
             case 'biweekly':
-                let offset = (selectedDate) ? 6 : 0;
-                nextState.dates = getTwoWeeks(date, offset);
-                nextState.labels = getDateOfWeekLabels(nextState.dates, localeCode);
-                break;
+                const offset = (selectedDate) ? 6 : 0;
+                return getTwoWeeks(date, offset);
             case 'monthly':
-                nextState.dates = getMonth(date);
-                nextState.labels = getDateOfMonthLabels(nextState.dates, localeCode);
-                break;
+                return getMonth(date);
             case 'full':
-                let range = _.get(dailyActivities, 'range');
                 if (range) {
-                    nextState.dates = getMonths(range.start, range.end);
+                    return getMonths(range.start, range.end);
                 } else {
-                    nextState.dates = getMonth(env.date);
+                    return getMonth(env.date);
                 }
-                nextState.labels = getMonthLabels(nextState.dates, localeCode);
-                break;
         }
-        let additive =  (chartType === 'bar') ? true : false;
-        nextState.series = getActivitySeries(activities, nextState.dates);
-        nextState.upperRange = getUpperRange(nextState.series, additive);
-        nextState.indices = getActivityIndices(activities, nextState.dates);
-        nextState.selectedDateIndex = _.indexOf(nextState.dates, date);
+    }, [ chartRange, date, range ])
+    const labels = useMemo(() => {
+        switch (chartRange) {
+            case 'biweekly':
+                return getDateOfWeekLabels(dates, localeCode);
+            case 'monthly':
+                return getDateOfMonthLabels(dates, localeCode);
+            case 'full':
+                return getMonthLabels(dates, localeCode);
+        }
+    }, [ dates, localeCode ]);
+    const series = useMemo(() => {
+        return getActivitySeries(activities, dates);
+    }, [ dates, activities ]);
+    const upperRange = useMemo(() => {
+        const additive =  (chartType === 'bar') ? true : false;
+        return getUpperRange(series, additive);
+    }, [ series, chartType ]);
+    const indices = useMemo(() => {
+        return getActivityIndices(activities, dates);
+    }, [ dates, activities ]);
+    const selectedDateIndex = useMemo(() => {
+        return _.indexOf(dates, date);
+    }, [ dates, date ]);
+    const selectedDateLabel = useMemo(() => {
         if (selectedDate) {
-            let m = Moment(selectedDate);
-            nextState.selectedDateLabel = m.locale(localeCode).format('l');
+            const m = Moment(selectedDate);
+            return m.locale(localeCode).format('l');
         } else {
-            nextState.selectedDateLabel = t('user-statistics-today');
+            return t('user-statistics-today');
         }
-        let dateLabels = getDateLabels(nextState.dates, localeCode);
-        nextState.tooltips = _.map(nextState.series, (series) => {
+    }, [ selectedDate, localeCode ]);
+    const tooltips = useMemo(() => {
+        const dateLabels = getDateLabels(dates, localeCode);
+        return _.map(series, (series) => {
             return _.map(series.data, (count, index) => {
-                let objects = t(`user-statistics-tooltip-$count-${series.name}`, count);
-                let dateLabel = dateLabels[index];
+                const objects = t(`user-statistics-tooltip-$count-${series.name}`, count);
+                const dateLabel = dateLabels[index];
                 return `${objects}\n${dateLabel}`;
             });
         });
-    }
+    }, [ dates, series, localeCode ]);
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        return (
-            <div className="user-statistics">
-                {this.renderLegend()}
-                {this.renderChart()}
-            </div>
-        );
-    }
+    const handleChartClick = useListener((evt) => {
+        const date = evt.target.getAttribute('data-date');
+        if (date) {
+            // go to the user's personal page on that date
+            route.push('person-page', { selectedUserID: user.id, date });
+        }
+    });
 
-    /**
-     * Render legend for data series
-     *
-     * @return {ReactElement|null}
-     */
-    renderLegend() {
-        let { env, chartType } = this.props;
-        let { indices } = this.state;
-        let { t } = env.locale;
+    return (
+        <div className="user-statistics">
+            {renderLegend()}
+            {renderChart()}
+        </div>
+    );
+
+    function renderLegend() {
         if (!chartType) {
             return null;
         }
-        let items = _.map(indices, (index, type) => {
-            let props = {
-                series: String.fromCharCode('a'.charCodeAt(0) + index),
-                label: t(`user-statistics-legend-${type}`),
-            };
-            return <LegendItem key={index} {...props} />;
-        });
+        let items = _.map(indices, renderLegendItem);
         if (_.isEmpty(items)) {
             items = '\u00a0';
         }
         return <div className="legend">{items}</div>;
     }
 
-    /**
-     * Render currently selected chart type
-     *
-     * @return {ReactElement|null}
-     */
-    renderChart() {
-        let { chartType } = this.props;
+    function renderLegendItem(index, type) {
+        const props = {
+            series: String.fromCharCode('a'.charCodeAt(0) + index),
+            label: t(`user-statistics-legend-${type}`),
+        };
+        return <LegendItem key={index} {...props} />;
+    }
+
+    function renderChart() {
         switch (chartType) {
-            case 'bar': return this.renderBarChart();
-            case 'line': return this.renderLineChart();
-            case 'pie': return this.renderPieChart();
+            case 'bar': return renderBarChart();
+            case 'line': return renderLineChart();
+            case 'pie': return renderPieChart();
             default: return null;
         }
     }
 
-    /**
-     * Render a stacked bar chart showing activities on each day
-     *
-     * @return {ReactElement}
-     */
-    renderBarChart() {
-        let { chartRange } = this.props;
-        let { labels, series, dates, upperRange } = this.state;
-        let chartProps = {
+    function renderBarChart() {
+        const chartProps = {
             type: 'bar',
-            data: { labels, series, },
+            data: { labels, series },
             options: {
                 stackBars: true,
                 chartPadding: {
@@ -177,8 +131,8 @@ class UserStatistics extends PureComponent {
                 high: upperRange,
                 low: 0,
             },
-            onDraw: this.handleChartDraw,
-            onClick: this.handleChartClick,
+            onDraw: draw,
+            onClick: handleChartClick,
         };
         return (
             <ChartContainer scrollable={chartRange === 'full'} columns={dates.length}>
@@ -187,15 +141,8 @@ class UserStatistics extends PureComponent {
         );
     }
 
-    /**
-     * Render a line chart showing activities on each day
-     *
-     * @return {ReactElement}
-     */
-    renderLineChart() {
-        let { chartRange } = this.props;
-        let { labels, series, dates, upperRange } = this.state;
-        let chartProps = {
+    function renderLineChart() {
+        const chartProps = {
             type: 'line',
             data: { labels, series },
             options: {
@@ -208,7 +155,7 @@ class UserStatistics extends PureComponent {
                 high: upperRange,
                 low: 0,
             },
-            onDraw: this.handleChartDraw,
+            onDraw: draw,
         };
         return (
             <ChartContainer scrollable={chartRange === 'full'} columns={dates.length}>
@@ -217,19 +164,12 @@ class UserStatistics extends PureComponent {
         );
     }
 
-    /**
-     * Render a pie chart showing relative frequencies of activity types
-     *
-     * @return {ReactElement}
-     */
-    renderPieChart() {
-        let { series } = this.state;
-        let chartProps = {
+    function renderPieChart() {
+        const chartProps = {
             type: 'pie',
             data: {
                 series: _.map(series, (series) => {
-                    let sum = _.sum(series.data);
-                    return sum;
+                    return _.sum(series.data);
                 })
             },
             options: {
@@ -243,20 +183,7 @@ class UserStatistics extends PureComponent {
         return <Chartist {...chartProps} />;
     }
 
-    /**
-     * Called when Chartist is drawing a chart
-     *
-     * @param  {Object} cxt
-     */
-    handleChartDraw = (cxt) => {
-        let { chartType, chartRange } = this.props;
-        let {
-            labels,
-            dates,
-            selectedDateIndex,
-            selectedDateLabel,
-            tooltips
-        } = this.state;
+    function draw(cxt) {
         // move y-axis to the right side
         if(cxt.type === 'label' && cxt.axis.units.pos === 'y') {
             cxt.element.attr({
@@ -335,38 +262,24 @@ class UserStatistics extends PureComponent {
             cxt.element.attr({ 'data-date': date });
         }
     }
-
-    /**
-     * Called when user clicks on the chart
-     *
-     * @param  {Event} evt
-     */
-    handleChartClick = (evt) => {
-        let { route, user } = this.props;
-        let date = evt.target.getAttribute('data-date');
-        if (date) {
-            // go to the user's personal page on that date
-            route.push('person-page', { selectedUserID: user.id, date });
-        }
-    }
 }
 
 const getActivityIndices = memoizeWeak(null, function(activities, dates) {
-    let present = {};
-    _.each(dates, (date) => {
-        let counts = activities[date];
-        _.forIn(counts, (count, type) => {
+    const present = {};
+    for (let date of dates) {
+        const counts = activities[date];
+        for (let [ type, count ] of _.entries(counts)) {
             if (count) {
                 present[type] = true;
             }
-        });
-    });
-    let indices = {};
-    _.each(StoryTypes, (type, index) => {
+        }
+    }
+    const indices = {};
+    for (let [ index, type ] of StoryTypes.entries()) {
         if (present[type]) {
             indices[type] = index;
         }
-    });
+    }
     return indices;
 });
 
@@ -382,7 +295,7 @@ const getActivitySeries = memoizeWeak(null, function(activities, dates) {
             return value;
         });
         if (empty) {
-            return [];
+            series = [];
         }
         return {
             name: type,
@@ -394,24 +307,22 @@ const getActivitySeries = memoizeWeak(null, function(activities, dates) {
 const getUpperRange = memoizeWeak(null, function(series, additive) {
     let highest = 0;
     if (additive) {
-        let sums = [];
-        _.each(series, (s) => {
-            let values = s.data;
-            _.each(values, (value, index) => {
+        const sums = [];
+        for (let { data } of series) {
+            for (let [ index, value ] of data.entries()) {
                 sums[index] = (sums[index]) ? sums[index] + value : value;
-            });
-        });
+            }
+        }
         if (!_.isEmpty(sums)) {
             highest = _.max(sums);
         }
     } else {
-        _.each(series, (s) => {
-            let values = s.data;
-            let max = _.max(values);
+        for (let { data } of series) {
+            const max = _.max(data);
             if (max > highest) {
                 highest = max;
             }
-        });
+        }
     }
     // leave some room at the top
     if (highest < 100) {
@@ -446,8 +357,8 @@ const getDateOfWeekLabels = memoizeWeak(null, function(dates, localeCode) {
 
 const getDateOfMonthLabels = memoizeWeak(null, function(dates, localeCode) {
     return _.map(dates, (date) => {
-        let m = Moment(date);
-        let d = m.date();
+        const m = Moment(date);
+        const d = m.date();
         if (d % 2 === 0) {
             return m.locale(localeCode).format('D');
         } else {
@@ -458,8 +369,8 @@ const getDateOfMonthLabels = memoizeWeak(null, function(dates, localeCode) {
 
 const getMonthLabels = memoizeWeak(null, function(dates, localeCode) {
     return _.map(dates, (date) => {
-        let m = Moment(date);
-        let d = m.date();
+        const m = Moment(date);
+        const d = m.date();
         if (d === 1) {
             return m.locale(localeCode).format('MMMM');
         } else {
@@ -473,12 +384,12 @@ function getDateString(m) {
 }
 
 const getDates = memoizeStrong([], function(start, end) {
-    let s = Moment(start);
-    let e = Moment(end);
-    let dates = [];
-    let m = s.clone();
+    const s = Moment(start);
+    const e = Moment(end);
+    const dates = [];
+    const m = s.clone();
     while (m <= e) {
-        let date = getDateString(m);
+        const date = getDateString(m);
         dates.push(date);
         m.add(1, 'day');
     }
@@ -486,16 +397,16 @@ const getDates = memoizeStrong([], function(start, end) {
 });
 
 const getTwoWeeks = memoizeStrong([], function(date, offset) {
-    let m = Moment(date).add(offset, 'day');
-    let end = getDateString(m);
-    let start = getDateString(m.subtract(13, 'day'));
+    const m = Moment(date).add(offset, 'day');
+    const end = getDateString(m);
+    const start = getDateString(m.subtract(13, 'day'));
     return getDates(start, end);
 });
 
 const getMonth = memoizeStrong([], function(date) {
-    let m = Moment(date).startOf('month');
-    let start = getDateString(m);
-    let end = getDateString(Moment(date).endOf('month'));
+    const m = Moment(date).startOf('month');
+    const start = getDateString(m);
+    const end = getDateString(Moment(date).endOf('month'));
     return getDates(start, end);
 });
 
@@ -506,34 +417,36 @@ const getMonths = memoizeStrong([], function(start, end) {
 });
 
 function LegendItem(props) {
+    const { series, label } = props;
     return (
         <div className="item">
             <svg className="ct-chart-bar" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
-                <g className={`ct-series ct-series-${props.series}`}>
+                <g className={`ct-series ct-series-${series}`}>
                     <line className="ct-bar" x1={0} y1={5} x2={10} y2={5} />
                 </g>
             </svg>
             <span className="label">
-                {props.label}
+                {label}
             </span>
         </div>
     )
 }
 
 function ChartContainer(props) {
-    let width = Math.round(props.columns * 0.75) + 'em';
-    if (props.scrollable) {
+    const { columns, scrollable, children } = props;
+    const width = Math.round(columns * 0.75) + 'em';
+    if (scrollable) {
         return (
             <div className="scroll-container-frame">
                 <div className="scroll-container">
                     <div className="scroll-container-contents" style={{ width }}>
-                        {props.children}
+                        {children}
                     </div>
                 </div>
             </div>
         );
     } else {
-        return props.children;
+        return children;
     }
 }
 
@@ -541,25 +454,9 @@ UserStatistics.defaultProps = {
     chartRange: 'biweekly'
 };
 
+const component = React.memo(UserStatistics);
+
 export {
-    UserStatistics as default,
-    UserStatistics,
+    component as default,
+    component as UserStatistics,
 };
-
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    UserStatistics.propTypes = {
-        chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
-        chartRange: PropTypes.oneOf([ 'biweekly', 'monthly', 'full' ]),
-        dailyActivities: PropTypes.object,
-        selectedDate: PropTypes.string,
-        user: PropTypes.object,
-
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

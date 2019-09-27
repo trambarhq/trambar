@@ -6,12 +6,12 @@ import './push-button.scss';
  * Stateless component that renders a basic push button.
  */
 function PushButton(props) {
-    let { label, emphasized, hidden, disabled, onClick } = props;
+    const { label, emphasized, hidden, disabled, onClick } = props;
     if (hidden) {
         return null;
     }
     let classNames = [ 'push-button' ];
-    if (emphasized) {
+    if (emphasized && !disabled) {
         classNames.push('emphasized');
     }
     return (
@@ -27,11 +27,11 @@ PushButton.File = FileButton;
  * Stateless component that renders a push button that triggers file selection.
  */
 function FileButton(props) {
-    let { label, emphasized, hidden, disabled, multiple, accept, onChange } = props;
+    const { label, emphasized, hidden, disabled, multiple, accept, onChange } = props;
     if (hidden) {
         return null;
     }
-    let inputProps = {
+    const inputProps = {
         type: 'file',
         value: '',
         disabled,
@@ -39,7 +39,7 @@ function FileButton(props) {
         accept,
         onChange,
     };
-    let classNames = [ 'push-button' ];
+    const classNames = [ 'push-button' ];
     if (emphasized) {
         classNames.push('emphasized');
     }
@@ -56,16 +56,3 @@ export {
     PushButton,
     FileButton,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    FileButton.propTypes = {
-        label: PropTypes.string,
-        icon: PropTypes.string,
-        hidden: PropTypes.bool,
-        disabled: PropTypes.bool,
-        multiple: PropTypes.bool,
-        onChange: PropTypes.func,
-    };
-}

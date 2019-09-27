@@ -1,66 +1,34 @@
-import React, { PureComponent } from 'react';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
 
-import CollapsibleContainer from 'widgets/collapsible-container';
+import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 
-class DiagnosticsSection extends PureComponent {
-    static displayName = 'DiagnosticsSection';
+function DiagnosticsSection(props) {
+    const { hidden, label, children } = props;
+    const [ open, setOpen ] = useState(false);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            open: false
-        };
+    const handleLabelClick = useListener((evt) => {
+        setOpen(!open);
+    });
+
+    if (hidden) {
+        return null;
     }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement|null}
-     */
-    render() {
-        let { hidden, label, children } = this.props;
-        let { open } = this.state;
-        if (hidden) {
-            return null;
-        }
-        let className = 'diagnostics-section';
-        if (open) {
-            className += ' open';
-        }
-        return (
-            <div className={className}>
-                <div className="title" onClick={this.handleLabelClick}>
-                    {label}
-                </div>
-                <CollapsibleContainer open={open}>
-                    {children}
-                </CollapsibleContainer>
-            </div>
-        );
+    const classNames = [ 'diagnostics-section' ];
+    if (open) {
+        classNames.push('open');
     }
-
-    /**
-     * Called when user clicks label
-     *
-     * @param  {Event} evt
-     */
-    handleLabelClick = (evt) => {
-        let { open } = this.state;
-        open = !open;
-        this.setState({ open });
-    }
+    return (
+        <div className={classNames.join(' ')}>
+            <div className="title" onClick={handleLabelClick}>{label}</div>
+            <CollapsibleContainer open={open}>
+                {children}
+            </CollapsibleContainer>
+        </div>
+    );
 }
 
 export {
     DiagnosticsSection as default,
     DiagnosticsSection,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    DiagnosticsSection.propTypes = {
-        label: PropTypes.string,
-        hidden: PropTypes.bool,
-    };
-}

@@ -1,82 +1,57 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import { delay } from 'bluebird';
+import React from 'react';
+import Relaks, { useProgress } from 'relaks';
 import Moment from 'moment';
 
-import Environment from 'env/environment';
-
 // widgets
-import Tooltip from 'widgets/tooltip';
+import { Tooltip } from '../widgets/tooltip.jsx';
 
 /**
  * Tooltip showing the full timestamp.
- *
- * @extends PureComponent
  */
-class ModifiedTimeTooltip extends PureComponent {
-    static displayName = 'ModifiedTimeTooltip';
+async function ModifiedTimeTooltip(props) {
+    const { env, time, disabled } = props;
+    const { localeCode } = env.locale;
+    const [ show ] = useProgress(0);
+    let relativeTime = null;
+    let absoluteTime = null;
+    if (time) {
+        const m = Moment(time).locale(localeCode);
+        relativeTime = m.fromNow();
+        absoluteTime = m.format('lll');
+    };
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            relativeTime: null,
-            absoluteTime: null,
-        };
+    for (;;) {
+        render();
+        await interval();
     }
 
-    static getDerivedStateFromProps(props) {
-        let { env, time } = props;
-        let { localeCode } = env.locale;
-        let m;
-        if (time) {
-            m = Moment(time);
-            m.locale(localeCode);
-        };
-        return {
-            relativeTime: m ? m.fromNow() : null,
-            absoluteTime: m ? m.format('lll') : null,
-        };
-    }
-
-    render() {
-        let { disabled } = this.props;
-        let { relativeTime, absoluteTime } = this.state;
-        return (
+    function render() {
+        show(
             <Tooltip disabled={disabled}>
                 <inline>{relativeTime}</inline>
                 <window>{absoluteTime}</window>
             </Tooltip>
         );
     }
-
-    componentDidMount() {
-        instances.push(this);
-    }
-
-    componentWillUnmount() {
-        _.pull(instances, this);
-    }
 }
 
-let instances = [];
+let intervalPromise = null;
 
-// refresh the labels every minute
-setInterval(() => {
-    for (let instance of instances) {
-        instance.forceUpdate();
+function interval() {
+    if (!intervalPromise) {
+        intervalPromise = delay(30 * 1000);
+        intervalPromise.then(() => {
+            intervalPromise = null;
+        });
     }
-}, 30 * 1000);
+    return intervalPromise;
+}
+
+const component = Relaks.memo(ModifiedTimeTooltip);
 
 export {
-    ModifiedTimeTooltip as default,
-    ModifiedTimeTooltip,
+    component as default,
+    component as ModifiedTimeTooltip,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ModifiedTimeTooltip.propTypes = {
-        time: PropTypes.string,
-        disabled: PropTypes.bool,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

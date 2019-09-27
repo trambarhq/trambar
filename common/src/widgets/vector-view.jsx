@@ -1,234 +1,135 @@
-import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import * as MediaLoader from 'media/media-loader';
-import ComponentRefs from 'utils/component-refs';
+import React, { useState, useRef, useImperativeHandle, useEffect } from 'react';
+import * as MediaLoader from '../media/media-loader.mjs';
 
 /**
  * A component for displaying a SVG file, with proper support for zooming
  * and clipping.
- *
- * @extends {PureComponent}
  */
-class VectorView extends PureComponent {
-    static displayName = 'VectorView';
+function VectorView(props, ref) {
+    const { url, clippingRect, title, onError, onLoad, ...otherProps } = props;
+    const [ svg, setSVG ] = useState(null);
+    const containerRef = useRef();
+    const [ instance ] = useState({
+        src: null,
+        originX: 0,
+        originY: 0,
+        zoomX: 1,
+        zoomY: 1,
+        naturalWidth: 4,
+        naturalHeight: 4,
+    });
 
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            svg: SVGGraphicsElement,
+    useImperativeHandle(ref, () => {
+        return instance;
+    });
+
+    useEffect(() => {
+        instance.src = url;
+        MediaLoader.loadSVG(url).then((loadedSVG) => {
+            setSVG(loadedSVG);
+        }).catch((err) => {
+            if (onError) {
+                onError({ type: 'error', target: instance });
+            }
         });
-    }
-
-    /**
-     * Load image on mount
-     */
-    componentWillMount() {
-        let { url } = this.props;
-        this.load(url);
-    }
-
-    /**
-     * Update image when URL or clipping rect changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { url, clippingRect, title } = this.props;
-        if (nextProps.url !== url) {
-            this.load(nextProps.url);
+    }, [ url ]);
+    useEffect(() => {
+        const container = containerRef.current;
+        while (container.firstChild) {
+            container.removeChild(svg.firstChild);
         }
-        if (nextProps.clippingRect !== clippingRect) {
-            this.setViewBox(nextProps.clippingRect);
-        }
-        if (nextProps.title !== title) {
-            this.setTitle(nextProps.title);
-        }
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { setters } = this.components;
-        let props = _.omit(this.props, 'onLoad', 'url', 'clippingRect', 'title');
-        return <svg ref={setters.svg} viewBox="0 0 4 4" width={4} height={4} {...props} />
-    }
-
-    /**
-     * Inform parent component that loading is complete
-     */
-    triggerLoadEvent() {
-        let { onLoad } = this.props;
-        if (onLoad) {
-            onLoad({
-                type: 'load',
-                target: this,
-            });
-        }
-    }
-
-    /**
-     * Inform parent component that an error occurred
-     *
-     * @param  {Error} err
-     */
-    triggerErrorEvent(err) {
-        let { onError } = this.props;
-        if (onError) {
-            onError({
-                type: 'error',
-                target: this,
-                error: err
-            });
-        }
-    }
-
-    /**
-     * Load file at given URL or clear the canvas if it's empty
-     *
-     * @param  {String} url
-     *
-     * @return {Promise}
-     */
-    async load(url) {
-        let { title, clippingRect } = this.props;
-        if (url) {
-            try {
-                let svgNew = await MediaLoader.loadSVG(url);
-                let { svg } = this.components;
-                if (!svg) {
-                    throw new Error('Invalid missing container');
-                }
-                this.clear();
-                this.addTitle(title);
-                let child;
-                while (child = svgNew.firstChild) {
-                    svgNew.removeChild(child);
-                    svg.appendChild(child);
-                }
-                let width = svgNew.width.baseVal.value;
-                let height = svgNew.height.baseVal.value;
-                let viewBox = svgNew.viewBox.baseVal;
-                if (!width) {
-                    width = viewBox.width;
-                }
-                if (!height) {
-                    height = viewBox.height;
-                }
-                if (!width) {
-                    width = 1000;
-                }
-                if (!height) {
-                    height = 1000;
-                }
-                this.originX = viewBox.x;
-                this.originY = viewBox.y;
-                this.zoomX = (viewBox.width) ? viewBox.width / width : 1;
-                this.zoomY = (viewBox.height) ? viewBox.height / height : 1;
-                this.naturalWidth = width;
-                this.naturalHeight = height;
-                this.setViewBox(clippingRect);
-                this.triggerLoadEvent();
-            } catch (err) {
-                this.triggerErrorEvent(err);
+        if (svg) {
+            let child;
+            while (child = svg.firstChild) {
+                svg.removeChild(child);
+                container.appendChild(child);
             }
-        } else {
-            this.clear();
-            this.originX = 0;
-            this.originY = 0;
-            this.zoomX = 1;
-            this.zoomY = 1;
-            this.naturalWidth = 4;
-            this.naturalHeight = 4;
-            this.setViewBox();
-            return;
-        }
-    }
-
-    /**
-     * Remove all elements from SVG graphic element
-     */
-    clear() {
-        let { svg } = this.components;
-        while (svg.firstChild) {
-            svg.removeChild(svg.firstChild);
-        }
-    }
-
-    /**
-     * Add title to SVG element
-     *
-     * @param  {String} title
-     */
-    addTitle(title) {
-        let { svg } = this.components;
-        if (title && svg) {
-            let child = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-            child.textContent = title;
-            svg.appendChild(child);
-        }
-    }
-
-    /**
-     * Change title of SVG
-     *
-     * @param  {String} title
-     */
-    setTitle(title) {
-        let child = svg.getElementByTagName('title');
-        if (child) {
-            if (title) {
-                child.textContent = title;
-            } else {
-                svg.removeChild(child)
+            let width = svg.width.baseVal.value;
+            let height = svg.height.baseVal.value;
+            let viewBox = svg.viewBox.baseVal;
+            if (!width) {
+                width = viewBox.width;
             }
+            if (!height) {
+                height = viewBox.height;
+            }
+            if (!width) {
+                width = 1000;
+            }
+            if (!height) {
+                height = 1000;
+            }
+            instance.originX = viewBox.x;
+            instance.originY = viewBox.y;
+            instance.zoomX = (viewBox.width) ? viewBox.width / width : 1;
+            instance.zoomY = (viewBox.height) ? viewBox.height / height : 1;
+            instance.naturalWidth = width;
+            instance.naturalHeight = height;
         } else {
-            this.addTitle(title);
+            instance.originX = 0;
+            instance.originY = 0;
+            instance.zoomX = 1;
+            instance.zoomY = 1;
+            instance.naturalWidth = 4;
+            instance.naturalHeight = 4;
         }
-    }
-
-    /**
-     * Set view box of SVG graphic element
-     *
-     * @param {Object} clip
-     */
-    setViewBox(clip) {
-        let { svg } = this.components;
+    }, [ svg ]);
+    useEffect(() => {
+        const container = containerRef.current;
+        const { originX, originY, zoomX, zoomY, naturalWidth, naturalHeight } = instance;
+        let clip = clippingRect;
         if (!clip) {
             clip = {
                 left: 0,
                 top: 0,
-                width: this.naturalWidth,
-                height: this.naturalHeight,
+                width: naturalWidth,
+                height: naturalHeight,
             };
         }
-        let viewBox = svg.viewBox.baseVal;
-        let width = svg.width.baseVal;
-        let height = svg.height.baseVal;
-        viewBox.x = clip.left * this.zoomX + this.originX;
-        viewBox.y = clip.top * this.zoomX + this.originY;
-        viewBox.width = clip.width * this.zoomX;
-        viewBox.height = clip.height * this.zoomY;
+        const viewBox = container.viewBox.baseVal;
+        const width = container.width.baseVal;
+        const height = container.height.baseVal;
+        viewBox.x = clip.left * zoomX + originX;
+        viewBox.y = clip.top * zoomY + originY;
+        viewBox.width = clip.width * zoomX;
+        viewBox.height = clip.height * zoomY;
         width.value = clip.width;
         height.value = clip.height;
-    }
+    }, [ clippingRect ]);
+    useEffect(() => {
+        const container = containerRef.current;
+        let child = container.getElementsByTagName('title')[0];
+        if (title) {
+            if (!child) {
+                child = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                container.appendChild(child);
+            }
+            child.textContent = title;
+        } else {
+            if (child) {
+                container.removeChild(child);
+            }
+        }
+    }, [ title ]);
+    useEffect(() => {
+        if (onLoad) {
+            onLoad({  type: 'load', target: instance });
+        }
+    }, [ svg ]);
+
+    const svgProps = {
+        ref: containerRef,
+        viewBox: '0 0 4 4',
+        width: 4,
+        height: 4,
+        ...otherProps
+    };
+    return <svg {...svgProps} />;
 }
+
+const component = React.forwardRef(VectorView);
 
 export {
-    VectorView as default,
-    VectorView,
+    component as default,
+    component as VectorView,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    VectorView.propTypes = {
-        url: PropTypes.string,
-        clippingRect: PropTypes.object,
-        title: PropTypes.string,
-        onLoad: PropTypes.func,
-        onError: PropTypes.func,
-    };
-}

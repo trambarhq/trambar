@@ -1,52 +1,33 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 import MarkGor from 'mark-gor/react';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import ResourceView from 'widgets/resource-view';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ResourceView } from 'common/widgets/resource-view.jsx';
 
 import './app-component-dialog-box.scss';
 
 /**
  * Dialog box for displaying the description of an app component in full.
- *
- * @extends PureComponent
  */
-class AppComponentDialogBox extends PureComponent {
-    static displayName = 'AppComponentDialogBox';
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { component, show, onClose } = this.props;
-        if (!component) {
-            return null;
-        }
-        let overlayProps = { show, onBackgroundClick: onClose };
-        return (
-            <Overlay {...overlayProps}>
-                <div className="app-component-dialog-box">
-                    <div className="contents">
-                        {this.renderPicture()}
-                        {this.renderText()}
-                    </div>
-                    {this.renderButtons()}
-                </div>
-            </Overlay>
-        );
+function AppComponentDialogBox(props) {
+    const { env, component, onClose } = props;
+    const { t, p } = env.locale;
+    if (!component) {
+        return null;
     }
+    return (
+        <div className="app-component-dialog-box">
+            <div className="contents">
+                {renderPicture()}
+                {renderText()}
+            </div>
+            {renderButtons()}
+        </div>
+    );
 
-    /**
-     * Render icon or image
-     *
-     * @return {ReactElement}
-     */
-    renderPicture() {
-        let { env, component } = this.props;
+    function renderPicture() {
         if (component.image) {
             return (
                 <div className="picture">
@@ -54,9 +35,9 @@ class AppComponentDialogBox extends PureComponent {
                 </div>
             );
         } else {
-            let icon = component.icon || {};
-            let iconClassName = icon.class || 'fa-cubes';
-            let style = {
+            const icon = component.icon || {};
+            const iconClassName = icon.class || 'fa-cubes';
+            const style = {
                 color: icon.color,
                 backgroundColor: icon.backgroundColor,
             };
@@ -70,32 +51,14 @@ class AppComponentDialogBox extends PureComponent {
         }
     }
 
-    /**
-     * Render text description of component, formatted as Markdown
-     *
-     * @return {ReactElement}
-     */
-    renderText() {
-        let { env, component } = this.props;
-        let { p } = env.locale;
-        let text = p(component.text);
-        let elements = MarkGor.parse(text);
-        return (
-            <div className="text">
-                {elements}
-            </div>
-        );
+    function renderText() {
+        const text = p(component.text);
+        const elements = MarkGor.parse(text);
+        return <div className="text">{elements}</div>;
     }
 
-    /**
-     * Render buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, onClose } = this.props;
-        let { t } = env.locale;
-        let closeButtonProps = {
+    function renderButtons() {
+        const closeButtonProps = {
             label: t('app-component-close'),
             emphasized: true,
             onClick: onClose,
@@ -108,20 +71,9 @@ class AppComponentDialogBox extends PureComponent {
     }
 }
 
+const component = Overlay.create(AppComponentDialogBox);
+
 export {
-    AppComponentDialogBox as default,
-    AppComponentDialogBox,
+    component as default,
+    component as AppComponentDialogBox,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    AppComponentDialogBox.propTypes = {
-        show: PropTypes.bool,
-        component: PropTypes.object,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        onClose: PropTypes.func,
-    };
-}

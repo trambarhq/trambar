@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 import './push-button.scss';
@@ -7,7 +6,7 @@ import './push-button.scss';
  * Stateless component that renders a standard push button.
  */
 function PushButton(props) {
-    props = _.clone(props)
+    props = { ... props };
     if (props.className) {
         props.className = 'push-button ' + props.className;
     } else {

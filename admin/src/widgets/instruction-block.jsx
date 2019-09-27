@@ -1,65 +1,38 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
+import React from 'react';
+import Relaks, { useProgress } from 'relaks';
 import MarkGor from 'mark-gor/react';
 
 // widgets
-import CollapsibleContainer from 'widgets/collapsible-container';
+import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
 
 import './instruction-block.scss';
 
-class InstructionBlock extends AsyncComponent {
-    static displayName = 'InstructionBlock';
+async function InstructionBlock(props) {
+    const { env, topic, folder, hidden } = props;
+    const { languageCode } = env.locale;
+    const [ show ] = useProgress();
 
-    /**
-     * Render component asynchronously
-     *
-     * @param  {Meanwhile}  meanwhile
-     *
-     * @return {Promise}
-     */
-    async renderAsync(meanwhile) {
-        let { env, topic, folder, hidden } = this.props;
-        let { languageCode } = env.locale;
-        let props = {
-            hidden,
-            env,
-        };
-        props.contents = await loadMarkdown(folder, topic, languageCode);
-        return <InstructionBlockSync {...props} />;
-    }
-}
+    render();
+    const contents = await loadMarkdown(folder, topic, languageCode);
+    render();
 
-/**
- * A box with instructions in it. Instructions are Markdown files stored in
- * src/instructions.
- *
- * @extends PureComponent
- */
-class InstructionBlockSync extends PureComponent {
-    static displayName = 'InstructionBlockSync';
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement|null}
-     */
-    render() {
-        let { hidden, contents } = this.props;
+    function render() {
         if (!contents) {
-            return null;
+            show(null);
+        } else {
+            const classNames = [ 'instruction-block' ];
+            if (hidden) {
+                classNames.push('hidden')
+            }
+            show(
+                <div className={classNames.join(' ')}>
+                    <CollapsibleContainer open={!hidden}>
+                        <div className="contents">{contents}</div>
+                    </CollapsibleContainer>
+                </div>
+            );
         }
-        let classNames = [ 'instruction-block' ];
-        if (hidden) {
-            classNames.push('hidden')
-        }
-        return (
-            <div className={classNames.join(' ')}>
-                <CollapsibleContainer open={!hidden}>
-                    <div className="contents">{contents}</div>
-                </CollapsibleContainer>
-            </div>
-        );
     }
 }
 
@@ -73,8 +46,8 @@ class InstructionBlockSync extends PureComponent {
  * @return {Promise<ReactElement>}
  */
 async function loadMarkdown(folder, topic, lang) {
-    let text = await loadText(folder, topic, lang);
-    let contents = MarkGor.parse(text);
+    const text = await loadText(folder, topic, lang);
+    const contents = MarkGor.parse(text);
     return loadImages(contents, folder);
 }
 
@@ -88,16 +61,19 @@ async function loadMarkdown(folder, topic, lang) {
  * @return {Promise}
  */
 async function loadText(folder, topic, lang) {
-    let module;
     try {
-        module = await import(`instructions/${folder}/${topic}.${lang}.md`);
+        const module = await import(`../instructions/${folder}/${topic}.${lang}.md`);
+        return module.default || '';
     } catch (err) {
         if (process.env.NODE_ENV !== 'production') {
             console.log(`Missing instructions for topic "${topic}" in language "${lang}"`);
         }
-        module = await import(`instructions/${folder}/${topic}.en.md`);
+        if (lang !== 'en') {
+            return loadText(folder, topic, 'en');
+        } else {
+            return '';
+        }
     }
-    return module;
 }
 
 /**
@@ -112,17 +88,18 @@ async function loadImages(element, folder) {
     if (typeof(element) === 'string') {
         return element;
     } else if (element instanceof Array) {
-        let results = [];
+        const results = [];
         for (let e of element) {
-            let result = await loadImages(e, folder);
+            const result = await loadImages(e, folder);
             results.push(result)
         }
         return results;
     } else if (element.type === 'img') {
-        let filename = element.props.src;
+        const filename = element.props.src;
         if (filename && !/^\w+:/.test(filename)) {
             try {
-                let url = await import(`instructions/${folder}/${filename}`);
+                const module = await import(`../instructions/${folder}/${filename}`);
+                const url = module.default;
                 return React.cloneElement(element, { src: url });
             } catch (err) {
                 if (process.env.NODE_ENV !== 'production') {
@@ -132,11 +109,12 @@ async function loadImages(element, folder) {
         }
         return element;
     } else if (element.type === 'a') {
-        let url = element.props.href;
+        const url = element.props.href;
         if (url && !/^\w+:/.test(url)) {
             try {
-                let fileURL = await import(`instructions/${folder}/${url}`);
-                let props = { href: url };
+                const module = await import(`../instructions/${folder}/${url}`);
+                const fileURL = module.default;
+                const props = { href: url };
                 if (/\.html$/.test(url)) {
                     props.target = '_blank';
                 } else {
@@ -153,9 +131,9 @@ async function loadImages(element, folder) {
             return React.cloneElement(element, { target: '_blank' });
         }
     } else if (element.props && !_.isEmpty(element.props.children)) {
-        let newChildren = [];
+        const newChildren = [];
         for (let child of element.props.children) {
-            let newChild = await loadImages(child, folder);
+            const newChild = await loadImages(child, folder);
             newChildren.push(newChild);
         }
         return React.cloneElement(element, {}, newChildren);
@@ -168,29 +146,9 @@ InstructionBlock.defaultProps = {
     hidden: false,
 };
 
+const component = Relaks.memo(InstructionBlock);
+
 export {
-    InstructionBlock as default,
-    InstructionBlock,
-    InstructionBlockSync,
+    component as default,
+    component as InstructionBlock,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    InstructionBlock.propTypes = {
-        folder: PropTypes.string.isRequired,
-        topic: PropTypes.string.isRequired,
-        hidden: PropTypes.bool,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    InstructionBlockSync.propTypes = {
-        hidden: PropTypes.bool,
-        contents: PropTypes.oneOfType([
-            PropTypes.arrayOf(PropTypes.node),
-            PropTypes.node
-        ]),
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

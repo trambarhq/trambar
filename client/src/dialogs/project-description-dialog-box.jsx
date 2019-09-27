@@ -1,51 +1,32 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React from 'react';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import ResourceView from 'widgets/resource-view';
-import Scrollable from 'widgets/scrollable';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ResourceView } from 'common/widgets/resource-view.jsx';
+import { Scrollable } from '../widgets/scrollable.jsx';
 
 import './project-description-dialog-box.scss';
 
 /**
  * Dialog box for displaying a project's description in full.
- *
- * @extends PureComponent
  */
-class ProjectDescriptionDialogBox extends PureComponent {
-    static displayName = 'ProjectDescriptionDialogBox';
+function ProjectDescriptionDialogBox(props) {
+    const { env, project, onClose } = props;
+    const { t, p } = env.locale;
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { show } = this.props;
-        let overlayProps = { show, onBackgroundClick: this.handleCloseClick };
-        return (
-            <Overlay {...overlayProps}>
-                <div className="project-description-dialog-box">
-                    {this.renderText()}
-                    {this.renderButtons()}
-                </div>
-            </Overlay>
-        );
-    }
+    return (
+        <div className="project-description-dialog-box">
+            {renderText()}
+            {renderButtons()}
+        </div>
+    );
 
-    /**
-     * Render description of project
-     *
-     * @return {ReactElement}
-     */
-    renderText() {
-        let { env, project } = this.props;
-        let { name } = project;
-        let { resources, title } = project.details;
-        let { p } = env.locale;
-        let image = _.find(resources, { type: 'image' });
+    function renderText() {
+        const { name } = project;
+        const { resources, title } = project.details;
+        const image = _.find(resources, { type: 'image' });
         return (
             <Scrollable>
                 <div className="title">{p(title) || name}</div>
@@ -59,18 +40,11 @@ class ProjectDescriptionDialogBox extends PureComponent {
         );
     }
 
-    /**
-     * Render buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        let closeButtonProps = {
+    function renderButtons() {
+        const closeButtonProps = {
             label: t('project-description-close'),
             emphasized: true,
-            onClick: this.handleCloseClick,
+            onClick: onClose,
         };
         return (
             <div className="buttons">
@@ -78,36 +52,11 @@ class ProjectDescriptionDialogBox extends PureComponent {
             </div>
         );
     }
-
-    /**
-     * Called when user click cancel or ok button or outside the dialog box
-     *
-     * @param  {Event} evt
-     */
-    handleCloseClick = (evt) => {
-        let { onClose } = this.props;
-        if (onClose) {
-            onClose({ type: 'cancel', target: this });
-        }
-    }
 }
+
+const component = Overlay.create(ProjectDescriptionDialogBox);
 
 export {
-    ProjectDescriptionDialogBox as default,
-    ProjectDescriptionDialogBox,
+    component as default,
+    component as ProjectDescriptionDialogBox,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ProjectDescriptionDialogBox.propTypes = {
-        show: PropTypes.bool,
-        project: PropTypes.object.isRequired,
-
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onClose: PropTypes.func,
-    };
-}

@@ -1,309 +1,178 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
-import * as TagScanner from 'utils/tag-scanner';
-import * as RepoUtils from 'objects/utils/repo-utils';
-import * as UserUtils from 'objects/utils/user-utils';
+import React, { useRef, useMemo } from 'react';
+import { useListener } from 'relaks';
+import * as TagScanner from 'common/utils/tag-scanner.mjs';
+import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import TextField from 'widgets/text-field';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { TextField } from '../widgets/text-field.jsx';
+
+// custom hooks
+import {
+    useDraftBuffer,
+} from '../hooks.mjs';
 
 import './issue-dialog-box.scss';
 
 /**
  * Dialog box for adding a title and tags to a story being exported to an
  * issue tracker.
- *
- * @extends PureComponent
  */
-class IssueDialogBox extends PureComponent {
-    static displayName = 'IssueDialogBox';
-
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            textField: TextField
-        });
-        this.state = {
-            newIssue: undefined,
-            originalIssue: undefined,
-        };
-    }
-
-    /**
-     * Derive an issue from props when none is provided
-     *
-     * @param  {Object} props
-     * @param  {Object} state
-     *
-     * @return {Object|null}
-     */
-    static getDerivedStateFromProps(props, state) {
-        let { show, issue } = props;
-        let { originalIssue } = state;
-        if (show) {
-            if (originalIssue !== issue) {
-                let newIssue = null;
-                if (!issue) {
-                    let { env, story, repos } = props;
-                    let { p } = env.locale;
-                    let { text } = story.details;
-                    let langText = p(text);
-                    // look for a title in the text
-                    let paragraphs = _.split(_.trim(langText), /[\r\n]+/);
-                    let first = TagScanner.removeTags(paragraphs[0]);
-                    // use first paragraph as title only if it isn't very long
-                    let title = '';
-                    if (first.length < 100) {
-                        title = first;
-                    }
-
-                    // look for tags that match labels
-                    let allLabels = _.uniq(_.flatten(_.map(repos, 'details.labels')));
-                    let labels = _.filter(allLabels, (label) => {
-                        let tag = `#${_.replace(label, /\s+/g, '-')}`;
-                        return _.includes(story.tags, tag);
-                    });
-                    if (title || !_.isEmpty(labels)) {
-                        newIssue = { title, labels };
-                    }
-                }
-                return { newIssue, originalIssue: issue };
-            }
-        } else {
-            return { newIssue: undefined, originalIssue: undefined };
-        }
-        return null;
-    }
-
-    /**
-     * Return the current issue details
-     *
-     * @param  {String} path
-     *
-     * @return {*}
-     */
-    getIssueProperty(path) {
-        let { issue } = this.props;
-        let { newIssue } = this.state;
-        return _.get(newIssue || issue, path);
-    }
-
-    /**
-     * Set a property of the issue object
-     *
-     * @param  {String} path
-     * @param  {*} value
-     */
-    setIssueProperty(path, value) {
-        let { issue } = this.props;
-        let { newIssue } = this.state;
-        let newIssueAfter = _.decoupleSet(newIssue || issue, path, value);
-        if (path === 'repo_id') {
-            lastSelectedRepoID = value;
-            window.localStorage.last_selected_repo_id = value;
-        }
-        this.setState({ newIssue: newIssueAfter });
-    }
-
-    /**
-     * Return the selected repo
-     *
-     * @return {Repo}
-     */
-    getSelectedRepo() {
-        let repoID = this.getIssueProperty('repo_id');
-        let repos = this.getAvailableRepos();
-        let repo = _.find(repos, { id: repoID });
-        if (!repo) {
-            repo = _.find(repos, { id: lastSelectedRepoID });
-        }
-        if (!repo) {
-            // find one with labels--if a repo has no labels, then its
-            // issue tracker probably isn't being used
-            repo = _.last(_.sortBy(repos, (repo) => {
-                return _.size(repo.details.labels);
-            }));
-        }
-        if (!repo) {
-            repo = _.first(repos);
-        }
-        return repo || null;
-    }
-
-    /**
-     * Return repos that have issue-trackers
-     *
-     * @return {Array<Object>}
-     */
-    getAvailableRepos() {
-        let { env, currentUser, story, repos } = this.props;
-        let { p } = env.locale;
-        repos = _.filter(repos, (repo) => {
+function IssueDialogBox(props) {
+    const { env, currentUser, issue, story, repos, allowDeletion } = props;
+    const { onCancel, onConfirm } = props;
+    const { t, p } = env.locale;
+    const textFieldRef = useRef();
+    const availableRepos = useMemo(() => {
+        const accessible = _.filter(repos, (repo) => {
             return UserUtils.canAddIssue(currentUser, story, repo, 'read-write');
         });
-        repos = _.sortBy(repos, (repo) => {
+        const sorted = _.sortBy(repos, (repo) => {
             return _.toLower(p(repo.details.title) || repo.name);
         });
-        return repos;
-    }
+        return sorted;
+    }, [ env, currentUser, story, repos ]);
+    const draft = useDraftBuffer({
+        original: issue || {},
+        prefill: generateNewIssue,
+    });
+    const selectedRepoID = draft.get('repo_id');
+    const selectedRepo = _.find(availableRepos, { id: selectedRepoID });
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { show, onClose } = this.props;
-        let overlayProps = { show, onBackgroundClick: onClose };
-        return (
-            <Overlay {...overlayProps}>
-                <div className="issue-dialog-box">
-                    {this.renderForm()}
-                    <div className="controls">
-                        {this.renderButtons()}
-                    </div>
-                </div>
-            </Overlay>
-        );
-    }
+    const handleDeleteClick = useListener((evt) => {
+        if (onConfirm) {
+            onConfirm({ issue: null });
+        }
+    });
+    const handleCancelClick = useListener((evt) => {
+        if (onCancel) {
+            onCancel({});
+        }
+    });
+    const handleOKClick = useListener((evt) => {
+        // make sure the selected labels exist in the selected repo only
+        const labels = _.intersection(draft.current.labels, selectedRepo.details.labels);
+        const newIssue = { ...draft.current, labels };
+        if (onConfirm) {
+            onConfirm({ issue: newIssue });
+        }
+    });
+    const handleTitleChange = useListener((evt) => {
+        const text = evt.target.value;
+        draft.set('title', text);
+    });
+    const handleRepoChange = useListener((evt) => {
+        const repoID = parseInt(evt.target.value);
+        draft.set('repo_id', repoID);
+    });
+    const handleTagClick = useListener((evt) => {
+        const label = evt.target.getAttribute('data-label');
+        const labelsBefore = draft.get('labels', []);
+        const labels = _.toggle(labelsBefore, label);
+        draft.set('labels', labels);
+    });
 
-    /**
-     * Render issue form
-     *
-     * @return {ReactElement}
-     */
-    renderForm() {
+    return (
+        <div className="issue-dialog-box">
+            {renderForm()}
+            <div className="controls">
+                {renderButtons()}
+            </div>
+        </div>
+    );
+
+    function renderForm() {
         return (
             <div className="container">
                 <div className="top">
-                    {this.renderTitleInput()}
-                    {this.renderRepoSelector()}
+                    {renderTitleInput()}
+                    {renderRepoSelector()}
                 </div>
-                {this.renderLabelSelector()}
+                {renderLabelSelector()}
             </div>
         );
     }
 
-    /**
-     * Render input for issue title
-     *
-     * @return {ReactElement}
-     */
-    renderTitleInput() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        let { setters } = this.components;
-        let props = {
+    function renderTitleInput() {
+        const props = {
             id: 'title',
-            ref: setters.textField,
-            value: this.getIssueProperty('title'),
+            value: draft.get('title', ''),
             env,
-            onChange: this.handleTitleChange,
+            onChange: handleTitleChange,
         };
-        return <TextField {...props}>{t('issue-title')}</TextField>;
+        return <TextField ref={textFieldRef} {...props}>{t('issue-title')}</TextField>;
     }
 
-    /**
-     * Render select control for repo if there're more than one
-     *
-     * @return {[type]}
-     */
-    renderRepoSelector() {
-        let { env } = this.props;
-        let { t, p } = env.locale;
-        let repos = this.getAvailableRepos();
-        if (repos.length <= 1) {
+    function renderRepoSelector() {
+        if (availableRepos.length <= 1) {
             return null;
         }
-        let repo = this.getSelectedRepo();
-        let options = _.map(repos, (repo, index) => {
-            let title = RepoUtils.getDisplayName(repo, env);
-            return <option key={index} value={repo.id}>{title}</option>;
-        });
         return (
             <div className="select-field">
                 <label>{t('issue-repo')}</label>
-                <select value={repo.id} onChange={this.handleRepoChange}>
-                    {options}
+                <select value={selectedRepo.id} onChange={handleRepoChange}>
+                    {_.map(repos, renderRepoOption)}
                 </select>
             </div>
         );
     }
 
-    /**
-     * Render tag selector
-     *
-     * @return {ReactElement}
-     */
-    renderLabelSelector() {
-        let repo = this.getSelectedRepo();
-        if (!repo) {
+    function renderRepoOption(repo, i) {
+        const title = RepoUtils.getDisplayName(repo, env);
+        return <option key={i} value={repo.id}>{title}</option>;
+    }
+
+    function renderLabelSelector() {
+        if (!selectedRepo) {
             return null;
         }
-        let selectedLabels = this.getIssueProperty('labels') || [];
-        let { labels } = repo.details;
-        let tags = _.map(labels, (label, index) => {
-            let props = {
-                className: 'tag',
-                style: RepoUtils.getLabelStyle(repo, label),
-                'data-label': label,
-                onClick: this.handleTagClick,
-            };
-            if (_.includes(selectedLabels, label)) {
-                props.className += ' selected';
-            }
-            return <span key={index} {...props}>{label}</span>;
-        });
+        const { labels } = selectedRepo.details;
+        const tags = _.map(labels, renderLabel);
         for (let i = 1; i < tags.length; i += 2) {
             tags.splice(i, 0, ' ');
         }
-        return  <div className="tags">{tags}</div>;
+        return <div className="tags">{tags}</div>;
     }
 
-    /**
-     * Render buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, issue, allowDeletion } = this.props;
-        let { newIssue } = this.state;
-        let { t } = env.locale;
-        let repo = this.getSelectedRepo();
-        let text = this.getIssueProperty('title');
-        let changed = !!_.trim(text);
-        let canDelete = false;
-        if (issue) {
-            if (newIssue) {
-                changed = !_.isEqual(newIssue, issue);
-            } else {
-                changed = false;
-            }
-            canDelete = true;
+    function renderLabel(label, i) {
+        const classNames = [ 'tag' ];
+        const selectedLabels = draft.get('labels', []);
+        if (_.includes(selectedLabels, label)) {
+            classNames.push('selected');
         }
-        if (!allowDeletion) {
-            canDelete = false;
-        }
-        let deleteProps = {
+        const props = {
+            className: classNames.join(' '),
+            style: RepoUtils.getLabelStyle(selectedRepo, label),
+            'data-label': label,
+            onClick: handleTagClick,
+        };
+        return <span key={i} {...props}>{label}</span>;
+    }
+
+    function renderButtons() {
+        const unsaved = { draft };
+        const text = draft.get('title', '');
+        const canDelete = false;
+        const deleteProps = {
             label: t('issue-delete'),
             emphasized: false,
             hidden: !canDelete,
-            onClick: this.handleDeleteClick,
+            onClick: handleDeleteClick,
         };
-        let cancelProps = {
+        const cancelProps = {
             label: t('issue-cancel'),
             emphasized: false,
-            onClick: this.handleCancelClick,
+            onClick: handleCancelClick,
         };
-        let confirmProps = {
+        const confirmProps = {
             label: t('issue-ok'),
             emphasized: true,
-            disabled: !changed || !repo,
-            onClick: this.handleOKClick,
+            disabled: !unsaved || !selectedRepo,
+            onClick: handleOKClick,
         };
         return (
             <div className="buttons">
@@ -318,137 +187,48 @@ class IssueDialogBox extends PureComponent {
         );
     }
 
-    /**
-     * Focus text field on mount
-     */
-    componentDidMount() {
-        setTimeout(() => {
-            let { textField } = this.components;
-            // only if the title is currently empty
-            if (!this.getIssueProperty('title')) {
-                if (textField) {
-                    textField.focus();
-                }
-            }
-        }, 50)
-    }
+    function generateNewIssue(base) {
+        const { text } = story.details;
+        const langText = p(text);
+        // look for a title in the text
+        const paragraphs = _.split(_.trim(langText), /[\r\n]+/);
+        const first = TagScanner.removeTags(paragraphs[0]);
+        // use first paragraph as title only if it isn't very long
+        let title = '';
+        if (first.length < 100) {
+            title = first;
+        }
 
-    /**
-     * Called when user clicks the delete button
-     *
-     * @param  {Event} evt
-     */
-    handleDeleteClick = (evt) => {
-        let { onConfirm } = this.props;
-        if (onConfirm) {
-            onConfirm({
-                type: 'confirm',
-                target: this,
-                issue: null,
+        // look for tags that match labels
+        const allLabels = _.uniq(_.flatten(_.map(repos, 'details.labels')));
+        const labels = _.filter(allLabels, (label) => {
+            let tag = `#${_.replace(label, /\s+/g, '-')}`;
+            return _.includes(story.tags, tag);
+        });
+
+        // choose the last one selected
+        const lastSelectedRepoID = parseInt(localStorage.last_selected_repo_id);
+        let repo = _.find(availableRepos, { id: lastSelectedRepoID });
+        if (!repo) {
+            // find one with labels--if a repo has no labels, then its
+            // issue tracker probably isn't being used
+            const sorted = _.sortBy(availableRepos, (repo) => {
+                return _.size(repo.details.labels);
             });
+            repo = _.last(sorted);
         }
-    }
 
-    /**
-     * Called when user clicks the cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = (evt) => {
-        let { onCancel } = this.props;
-        if (onCancel) {
-            onCancel({
-                type: 'cancel',
-                target: this,
-            });
-        }
-    }
-
-    /**
-     * Called when user clicks the open button
-     *
-     * @param  {Event} evt
-     */
-    handleOKClick = (evt) => {
-        let { story, onConfirm } = this.props;
-        let { newIssue } = this.state;
-        newIssue = _.clone(newIssue);
-        let repo = this.getSelectedRepo();
-        // make sure id is set
-        newIssue.repo_id = repo.id;
-        // make use the selected labels exist in the selected repo only
-        newIssue.labels = _.intersection(newIssue.labels, repo.details.labels);
-        if (onConfirm) {
-            onConfirm({
-                type: 'close',
-                target: this,
-                issue: newIssue
-            });
-        }
-    }
-
-    /**
-     * Called when user changes the title
-     *
-     * @param  {Event} evt
-     */
-    handleTitleChange = (evt) => {
-        let text = evt.target.value;
-        this.setIssueProperty('title', text);
-    }
-
-    /**
-     * Called when user selects a repo
-     *
-     * @param  {Event} evt
-     */
-    handleRepoChange = (evt) => {
-        let repoID = parseInt(evt.target.value);
-        this.setIssueProperty('repo_id', repoID);
-    }
-
-    /**
-     * Called when user clicks a tag
-     *
-     * @param  {[type]} evt
-     *
-     * @return {[type]}
-     */
-    handleTagClick = (evt) => {
-        let label = evt.target.getAttribute('data-label');
-        let labels = this.getIssueProperty('labels') || [];
-        if (_.includes(labels, label)) {
-            labels = _.difference(labels, [ label ]);
-        } else {
-            labels = _.union(labels, [ label ]);
-        }
-        this.setIssueProperty('labels', labels);
+        return {
+            title,
+            labels,
+            repo_id: (repo) ? repo.id : undefined,
+        };
     }
 }
 
-let lastSelectedRepoID = parseInt(window.localStorage.last_selected_repo_id) || undefined;
+const component = Overlay.create(IssueDialogBox);
 
 export {
-    IssueDialogBox as default,
-    IssueDialogBox,
+    component as default,
+    component as IssueDialogBox,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    IssueDialogBox.propTypes = {
-        show: PropTypes.bool,
-        allowDeletion: PropTypes.bool.isRequired,
-        currentUser: PropTypes.object.isRequired,
-        story: PropTypes.object.isRequired,
-        repos: PropTypes.arrayOf(PropTypes.object),
-        issue: PropTypes.object,
-
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onConfirm: PropTypes.func,
-        onClose: PropTypes.func,
-    };
-}

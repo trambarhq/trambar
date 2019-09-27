@@ -4,7 +4,7 @@ import React, { PureComponent, Children } from 'react';
 import ReactDOM from 'react-dom';
 
 // widgets
-import PushButton from 'widgets/push-button';
+import PushButton from '../widgets/push-button.jsx';
 
 import './qr-scanner-dialog-box.scss';
 
@@ -93,7 +93,7 @@ class QRScannerDialogBox extends PureComponent {
             } else {
                 if (process.env.NODE_ENV !== 'production') {
                     // insert a placeholder so we can work on the layout in the browser
-                    let imageURL = require('camera-placeholder-qr-code.jpg');
+                    let imageURL = require('../../assets/camera-placeholder-qr-code.jpg');
                     this.cameraPlaceholderNode = document.createElement('DIV');
                     this.cameraPlaceholderNode.className = 'camera-placeholder';
                     this.cameraPlaceholderNode.style.backgroundImage = `url(${imageURL})`;
@@ -365,7 +365,7 @@ export {
     CameraOverlay,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

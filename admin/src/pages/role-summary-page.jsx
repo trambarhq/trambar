@@ -1,285 +1,181 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import ComponentRefs from 'utils/component-refs';
-import * as RoleFinder from 'objects/finders/role-finder';
-import * as SystemFinder from 'objects/finders/system-finder';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as SlugGenerator from 'utils/slug-generator';
+import React, { useState } from 'react';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
+import * as RoleSaver from 'common/objects/savers/role-saver.mjs';
+import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
+import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as UserSaver from 'common/objects/savers/user-saver.mjs';
 
 // widgets
-import PushButton from 'widgets/push-button';
-import ComboButton from 'widgets/combo-button';
-import InstructionBlock from 'widgets/instruction-block';
-import TextField from 'widgets/text-field';
-import MultilingualTextField from 'widgets/multilingual-text-field';
-import OptionList from 'widgets/option-list';
-import InputError from 'widgets/input-error';
-import ActionConfirmation from 'widgets/action-confirmation';
-import DataLossWarning from 'widgets/data-loss-warning';
-import UnexpectedError from 'widgets/unexpected-error';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ComboButton } from '../widgets/combo-button.jsx';
+import { InstructionBlock } from '../widgets/instruction-block.jsx';
+import { TextField } from '../widgets/text-field.jsx';
+import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
+import { OptionList } from '../widgets/option-list.jsx';
+import { InputError } from '../widgets/input-error.jsx';
+import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
+import { UnexpectedError } from '../widgets/unexpected-error.jsx';
+
+// custom hooks
+import {
+    useDraftBuffer,
+    useSelectionBuffer,
+    useAutogenID,
+    useValidation,
+    useConfirmation,
+    useDataLossWarning,
+} from '../hooks.mjs';
 
 import './role-summary-page.scss';
 
-/**
- * Asynchronous component that retrieves data needed by the Role Summary page.
- *
- * @extends AsyncComponent
- */
-class RoleSummaryPage extends AsyncComponent {
-    static displayName = 'RoleSummaryPage';
+async function RoleSummaryPage(props) {
+    const { database, roleID } = props;
+    const creating = (roleID === 'new');
+    const [ show ] = useProgress();
 
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, env, roleID, editing } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let creating = (roleID === 'new');
-        let props = {
-            database,
-            route,
-            env,
-            editing: editing || creating,
-            creating,
-        };
-        meanwhile.show(<RoleSummaryPageSync {...props} />);
-        let currentUserID = await db.start();
-        props.system = await SystemFinder.findSystem(db)
-        if (!creating) {
-            props.role = await RoleFinder.findRole(db, roleID)
-        }
-        meanwhile.show(<RoleSummaryPageSync {...props} />);
-        props.users = await UserFinder.findActiveUsers(db);
-        return <RoleSummaryPageSync {...props} />;
+    render();
+    const currentUserID = await database.start();
+    const system = await SystemFinder.findSystem(database);
+    const role = !creating ? await RoleFinder.findRole(database, roleID) : null;
+    render();
+    const users = await UserFinder.findActiveUsers(database);
+    render();
+
+    function render() {
+        const sprops = { system, role, users, creating };
+        show(<RoleSummaryPageSync key={roleID} {...sprops} {...props} />);
     }
 }
 
-/**
- * Synchronous component that actually renders the Role Summary page.
- *
- * @extends PureComponent
- */
-class RoleSummaryPageSync extends PureComponent {
-    static displayName = 'RoleSummaryPageSync';
+function RoleSummaryPageSync(props) {
+    const { system, role, users, creating } = props;
+    const { database, route, env, editing } = props;
+    const { t, p } = env.locale;
+    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
+    const readOnly = !editing && !creating;
+    const [ adding, setAdding ] = useState(false);
+    const draft = useDraftBuffer({
+        original: role || {},
+        reset: readOnly,
+    });
+    const members = _.filter(users, (user) => {
+        return (role) ? _.includes(user.role_ids, role.id) : false;
+    });
+    const userSelection = useSelectionBuffer({
+        original: members,
+        reset: readOnly,
+    });
+    const [ problems, reportProblems ] = useValidation(!readOnly);
+    const [ error, run ] = useErrorCatcher();
+    const [ confirmationRef, confirm ] = useConfirmation();
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            confirmation: ActionConfirmation
+    const handleEditClick = useListener((evt) => {
+        route.replace({ editing: true });
+    });
+    const handleCancelClick = useListener((evt) => {
+        if (creating) {
+            handleReturnClick();
+        } else {
+            route.replace({ editing: undefined });
+        }
+    });
+    const handleAddClick = useListener((evt) => {
+        route.push({ roleID: 'new' });
+    });
+    const handleReturnClick = useListener((evt) => {
+        route.push('role-list-page');
+    });
+    const handleDisableClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('role-summary-confirm-disable'));
+            await RoleSaver.disableRole(database, role);
+            handleReturnClick();
         });
-        this.state = {
-            newRole: null,
-            hasChanges: false,
-            saving: false,
-            adding: false,
-            removingUserIDs: [],
-            addingUserIDs: [],
-            problems: {},
-        };
-    }
+    });
+    const handleRemoveClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('role-summary-confirm-delete'));
+            await RoleSaver.removeRole(database, role);
+            handleReturnClick();
+        });
+    });
+    const handleRestoreClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('role-summary-confirm-reactivate'));
+            await RoleSaver.restoreRole(database, role);
+        });
+    });
+    const handleSaveClick = useListener((evt) => {
+        run(async () => {
+            try {
+                const problems = {};
+                const name = draft.get('name');
+                if (!name) {
+                    problems.name = 'validation-required';
+                }
+                reportProblems(problems);
 
-    /**
-     * Reset edit state when edit ends
-     *
-     * @param  {Object} props
-     * @param  {Object} state
-     */
-    static getDerivedStateFromProps(props, state) {
-        let { editing } = props;
-        if (!editing) {
-            return {
-                newRole: null,
-                hasChanges: false,
-                addingUserIDs: [],
-                removingUserIDs: [],
-                problems: {},
-            };
-        }
-        return null;
-    }
+                const roleAfter = await RoleSaver.saveRole(database, draft.current);
+                const adding = userSelection.adding();
+                const removing = userSelection.removing();
+                await UserSaver.addRole(database, adding, roleAfter);
+                await UserSaver.removeRole(database, removing, roleAfter);
 
-    /**
-     * Return edited copy of role object or the original object
-     *
-     * @param  {String} state
-     *
-     * @return {Object}
-     */
-    getRole(state) {
-        let { role } = this.props;
-        let { newRole } = this.state;
-        if (!state || state === 'current') {
-            return newRole || role || emptyRole;
-        } else {
-            return role || emptyRole;
-        }
-    }
-
-    /**
-     * Return a property of the role object
-     *
-     * @param  {String} path
-     * @param  {String} state
-     *
-     * @return {*}
-     */
-    getRoleProperty(path, state) {
-        let role = this.getRole(state);
-        return _.get(role, path);
-    }
-
-    /**
-     * Modify a property of the role object
-     *
-     * @param  {String} path
-     * @param  {*} value
-     */
-    setRoleProperty(path, value) {
-        let { role } = this.props;
-        let { addingUserIDs, removingUserIDs } = this.state;
-        let newRole = this.getRole('current');
-        let newRoleAfter = _.decoupleSet(newRole, path, value);
-        if (path === 'details.title') {
-            let autoNameBefore = SlugGenerator.fromTitle(newRole.details.title);
-            let autoNameAfter = SlugGenerator.fromTitle(newRoleAfter.details.title);
-            if (!newRole.name || newRole.name === autoNameBefore) {
-                newRoleAfter.name = autoNameAfter;
+                if (creating) {
+                    setAdding(true);
+                }
+                warnDataLoss(false);
+                route.replace({ editing: undefined, roleID: roleAfter.id });
+            } catch (err) {
+                if (err.statusCode === 409) {
+                    reportProblems({ name: 'validation-duplicate-role-name' });
+                } else {
+                    throw err;
+                }
             }
-        }
-        if(_.size(newRoleAfter.name) > 128) {
-            newRoleAfter.name = newRoleAfter.name.substr(0, 128);
-        }
-        let hasChanges = true;
-        if (_.isEqual(newRoleAfter, role)) {
-            newRoleAfter = null;
-            hasChanges = !_.isEmpty(addingUserIDs) || !_.isEmpty(removingUserIDs);
-        }
-        this.setState({ newRole: newRoleAfter, hasChanges });
-    }
+        });
+    });
+    const [ handleTitleChange, handleNameChange ] = useAutogenID(draft, {
+        titleKey: 'details.title',
+        nameKey: 'name',
+    });
+    const handleDescriptionChange = useListener((evt) => {
+        const description = evt.target.value;
+        draft.set('details.description', description);
+    });
+    const handleRatingOptionClick = useListener((evt) => {
+        const key = evt.name;
+        const rating = messageRatings[key];
+        draft.set('settings.rating', rating);
+    });
+    const handleUserOptionClick = useListener((evt) => {
+        const userID = parseInt(evt.name);
+        const user = _.find(users, { id: userID });
+        userSelection.toggle(user);
+    });
 
-    /**
-     * Look for problems in role object
-     *
-     * @return {Object}
-     */
-    findProblems() {
-        let problems = {};
-        let newRole = this.getRole();
-        if (!newRole.name) {
-            problems.name = 'validation-required';
-        }
-        return problems;
-    }
+    warnDataLoss(draft.changed || userSelection.changed);
 
-    /**
-     * Change editability of page
-     *
-     * @param  {Boolean} edit
-     * @param  {Object}  newRole
-     *
-     * @return {Promise}
-     */
-    setEditability(edit, newRole) {
-        let { route, creating } = this.props;
-        if (creating && !edit && !newRole) {
-            return this.returnToList();
-        } else {
-            let params = _.clone(route.params);
-            params.editing = edit || undefined;
-            if (newRole) {
-                // use id of newly created role
-                params.roleID = newRole.id;
-            }
-            return route.replace(route.name, params);
-        }
-    }
+    const title = RoleUtils.getDisplayName(draft.current, env);
+    return (
+        <div className="role-summary-page">
+            {renderButtons()}
+            <h2>{t('role-summary-$title', title)}</h2>
+            <UnexpectedError error={error} />
+            {renderForm()}
+            {renderInstructions()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
+        </div>
+    );
 
-    /**
-     * Return to repo list
-     *
-     * @return {Promise}
-     */
-    returnToList() {
-        let { route } = this.props;
-        return route.push('role-list-page');
-    }
-
-    /**
-     * Start creating a new role
-     *
-     * @return {Promise}
-     */
-    startNew() {
-        let { route } = this.props;
-        let params = _.clone(route.params);
-        params.roleID = 'new';
-        return route.replace(route.name, params);
-    }
-
-    /**
-     * Return list of language codes
-     *
-     * @return {Array<String>}
-     */
-    getInputLanguages() {
-        let { system } = this.props;
-        return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { route, env } = this.props;
-        let { hasChanges, problems } = this.state;
-        let { setters } = this.components;
-        let { t, p } = env.locale;
-        let role = this.getRole();
-        let title = p(_.get(role, 'details.title')) || role.name;
-        return (
-            <div className="role-summary-page">
-                {this.renderButtons()}
-                <h2>{t('role-summary-$title', title)}</h2>
-                <UnexpectedError>{problems.unexpected}</UnexpectedError>
-                {this.renderForm()}
-                {this.renderInstructions()}
-                <ActionConfirmation ref={setters.confirmation} env={env} />
-                <DataLossWarning changes={hasChanges} env={env} route={route} />
-            </div>
-        );
-    }
-
-    /**
-     * Render buttons in top right corner
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, role, editing } = this.props;
-        let { hasChanges, adding } = this.state;
-        let { t } = env.locale;
-        if (editing) {
-            return (
-                <div className="buttons">
-                    <PushButton onClick={this.handleCancelClick}>
-                        {t('role-summary-cancel')}
-                    </PushButton>
-                    {' '}
-                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
-                        {t('role-summary-save')}
-                    </PushButton>
-                </div>
-            );
-        } else {
-            let active = (role) ? !role.deleted && !role.disabled : true;
+    function renderButtons() {
+        if (readOnly) {
+            const active = (role) ? !role.deleted && !role.disabled : true;
             let preselected;
             if (active) {
                 preselected = (adding) ? 'add' : 'return';
@@ -289,63 +185,64 @@ class RoleSummaryPageSync extends PureComponent {
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
-                        <option name="return" onClick={this.handleReturnClick}>
+                        <option name="return" onClick={handleReturnClick}>
                             {t('role-summary-return')}
                         </option>
-                        <option name="add" onClick={this.handleAddClick}>
+                        <option name="add" onClick={handleAddClick}>
                             {t('role-summary-add')}
                         </option>
-                        <option name="archive" disabled={!active} separator onClick={this.handleDisableClick}>
+                        <option name="archive" disabled={!active} separator onClick={handleDisableClick}>
                             {t('role-summary-disable')}
                         </option>
-                        <option name="delete" disabled={!active} onClick={this.handleDeleteClick}>
+                        <option name="delete" disabled={!active} onClick={handleRemoveClick}>
                             {t('role-summary-delete')}
                         </option>
-                        <option name="reactivate" hidden={active} onClick={this.handleReactivateClick}>
+                        <option name="reactivate" hidden={active} onClick={handleRestoreClick}>
                             {t('role-summary-reactivate')}
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton className="emphasis" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" onClick={handleEditClick}>
                         {t('role-summary-edit')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            const changed = draft.changed || userSelection.changed;
+            return (
+                <div className="buttons">
+                    <PushButton onClick={handleCancelClick}>
+                        {t('role-summary-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
+                        {t('role-summary-save')}
                     </PushButton>
                 </div>
             );
         }
     }
 
-    /**
-     * Render form for entering role details
-     *
-     * @return {ReactElement}
-     */
-    renderForm() {
+    function renderForm() {
         return (
             <div className="form">
-                {this.renderTitleInput()}
-                {this.renderNameInput()}
-                {this.renderDescriptionInput()}
-                {this.renderRatingSelector()}
-                {this.renderUserSelector()}
+                {renderTitleInput()}
+                {renderNameInput()}
+                {renderDescriptionInput()}
+                {renderRatingSelector()}
+                {renderUserSelector()}
             </div>
         );
     }
 
-    /**
-     * Render title input
-     *
-     * @return {ReactElement}
-     */
-    renderTitleInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderTitleInput() {
+        const props = {
             id: 'title',
-            value: this.getRoleProperty('details.title'),
-            availableLanguageCodes: this.getInputLanguages(),
-            onChange: this.handleTitleChange,
-            readOnly: !editing,
+            value: draft.get('details.title', {}),
+            availableLanguageCodes,
+            readOnly,
             env,
+            onChange: handleTitleChange,
         };
         return (
             <MultilingualTextField {...props}>
@@ -354,22 +251,14 @@ class RoleSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render name input
-     *
-     * @return {ReactElement}
-     */
-    renderNameInput() {
-        let { env, editing } = this.props;
-        let { problems } = this.state;
-        let { t } = env.locale;
-        let props = {
+    function renderNameInput() {
+        const props = {
             id: 'name',
-            value: this.getRoleProperty('name'),
-            readOnly: !editing,
+            value: draft.get('name', ''),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleNameChange,
+            onChange: handleNameChange,
         };
         return (
             <TextField {...props}>
@@ -379,22 +268,15 @@ class RoleSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render description input
-     *
-     * @return {ReactElement}
-     */
-    renderDescriptionInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderDescriptionInput() {
+        const props = {
             id: 'description',
-            value: this.getRoleProperty('details.description'),
-            availableLanguageCodes: this.getInputLanguages(),
+            value: draft.get('details.description', {}),
             type: 'textarea',
-            readOnly: !editing,
+            availableLanguageCodes,
+            readOnly,
             env,
-            onChange: this.handleDescriptionChange,
+            onChange: handleDescriptionChange,
         };
         return (
             <MultilingualTextField {...props}>
@@ -403,87 +285,60 @@ class RoleSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render message rating selector
-     *
-     * @return {ReactElement}
-     */
-    renderRatingSelector() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let ratingCurr = this.getRoleProperty('settings.rating', 'current') || 0;
-        let ratingPrev = this.getRoleProperty('settings.rating', 'original') || 0;
-        let optionProps = _.map(messageRatings, (rating, key) => {
-            return {
-                name: key,
-                selected: ratingCurr === rating,
-                previous: ratingCurr === rating,
-                children: t(`role-summary-rating-${key}`),
-            };
-        });
+    function renderRatingSelector() {
         let listProps = {
-            onOptionClick: this.handleRatingOptionClick,
-            readOnly: !editing,
+            onOptionClick: handleRatingOptionClick,
+            readOnly,
         };
         return (
             <OptionList {...listProps}>
-                <label>
-                    {t('role-summary-rating')}
-                </label>
-                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+                <label>{t('role-summary-rating')}</label>
+                {_.map(messageRatings, renderRatingOption)}
             </OptionList>
         );
     }
 
-    /**
-     * Render user selector
-     *
-     * @return {ReactElement}
-     */
-    renderUserSelector() {
-        let { env, users, editing } = this.props;
-        let { removingUserIDs, addingUserIDs } = this.state;
-        let { t, p } = env.locale;
-        let roleID = this.getRoleProperty('id');
-        users = sortUsers(users, env);
-        let optionProps = _.map(users, (user) => {
-            let selectedBefore = _.includes(user.role_ids, roleID);
-            let selectedAfter;
-            if (selectedBefore) {
-                selectedAfter = !_.includes(removingUserIDs, user.id);
-            } else {
-                selectedAfter = _.includes(addingUserIDs, user.id);
-            }
-            return {
-                name: String(user.id),
-                selected: selectedAfter,
-                previous: selectedBefore,
-                children: p(user.details.name) || p.username
-            }
-        });
-        let listProps = {
-            readOnly: !editing,
-            onOptionClick: this.handleUserOptionClick,
+    function renderRatingOption(rating, key) {
+        const ratingCurr = draft.getCurrent('settings.rating', 0);
+        const ratingPrev = draft.getOriginal('settings.rating', 0);
+        const props = {
+            name: key,
+            selected: ratingCurr === rating,
+            previous: ratingPrev === rating,
+            children: t(`role-summary-rating-${key}`),
+        };
+        return <option key={key} {...props} />;
+    }
+
+    function renderUserSelector() {
+        const usersSorted = sortUsers(users, env);
+        const listProps = {
+            readOnly,
+            onOptionClick: handleUserOptionClick,
         };
         return (
             <OptionList {...listProps}>
                 <label>{t('role-summary-users')}</label>
-                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+                {_.map(usersSorted, renderUserOption)}
             </OptionList>
         );
     }
 
-    /**
-     * Render instruction box
-     *
-     * @return {ReactElement}
-     */
-    renderInstructions() {
-        let { env, editing } = this.props;
-        let instructionProps = {
+    function renderUserOption(user, i) {
+        const props = {
+            name: String(user.id),
+            selected: userSelection.isKeeping(user),
+            previous: userSelection.isExisting(user),
+            children: p(user.details.name) || p.username
+        };
+        return <option key={i} {...props} />;
+    }
+
+    function renderInstructions() {
+        const instructionProps = {
             folder: 'role',
             topic: 'role-summary',
-            hidden: !editing,
+            hidden: readOnly,
             env,
         };
         return (
@@ -492,252 +347,15 @@ class RoleSummaryPageSync extends PureComponent {
             </div>
         );
     }
-
-    /**
-     * Save user with new flags
-     *
-     * @param  {Object} flags
-     *
-     * @return {Promise<Role>}
-     */
-    changeFlags(flags) {
-        let { database, role } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let roleAfter = _.assign({}, role, flags);
-        return db.saveOne({ table: 'role' }, roleAfter).catch((err) => {
-            let problems = { unexpected: err.message };
-            this.setState({ problems });
-        });
-    }
-
-    /**
-     * Called when user clicks disable button
-     *
-     * @param  {Event} evt
-     */
-    handleDisableClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('role-summary-confirm-disable');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            let roleAfter = await this.changeFlags({ disabled: true });
-            if (roleAfter) {
-                return this.returnToList();
-            }
-        }
-    }
-
-    /**
-     * Called when user clicks delete button
-     *
-     * @param  {Event} evt
-     */
-    handleDeleteClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('role-summary-confirm-delete');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            let roleAfter = await this.changeFlags({ deleted: true });
-            if (roleAfter) {
-                return this.returnToList();
-            }
-        }
-    }
-
-    /**
-     * Called when user clicks disable button
-     *
-     * @param  {Event} evt
-     */
-    handleReactivateClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('role-summary-confirm-reactivate');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            await this.changeFlags({ disabled: false, deleted: false });
-        }
-    }
-
-    /**
-     * Called when user click return button
-     *
-     * @param  {Event} evt
-     */
-    handleReturnClick = async (evt) => {
-        await this.returnToList();
-    }
-
-    /**
-     * Called when user click add button
-     *
-     * @param  {Event} evt
-     */
-    handleAddClick = async (evt) => {
-        await this.startNew();
-    }
-
-    /**
-     * Called when user clicks edit button
-     *
-     * @param  {Event} evt
-     */
-    handleEditClick = async (evt) => {
-        await this.setEditability(true);
-    }
-
-    /**
-     * Called when user clicks cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = async (evt) => {
-        await this.setEditability(false);
-    }
-
-    /**
-     * Called when user clicks save button
-     *
-     * @param  {Event} evt
-     */
-    handleSaveClick = (evt) => {
-        let { database, users } = this.props;
-        let { saving, removingUserIDs, addingUserIDs } = this.state;
-        if (saving) {
-            return;
-        }
-        let problems = this.findProblems();
-        if (_.some(problems)) {
-            this.setState({ problems });
-            return;
-        }
-        let role = this.getRole();
-        this.setState({ saving: true, adding: !role.id, problems: {} }, async () => {
-            try {
-                let db = database.use({ schema: 'global', by: this });
-                let currentUserID = await db.start();
-                let roleAfter = await db.saveOne({ table: 'role' }, role);
-                // change role_ids of selected/deselected users
-                let userChanges = [];
-                for (let userID of addingUserIDs) {
-                    let user = _.find(users, { id: userID });
-                    userChanges.push({
-                        id: user.id,
-                        role_ids: _.union(user.role_ids, [ roleAfter.id ]),
-                    });
-                }
-                for (let userID of removingUserIDs) {
-                    let user = _.find(users, { id: userID });
-                    userChanges.push({
-                        id: user.id,
-                        role_ids: _.difference(user.role_ids, [ roleAfter.id ]),
-                    });
-                }
-                if (!_.isEmpty(userChanges)) {
-                    await db.save({ table: 'user' }, userChanges);
-                }
-                this.setState({ hasChanges: false, saving: false }, () => {
-                    return this.setEditability(false, roleAfter);
-                });
-            } catch (err) {
-                let problems;
-                if (err.statusCode === 409) {
-                    problems = { name: 'validation-duplicate-role-name' };
-                } else {
-                    problems = { unexpected: err.message };
-                }
-                this.setState({ problems, saving: false });
-            }
-        });
-    }
-
-    /**
-     * Called when user changes the title
-     *
-     * @param  {Object} evt
-     */
-    handleTitleChange = (evt) => {
-        this.setRoleProperty(`details.title`, evt.target.value);
-    }
-
-    /**
-     * Called when user changes the name
-     *
-     * @param  {Event} evt
-     */
-    handleNameChange = (evt) => {
-        let name = _.toLower(evt.target.value).replace(/[^\w\-]+/g, '');
-        this.setRoleProperty(`name`, name);
-    }
-
-    /**
-     * Called when user changes the description
-     *
-     * @param  {Object} evt
-     */
-    handleDescriptionChange = (evt) => {
-        this.setRoleProperty(`details.description`, evt.target.value);
-    }
-
-    /**
-     * Called when user clicks on one of the rating option
-     *
-     * @param  {Object} evt
-     */
-    handleRatingOptionClick = (evt) => {
-        let key = evt.name;
-        let rating = messageRatings[key];
-        this.setRoleProperty(`settings.rating`, rating);
-    }
-
-    /**
-     * Called when user clicks on one of the users in list
-     *
-     * @param  {Object} evt
-     */
-    handleUserOptionClick = (evt) => {
-        let { users } = this.props;
-        let { addingUserIDs, removingUserIDs, newRole } = this.state;
-        let userID = parseInt(evt.name);
-        let user = _.find(users, { id: userID });
-        let roleID = this.getRoleProperty('id');
-        if (_.includes(user.role_ids, roleID)) {
-            if (_.includes(removingUserIDs, user.id)) {
-                removingUserIDs = _.without(removingUserIDs, user.id);
-            } else {
-                removingUserIDs = _.concat(removingUserIDs, user.id);
-            }
-        } else {
-            if (_.includes(addingUserIDs, user.id)) {
-                addingUserIDs = _.without(addingUserIDs, user.id);
-            } else {
-                addingUserIDs = _.concat(addingUserIDs, user.id);
-            }
-        }
-        let hasChanges = true;
-        if (!newRole) {
-            hasChanges = !_.isEmpty(addingUserIDs) || !_.isEmpty(removingUserIDs);
-        }
-        this.setState({ addingUserIDs, removingUserIDs, hasChanges });
-    }
 }
 
-let sortUsers = memoizeWeak(null, function(users, env) {
-    let { p } = env.locale;
-    let name = (user) => {
+const sortUsers = memoizeWeak(null, function(users, env) {
+    const { p } = env.locale;
+    const name = (user) => {
         return p(user.details.name) || user.username;
     };
     return _.sortBy(users, name);
 });
-
-const emptyRole = {
-    details: {}
-};
 
 const messageRatings = {
     'very-high': 50,
@@ -747,39 +365,9 @@ const messageRatings = {
     'very-low': -50,
 };
 
+const component = Relaks.memo(RoleSummaryPage);
+
 export {
-    RoleSummaryPage as default,
-    RoleSummaryPage,
-    RoleSummaryPageSync,
+    component as default,
+    component as RoleSummaryPage,
 };
-
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    RoleSummaryPage.propTypes = {
-        editing: PropTypes.bool,
-        roleID: PropTypes.oneOfType([
-            PropTypes.number,
-            PropTypes.oneOf([ 'new' ]),
-        ]).isRequired,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    RoleSummaryPageSync.propTypes = {
-        editing: PropTypes.bool,
-        creating: PropTypes.bool,
-        system: PropTypes.object,
-        role: PropTypes.object,
-        users: PropTypes.arrayOf(PropTypes.object),
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

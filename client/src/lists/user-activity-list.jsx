@@ -1,107 +1,61 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import { memoizeWeak } from 'utils/memoize';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
 
 // widgets
-import ProfileImage from 'widgets/profile-image';
-import Time from 'widgets/time';
+import { ProfileImage } from '../widgets/profile-image.jsx';
+import { Time } from '../widgets/time.jsx';
 
 import './user-activity-list.scss';
 
 /**
  * A short list showing a user's recent history. Used by UserView.
- *
- * @extends PureComponent
  */
-class UserActivityList extends PureComponent {
-    static displayName = 'UserActivityList';
+function UserActivityList(props) {
+    const { route, env, user, stories, storyCountEstimate } = props;
+    const { t, g } = env.locale;
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { stories, storyCountEstimate } = this.props;
-        if (stories) {
-            stories = sortStories(stories);
-            return (
-                <div className="user-activity-list">
-                {
-                    _.map(stories, (story) => {
-                        return this.renderActivity(story);
-                    })
-                }
-                </div>
-            );
-        } else {
-            let indices = _.range(0, storyCountEstimate);
-            return (
-                <div className="user-activity-list">
-                {
-                    _.map(indices, (index) => {
-                        return this.renderActivityPlaceholder(index);
-                    })
-                }
-                </div>
-            );
-        }
+    if (stories) {
+        const sorted = sortStories(stories);
+        return (
+            <div className="user-activity-list">
+                {_.map(sorted, renderActivity)}
+            </div>
+        );
+    } else {
+        const indices = _.range(0, storyCountEstimate);
+        return (
+            <div className="user-activity-list">
+                {_.map(indices, renderActivityPlaceholder)}
+            </div>
+        );
     }
 
-    /**
-     * Render a brief description about a story
-     *
-     * @param  {Story} story
-     *
-     * @return {ReactElement}
-     */
-    renderActivity(story) {
-        let { route, env, user } = this.props;
-        let params = _.pick(route.params, 'date', 'search');
+    function renderActivity(story) {
+        const params = _.pick(route.params, 'date', 'search');
         params.selectedUserID = user.id;
         params.highlightStoryID = story.id;
-        let url = route.find('person-page', params);
-        let text = this.renderText(story);
-        let labelClass = 'label';
-        let time = story.btime || story.ptime;
-        let yesterday = env.getRelativeDate(-1, 'day');
+        const url = route.find('person-page', params);
+        const labelClasses = [ 'label' ];
+        const time = story.btime || story.ptime;
+        const yesterday = env.getRelativeDate(-1, 'day');
         if (yesterday < time) {
-            labelClass += ' recent';
+            labelClasses.push('recent');
         }
         return (
             <div key={story.id} className="activity">
                 <Time time={story.ptime} env={env} compact={true} />
-                <div className={labelClass}>
-                    <a href={url}>{text}</a>
+                <div className={labelClasses.join(' ')}>
+                    <a href={url}>{renderText(story)}</a>
                 </div>
             </div>
         );
     }
 
-    /**
-     * Render a placeholder
-     *
-     * @param  {Number} index
-     *
-     * @return {ReactElement}
-     */
-    renderActivityPlaceholder(index) {
-        return <div key={index} className="activity">{'\u00a0'}</div>;
-    }
-
-    /**
-     * Return short summary about story
-     *
-     * @param  {Story} story
-     *
-     * @return {String}
-     */
-    renderText(story) {
-        let { env, user } = this.props;
-        let { t, g } = env.locale;
-        let name = _.get(user, 'details.name');
-        let gender = _.get(user, 'details.gender');
+    function renderText(story) {
+        const name = _.get(user, 'details.name');
+        const gender = _.get(user, 'details.gender');
         g(name, gender);
         switch (story.type) {
             case 'push':
@@ -122,11 +76,11 @@ class UserActivityList extends PureComponent {
                 return t(`user-activity-$name-edited-wiki-page`, name);
             case 'member':
             case 'repo':
-                let action = story.details.action;
+                const action = story.details.action;
                 return t(`user-activity-$name-${action}-repo`, name);
             case 'post':
-                let resources = story.details.resources;
-                let counts = _.countBy(resources, 'type');
+                const resources = story.details.resources;
+                const counts = _.countBy(resources, 'type');
                 if (counts.video > 0) {
                     return t(`user-activity-$name-posted-$count-video-clips`, name, counts.video);
                 } else if (counts.image > 0) {
@@ -142,9 +96,15 @@ class UserActivityList extends PureComponent {
                 return t(`user-activity-$name-started-survey`, name);
             case 'task-list':
                 return t(`user-activity-$name-started-task-list`, name);
+            case 'snapshot':
+                return t(`user-activity-$name-modified-website`, name);
             default:
                 return story.type;
         }
+    }
+
+    function renderActivityPlaceholder(index) {
+        return <div key={index} className="activity">{'\u00a0'}</div>;
     }
 }
 
@@ -160,18 +120,3 @@ export {
     UserActivityList as default,
     UserActivityList,
 };
-
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    UserActivityList.propTypes = {
-        user: PropTypes.object,
-        stories: PropTypes.arrayOf(PropTypes.object),
-        storyCountEstimate: PropTypes.number,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

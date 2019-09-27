@@ -1,210 +1,106 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import * as MediaLoader from 'media/media-loader';
-import * as ImageCropping from 'media/image-cropping';
-import * as ResourceUtils from 'objects/utils/resource-utils';
+import React, { useState } from 'react';
+import { useAsyncEffect } from 'relaks';
+import * as MediaLoader from '../media/media-loader.mjs';
+import * as ImageCropping from '../media/image-cropping.mjs';
+import * as ResourceUtils from '../objects/utils/resource-utils.mjs';
 
-import BitmapView from 'widgets/bitmap-view';
-import VectorView from 'widgets/vector-view';
+import { BitmapView } from './bitmap-view.jsx';
+import { VectorView } from './vector-view.jsx';
 
-require('./resource-view.scss');
+import './resource-view.scss';
 
 /**
  * A component for displaying a media resource (image, video, audio, web-link).
  * It's capable of displaying local files that have just need selected for
  * uploading to remote server.
- *
- * @extends {PureComponent}
  */
-class ResourceView extends PureComponent {
-    static displayName = 'ResourceView';
-
-    constructor(props) {
-        super(props);
-        this.state = {
-            loadingRemoteImage: '',
-            remoteImageLoaded: '',
-        };
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { children } = this.props;
-        let { remoteImageLoaded } = this.state;
-        let localURL = this.getLocalImageURL();
-        let remoteURL = this.getRemoteImageURL();
-        // if we have a blob of the image, then it's just been uploaded
-        // use it until we've loaded the remote copy
-        if (localURL && (remoteImageLoaded !== remoteURL)) {
-            return this.renderLocalImage();
-        } else if (remoteURL) {
-            return this.renderRemoteImage();
-        } else {
-            return children || null;
+function ResourceView(props) {
+    const { env, resource, width, height, clip, showAnimation, showMosaic, children, ...otherProps } = props;
+    const [ remoteURLLoaded, setRemoteURLLoaded ] = useState('');
+    const remoteParams = { remote: true };
+    const localParams = { local: true, original: true };
+    if (showAnimation && resource.format === 'gif') {
+        // use the original file when it's a gif and we wish to show animation
+        remoteParams.original = true;
+    } else {
+        if (!clip) {
+            // don't apply clip rectangle
+            remoteParams.clip = null;
         }
+        // resize source image
+        remoteParams.width = width;
+        remoteParams.height = height;
+    }
+    const localURL = ResourceUtils.getImageURL(resource, localParams, env);
+    const remoteURL = ResourceUtils.getImageURL(resource, remoteParams, env);
+
+    useAsyncEffect(async () => {
+        if (localURL && remoteURL) {
+            // the image has just become available on the remote server
+            // pre-cache it before switching from the local copy
+            await MediaLoader.loadImage(remoteURL);
+            setRemoteURLLoaded(remoteURL);
+        }
+    }, [ localURL, remoteURL ]);
+
+    // if we have a blob of the image, then it's just been uploaded
+    // use it until we've loaded the remote copy
+    if (localURL && (remoteURLLoaded !== remoteURL)) {
+        return renderLocalImage();
+    } else if (remoteURL) {
+        return renderRemoteImage();
+    } else {
+        return children || null;
     }
 
-    /**
-     * Render image stored at server
-     *
-     * @return {ReactElement}
-     */
-    renderRemoteImage() {
-        let { resource, width, height, clip, showMosaic } = this.props;
-        let { remoteImageLoaded } = this.state;
-        let url = this.getRemoteImageURL();
-        let dims = ResourceUtils.getImageDimensions(resource, {
-            original: !clip
-        });
-        let props = _.omit(this.props, propNames);
+    function renderRemoteImage() {
+        const dims = ResourceUtils.getImageDimensions(resource, { original: !clip });
+        let imageWidth, imageHeight;
         if (width) {
-            props.width = width;
-            props.height = Math.round(width * dims.height / dims.width);
+            imageWidth = width;
+            imageHeight = Math.round(width * dims.height / dims.width);
         } else if (height) {
-            props.width = Math.round(height * dims.width / dims.height);
-            props.height = height;
+            imageWidth = Math.round(height * dims.width / dims.height);
+            imageHeight = height;
         } else {
-            props.width = dims.width;
-            props.height = dims.height;
+            imageWidth = dims.width;
+            imageHeight = dims.height;
         }
-        props.src = url;
-        let containerProps = {
-            className: 'resource-view'
+        const imageProps = {
+            src: remoteURL,
+            width: imageWidth,
+            height: imageHeight,
+            onLoad: (evt) => { setRemoteURLLoaded(remoteURL) },
+            ...otherProps,
         };
-        if (!remoteImageLoaded && showMosaic) {
-            containerProps.className += ' loading';
-            containerProps.style = this.getMosaicStyle();
-            props.onLoad = this.handleRemoteImageLoad;
+        const classNames = [ 'resource-view' ];
+        let style;
+        if (remoteURLLoaded !== remoteURL && showMosaic) {
+            const mosaic = (clip) ? _.get(resource, 'mosaic') : null;
+            classNames.push('loading');
+            style = getMosaicStyle(mosaic, width, height);
         }
         return (
-            <div {...containerProps}>
-                <img {...props} />
+            <div className={classNames.join(' ')} style={style}>
+                <img {...imageProps} />
             </div>
         );
     }
 
-    /**
-     * Render an image stored in a blob
-     *
-     * @return {ReactElement}
-     */
-    renderLocalImage() {
-        let { env, resource, clip, width, height } = this.props;
-        let url = this.getLocalImageURL();
-        let clippingRect = (clip) ? ResourceUtils.getClippingRect(resource) : null;
-        let props = _.omit(this.props, propNames);
-        props.url = url;
-        props.clippingRect = clippingRect;
-        props.width = width;
-        props.height = height;
+    function renderLocalImage() {
+        const clippingRect = (clip) ? ResourceUtils.getClippingRect(resource) : null;
+        const imageProps = {
+            url: localURL,
+            width,
+            height,
+            clippingRect,
+        }
         if (resource.format === 'svg') {
-            return <VectorView {...props} />;
+            return <VectorView {...imageProps} />;
         } else {
-            return <BitmapView {...props} />;
+            return <BitmapView {...imageProps} />;
         }
-    }
-
-    /**
-     * Check for need to preload remote image on mount
-     */
-    componentDidMount() {
-        this.componentDidUpdate();
-    }
-
-    /**
-     * Check for need to preload remote image on update
-     *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
-     */
-    async componentDidUpdate(prevProps, prevState) {
-        let { remoteImageLoaded, loadingRemoteImage } = this.state;
-        let localURL = this.getLocalImageURL();
-        let remoteURL = this.getRemoteImageURL();
-        if (localURL && remoteURL) {
-            if (remoteImageLoaded !== remoteURL && loadingRemoteImage !== remoteURL) {
-                // the image has just become available on the remote server
-                // pre-cache it before switching from the local copy
-                this.setState({ loadingRemoteImage: remoteURL });
-                await MediaLoader.loadImage(remoteURL);
-                this.setState({ remoteImageLoaded: remoteURL });
-            }
-        }
-    }
-
-    /**
-     * Create background style showing a mosaic of the image
-     *
-     * @return {Object}
-     */
-    getMosaicStyle() {
-        let { resource, clip, width, height } = this.props;
-        let heightToWidthRatio = height / width;
-        let style = {
-            paddingTop: (heightToWidthRatio * 100) + '%'
-        };
-        let mosaic = _.get(resource, 'mosaic');
-        if (clip && _.size(mosaic) === 16) {
-            let scanlines = _.chunk(mosaic, 4);
-            let gradients  = _.map(scanlines, (pixels) => {
-                let [ c1, c2, c3, c4 ] = _.map(pixels, formatColor);
-                return `linear-gradient(90deg, ${c1} 0%, ${c1} 25%, ${c2} 25%, ${c2} 50%, ${c3} 50%, ${c3} 75%, ${c4} 75%, ${c4} 100%)`;
-            });
-            let positions = [ `0 0%`, `0 ${100 / 3}%`, `0 ${200 / 3}%`, `0 100%` ];
-            style.backgroundRepeat = 'no-repeat';
-            style.backgroundSize = `100% 25.5%`;
-            style.backgroundImage = gradients.join(', ');
-            style.backgroundPosition = positions.join(', ');
-        }
-        return style;
-    }
-
-    /**
-     * Return URL to clipped image from server
-     *
-     * @return {String|undefined}
-     */
-    getRemoteImageURL() {
-        let { env, resource, width, height, clip, showAnimation } = this.props;
-        let params = { remote: true };
-        if (showAnimation && resource.format === 'gif') {
-            // use the original file when it's a gif and we wish to show animation
-            params.original = true;
-        } else {
-            if (!clip) {
-                // don't apply clip rectangle
-                params.clip = null;
-            }
-            // resize source image
-            params.width = width;
-            params.height = height;
-        }
-        return ResourceUtils.getImageURL(resource, params, env);
-    }
-
-    /**
-     * Return URL to file just uploaded by the user
-     *
-     * @return {String}
-     */
-    getLocalImageURL() {
-        let { env, resource } = this.props;
-        let params = { local: true, original: true };
-        return ResourceUtils.getImageURL(resource, params, env);
-    }
-
-    /**
-     * Called when remote image is done loading
-     *
-     * @param  {Event} Evt
-     */
-    handleRemoteImageLoad = (evt) => {
-        let url = evt.target.getAttribute('src');
-        this.setState({ remoteImageLoaded: url });
     }
 }
 
@@ -215,39 +111,31 @@ function formatColor(color) {
     return '#' + color;
 }
 
+function getMosaicStyle(mosaic, width, height) {
+    const heightToWidthRatio = height / width;
+    const style = { paddingTop: (heightToWidthRatio * 100) + '%' };
+    if (_.size(mosaic) === 16) {
+        const scanlines = _.chunk(mosaic, 4);
+        const gradients  = _.map(scanlines, (pixels) => {
+            let [ c1, c2, c3, c4 ] = _.map(pixels, formatColor);
+            return `linear-gradient(90deg, ${c1} 0%, ${c1} 25%, ${c2} 25%, ${c2} 50%, ${c3} 50%, ${c3} 75%, ${c4} 75%, ${c4} 100%)`;
+        });
+        const positions = [ `0 0%`, `0 ${100 / 3}%`, `0 ${200 / 3}%`, `0 100%` ];
+        style.backgroundRepeat = 'no-repeat';
+        style.backgroundSize = `100% 25.5%`;
+        style.backgroundImage = gradients.join(', ');
+        style.backgroundPosition = positions.join(', ');
+    }
+    return style;
+}
+
 ResourceView.defaultProps = {
     clip: true,
     showAnimation: false,
     showMosaic: false,
 };
 
-const propNames = [
-    'resource',
-    'width',
-    'height',
-    'clip',
-    'showAnimation',
-    'showMosaic',
-    'env'
-];
-
 export {
     ResourceView as default,
     ResourceView,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ResourceView.propTypes = {
-        resource: PropTypes.object.isRequired,
-        width: PropTypes.number,
-        height: PropTypes.number,
-        clip: PropTypes.bool,
-        showAnimation: PropTypes.bool,
-        showMosaic: PropTypes.bool,
-        env: PropTypes.instanceOf(Environment),
-    };
-}

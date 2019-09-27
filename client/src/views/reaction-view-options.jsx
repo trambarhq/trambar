@@ -1,110 +1,99 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
-import * as UserUtils from 'objects/utils/user-utils';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import PopUpMenu from 'widgets/pop-up-menu';
-import OptionButton from 'widgets/option-button';
+import PopUpMenu from '../widgets/pop-up-menu.jsx';
+import OptionButton from '../widgets/option-button.jsx';
 
 import './reaction-view-options.scss';
 
 /**
  * Component that renders a pop-up menu used to alter options of reactions to
  * stories.
- *
- * @extends PureComponent
  */
-class ReactionViewOptions extends PureComponent {
-    static displayName = 'ReactionViewOptions';
+function ReactionViewOptions(props) {
+    const { env, options, reaction, story, currentUser, access, onChange } = props;
+    const { t } = env.locale;
+    const [ openMenu, setOpenMenu ] = useState('');
 
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            popUpMenu: PopUpMenu
-        });
-        this.state = {
-            open: false
-        };
+    const handleOpen = useListener((evt) => {
+        setOpenMenu('main');
+    });
+    const handleClose = useListener((evt) => {
+        setOpenMenu('');
+    });
+    const handleHideClick = useListener((evt) => {
+        const newOptions = { ...options };
+        newOptions.hideReaction = !options.hideReaction;
+        if (onChange) {
+            onChange({ options: newOptions });
+        }
+    });
+    const handleEditClick = useListener((evt) => {
+        const newOptions = { ...options };
+        newOptions.editReaction = !options.editReaction;
+        if (onChange) {
+            onChange({ options: newOptions });
+        }
+    });
+    const handleRemoveClick = useListener((evt) => {
+        const newOptions = { ...options };
+        newOptions.removeReaction = true;
+        if (onChange) {
+            onChange({ options: newOptions });
+        }
+    });
+
+    let active = false;
+    if (UserUtils.canHideReaction(currentUser, story, reaction, access)) {
+        active = true;
     }
-
-    /**
-     * Close the pop-up menu
-     */
-    close() {
-        let { popUpMenu } = this.components;
-        this.setState({ open: false });
-        popUpMenu.close();
+    if (UserUtils.canEditReaction(currentUser, story, reaction, access)) {
+        active = true;
     }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { reaction, story, currentUser, access } = this.props;
-        let { setters } = this.components;
-        let active = false;
-        if (UserUtils.canHideReaction(currentUser, story, reaction, access)) {
-            active = true;
-        }
-        if (UserUtils.canEditReaction(currentUser, story, reaction, access)) {
-            active = true;
-        }
-        if (UserUtils.canRemoveReaction(currentUser, story, reaction, access)) {
-            active = true;
-        }
-        let props = {
-            ref: setters.popUpMenu,
-            className: 'reaction-view-options',
-            disabled: !active,
-            popOut: true,
-            onOpen: this.handleOpen,
-            onClose: this.handleClose,
-        };
-        return (
-            <PopUpMenu {...props}>
-                <button>
-                    <i className="fa fa-ellipsis-v" />
-                </button>
-                <menu>
-                    {this.renderOptions()}
-                </menu>
-            </PopUpMenu>
-        );
+    if (UserUtils.canRemoveReaction(currentUser, story, reaction, access)) {
+        active = true;
     }
+    const menuProps = {
+        open: (openMenu === 'main'),
+        className: 'reaction-view-options',
+        disabled: !active,
+        popOut: true,
+        onOpen: handleOpen,
+        onClose: handleClose,
+    };
+    return (
+        <PopUpMenu {...menuProps}>
+            <button>
+                <i className="fa fa-ellipsis-v" />
+            </button>
+            <menu>
+                {renderOptions()}
+            </menu>
+        </PopUpMenu>
+    );
 
-    /**
-     * Render options
-     *
-     * @return {ReactElement|null}
-     */
-    renderOptions() {
-        let { env, options, reaction, story, currentUser, access } = this.props;
-        let { open } = this.state;
-        let { t } = env.locale;
-        if (!open) {
-            return null;
-        }
-        let hideProps = {
+    function renderOptions() {
+        const hideProps = {
             label: t('option-hide-comment'),
             hidden: !UserUtils.canHideReaction(currentUser, story, reaction, access),
             selected: options.hideReaction,
-            onClick: this.handleHideClick,
+            onClick: handleHideClick,
         };
-        let editProps = {
+        const editProps = {
             label: t('option-edit-comment'),
             hidden: !UserUtils.canEditReaction(currentUser, story, reaction, access),
             selected: options.editReaction,
-            onClick: this.handleEditClick,
+            onClick: handleEditClick,
         };
-        let removeProps = {
+        const removeProps = {
             label: t('option-remove-comment'),
             hidden: !UserUtils.canRemoveReaction(currentUser, story, reaction, access),
             selected: options.removeReaction,
-            onClick: this.handleRemoveClick,
+            onClick: handleRemoveClick,
         };
         return (
             <div className="view-options in-menu">
@@ -114,95 +103,9 @@ class ReactionViewOptions extends PureComponent {
             </div>
         );
     }
-
-    /**
-     * Inform parent component that options have been changed
-     *
-     * @param  {Object} options
-     */
-    triggerChangeEvent(options) {
-        let { onChange } = this.props;
-        if (onChange) {
-            onChange({
-                type: 'change',
-                target: this,
-                options,
-            });
-        }
-    }
-
-    /**
-     * Called when user opens the menu
-     *
-     * @param  {Object} evt
-     */
-    handleOpen = (evt) => {
-        this.setState({ open: true });
-    }
-
-    /**
-     * Called when user closes the menu
-     *
-     * @param  {Object} evt
-     */
-    handleClose = (evt) => {
-        this.setState({ open: false });
-    }
-
-    /**
-     * Called when user clicks on hide comment button
-     *
-     * @param  {Event} evt
-     */
-    handleHideClick = (evt) => {
-        let { options } = this.props;
-        options = _.clone(options);
-        options.hideReaction = !options.hideReaction;
-        this.triggerChangeEvent(options);
-    }
-
-    /**
-     * Called when user clicks on edit comment button
-     *
-     * @param  {Event} evt
-     */
-    handleEditClick = (evt) => {
-        let { options } = this.props;
-        options = _.clone(options);
-        options.editReaction = true;
-        this.triggerChangeEvent(options);
-    }
-
-    /**
-     * Called when user clicks on remove comment button
-     *
-     * @param  {Event} evt
-     */
-    handleRemoveClick = (evt) => {
-        let { options } = this.props;
-        options = _.clone(options);
-        options.removeReaction = true;
-        this.triggerChangeEvent(options);
-    }
 }
 
 export {
     ReactionViewOptions as default,
     ReactionViewOptions,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ReactionViewOptions.propTypes = {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        currentUser: PropTypes.object.isRequired,
-        reaction: PropTypes.object.isRequired,
-        story: PropTypes.object.isRequired,
-        options: PropTypes.object.isRequired,
-
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

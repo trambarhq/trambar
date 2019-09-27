@@ -3,6 +3,7 @@
 .combo-button {
     display: inline-block;
     position: relative;
+    user-select: none;
 
     BUTTON {
         font-size: 1.2em;

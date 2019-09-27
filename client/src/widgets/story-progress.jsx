@@ -1,9 +1,9 @@
 import React from 'react';
 import Moment from 'moment';
-import * as StoryUtils from 'objects/utils/story-utils';
+import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
 
 // widgets
-import Time from 'widgets/time';
+import Time from './time.jsx';
 
 import './story-progress.scss';
 
@@ -13,8 +13,8 @@ import './story-progress.scss';
  * to attached media.
  */
 function StoryProgress(props) {
-    let { env, story, status, pending } = props;
-    let { t } = env.locale;
+    const { env, story, status, pending } = props;
+    const { t } = env.locale;
     let contents;
 
     if (!StoryUtils.isActuallyPublished(story)) {
@@ -37,11 +37,11 @@ function StoryProgress(props) {
             contents = <Time time={story.ptime} env={env} />;
             if (pending) {
                 // story has not made it into listings yet
-                let spinnerStyle = {};
-                let now = Moment();
-                let rtime = Moment(story.rtime);
+                const spinnerStyle = {};
+                const now = Moment();
+                const rtime = Moment(story.rtime);
                 // give story ten seconds to show up before we show the spinner
-                let delay = 10000 - (now - rtime);
+                const delay = 10000 - (now - rtime);
                 if (delay > 0) {
                     spinnerStyle.animationDelay = (delay / 1000) + 's';
                 }
@@ -64,15 +64,3 @@ export {
     StoryProgress as default,
     StoryProgress,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    StoryProgress.propTypes = {
-        status: PropTypes.object,
-        story: PropTypes.object.isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

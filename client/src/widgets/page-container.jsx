@@ -1,36 +1,33 @@
-import React, { PureComponent } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 import './page-container.scss';
 
 /**
  * Container holding a page's contents.
- *
- * @extends PureComponent
  */
-class PageContainer extends PureComponent {
-    static displayName = 'PageContainer';
+function PageContainer(props) {
+    const { className, children } = props;
+    const ref = useRef();
 
-    setNode(node) {
-        if (node) {
-            let activeElement = document.activeElement;
-            if (!activeElement || activeElement === document.body) {
-                // set focus so that arrow keys can be used to scroll the page
-                node.focus();
-            }
+    useEffect(() => {
+        const activeElement = document.activeElement;
+        if (!activeElement || activeElement === document.body) {
+            // set focus so that arrow keys can be used to scroll the page
+            ref.current.focus();
         }
-    }
+    }, []);
 
-    render() {
-        let { className, children } = this.props;
-        className = 'page-container' + ((className) ? ` ${className}` : '');
-        return (
-            <div className={className} tabIndex={0} ref={this.setNode}>
-                <div className="contents">
-                    {children}
-                </div>
-            </div>
-        );
+    const classNames = [ 'page-container' ];
+    if (className) {
+        classNames.push(className);
     }
+    return (
+        <div className={classNames.join(' ')} tabIndex={0} ref={ref}>
+            <div className="contents">
+                {children}
+            </div>
+        </div>
+    );
 }
 
 export {

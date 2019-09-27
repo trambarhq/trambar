@@ -1,105 +1,63 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import Scrollable from 'widgets/scrollable';
-import OptionButton from 'widgets/option-button';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { Scrollable } from '../widgets/scrollable.jsx';
+import { OptionButton } from '../widgets/option-button.jsx';
 
 import './project-management-dialog-box.scss';
 
 /**
  * Dialog box for removing a project from the list.
- *
- * @extends PureComponent
  */
-class ProjectManagementDialogBox extends PureComponent {
-    static displayName = 'ProjectManagementDialogBox';
+function ProjectManagementDialogBox(props) {
+    const { env, projectLinks, onDelete, onCancel } = props;
+    const { t, p } = env.locale;
+    const [ selection, setSelection ] = _.map(projectLinks, 'key');
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            selection: [],
-        };
-    }
+    const handleProjectClick = useListener((evt) => {
+        const key = evt.currentTarget.id;
+        setSelection(_.toggle(selection, key));
+    });
+    const handleRemoveClick = useListener((evt) => {
+        if (onDelete) {
+            onDelete({ selection });
+        }
+    });
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { show } = this.props;
-        let overlayProps = { show, onBackgroundClick: this.handleCancelClick };
-        return (
-            <Overlay {...overlayProps}>
-                <div className="project-management-dialog-box">
-                    {this.renderList()}
-                    {this.renderButtons()}
-                </div>
-            </Overlay>
-        );
-    }
-
-    /**
-     * Render list of users
-     *
-     * @return {Array<ReactElement>}
-     */
-    renderList() {
-        let { projectLinks } = this.props;
-        return (
+    return (
+        <div className="project-management-dialog-box">
             <Scrollable>
-            {
-                _.map(projectLinks, (projectLink, i) => {
-                    return this.renderProjectButton(projectLink, i);
-                })
-            }
+                {_.map(projectLinks, renderProjectButton)}
             </Scrollable>
-        );
-    }
+            {renderButtons()}
+        </div>
+    );
 
-    /**
-     * Render button for project
-     *
-     * @param  {Object} link
-     * @param  {Number} i
-     *
-     * @return {ReactElement}
-     */
-    renderProjectButton(link, i) {
-        let { env } = this.props;
-        let { selection } = this.state;
-        let { p } = env.locale;
-        let props = {
+    function renderProjectButton(link, i) {
+        const props = {
             id: link.key,
             label: p(link.name),
             iconOn: 'times-circle',
-            selected: _.includes(selection, link.key),
-            onClick: this.handleProjectClick,
+            selected: projectSelection.isRemoving(link),
+            onClick: handleProjectClick,
         };
         return <OptionButton key={i} {...props} />;
     }
 
-    /**
-     * Render cancel and OK buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env } = this.props;
-        let { selection } = this.state;
-        let { t } = env.locale;
-        let cancelProps = {
+    function renderButtons() {
+        const cancelProps = {
             label: t('project-management-cancel'),
-            onClick: this.handleCancelClick,
+            onClick: onCancel,
         };
-        let removeProps = {
+        const removeProps = {
             label: t('project-management-remove'),
-            onClick: this.handleRemoveClick,
+            onClick: handleRemoveClick,
             emphasized: true,
-            disabled: _.isEmpty(selection),
+            disabled: !projectSelection.changed,
         };
         return (
             <div className="buttons">
@@ -108,74 +66,11 @@ class ProjectManagementDialogBox extends PureComponent {
             </div>
         );
     }
-
-    /**
-     * Called when user clicks
-     *
-     * @param  {Event} evt
-     */
-    handleProjectClick = (evt) => {
-        let { selection } = this.state;
-        let key = evt.currentTarget.id;
-        if (_.includes(selection, key)) {
-            selection = _.without(selection, key);
-            _.pull(selection, key);
-        } else {
-            selection = _.concat(selection, key);
-        }
-        this.setState({ selection });
-    }
-
-    /**
-     * Called when user click remove button
-     *
-     * @param  {Event} evt
-     */
-    handleRemoveClick = (evt) => {
-        let { onDelete } = this.props;
-        let { selection } = this.state;
-        if (onDelete) {
-            onDelete({
-                type: 'delete',
-                target: this,
-                selection,
-            })
-        }
-    }
-
-    /**
-     * Called when user click cancel button or outside the dialog box
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = (evt) => {
-        let { onCancel } = this.props;
-        if (onCancel) {
-            onCancel({
-                type: 'cancel',
-                target: this,
-            });
-        }
-    }
 }
+
+const component = Overlay.create(ProjectManagementDialogBox);
 
 export {
-    ProjectManagementDialogBox as default,
-    ProjectManagementDialogBox,
+    component as default,
+    component as ProjectManagementDialogBox,
 };
-
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ProjectManagementDialogBox.propTypes = {
-        show: PropTypes.bool,
-        projectLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        onDelete: PropTypes.func,
-        onCancel: PropTypes.func,
-    };
-}

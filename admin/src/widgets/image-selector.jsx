@@ -1,12 +1,13 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import * as MediaLoader from 'media/media-loader';
-import * as ResourceUtils from 'objects/utils/resource-utils';
+import React, { useState, useImperativeHandle } from 'react';
+import { useListener } from 'relaks';
+import * as MediaLoader from 'common/media/media-loader.mjs';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
 // widgets
-import ImageCroppingDialogBox from 'dialogs/image-cropping-dialog-box';
-import ImageAlbumDialogBox from 'dialogs/image-album-dialog-box';
-import ResourceView from 'widgets/resource-view';
+import { ImageCroppingDialogBox } from '../dialogs/image-cropping-dialog-box.jsx';
+import { ImageAlbumDialogBox } from '../dialogs/image-album-dialog-box.jsx';
+import { ResourceView } from 'common/widgets/resource-view.jsx';
 
 import './image-selector.scss';
 
@@ -14,119 +15,96 @@ import './image-selector.scss';
  * Widget for selecting an image, either from the image album or from the
  * user's computer. When desiredWidth and desiredHeight are specified,
  * it provides the option to crop the selected image.
- *
- * @extends PureComponent
  */
-class ImageSelector extends PureComponent {
-    static displayName = 'ImageSelector';
+function ImageSelector(props, ref) {
+    const { database, env, payloads, readOnly, children, onChange } = props;
+    const { resources, desiredWidth, desiredHeight, purpose } = props;
+    const { t } = env.locale;
+    const [ cropping, setCropping ] = useState(false);
+    const [ showingAlbum, setShowingAlbum ] = useState(false);
+    const [ instance ] = useState({ value: resources });
+    const image = _.find(resources, { type: 'image' });
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            cropping: false,
-            showingAlbum: false,
-        };
+    useImperativeHandle(ref, () => {
+        return instance;
+    });
+
+    const handleChooseClick = useListener((evt) => {
+        setShowingAlbum(true);
+    });
+    const handleCropClick = useListener((evt) => {
+        setCropping(true);
+    });
+    const handleAlbumDialogCancel = useListener((evt) => {
+        setShowingAlbum(false);
+    });
+    const handleCroppingDialogCancel = useListener((evt) => {
+        setCropping(false);
+    });
+    const handleImageSelect = useListener((evt) => {
+        const newImage = { type: 'image', ...evt.image };
+        setShowingAlbum(false);
+        setImage(newImage);
+    });
+    const handleImageSectionSelect = useListener((evt) => {
+        const newImage = { ...image, clip: evt.clippingRect };
+        setCropping(false);
+        setImage(newImage);
+    });
+    const handleUploadChange = useListener(async (evt) => {
+        const file = evt.target.files[0];
+        if (file) {
+            const payload = payloads.add('image').attachFile(file);
+            const meta = await MediaLoader.getImageMetadata(file);
+            const newImage = {
+                payload_token: payload.id,
+                width: meta.width,
+                height: meta.height,
+                format: meta.format,
+                type: 'image',
+            };
+            setImage(newImage);
+        }
+    });
+    const handleImageClick = useListener((evt) => {
+        // open URL in pop-up instead of a tab
+        const url = evt.currentTarget.href;
+        if (url) {
+            const width = parseInt(evt.currentTarget.getAttribute('data-width'));
+            const height = parseInt(evt.currentTarget.getAttribute('data-height'));
+            openPopup(url, width, height);
+            evt.preventDefault();
+        }
+    });
+
+    const classNames = [ 'image-selector' ];
+    if (readOnly) {
+        classNames.push('readonly')
     }
-
-    /**
-     * Return image object if there's one
-     *
-     * @return {Object|null}
-     */
-    getImage() {
-        let { resources } = this.props;
-        return _.find(resources, { type: 'image' });
-    }
-
-    /**
-     * Update resource array and past it to parent component through an
-     * onChange event
-     *
-     * @param  {Object} image
-     */
-    setImage(image) {
-        let { resources, desiredWidth, desiredHeight, onChange } = this.props;
-        if (desiredWidth && desiredHeight) {
-            // center a clipping rect over the image if there's none
-            if (!image.clip) {
-                let ratio = desiredWidth / desiredHeight;
-                let width = image.width;
-                let height = Math.round(width / ratio);
-                let left = 0;
-                let top = Math.round((image.height - height) / 2);
-                if (top < 0) {
-                    height = image.height;
-                    width = Math.round(height * ratio);
-                    left = Math.round((image.width - width) / 2);
-                    top = 0;
-                }
-                image = _.clone(image);
-                image.clip = { left, top, width, height };
-            }
-        }
-        resources = _.slice(resources);
-        let index = _.findIndex(resources, { type: 'image' });
-        if (index !== -1) {
-            if (image) {
-                resources[index] = image;
-            } else {
-                resources.splice(index, 1);
-            }
-        } else {
-            resources.push(image);
-        }
-        this.value = resources;
-        if (onChange) {
-            onChange({
-                type: 'change',
-                target: this,
-            });
-        }
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { readOnly, children } = this.props;
-        let classNames = [ 'image-selector' ];
-        if (readOnly) {
-            classNames.push('readonly')
-        }
-        return (
-            <div className={classNames.join(' ')}>
-                <label>{children}</label>
-                <div className="contents">
-                    {this.renderImage()}
-                    {this.renderOptions()}
-                </div>
-                {this.renderCroppingDialogBox()}
-                {this.renderAlbumDialogBox()}
+    return (
+        <div className={classNames.join(' ')}>
+            <label>{children}</label>
+            <div className="contents">
+                {renderImage()}
+                {renderOptions()}
             </div>
-        );
-    }
+            {renderCroppingDialogBox()}
+            {renderAlbumDialogBox()}
+        </div>
+    );
 
-    /**
-     * Render image or placeholder
-     *
-     * @return {ReactElement}
-     */
-    renderImage() {
-        let { env, desiredWidth, desiredHeight } = this.props;
-        let height = 120, width;
-        let image = this.getImage();
+    function renderImage() {
+        const height = 120;
         if (image) {
-            let fullResURL = ResourceUtils.getImageURL(image, { clip: null, remote: true }, env);
-            let linkProps = {
+            const fullResURL = ResourceUtils.getImageURL(image, { clip: null, remote: true }, env);
+            const linkProps = {
                 href: fullResURL,
                 target: '_blank',
                 'data-width': image.width,
                 'data-height': image.height,
-                onClick: this.handleImageClick,
+                onClick: handleImageClick,
             };
-            let viewProps = {
+            const viewProps = {
                 resource: image,
                 clip: !!(desiredWidth && desiredHeight),
                 height: height,
@@ -140,6 +118,7 @@ class ImageSelector extends PureComponent {
                 </div>
             );
         } else {
+            let width;
             if (desiredWidth && desiredHeight) {
                 width = Math.round(desiredWidth * height / desiredHeight);
             } else {
@@ -155,37 +134,24 @@ class ImageSelector extends PureComponent {
         }
     }
 
-    /**
-     * Render list of options
-     *
-     * @return {ReactElement}
-     */
-    renderOptions() {
+    function renderOptions() {
         return (
             <div className="options">
-                {this.renderChooseOption()}
-                {this.renderUploadOption()}
-                {this.renderResizeOption()}
+                {renderChooseOption()}
+                {renderUploadOption()}
+                {renderResizeOption()}
             </div>
         )
     }
 
-    /**
-     * Render crop button if dimensions are specified
-     *
-     * @return {ReactElement|null}
-     */
-    renderResizeOption() {
-        let { env, desiredWidth, desiredHeight, readOnly } = this.props;
-        let { t } = env.locale;
+    function renderResizeOption() {
         if (!desiredWidth || !desiredHeight) {
             return null;
         }
-        let props = { className: 'option' };
+        const props = { className: 'option' };
         if (!readOnly) {
-            props.onClick = this.handleCropClick;
+            props.onClick = handleCropClick;
         }
-        let image = this.getImage();
         if (!image) {
             props.className += ' disabled';
         }
@@ -198,20 +164,13 @@ class ImageSelector extends PureComponent {
         );
     }
 
-    /**
-     * Render choose button if purpose is specified
-     *
-     * @return {ReactElement|null}
-     */
-    renderChooseOption() {
-        let { env, purpose, readOnly } = this.props;
-        let { t } = env.locale;
+    function renderChooseOption() {
         if (!purpose) {
             return null;
         }
-        let props = { className: 'option' };
+        const props = { className: 'option' };
         if (!readOnly) {
-            props.onClick = this.handleChooseClick;
+            props.onClick = handleChooseClick;
         }
         return (
             <div {...props}>
@@ -222,20 +181,13 @@ class ImageSelector extends PureComponent {
         );
     }
 
-    /**
-     * Render upload button
-     *
-     * @return {ReactElement}
-     */
-    renderUploadOption() {
-        let { env, readOnly } = this.props;
-        let { t } = env.locale;
-        let inputProps = {
+    function renderUploadOption() {
+        const inputProps = {
             type: 'file',
             value: '',
             accept: 'image/*',
             disabled: readOnly,
-            onChange: this.handleUploadChange,
+            onChange: handleUploadChange,
         };
         return (
             <label className="option">
@@ -247,34 +199,23 @@ class ImageSelector extends PureComponent {
         );
     }
 
-    renderCroppingDialogBox() {
-        let { env, desiredWidth, desiredHeight } = this.props;
-        let { cropping } = this.state;
-        let image = this.getImage();
+    function renderCroppingDialogBox() {
         if (!(image && desiredWidth && desiredHeight)) {
             return null;
         }
-        let dialogBoxProps = {
+        const dialogBoxProps = {
             show: cropping,
             image,
             desiredWidth,
             desiredHeight,
             env,
-            onSelect: this.handleImageSectionSelect,
-            onCancel: this.handleCroppingDialogCancel,
+            onSelect: handleImageSectionSelect,
+            onCancel: handleCroppingDialogCancel,
         };
         return <ImageCroppingDialogBox {...dialogBoxProps} />;
     }
 
-    /**
-     * Render cropping or album dialog box if one of them is active
-     *
-     * @return {ReactElement|null}
-     */
-    renderAlbumDialogBox() {
-        let { database, env, payloads, purpose } = this.props;
-        let { showingAlbum } = this.state;
-        let image = this.getImage();
+    function renderAlbumDialogBox() {
         let dialogBoxProps = {
             show: showingAlbum,
             purpose,
@@ -282,157 +223,89 @@ class ImageSelector extends PureComponent {
             database,
             env,
             payloads,
-            onSelect: this.handleImageSelect,
-            onCancel: this.handleAlbumDialogCancel,
+            onSelect: handleImageSelect,
+            onCancel: handleAlbumDialogCancel,
         };
         return <ImageAlbumDialogBox {...dialogBoxProps} />;
     }
 
-    /**
-     * Called when user clicks choose
-     *
-     * @param  {Event} evt
-     */
-    handleChooseClick = (evt) => {
-        this.setState({ showingAlbum: true });
-    }
-
-    /**
-     * Called when user clicks crop button
-     *
-     * @param  {Event} evt
-     */
-    handleCropClick = (evt) => {
-        this.setState({ cropping: true });
-    }
-
-    /**
-     * Called when user selects an image from album
-     *
-     * @param  {Object} evt
-     */
-    handleImageSelect = (evt) => {
-        let image = _.clone(evt.image);
-        image.type = 'image';
-        this.setImage(image);
-        this.handleAlbumDialogCancel();
-    }
-
-    /**
-     * Called when user changes the clipping rect
-     *
-     * @param  {Object} evt
-     */
-    handleImageSectionSelect = (evt) => {
-        let image = _.clone(this.getImage());
-        image.clip = evt.clippingRect;
-        this.setImage(image);
-        this.handleCroppingDialogCancel();
-    }
-
-    /**
-     * Called when user selects a file on his computer
-     *
-     * @param  {Event} evt
-     */
-    handleUploadChange = async (evt) => {
-        let { payloads } = this.props;
-        let file = evt.target.files[0];
-        if (file) {
-            let payload = payloads.add('image').attachFile(file);
-            let meta = await MediaLoader.getImageMetadata(file);
-            let image = {
-                payload_token: payload.id,
-                width: meta.width,
-                height: meta.height,
-                format: meta.format,
-                type: 'image',
-            };
-            return this.setImage(image);
-        }
-    }
-
-    /**
-     * Called when user clicks cancel or outside a dialog box
-     *
-     * @param  {Object} evt
-     */
-    handleAlbumDialogCancel = (evt) => {
-        this.setState({ showingAlbum: false });
-    }
-
-    /**
-     * Called when user clicks cancel or outside a dialog box
-     *
-     * @param  {Object} evt
-     */
-    handleCroppingDialogCancel = (evt) => {
-        this.setState({ cropping: false });
-    }
-
-    /**
-     * Called when user clicks on image link
-     *
-     * @param  {Event} evt
-     */
-    handleImageClick = (evt) => {
-        // open URL in pop-up instead of a tab
-        let url = evt.currentTarget.href;
-        if (url) {
-            let width = parseInt(evt.currentTarget.getAttribute('data-width'));
-            let height = parseInt(evt.currentTarget.getAttribute('data-height'));
-            let windowWidth = width;
-            let windowHeight = height;
-            let availableWidth = screen.width - 100;
-            let availableHeight = screen.height - 100;
-            if (windowWidth > availableWidth) {
-                windowWidth = availableWidth;
-                windowHeight = Math.round(windowWidth * height / width);
-            }
-            if (windowHeight > availableHeight) {
-                windowHeight = availableHeight;
-                windowWidth = Math.round(windowHeight * width / height);
-            }
-            let windowLeft = Math.round((screen.width - windowHeight) / 3);
-            let windowTop = Math.round((screen.height - windowHeight) / 3);
-            let params = [
-                `left=${windowLeft}`,
-                `top=${windowTop}`,
-                `width=${windowWidth}`,
-                `height=${windowHeight}`,
-            ];
-            window.open(url, '_blank', params.join(','));
-            evt.preventDefault();
+    function setImage(image) {
+        instance.value = updateResource(resources, image, desiredWidth, desiredHeight);
+        if (onChange) {
+            onChange({
+                type: 'change',
+                target: instance,
+            });
         }
     }
 }
 
-ImageSelector.defaultProps = {
+function updateResource(resources, image, desiredWidth, desiredHeight) {
+    if (desiredWidth && desiredHeight) {
+        // center a clipping rect over the image if there's none
+        if (!image.clip) {
+            const ratio = desiredWidth / desiredHeight;
+            let width = image.width;
+            let height = Math.round(width / ratio);
+            let left = 0;
+            let top = Math.round((image.height - height) / 2);
+            if (top < 0) {
+                height = image.height;
+                width = Math.round(height * ratio);
+                left = Math.round((image.width - width) / 2);
+                top = 0;
+            }
+            const clip = { left, top, width, height };
+            image = { clip, ...image };
+        }
+    }
+    resources = _.slice(resources);
+    const index = _.findIndex(resources, { type: 'image' });
+    if (index !== -1) {
+        if (image) {
+            resources[index] = image;
+        } else {
+            resources.splice(index, 1);
+        }
+    } else {
+        resources.push(image);
+    }
+    return resources;
+}
+
+function openPopup(url, width, height) {
+    let windowWidth = width;
+    let windowHeight = height;
+    const availableWidth = screen.width - 100;
+    const availableHeight = screen.height - 100;
+    if (windowWidth > availableWidth) {
+        windowWidth = availableWidth;
+        windowHeight = Math.round(windowWidth * height / width);
+    }
+    if (windowHeight > availableHeight) {
+        windowHeight = availableHeight;
+        windowWidth = Math.round(windowHeight * width / height);
+    }
+    const windowLeft = Math.round((screen.width - windowHeight) / 3);
+    const windowTop = Math.round((screen.height - windowHeight) / 3);
+    const params = [
+        `left=${windowLeft}`,
+        `top=${windowTop}`,
+        `width=${windowWidth}`,
+        `height=${windowHeight}`,
+    ];
+    window.open(url, '_blank', params.join(','));
+
+}
+
+const component = React.forwardRef(ImageSelector);
+
+component.defaultProps = {
     resources: [],
     readOnly: false,
 };
 
 export {
-    ImageSelector as default,
-    ImageSelector,
+    component as default,
+    component as ImageSelector,
 };
-
-import Database from 'data/database';
-import Environment from 'env/environment';
-import Payloads from 'transport/payloads';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ImageSelector.propTypes = {
-        purpose: PropTypes.string,
-        desiredWidth: PropTypes.number,
-        desiredHeight: PropTypes.number,
-        resources: PropTypes.arrayOf(PropTypes.object),
-        readOnly: PropTypes.bool,
-        database: PropTypes.instanceOf(Database).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        onChange: PropTypes.func,
-    };
-}

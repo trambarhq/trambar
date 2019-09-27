@@ -1,157 +1,133 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as RepoFinder from 'objects/finders/repo-finder';
-import * as BookmarkFinder from 'objects/finders/bookmark-finder';
-import * as ReactionFinder from 'objects/finders/reaction-finder';
+import React, { useState } from 'react';
+import Relaks, { useProgress } from 'relaks';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
+import * as BookmarkFinder from 'common/objects/finders/bookmark-finder.mjs';
+import * as ReactionFinder from 'common/objects/finders/reaction-finder.mjs';
 
 // widgets
-import SmartList from 'widgets/smart-list';
-import StoryView from 'views/story-view';
-import StoryEditor from 'editors/story-editor';
-import NewItemsAlert from 'widgets/new-items-alert';
-import ErrorBoundary from 'widgets/error-boundary';
+import { SmartList } from 'common/widgets/smart-list.jsx';
+import { StoryView } from '../views/story-view.jsx';
+import { StoryEditor } from '../editors/story-editor.jsx';
+import { NewItemsAlert } from '../widgets/new-items-alert.jsx';
+import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import './story-list.scss';
 
-/**
- * Asynchronous component that retrieves data needed by a story list
- * (in addition to the notifications given to it)
- *
- * @extends AsyncComponent
- */
-class StoryList extends AsyncComponent {
-    static displayName = 'StoryList';
+async function StoryList(props) {
+    const { database, route, payloads, env } = props;
+    const { stories, draftStories, pendingStories } = props;
+    const { currentUser, project } = props;
+    const { access, acceptNewStory } = props;
+    const { highlightStoryID, scrollToStoryID, highlightReactionID, scrollToReactionID } = props;
+    const { t } = env.locale;
+    const allStories = _.filter(_.concat(pendingStories, draftStories, stories));
+    const [ hiddenStoryIDs, setHiddenStoryIDs ] = useState([]);
+    const [ show ] = useProgress();
 
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, payloads, env } = this.props;
-        let { stories, draftStories, pendingStories } = this.props;
-        let { currentUser, project } = this.props;
-        let { access, acceptNewStory } = this.props;
-        let { highlightStoryID, scrollToStoryID, highlightReactionID, scrollToReactionID } = this.props;
-        let allStories = _.filter(_.concat(pendingStories, draftStories, stories));
-        let db = database.use({ by: this });
-        let props = {
-            access,
-            acceptNewStory,
-            highlightStoryID,
-            scrollToStoryID,
-            highlightReactionID,
-            scrollToReactionID,
-            stories,
-            draftStories,
-            pendingStories,
-            currentUser,
-            project,
-            database,
-            payloads,
-            route,
-            env,
-        };
-        meanwhile.show(<StoryListSync {...props} />);
-        let currentUserID = await db.start();
-        // load repos first, so "add to issue tracker" option doesn't pop in
-        // suddenly in triple-column mode
-        props.repos = await RepoFinder.findProjectRepos(db, props.project);
-        meanwhile.show(<StoryListSync {...props} />);
-        props.authors = await UserFinder.findStoryAuthors(db, allStories);
-        meanwhile.show(<StoryListSync {...props} />);
-        props.reactions = await ReactionFinder.findReactionsToStories(db, allStories, props.currentUser)
-        meanwhile.show(<StoryListSync {...props} />);
-        props.respondents = await UserFinder.findReactionAuthors(db, props.reactions);
-        meanwhile.show(<StoryListSync {...props} />);
-        props.recommendations = await BookmarkFinder.findBookmarksByUser(db, props.currentUser, allStories);
-        meanwhile.show(<StoryListSync {...props} />);
-        props.recipients = await UserFinder.findBookmarkRecipients(db, props.bookmarks);
-        return <StoryListSync {...props} />;
-    }
-}
-
-/**
- * Synchronous component that actually renders the list, with the help of
- * SmartList.
- *
- * @extends PureComponent
- */
-class StoryListSync extends PureComponent {
-    static displayName = 'StoryListSync';
-
-    constructor(props) {
-        super(props);
-        this.state = {
-            hiddenStoryIDs: [],
-        };
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let {
-            route,
-            stories,
-            pendingStories,
-            draftStories,
-            acceptNewStory,
-            currentUser,
-            highlightStoryID,
-            scrollToStoryID,
-        } = this.props;
-        stories = sortStories(stories, pendingStories);
-        if (acceptNewStory) {
-            stories = attachDrafts(stories, draftStories, currentUser);
+    const handleStoryIdentity = (evt) => {
+        if (evt.alternative && evt.item && evt.item.id >= 1) {
+            // look for temporary id
+            const location = { table: 'story' };
+            const tempID = database.findTemporaryID(location, evt.item.id);
+            return getAnchor(tempID);
+        } else {
+            if (acceptNewStory) {
+                // use a fixed id for the first editor, so we don't lose focus
+                // when the new story acquires an id after being saved automatically
+                if (evt.currentIndex === 0) {
+                    return getAnchor('top');
+                }
+            }
+            return getAnchor(evt.item.id);
         }
-        let anchorStoryID = scrollToStoryID || highlightStoryID;
-        let smartListProps = {
-            items: stories,
+    };
+    const handleStoryRender = (evt) => {
+        return renderStory(evt.item, evt.needed, evt.previousHeight, evt.estimatedHeight, evt.currentIndex);
+    };
+    const handleStoryAnchorChange = (evt) => {
+        reanchorAtStory((evt.item) ? evt.item.id : undefined);
+    };
+    const handleStoryBeforeAnchor = (evt) => {
+        setHiddenStoryIDs(_.map(evt.items, 'id'));
+    };
+    const handleNewStoryAlertClick = (evt) => {
+        setHiddenStoryIDs([]);
+    };
+    const handleStoryBump = (evt) => {
+        reanchorAtStory(null);
+    };
+    const handleStoryEdit = (evt) => {
+        if (evt.target.props.story.id === highlightStoryID) {
+            reanchorAtStory(highlightStoryID, highlightReactionID);
+        }
+    };
+
+    function reanchorAtStory(scrollToStoryID, scrollToReactionID) {
+        route.replace({
+            scrollToStoryID,
+            highlightStoryID: undefined,
+            scrollToReactionID,
+            highlightReactionID: undefined,
+        });
+    }
+
+    function getAnchor(storyID) {
+        return (storyID) ? `story-${storyID}` : undefined
+    }
+
+    render();
+    // load repos first, so "add to issue tracker" option doesn't pop in
+    // suddenly in triple-column mode
+    const repos = await RepoFinder.findProjectRepos(database, project);
+    render();
+    const authors = await UserFinder.findStoryAuthors(database, allStories);
+    render();
+    const reactions = await ReactionFinder.findReactionsToStories(database, allStories, currentUser)
+    render();
+    const respondents = await UserFinder.findReactionAuthors(database, reactions);
+    render();
+    const bookmarks = await BookmarkFinder.findBookmarksByUser(database, currentUser, allStories);
+    render();
+    const recipients = await UserFinder.findBookmarkRecipients(database, bookmarks);
+    render();
+
+    function render() {
+        let list = sortStories(stories, pendingStories);
+        if (acceptNewStory) {
+            list = attachDrafts(list, draftStories, currentUser);
+        }
+        const smartListProps = {
+            items: list,
             offset: 20,
             behind: 4,
             ahead: 8,
-            anchor: (anchorStoryID) ? `story-${anchorStoryID}` : undefined,
+            anchor: getAnchor(scrollToStoryID || highlightStoryID),
 
-            onIdentity: this.handleStoryIdentity,
-            onRender: this.handleStoryRender,
-            onAnchorChange: this.handleStoryAnchorChange,
-            onBeforeAnchor: this.handleStoryBeforeAnchor,
+            onIdentity: handleStoryIdentity,
+            onRender: handleStoryRender,
+            onAnchorChange: handleStoryAnchorChange,
+            onBeforeAnchor: handleStoryBeforeAnchor,
         };
-        this.freshList = false;
-        return (
+        show(
             <div className="story-list">
                 <SmartList {...smartListProps} />
-                {this.renderNewStoryAlert()}
+                {renderNewStoryAlert()}
             </div>
         );
     }
 
-    /**
-     * Render alert indicating there're new stories hidden up top
-     *
-     * @return {ReactElement}
-     */
-    renderNewStoryAlert() {
-        let { route, env } = this.props;
-        let { hiddenStoryIDs } = this.state;
-        let { t } = env.locale;
-        let count = _.size(hiddenStoryIDs);
+    function renderNewStoryAlert() {
+        const count = _.size(hiddenStoryIDs);
         let url;
-        if (!_.isEmpty(hiddenStoryIDs)) {
+        if (count > 0) {
             url = route.find(route.name, {
                 highlightStoryID: _.first(hiddenStoryIDs)
             });
         }
-        let props = { url, onClick: this.handleNewStoryAlertClick };
+        const props = { url, onClick: handleNewStoryAlertClick };
         return (
             <NewItemsAlert {...props}>
                 {t('alert-$count-new-stories', count)}
@@ -159,79 +135,7 @@ class StoryListSync extends PureComponent {
         );
     }
 
-    /**
-     * Change the URL hash so page is anchor at given story
-     *
-     * @param  {Number|undefined} scrollToStoryID
-     * @param  {Number|undefined} scrollToReactionID
-     */
-    reanchorAtStory(scrollToStoryID, scrollToReactionID) {
-        let { route } = this.props;
-        let params = {
-            scrollToStoryID,
-            highlightStoryID: undefined,
-            scrollToReactionID,
-            highlightReactionID: undefined,
-        };
-        route.reanchor(params);
-    }
-
-    /**
-     * Called when SmartList wants an item's id
-     *
-     * @param  {Object} evt
-     *
-     * @return {String}
-     */
-    handleStoryIdentity = (evt) => {
-        let { database, acceptNewStory } = this.props;
-        if (evt.alternative && evt.item && evt.item.id >= 1) {
-            // look for temporary id
-            let location = { table: 'story' };
-            let temporaryID = database.findTemporaryID(location, evt.item.id);
-            if (temporaryID) {
-                return `story-${temporaryID}`;
-            }
-        } else {
-            if (acceptNewStory) {
-                // use a fixed id for the first editor, so we don't lose focus
-                // when the new story acquires an id after being saved automatically
-                if (evt.currentIndex === 0) {
-                    return 'story-top';
-                }
-            }
-            return `story-${evt.item.id}`;
-        }
-    }
-
-    /**
-     * Called when SmartList wants to render an item
-     *
-     * @param  {Object} evt
-     *
-     * @return {ReactElement}
-     */
-    handleStoryRender = (evt) => {
-        let {
-            database,
-            route,
-            payloads,
-            env,
-            stories,
-            draftStories,
-            authors,
-            reactions,
-            respondents,
-            recommendations,
-            recipients,
-            repos,
-            currentUser,
-            highlightStoryID,
-            highlightReactionID,
-            scrollToReactionID,
-            access
-        } = this.props;
-        let story = evt.item;
+    function renderStory(story, needed, previousHeight, estimatedHeight, index) {
         // see if it's being editted
         let isDraft = false;
         let highlighting = false;
@@ -253,20 +157,14 @@ class StoryListSync extends PureComponent {
             isDraft = true;
         }
         if (isDraft) {
-            let storyAuthors = findAuthors(authors, story);
-            let storyRecommendations = findRecommendations(recommendations, story, currentUser);
-            let storyRecipients = findRecipients(recipients, storyRecommendations);
-            if (_.isEmpty(storyAuthors) && currentUser) {
-                storyAuthors = array(currentUser);
-            }
-            let editorProps = {
+            const editorProps = {
                 highlighting,
                 story,
-                authors: storyAuthors,
-                recommendations: storyRecommendations,
-                recipients: storyRecipients,
+                authors: findDraftAuthors(currentUser, authors, story),
+                bookmarks: findBookmarks(bookmarks, story, currentUser),
+                recipients: findRecipients(recipients, bookmarks, story, currentUser),
                 repos,
-                isStationary: evt.currentIndex === 0,
+                isStationary: (index === 0),
                 currentUser,
                 database,
                 payloads,
@@ -279,33 +177,29 @@ class StoryListSync extends PureComponent {
                 </ErrorBoundary>
             );
         } else {
-            if (evt.needed) {
-                let storyReactions = findReactions(reactions, story);
-                let storyAuthors = findAuthors(authors, story);
-                let storyRespondents = findRespondents(respondents, reactions);
-                let storyRecommendations = findRecommendations(recommendations, story, currentUser);
-                let storyRecipients = findRecipients(recipients, recommendations);
-                let pending = !_.includes(stories, story);
-                let storyProps = {
+            if (needed) {
+                const pending = !_.includes(stories, story);
+                const storyProps = {
                     highlighting,
                     pending,
                     access,
                     highlightReactionID,
                     scrollToReactionID,
                     story,
-                    reactions: storyReactions,
-                    authors: storyAuthors,
-                    respondents: storyRespondents,
-                    recommendations: storyRecommendations,
-                    recipients: storyRecipients,
+                    reactions: findReactions(reactions, story),
+                    authors: findAuthors(authors, story),
+                    respondents: findRespondents(respondents, reactions),
+                    bookmarks: findBookmarks(bookmarks, story, currentUser),
+                    recipients: findRecipients(recipients, bookmarks, story, currentUser),
+                    project,
                     repos,
                     currentUser,
                     database,
                     payloads,
                     route,
                     env,
-                    onBump: this.handleStoryBump,
-                    onEdit: this.handleStoryEdit,
+                    onBump: handleStoryBump,
+                    onEdit: handleStoryEdit,
                 };
                 return (
                     <ErrorBoundary env={env}>
@@ -313,65 +207,12 @@ class StoryListSync extends PureComponent {
                     </ErrorBoundary>
                 );
             } else {
-                let height = evt.previousHeight || evt.estimatedHeight || 100;
+                const height = previousHeight || estimatedHeight || 100;
                 return <div className="story-view" style={{ height }} />
             }
         }
     }
-
-    /**
-     * Called when a different story is positioned at the top of the viewport
-     *
-     * @param  {Object} evt
-     */
-    handleStoryAnchorChange = (evt) => {
-        this.reanchorAtStory((evt.item) ? evt.item.id : undefined);
-    }
-
-    /**
-     * Called when SmartList notice new items were rendered off screen
-     *
-     * @param  {Object} evt
-     */
-    handleStoryBeforeAnchor = (evt) => {
-        let hiddenStoryIDs = _.map(evt.items, 'id');
-        this.setState({ hiddenStoryIDs });
-    }
-
-    /**
-     * Called when user clicks on new story alert
-     *
-     * @param  {Event} evt
-     */
-    handleNewStoryAlertClick = (evt) => {
-        this.setState({ hiddenStoryIDs: [] });
-    }
-
-    /**
-     * Scroll back to the top when a story is bumped
-     *
-     * @param  {Object} evt
-     */
-    handleStoryBump = (evt) => {
-        this.reanchorAtStory(null);
-    }
-
-    /**
-     * Stop StoryView from highlighting a second time when it eventual remounts
-     *
-     * @param  {Object} evt
-     */
-    handleStoryEdit = (evt) => {
-        let { highlightStoryID, highlightReactionID } = this.props;
-        if (evt.target.props.story.id === highlightStoryID) {
-            this.reanchorAtStory(highlightStoryID, highlightReactionID);
-        }
-    }
 }
-
-const array = memoizeWeak([], function(object) {
-    return [ object ];
-});
 
 const sortStories = memoizeWeak(null, function(stories, pendingStories) {
     if (!_.isEmpty(pendingStories)) {
@@ -381,11 +222,13 @@ const sortStories = memoizeWeak(null, function(stories, pendingStories) {
                 stories.push(story);
             } else {
                 // copy pending changes into story
-                let index = _.findIndex(stories, { id: story.published_version_id });
+                const index = _.findIndex(stories, { id: story.published_version_id });
                 if (index !== -1) {
-                    let publishedStory = stories[index] = _.clone(stories[index]);
-                    publishedStory.details = story.details;
-                    publishedStory.user_ids = story.user_ids;
+                    stories[index] = {
+                        ...stories[index],
+                        details: story.details,
+                        user_ids: story.user_ids,
+                    };
                 }
             }
         }
@@ -400,13 +243,13 @@ const attachDrafts = memoizeWeak([ null ], function(stories, drafts, currentUser
     });
 
     // current user's own drafts are listed first
-    let own = function(story) {
+    const own = function(story) {
         return story.user_ids[0] === currentUser.id;
     };
     newDrafts = _.orderBy(newDrafts, [ own, 'id' ], [ 'desc', 'desc' ]);
 
     // see if the current user has a draft
-    let currentUserDraft = _.find(newDrafts, (story) => {
+    const currentUserDraft = _.find(newDrafts, (story) => {
         if (story.user_ids[0] === currentUser.id) {
             return true;
         }
@@ -418,7 +261,7 @@ const attachDrafts = memoizeWeak([ null ], function(stories, drafts, currentUser
     return _.concat(newDrafts, stories);
 });
 
-let getStoryTime = function(story) {
+const getStoryTime = function(story) {
     return story.btime || story.ptime;
 };
 
@@ -430,25 +273,33 @@ const findReactions = memoizeWeak(null, function(reactions, story) {
 
 const findAuthors = memoizeWeak(null, function(users, story) {
     if (story) {
-        let hash = _.keyBy(users, 'id');
-        return _.filter(_.map(story.user_ids, (userID) => {
+        const hash = _.keyBy(users, 'id');
+        const list = _.filter(_.map(story.user_ids, (userID) => {
             return hash[userID];
         }));
+        return list;
     }
 });
 
+const findDraftAuthors = memoizeWeak(null, function(currentUser, users, story) {
+    if (story && users) {
+        return findAuthors(users, story);
+    }
+    return [ currentUser ];
+});
+
 const findRespondents = memoizeWeak(null, function(users, reactions) {
-    let respondentIDs = _.uniq(_.map(reactions, 'user_id'));
-    let hash = _.keyBy(users, 'id');
+    const respondentIDs = _.uniq(_.map(reactions, 'user_id'));
+    const hash = _.keyBy(users, 'id');
     return _.filter(_.map(respondentIDs, (userID) => {
         return hash[userID];
     }));
 });
 
-const findRecommendations = memoizeWeak(null, function(recommendations, story, currentUser) {
+const findBookmarks = memoizeWeak(null, function(bookmarks, story, currentUser) {
     if (story) {
         let storyID = story.published_version_id || story.id;
-        return _.filter(recommendations, (bookmark) => {
+        return _.filter(bookmarks, (bookmark) => {
             if (bookmark.story_id === storyID) {
                 // omit those hidden by the current user
                 if (!(bookmark.hidden && bookmark.target_user_id === currentUser.id)) {
@@ -459,75 +310,20 @@ const findRecommendations = memoizeWeak(null, function(recommendations, story, c
     }
 });
 
-const findRecipients = memoizeWeak(null, function(recipients, recommendations) {
+const findRecipients = memoizeWeak(null, function(recipients, bookmarks, story, currentUser) {
+    const storyBookmarks = findBookmarks(bookmarks, story, currentUser);
     return _.filter(recipients, (recipient) => {
-        return _.some(recommendations, { target_user_id: recipient.id });
+        return _.some(storyBookmarks, { target_user_id: recipient.id });
     });
 });
 
-function getAuthorIDs(stories) {
-    let userIDs = _.flatten(_.map(stories, 'user_ids'));
-    return _.uniq(userIDs);
-}
+const component = Relaks.memo(StoryList);
 
-StoryList.defaultProps = {
+component.defaultProps = {
     acceptNewStory: false,
 };
 
 export {
-    StoryList as default,
-    StoryList,
-    StoryListSync,
+    component as default,
+    component as StoryList,
 };
-
-import Database from 'data/database';
-import Payloads from 'transport/payloads';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    StoryList.propTypes = {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        acceptNewStory: PropTypes.bool,
-        highlightStoryID: PropTypes.number,
-        scrollToStoryID: PropTypes.number,
-        highlightReactionID: PropTypes.number,
-        scrollToReactionID: PropTypes.number,
-        stories: PropTypes.arrayOf(PropTypes.object),
-        draftStories: PropTypes.arrayOf(PropTypes.object),
-        pendingStories: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        project: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    StoryListSync.propTypes = {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        acceptNewStory: PropTypes.bool,
-        highlightStoryID: PropTypes.number,
-        scrollToStoryID: PropTypes.number,
-        highlightReactionID: PropTypes.number,
-        scrollToReactionID: PropTypes.number,
-        stories: PropTypes.arrayOf(PropTypes.object),
-        authors: PropTypes.arrayOf(PropTypes.object),
-        draftStories: PropTypes.arrayOf(PropTypes.object),
-        pendingStories: PropTypes.arrayOf(PropTypes.object),
-        reactions: PropTypes.arrayOf(PropTypes.object),
-        respondents: PropTypes.arrayOf(PropTypes.object),
-        recommendations: PropTypes.arrayOf(PropTypes.object),
-        recipients: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        project: PropTypes.object,
-        repos: PropTypes.arrayOf(PropTypes.object),
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

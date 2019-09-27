@@ -13,6 +13,16 @@ body {
     overflow: hidden;
 }
 
+A {
+    &:link, &:visited {
+        color: $link-hover-color;
+    }
+}
+
+BUTTON {
+    user-select: none;
+}
+
 .front-end {
     position: absolute;
     display: flex;

@@ -13,6 +13,8 @@
     input[type=email],
     input[type=url],
     input[type=tel],
+    input[type=time],
+    input[type=number],
     textarea {
         display: block;
         width: 100%;
@@ -21,6 +23,11 @@
         font-size: 1em;
         margin-top: 2px;
         padding: 2px 2px 1px 4px;
+    }
+
+    input[type=time],
+    input[type=number] {
+        width: inherit;
     }
 
     textarea {
@@ -33,6 +40,8 @@
         input[type=email],
         input[type=url],
         input[type=tel],
+        input[type=time],
+        input[type=number],
         textarea {
             border-color: $text-field-read-only-border-color;
             cursor: text;

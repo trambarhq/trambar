@@ -24,14 +24,3 @@ export {
     EmptyMessage as default,
     EmptyMessage,
 };
-
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    EmptyMessage.propTypes = {
-        phrase: PropTypes.string.isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

@@ -1,7 +1,8 @@
 import _ from 'lodash';
-import React, { PureComponent, Children } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
-import SortableTable from 'widgets/sortable-table';
+import SortableTable from './sortable-table.jsx';
 
 import './option-list.scss';
 
@@ -9,64 +10,55 @@ import './option-list.scss';
  * A input control containing a list of selectable options. In read-only mode,
  * only the selected options will be shown. The box will expand to list all
  * options when switching into read-write mode.
- *
- * @extends PureComponent
  */
-class OptionList extends PureComponent {
-    static displayName = 'OptionList';
+function OptionList(props) {
+    const { readOnly, children, onOptionClick } = props;
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { children, readOnly } = this.props;
-        children = Children.toArray(children);
-        let options = _.filter(children, { type: 'option' });
-        let label = _.find(children, { type: 'label' });
-        let classNames = [ 'option-list' ];
-        if (readOnly) {
-            classNames.push('readonly');
+    const handleClick = useListener((evt) => {
+        const name = evt.currentTarget.getAttribute('data-name');
+        if (onOptionClick) {
+            onOptionClick({
+                type: 'optionclick',
+                target: this,
+                name,
+            });
         }
-        let tableProps = {
-            expandable: true,
-            selectable: !readOnly,
-            expanded: !readOnly,
-            sortColumns: [],
-        };
-        return (
-            <div className={classNames.join(' ')}>
-                <label>
-                    {label ? label.props.children : null}
-                </label>
-                <div className="container">
-                    <SortableTable {...tableProps}>
-                        <tbody>
-                        {
-                            _.map(options, (option, i) => {
-                                return this.renderRow(option, i);
-                            })
-                        }
-                        </tbody>
-                    </SortableTable>
-                </div>
-            </div>
-        );
-    }
+    });
 
-    renderRow(option, i) {
-        let { readOnly } = this.props;
-        let { name, hidden, selected, previous, children } = option.props;
+    const array = React.Children.toArray(children);
+    const options = _.filter(array, { type: 'option' });
+    const label = _.find(array, { type: 'label' });
+    const classNames = [ 'option-list' ];
+    if (readOnly) {
+        classNames.push('readonly');
+    }
+    const tableProps = {
+        expandable: true,
+        selectable: !readOnly,
+        expanded: !readOnly,
+        sortColumns: [],
+    };
+    return (
+        <div className={classNames.join(' ')}>
+            <label>
+                {label ? label.props.children : null}
+            </label>
+            <div className="container">
+                <SortableTable {...tableProps}>
+                    <tbody>{_.map(options, renderRow)}</tbody>
+                </SortableTable>
+            </div>
+        </div>
+    );
+
+    function renderRow(option, i) {
+        const { name, hidden, selected, previous, children } = option.props;
         if (hidden) {
             return null;
         }
-        let classNames = [ 'option' ];
+        const classNames = [ 'option' ];
         if (selected) {
-            classNames.push('fixed');
-            if (!readOnly) {
-                classNames.push('selected');
-            }
+            classNames.push(readOnly ? 'fixed' : 'selected');
         }
         let badge;
         if (!readOnly) {
@@ -76,14 +68,11 @@ class OptionList extends PureComponent {
                 badge = <i className="fa fa-times-circle-o badge remove" />;
             }
         }
-        let props = {
+        const props = {
             className: classNames.join(' '),
             'data-name': name,
-            onClick: this.handleClick,
+            onClick: (!readOnly) ? handleClick : undefined,
         };
-        if (readOnly) {
-            props.onClick = undefined;
-        }
         return (
             <tr key={i} {...props}>
                 <td>
@@ -93,30 +82,9 @@ class OptionList extends PureComponent {
             </tr>
         );
     }
-
-    handleClick = (evt) => {
-        let { onOptionClick } = this.props;
-        let name = evt.currentTarget.getAttribute('data-name');
-        if (onOptionClick) {
-            onOptionClick({
-                type: 'optionclick',
-                target: this,
-                name,
-            });
-        }
-    }
 }
 
 export {
     OptionList as default,
     OptionList,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    OptionList.propTypes = {
-        readOnly: PropTypes.bool,
-        onOptionClick: PropTypes.func,
-    };
-}

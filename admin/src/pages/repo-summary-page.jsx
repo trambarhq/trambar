@@ -1,285 +1,176 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import ComponentRefs from 'utils/component-refs';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as RepoFinder from 'objects/finders/repo-finder';
-import * as StatisticsFinder from 'objects/finders/statistics-finder';
+import React, { useState } from 'react';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
+import * as RepoSaver from 'common/objects/savers/repo-saver.mjs';
+import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
+import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
+import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 
 // widgets
-import PushButton from 'widgets/push-button';
-import ComboButton from 'widgets/combo-button';
-import InstructionBlock from 'widgets/instruction-block';
-import TextField from 'widgets/text-field';
-import MultilingualTextField from 'widgets/multilingual-text-field';
-import OptionList from 'widgets/option-list';
-import ActivityChart from 'widgets/activity-chart';
-import ActionConfirmation from 'widgets/action-confirmation';
-import DataLossWarning from 'widgets/data-loss-warning';
-import UnexpectedError from 'widgets/unexpected-error';
-import ErrorBoundary from 'widgets/error-boundary';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ComboButton } from '../widgets/combo-button.jsx';
+import { InstructionBlock } from '../widgets/instruction-block.jsx';
+import { TextField } from '../widgets/text-field.jsx';
+import { URLLink } from '../widgets/url-link.jsx';
+import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
+import { ActivityChart } from '../widgets/activity-chart.jsx';
+import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
+import { UnexpectedError } from '../widgets/unexpected-error.jsx';
+import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
+
+// custom hooks
+import {
+    useDraftBuffer,
+    useValidation,
+    useConfirmation,
+    useDataLossWarning,
+} from '../hooks.mjs';
 
 import './repo-summary-page.scss';
 
-/**
- * Asynchronous component that retrieves data needed by the Repo Summary page.
- *
- * @extends AsyncComponent
- */
-class RepoSummaryPage extends AsyncComponent {
-    static displayName = 'RepoSummaryPage';
+async function RepoSummaryPage(props) {
+    const { database, projectID, repoID } = props;
+    const [ show ] = useProgress();
 
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, env, projectID, repoID, editing } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let props = {
-            projectID,
-            database,
-            route,
-            env,
-            editing,
-        };
-        meanwhile.show(<RepoSummaryPageSync {...props} />);
-        let currentUserID = await db.start()
-        props.repo = await RepoFinder.findRepo(db, repoID);
-        meanwhile.show(<RepoSummaryPageSync {...props} />);
-        props.project = await ProjectFinder.findProject(db, projectID);
-        meanwhile.show(<RepoSummaryPageSync {...props} />);
-        props.statistics = await StatisticsFinder.findDailyActivitiesOfRepo(db, props.project, props.repo);
-        return <RepoSummaryPageSync {...props} />;
+    render();
+    const currentUserID = await database.start()
+    const system = await SystemFinder.findSystem(database);
+    const repo = await RepoFinder.findRepo(database, repoID);
+    render();
+    const project = await ProjectFinder.findProject(database, projectID);
+    render();
+    const statistics = await StatisticsFinder.findDailyActivitiesOfRepo(database, project, repo);
+    render();
+
+    function render() {
+        const sprops = { system, repo, project, statistics };
+        show(<RepoSummaryPageSync key={repoID} {...sprops} {...props} />);
     }
 }
 
-/**
- * Synchronous component that actually renders the Repo Summary page.
- *
- * @extends PureComponent
- */
-class RepoSummaryPageSync extends PureComponent {
-    static displayName = 'RepoSummaryPageSync';
+function RepoSummaryPageSync(props) {
+    const { system, repo, project, statistics } = props;
+    const { database, route, env, editing } = props;
+    const { t, p } = env.locale;
+    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
+    const readOnly = !editing;
+    const draft = useDraftBuffer({
+        original: repo,
+        reset: readOnly,
+    });
+    const [ error, run ] = useErrorCatcher();
+    const [ problems, reportProblems ] = useValidation(!readOnly);
+    const [ confirmationRef, confirm ] = useConfirmation();
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
+    const baseURL = _.get(repo, 'details.web_url');
 
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            confirmation: ActionConfirmation
+    const handleEditClick = useListener((evt) => {
+        route.push({ editing: true });
+    });
+    const handleCancelClick = useListener((evt) => {
+        route.push({ editing: undefined });
+    });
+    const handleReturnClick = useListener((evt) => {
+        route.push('repo-list-page', { projectID: project.id });
+    });
+    const handleRemoveClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('repo-summary-confirm-remove'));
+            await ProjectSaver.removeFromRepoList(database, project, repo.id);
         });
-        this.state = {
-            newRepo: null,
-            saving: false,
-            problems: {},
-        };
-    }
+    });
+    const handleRestoreClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('repo-summary-confirm-restore'));
+            await ProjectSaver.addToRepoList(database, project, repo.id);
+        });
+    });
+    const handleSaveClick = useListener((evt) => {
+        run(async () => {
+            await RepoSaver.saveRepo(database, draft.current);
+            warnDataLoss(false);
+            handleCancelClick();
+        });
+    });
+    const handleTitleChange = useListener((evt) => {
+        const title = evt.target.value;
+        draft.set('details.title', title);
+    });
 
-    /**
-     * Reset edit state when edit ends
-     *
-     * @param  {Object} props
-     * @param  {Object} state
-     */
-    static getDerivedStateFromProps(props, state) {
-        let { editing } = props;
-        if (!editing) {
-            return {
-                newRepo: null,
-                hasChanges: false,
-                problems: {},
-            };
-        }
-        return null;
-    }
+    warnDataLoss(draft.changed);
 
-    /**
-     * Return edited copy of repo object or the original object
-     *
-     * @param  {String} state
-     *
-     * @return {Object}
-     */
-    getRepo(state) {
-        let { repo } = this.props;
-        let { newRepo } = this.state;
-        if (!state || state === 'current') {
-            return newRepo || repo || emptyRepo;
-        } else {
-            return repo || emptyRepo;
-        }
-    }
+    const { changed } = draft;
+    const title = RepoUtils.getDisplayName(repo, env);
+    return (
+        <div className="repo-summary-page">
+            {renderButtons()}
+            <h2>{t('repo-summary-$title', title)}</h2>
+            <UnexpectedError error={error} />
+            {renderForm()}
+            {renderInstructions()}
+            {renderChart()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
+        </div>
+    );
 
-    /**
-     * Return a property of the repo object
-     *
-     * @param  {String} path
-     * @param  {String} state
-     *
-     * @return {*}
-     */
-    getRepoProperty(path, state) {
-        let repo = this.getRepo(state);
-        return _.get(repo, path);
-    }
-
-    /**
-     * Modify a property of the repo object
-     *
-     * @param  {String} path
-     * @param  {*} value
-     */
-    setRepoProperty(path, value) {
-        let { repo } = this.props;
-        let newRepo = this.getRepo();
-        let newRepoAfter = _.decoupleSet(newRepo, path, value);
-        let hasChanges = true;
-        if (_.isEqual(newRepoAfter, repo)) {
-            newRepoAfter = null;
-            hasChanges = false;
-        }
-        this.setState({ newRepo: newRepoAfter, hasChanges });
-    }
-
-    /**
-     * Change editability of page
-     *
-     * @param  {Boolean} edit
-     *
-     * @return {Promise}
-     */
-    setEditability(edit) {
-        let { route } = this.props;
-        let params = _.clone(route.params);
-        params.editing = edit || undefined;
-        return route.replace(route.name, params);
-    }
-
-    /**
-     * Return to repo list
-     *
-     * @return {Promise}
-     */
-    returnToList() {
-        let { route, projectID } = this.props;
-        let params = { projectID };
-        return route.push('repo-list-page', params);
-    }
-
-    /**
-     * Return list of language codes
-     *
-     * @return {Array<String>}
-     */
-    getInputLanguages() {
-        let { system } = this.props;
-        return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { route, env } = this.props;
-        let { hasChanges, problems } = this.state;
-        let { setters } = this.components;
-        let { t, p } = env.locale;
-        let repo = this.getRepo();
-        let title = p(_.get(repo, 'details.title')) || repo.name;
-        return (
-            <div className="repo-summary-page">
-                {this.renderButtons()}
-                <h2>{t('repo-summary-$title', title)}</h2>
-                <UnexpectedError>{problems.unexpected}</UnexpectedError>
-                {this.renderForm()}
-                {this.renderInstructions()}
-                {this.renderChart()}
-                <ActionConfirmation ref={setters.confirmation} env={env} />
-                <DataLossWarning changes={hasChanges} env={env} route={route} />
-            </div>
-        );
-    }
-
-    /**
-     * Render buttons in top right corner
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { route, env, project, repo, editing } = this.props;
-        let { hasChanges } = this.state;
-        let { t } = env.locale;
-        if (editing) {
-            return (
-                <div key="edit" className="buttons">
-                    <PushButton onClick={this.handleCancelClick}>
-                        {t('repo-summary-cancel')}
-                    </PushButton>
-                    {' '}
-                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
-                        {t('repo-summary-save')}
-                    </PushButton>
-                </div>
-            );
-        } else {
-            let active = (project && repo) ? _.includes(project.repo_ids, repo.id) : true;
-            let preselected = (!active) ? 'restore' : undefined;
+    function renderButtons() {
+        if (readOnly) {
+            const active = (project && repo) ? _.includes(project.repo_ids, repo.id) : true;
+            const preselected = (!active) ? 'restore' : undefined;
             return (
                 <div key="view" className="buttons">
                     <ComboButton preselected={preselected}>
-                        <option name="return" onClick={this.handleReturnClick}>
+                        <option name="return" onClick={handleReturnClick}>
                             {t('repo-summary-return')}
                         </option>
-                        <option name="remove" disabled={!active} onClick={this.handleRemoveClick}>
+                        <option name="remove" disabled={!active} onClick={handleRemoveClick}>
                             {t('repo-summary-remove')}
                         </option>
-                        <option name="restore" hidden={active} onClick={this.handleRestoreClick}>
+                        <option name="restore" hidden={active} onClick={handleRestoreClick}>
                             {t('repo-summary-restore')}
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton className="emphasis" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" onClick={handleEditClick}>
                         {t('repo-summary-edit')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            return (
+                <div key="edit" className="buttons">
+                    <PushButton onClick={handleCancelClick}>
+                        {t('repo-summary-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
+                        {t('repo-summary-save')}
                     </PushButton>
                 </div>
             );
         }
     }
 
-    /**
-     * Render form for entering repo details
-     *
-     * @return {ReactElement}
-     */
-    renderForm() {
+    function renderForm() {
         return (
             <div className="form">
-                {this.renderTitleInput()}
-                {this.renderNameInput()}
-                {this.renderIssueTrackingStatus()}
+                {renderTitleInput()}
+                {renderNameInput()}
+                {renderIssueTrackingStatus()}
             </div>
         );
     }
 
-    /**
-     * Render title input
-     *
-     * @return {ReactElement}
-     */
-    renderTitleInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderTitleInput() {
+        const props = {
             id: 'title',
-            value: this.getRepoProperty('details.title'),
-            availableLanguageCodes: this.getInputLanguages(),
-            readOnly: !editing,
+            value: draft.get('details.title', {}),
+            availableLanguageCodes,
+            readOnly,
             env,
-            onChange: this.handleTitleChange,
+            onChange: handleTitleChange,
         };
         return (
             <MultilingualTextField {...props}>
@@ -288,44 +179,27 @@ class RepoSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render repo name input (read only)
-     *
-     * @return {ReactElement}
-     */
-    renderNameInput() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderNameInput() {
+        const props = {
             id: 'name',
-            value: this.getRepoProperty('name'),
+            value: draft.get('name', ''),
             readOnly: true,
             env,
         };
         return (
             <TextField {...props}>
                 {t('repo-summary-gitlab-name')}
+                {' '}
+                <URLLink url={baseURL} />
             </TextField>
         );
     }
 
-    /**
-     * Render issue tracker status
-     *
-     * @return {ReactElement}
-     */
-    renderIssueTrackingStatus() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        let issueTrackStatus;
-        if (this.getRepoProperty('details.issues_enabled')) {
-            issueTrackStatus = t('repo-summary-issue-tracker-enabled');
-        } else {
-            issueTrackStatus = t('repo-summary-issue-tracker-disabled');
-        }
-        let props = {
+    function renderIssueTrackingStatus() {
+        const status = draft.get('details.issues_enabled') ? 'enabled' : 'disabled';
+        const props = {
             id: 'issue-tracker',
-            value: issueTrackStatus,
+            value: t(`repo-summary-issue-tracker-${status}`),
             readOnly: true,
             env,
         };
@@ -336,14 +210,8 @@ class RepoSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render instruction box
-     *
-     * @return {ReactElement}
-     */
-    renderInstructions() {
-        let { env, editing } = this.props;
-        let instructionProps = {
+    function renderInstructions() {
+        const instructionProps = {
             folder: 'repo',
             topic: 'repo-summary',
             hidden: !editing,
@@ -356,18 +224,8 @@ class RepoSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render activity chart
-     *
-     * @return {ReactElement}
-     */
-    renderChart() {
-        let { env, statistics } = this.props;
-        let { t } = env.locale;
-        let chartProps = {
-            statistics,
-            env,
-        };
+    function renderChart() {
+        const chartProps = { statistics, env };
         return (
             <div className="statistics">
                 <ErrorBoundary env={env}>
@@ -378,166 +236,11 @@ class RepoSummaryPageSync extends PureComponent {
             </div>
         );
     }
-
-    /**
-     * Save project with repo added or removed
-     *
-     * @param  {Boolean} include
-     *
-     * @return {Promise<Project|undefined>}
-     */
-    async changeInclusion(include) {
-        let { database, project, repo } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let repoIDs = project.repo_ids;
-        if (include) {
-            repoIDs = _.union(repoIDs, [ repo.id ]);
-        } else {
-            repoIDs = _.difference(repoIDs, [ repo.id ]);
-        }
-        let projectAfter = _.assign({}, project, { repo_ids: repoIDs });
-        try {
-            return db.saveOne({ table: 'project' }, projectAfter);
-        } catch (err) {
-            let problems = { unexpected: err.message };
-            this.setState({ problems });
-        }
-    }
-
-    /**
-     * Called when user clicks remove button
-     *
-     * @param  {Event} evt
-     */
-    handleRemoveClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('repo-summary-confirm-remove');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            let projectAfter = await this.changeInclusion(false);
-            if (projectAfter) {
-                await this.returnToList();
-            }
-        }
-    }
-
-    /**
-     * Called when user clicks restore button
-     *
-     * @param  {Event} evt
-     */
-    handleRestoreClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('repo-summary-confirm-restore');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            await this.changeInclusion(true);
-        }
-    }
-
-    /**
-     * Called when user clicks return button
-     *
-     * @param  {Event} evt
-     */
-    handleReturnClick = (evt) => {
-        return this.returnToList();
-    }
-
-    /**
-     * Called when user clicks edit button
-     *
-     * @param  {Event} evt
-     */
-    handleEditClick = (evt) => {
-        return this.setEditability(true);
-    }
-
-    /**
-     * Called when user clicks cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = (evt) => {
-        return this.setEditability(false);
-    }
-
-    /**
-     * Called when user clicks save button
-     *
-     * @param  {Event} evt
-     */
-    handleSaveClick = (evt) => {
-        let { database } = this.props;
-        let { saving } = this.state;
-        if (saving) {
-            return;
-        }
-        let repo = this.getRepo();
-        this.setState({ saving: true, problems: {} }, async () => {
-            try {
-                let db = database.use({ schema: 'global', by: this });
-                let currentUserID = await db.start();
-                let repoAfter = await db.saveOne({ table: 'repo' }, repo);
-                this.setState({ hasChanges: false, saving: false }, () => {
-                    this.setEditability(false);
-                });
-            } catch (err) {
-                let problems = { unexpected: err.message };
-                this.setState({ problems, saving: false });
-            }
-        });
-    }
-
-    /**
-     * Called when user changes the title
-     *
-     * @param  {Event} evt
-     */
-    handleTitleChange = (evt) => {
-        this.setRepoProperty(`details.title`, evt.target.value);
-    }
 }
 
-const emptyRepo = {
-    details: {}
-};
+const component = Relaks.memo(RepoSummaryPage);
 
 export {
-    RepoSummaryPage as default,
-    RepoSummaryPage,
-    RepoSummaryPageSync,
+    component as default,
+    component as RepoSummaryPage,
 };
-
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    RepoSummaryPage.propTypes = {
-        editing: PropTypes.bool,
-        projectID: PropTypes.number.isRequired,
-        repoID: PropTypes.number.isRequired,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    RepoSummaryPageSync.propTypes = {
-        editing: PropTypes.bool,
-        projectID: PropTypes.number.isRequired,
-        system: PropTypes.object,
-        repo: PropTypes.object,
-        project: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

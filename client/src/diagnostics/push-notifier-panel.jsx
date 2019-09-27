@@ -1,53 +1,49 @@
 import _ from 'lodash';
-import React, { Component } from 'react';
+import React from 'react';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import DiagnosticsSection from 'widgets/diagnostics-section';
+import { SettingsPanel } from '../widgets/settings-panel.jsx';
+import { DiagnosticsSection } from '../widgets/diagnostics-section.jsx';
 
 import './push-notifier-panel.scss';
 
-class PushNotifierPanel extends Component {
-    static displayName = 'PushNotifierPanel';
-    /**
-     * Render diagnostics
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { notifier } = this.props;
-        let {
-            registrationID,
-            registrationType,
-            relayAddress,
-            relayToken,
-            recentMessages,
-        } = notifier;
-        let device = getDeviceDetails();
-        return (
-            <SettingsPanel className="push-notifier">
-                <header>
-                    <i className="fa fa-gear" /> Push Notification
-                </header>
-                <body>
-                    <DiagnosticsSection label="Registration">
-                        <div>ID: {registrationID}</div>
-                        <div>Network: {registrationType}</div>
-                    </DiagnosticsSection>
-                    <DiagnosticsSection label="Push relay">
-                        <div>Address: {relayAddress}</div>
-                        <div>Token: {relayToken}</div>
-                    </DiagnosticsSection>
-                    <DiagnosticsSection label="Recent messages">
-                       {_.map(recentMessages, renderJSON)}
-                    </DiagnosticsSection>
-                    <DiagnosticsSection label="Device">
-                        <div>Manufacturer: {device.manufacturer}</div>
-                        <div>Model: {device.name}</div>
-                    </DiagnosticsSection>
-                </body>
-            </SettingsPanel>
-        );
+function PushNotifierPanel(props) {
+    const { notifier } = props;
+    const {
+        registrationID,
+        registrationType,
+        relayAddress,
+        relayToken,
+        recentMessages,
+    } = notifier;
+    const device = getDeviceDetails();
+    return (
+        <SettingsPanel className="push-notifier">
+            <header>
+                <i className="fa fa-gear" /> Push Notification
+            </header>
+            <body>
+                <DiagnosticsSection label="Registration">
+                    <div>ID: {registrationID}</div>
+                    <div>Network: {registrationType}</div>
+                </DiagnosticsSection>
+                <DiagnosticsSection label="Push relay">
+                    <div>Address: {relayAddress}</div>
+                    <div>Token: {relayToken}</div>
+                </DiagnosticsSection>
+                <DiagnosticsSection label="Recent messages">
+                   {_.map(recentMessages, renderJSON)}
+                </DiagnosticsSection>
+                <DiagnosticsSection label="Device">
+                    <div>Manufacturer: {device.manufacturer}</div>
+                    <div>Model: {device.name}</div>
+                </DiagnosticsSection>
+            </body>
+        </SettingsPanel>
+    );
+
+    function renderJSON(object, i) {
+        return <pre key={i}>{JSON.stringify(object, undefined, 4)}</pre>;
     }
 }
 
@@ -57,7 +53,7 @@ class PushNotifierPanel extends Component {
  * @return {Object}
  */
 function getDeviceDetails() {
-    let device = window.device;
+    const device = window.device;
     if (device) {
         return {
             manufacturer: device.manufacturer,
@@ -67,21 +63,7 @@ function getDeviceDetails() {
     return {};
 }
 
-function renderJSON(object, i) {
-    return <pre key={i}>{JSON.stringify(object, undefined, 4)}</pre>;
-}
-
 export {
     PushNotifierPanel as default,
     PushNotifierPanel,
 };
-
-import PushNotifier from 'transport/push-notifier';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    PushNotifierPanel.propTypes = {
-        notifier: PropTypes.instanceOf(PushNotifier),
-    };
-}

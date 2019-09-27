@@ -1,204 +1,94 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as StoryFinder from 'objects/finders/story-finder';
-import * as ProjectUtils from 'objects/utils/project-utils';
-import * as TagScanner from 'utils/tag-scanner';
+import React from 'react';
+import Relaks, { useProgress } from 'relaks';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as StoryFinder from 'common/objects/finders/story-finder.mjs';
+import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
+import * as TagScanner from 'common/utils/tag-scanner.mjs';
 
 // widgets
-import PageContainer from 'widgets/page-container';
-import StoryList from 'lists/story-list';
-import LoadingAnimation from 'widgets/loading-animation';
-import EmptyMessage from 'widgets/empty-message';
+import { PageContainer } from '../widgets/page-container.jsx';
+import { StoryList } from '../lists/story-list.jsx';
+import { LoadingAnimation } from '../widgets/loading-animation.jsx';
+import { EmptyMessage } from '../widgets/empty-message.jsx';
 
 import './news-page.scss';
 
-/**
- * Asynchronous component that retrieves data needed by the News page.
- *
- * @extends AsyncComponent
- */
-class NewsPage extends AsyncComponent {
-    static displayName = 'NewsPage';
+async function NewsPage(props) {
+    const { database, route, payloads, env, search, roleIDs, date } = props;
+    const { highlightStoryID, scrollToStoryID, highlightReactionID, scrollToReactionID } = props;
+    const [ show ] = useProgress();
+    let filtering = false;
+    let tags;
+    if (search) {
+        if (!TagScanner.removeTags(search)) {
+            tags = TagScanner.findTags(search);
+        }
+        filtering = true;
+    }
+    if (date || !_.isEmpty(roleIDs)) {
+        filtering = true;
+    }
 
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let {
-            database,
-            route,
-            payloads,
-            env,
-            search,
-            roleIDs,
-            date,
-            highlightStoryID,
-            scrollToStoryID,
-            highlightReactionID,
-            scrollToReactionID,
-        } = this.props;
-        let db = database.use({ by: this });
-        let filtering = false;
-        let tags;
-        if (search) {
-            if (!TagScanner.removeTags(search)) {
-                tags = TagScanner.findTags(search);
-            }
-            filtering = true;
-        }
-        if (date || !_.isEmpty(roleIDs)) {
-            filtering = true;
-        }
-        let props = {
-            acceptNewStory: !filtering,
-            search,
-            roleIDs,
-            date,
-            highlightStoryID,
-            scrollToStoryID,
-            highlightReactionID,
-            scrollToReactionID,
-            database,
-            payloads,
-            route,
-            env,
-        };
-        meanwhile.show(<NewsPageSync {...props} />);
-        let currentUserID = await db.start();
-        props.currentUser = await UserFinder.findUser(db, currentUserID);
-        props.project = await ProjectFinder.findCurrentProject(db);
-        meanwhile.show(<NewsPageSync {...props} />);
-        if (tags) {
-            props.stories = await StoryFinder.findStoriesWithTags(db, tags, props.currentUser);
-        } else if (search) {
-            props.stories = await StoryFinder.findStoriesMatchingText(db, search, env, props.currentUser);
-        } else if (date) {
-            props.stories = await StoryFinder.findStoriesOnDate(db, date, props.currentUser);
-        } else if (!_.isEmpty(roleIDs)) {
-            props.stories = await StoryFinder.findStoriesWithRolesInListing(db, 'news', roleIDs, props.currentUser);
-        } else {
-            props.stories = await StoryFinder.findStoriesInListing(db, 'news', props.currentUser);
-            meanwhile.show(<NewsPageSync {...props} />);
-            props.draftStories = await StoryFinder.findDraftStories(db, props.currentUser);
-            let limit = env.getRelativeDate(-1, 'date');
-            props.pendingStories = await StoryFinder.findUnlistedStories(db, props.currentUser, props.stories, limit);
-        }
-        // when we're highlighting a story, make sure the story is actually there
-        if (!date) {
-            let storyID = highlightStoryID;
-            if (storyID) {
-                let allStories = _.concat(props.stories, props.draftStories, props.pendingStories);
-                if (!_.find(allStories, { id: storyID })) {
-                    try {
-                        let story = await StoryFinder.findStory(db, storyID);
-                        await this.redirectToStory(route.params.schema, story);
-                    } catch (err) {
-                    }
+    render();
+    const currentUserID = await database.start();
+    const currentUser = await UserFinder.findUser(database, currentUserID);
+    const project = await ProjectFinder.findCurrentProject(database);
+    render();
+    let stories, draftStories, pendingStories;
+    if (tags) {
+        stories = await StoryFinder.findStoriesWithTags(database, tags, currentUser);
+    } else if (search) {
+        stories = await StoryFinder.findStoriesMatchingText(database, search, env, currentUser);
+    } else if (date) {
+        stories = await StoryFinder.findStoriesOnDate(database, date, currentUser);
+    } else if (!_.isEmpty(roleIDs)) {
+        stories = await StoryFinder.findStoriesWithRolesInListing(database, 'news', roleIDs, currentUser);
+    } else {
+        stories = await StoryFinder.findStoriesInListing(database, 'news', currentUser);
+        render();
+        draftStories = await StoryFinder.findDraftStories(database, currentUser);
+        render();
+        const limit = env.getRelativeDate(-1, 'date');
+        pendingStories = await StoryFinder.findUnlistedStories(database, currentUser, stories, limit);
+    }
+    render();
+
+    // when we're highlighting a story, make sure the story is actually there
+    if (!date) {
+        const storyID = highlightStoryID;
+        if (storyID) {
+            const allStories = _.concat(stories, draftStories, pendingStories);
+            if (!_.find(allStories, { id: storyID })) {
+                try {
+                    const story = await StoryFinder.findStory(database, storyID);
+                    await redirectToStory(route.params.schema, story);
+                } catch (err) {
                 }
             }
         }
-        return <NewsPageSync {...props} />;
     }
 
-    /**
-     * Redirect to page showing stories on the date of a story
-     *
-     * @param  {String} schema
-     * @param  {Story} story
-     *
-     * @return {Promise|undefined}
-     */
-    redirectToStory(schema, story) {
-        let { route } = this.props;
-        let redirect = true;
-        if (story.ptime && story.published && story.ready !== false) {
-            // don't redirect if the story is very recent
-            let elapsed = Moment() - Moment(story.ptime);
-            if (elapsed < 60 * 1000) {
-                return;
-            }
-        }
-        if (redirect) {
-            let params = {
-                schema: schema,
-                date: Moment(story.ptime).format('YYYY-MM-DD'),
-                highlightStoryID: story.id,
-            };
-            return route.replace(route.name, params);
-        }
-    }
-}
-
-/**
- * Synchronous component that actually renders the News page.
- *
- * @extends PureComponent
- */
-class NewsPageSync extends PureComponent {
-    static displayName = 'NewsPageSync';
-
-    /**
-     * Return the access level
-     *
-     * @return {String}
-     */
-    getAccessLevel() {
-        let { project, currentUser } = this.props;
-        return ProjectUtils.getUserAccessLevel(project, currentUser) || 'read-only';
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        return (
+    function render() {
+        show(
             <PageContainer className="news-page">
-                {this.renderList()}
-                {this.renderEmptyMessage()}
+                {renderList()}
+                {renderEmptyMessage()}
             </PageContainer>
         );
     }
 
-    /**
-     * Render list of stories
-     *
-     * @return {ReactElement|null}
-     */
-    renderList() {
-        let {
-            database,
-            route,
-            env,
-            payloads,
-            stories,
-            draftStories,
-            pendingStories,
-            currentUser,
-            project,
-            acceptNewStory,
-            highlightStoryID,
-            scrollToStoryID,
-            highlightReactionID,
-            scrollToReactionID,
-        } = this.props;
+    function renderList() {
         // don't render when we haven't done loading
         if (!stories) {
             return null;
         }
-        let access = this.getAccessLevel();
-        let listProps = {
+        const access = ProjectUtils.getUserAccessLevel(project, currentUser) || 'read-only';
+        const listProps = {
             access,
-            acceptNewStory: acceptNewStory && access === 'read-write',
+            acceptNewStory: !filtering && access === 'read-write',
             highlightStoryID,
             scrollToStoryID,
             highlightReactionID,
@@ -212,23 +102,16 @@ class NewsPageSync extends PureComponent {
             payloads,
             route,
             env,
-            onMissingStory: this.handleMissingStory,
         };
         return <StoryList {...listProps} />
     }
 
-    /**
-     * Render a message if there're no stories
-     *
-     * @return {ReactElement|null}
-     */
-    renderEmptyMessage() {
-        let { env, stories, date, roleIDs, search } = this.props;
+    function renderEmptyMessage() {
         if (!_.isEmpty(stories)) {
             return null;
         }
         if (!stories) {
-            // props.stories is null when they're being loaded
+            // stories is undefined when they're being loaded
             return <LoadingAnimation />;
         } else {
             let phrase;
@@ -241,59 +124,34 @@ class NewsPageSync extends PureComponent {
             } else {
                 phrase = 'news-no-stories-yet';
             }
-            let props = { phrase, env };
+            const props = { phrase, env };
             return <EmptyMessage {...props} />;
+        }
+    }
+
+    function redirectToStory(schema, story) {
+        let redirect = true;
+        if (story.ptime && story.published && story.ready !== false) {
+            // don't redirect if the story is very recent
+            const elapsed = Moment() - Moment(story.ptime);
+            if (elapsed < 60 * 1000) {
+                return;
+            }
+        }
+        if (redirect) {
+            const params = {
+                schema: schema,
+                date: Moment(story.ptime).format('YYYY-MM-DD'),
+                highlightStoryID: story.id,
+            };
+            return route.replace(route.name, params);
         }
     }
 }
 
+const component = Relaks.memo(NewsPage);
+
 export {
-    NewsPage as default,
-    NewsPage,
-    NewsPageSync
+    component as default,
+    component as NewsPage,
 };
-
-import Database from 'data/database';
-import Payloads from 'transport/payloads';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    NewsPage.propTypes = {
-        roleIDs: PropTypes.arrayOf(PropTypes.number),
-        search: PropTypes.string,
-        date: PropTypes.string,
-        scrollToStoryID: PropTypes.number,
-        highlightStoryID: PropTypes.number,
-        scrollToReactionID: PropTypes.number,
-        highlightReactionID: PropTypes.number,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    NewsPageSync.propTypes = {
-        roleIDs: PropTypes.arrayOf(PropTypes.number),
-        search: PropTypes.string,
-        date: PropTypes.string,
-        scrollToStoryID: PropTypes.number,
-        highlightStoryID: PropTypes.number,
-        scrollToReactionID: PropTypes.number,
-        highlightReactionID: PropTypes.number,
-        acceptNewStory: PropTypes.bool,
-        listing: PropTypes.object,
-        stories: PropTypes.arrayOf(PropTypes.object),
-        draftStories: PropTypes.arrayOf(PropTypes.object),
-        pendingStories: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        project: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

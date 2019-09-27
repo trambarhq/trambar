@@ -1,149 +1,77 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as UserUtils from 'objects/utils/user-utils';
+import React from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import ProfileImage from 'widgets/profile-image';
+import ProfileImage from '../widgets/profile-image.jsx';
 
-require('./user-selection-list.scss');
+import './user-selection-list.scss';
 
-class UserSelectionList extends AsyncComponent {
-    static displayName = 'UserSelectionList';
+async function UserSelectionList(props) {
+    const { database, route, env, selection, disabled, onSelect } = props;
+    const [ show ] = useProgress();
 
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let {
-            database,
-            route,
-            env,
-            selection,
-            disabled,
-            onSelect,
-        } = this.props;
-        let db = database.use({ by: this });
-        let props = {
-            users: undefined,
+    const handleUserClick = useListener((evt) => {
+        const userID = parseInt(evt.currentTarget.getAttribute('data-id'));
+        const user = _.find(users, { id: userID });
+        const userSelected = _.find(selection, { id: userID });
+        let newSelection;
+        if (userSelected) {
+            newSelection = _.without(selection, userSelected);
+        } else {
+            newSelection = _.concat(selection, user);
+        }
+        if (onSelect) {
+            onSelect({ selection: newSelection });
+        }
+    });
 
-            selection,
-            disabled,
-            env,
-            onSelect,
-        };
-        meanwhile.show(<UserSelectionListSync {...props} />);
-        let currentUserID = await db.start();
-        let project = await ProjectFinder.findCurrentProject(db);
-        props.users = await UserFinder.findProjectMembers(db, project);
-        return <UserSelectionListSync {...props} />
-    }
-}
+    render();
+    const project = await ProjectFinder.findCurrentProject(database);
+    const users = await UserFinder.findProjectMembers(database, project);
+    render();
 
-/**
- * Synchronous component that actually renders the list.
- *
- * @extends PureComponent
- */
-class UserSelectionListSync extends PureComponent {
-    static displayName = 'UserSelectionListSync';
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { env, users } = this.props;
-        users = sortUsers(users, env);
-        return (
+    function render() {
+        const sorted = sortUsers(users, env);
+        show(
             <div className="user-selection-list">
-            {
-                _.map(users, (user) => {
-                    return this.renderUser(user);
-                })
-            }
+                {_.map(sorted, renderUser)}
             </div>
         );
     }
 
-    /**
-     * Render a user's name and profile picture
-     *
-     * @return {ReactElement}
-     */
-    renderUser(user) {
-        let { env, selection, disabled } = this.props;
-        let props = {
+    function renderUser(user) {
+        const props = {
             user,
-            selected: _.includes(selection, user.id),
-            disabled: _.includes(disabled, user.id),
+            selected: _.some(selection, { id: user.id }),
+            disabled: _.some(disabled, { id: user.id }),
             env,
-            onClick: this.handleUserClick,
+            onClick: handleUserClick,
         };
         return <User key={user.id} {...props} />
-    }
-
-    /**
-     * Inform parent component that the selection has changed
-     *
-     * @param  {Array<Number>} selection
-     */
-    triggerSelectEvent(selection) {
-        let { onSelect } = this.props;
-        if (onSelect) {
-            onSelect({
-                type: 'select',
-                target: this,
-                selection,
-            });
-        }
-    }
-
-    /**
-     * Called when user clicks on a user
-     *
-     * @param  {Event} evt
-     */
-    handleUserClick = (evt) => {
-        let { selection } = this.props;
-        let userID = parseInt(evt.currentTarget.getAttribute('data-user-id'));
-        if (_.includes(selection, userID)) {
-            selection = _.without(selection, userID);
-        } else {
-            selection = _.concat(selection, userID);
-        }
-        this.triggerSelectEvent(selection);
     }
 }
 
 function User(props) {
-    let { user, env, disabled, onClick } = props;
-    let classNames = [ 'user' ];
+    const { user, env, disabled, onClick } = props;
+    const classNames = [ 'user' ];
     if (props.selected) {
         classNames.push('selected');
     }
     if (props.disabled) {
         classNames.push('disabled');
     }
-    let name = UserUtils.getDisplayName(user, env);
+    const name = UserUtils.getDisplayName(user, env);
     let containerProps = {
         className: classNames.join(' '),
-        'data-user-id': user.id,
+        'data-id': user.id,
         onClick: !disabled ? onClick : null,
     };
-    let imageProps = {
-        user,
-        env,
-        size: 'small',
-    };
+    const imageProps = { user, env, size: 'small' };
     return (
         <div {...containerProps}>
             <ProfileImage {...imageProps} />
@@ -161,36 +89,9 @@ const sortUsers = memoizeWeak(null, function(users, env) {
     return _.orderBy(users, [ name ], [ 'asc' ]);
 });
 
+const component = Relaks.memo(UserSelectionList);
+
 export {
-    UserSelectionList as default,
-    UserSelectionList,
-    UserSelectionListSync,
+    component as default,
+    component as UserSelectionList,
 };
-
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    UserSelectionList.propTypes = {
-        selection: PropTypes.arrayOf(PropTypes.number),
-        disabled: PropTypes.arrayOf(PropTypes.number),
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onSelect: PropTypes.func,
-    };
-    UserSelectionListSync.propTypes = {
-        users: PropTypes.arrayOf(PropTypes.object),
-        selection: PropTypes.arrayOf(PropTypes.number),
-        disabled: PropTypes.arrayOf(PropTypes.number),
-
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onSelect: PropTypes.func,
-    };
-}

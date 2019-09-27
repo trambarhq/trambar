@@ -1,123 +1,79 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import HeaderButton from 'widgets/header-button';
-import UserSelectionDialogBox from 'dialogs/user-selection-dialog-box';
+import { HeaderButton } from './header-button.jsx';
+import { UserSelectionDialogBox } from '../dialogs/user-selection-dialog-box';
 
 import './coauthoring-button.scss';
 
 /**
  * Button for adding/removing co-authors from a story. The component is also
  * responsible for rendering the dialog box.
- *
- * @extends PureComponent
  */
-class CoauthoringButton extends PureComponent {
-    static displayName = 'CoauthoringButton';
+function CoauthoringButton(props) {
+    const { authors, currentUser } = props;
+    const { database, route, env } = props;
+    const { onRemove, onSelect } = props;
+    const { t } = env.locale;
+    const [ selecting, setSelecting ] = useState(false);
+    const coauthoring = UserUtils.isCoauthor(authors, currentUser);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            selecting: false,
-        };
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { env, story, coauthoring } = this.props;
-        let { t } = env.locale;
-        let icon, label;
+    const handleClick = useListener((evt) => {
         if (coauthoring) {
-            icon = 'minus-square';
-            label = t('story-remove-yourself');
-        } else {
-            icon = 'plus-square';
-            if (story.user_ids.length > 1) {
-                label = t('story-add-remove-coauthor');
-            } else {
-                label = t('story-add-coauthor');
+            if (onRemove) {
+                onRemove({});
             }
+        } else {
+            setSelecting(true);
         }
-        return (
-            <span className="coauthoring-button">
-                <span onClick={this.handleClick}>
-                    <i className={`fa fa-${icon}`} />
-                    <span className="label">{label}</span>
-                </span>
-                {this.renderDialogBox()}
-            </span>
-        );
-    }
+    });
+    const handleCancel = useListener((evt) => {
+        setSelecting(false);
+    });
+    const handleSelect = useListener((evt) => {
+        if (onSelect) {
+            onSelect({ selection: evt.selection });
+        }
+        setSelecting(false);
+    });
 
-    /**
-     * Render dialog box for selecting co-authors
-     *
-     * @return {ReactElement}
-     */
-    renderDialogBox() {
-        let { database, route, env, story } = this.props;
-        let { selecting } = this.state;
-        let props = {
+    let icon, label;
+    if (coauthoring) {
+        icon = 'minus-square';
+        label = t('story-remove-yourself');
+    } else {
+        icon = 'plus-square';
+        if (_.size(authors) > 1) {
+            label = t('story-add-remove-coauthor');
+        } else {
+            label = t('story-add-coauthor');
+        }
+    }
+    return (
+        <span className="coauthoring-button">
+            <span onClick={handleClick}>
+                <i className={`fa fa-${icon}`} />
+                <span className="label">{label}</span>
+            </span>
+            {renderDialogBox()}
+        </span>
+    );
+
+    function renderDialogBox() {
+        const props = {
             show: selecting,
-            selection: story.user_ids,
-            disabled: _.slice(story.user_ids, 0, 1),
+            selection: authors,
+            disabled: _.slice(authors, 0, 1),
             database,
             route,
             env,
-            onSelect: this.handleSelect,
-            onCancel: this.handleCancel,
+            onSelect: handleSelect,
+            onCancel: handleCancel,
         };
         return <UserSelectionDialogBox {...props} />;
-    }
-
-    /**
-     * Called when user clicks the button
-     *
-     * @param  {Event} evt
-     */
-    handleClick = (evt) => {
-        let { coauthoring, onRemove } = this.props;
-        if (coauthoring) {
-            if (onRemove) {
-                onRemove({
-                    type: 'remove',
-                    target: this,
-                });
-            }
-        } else {
-            this.setState({ selecting: true });
-        }
-    }
-
-    /**
-     * Called when user clicks the x or outside the modal
-     *
-     * @param  {Event} evt
-     */
-    handleCancel = (evt) => {
-        this.setState({ selecting: false });
-    }
-
-    /**
-     * Called when user selects a user from the list
-     *
-     * @param  {Object} evt
-     */
-    handleSelect = (evt) => {
-        let { onSelect } = this.props;
-        if (onSelect) {
-            onSelect({
-                type: 'select',
-                target: this,
-                selection: evt.selection
-            });
-        }
-        this.setState({ selecting: false });
     }
 }
 
@@ -125,22 +81,3 @@ export {
     CoauthoringButton as default,
     CoauthoringButton,
 };
-
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    CoauthoringButton.propTypes = {
-        coauthoring: PropTypes.bool,
-        story: PropTypes.object.isRequired,
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onSelect: PropTypes.func,
-        onRemove: PropTypes.func,
-    };
-}

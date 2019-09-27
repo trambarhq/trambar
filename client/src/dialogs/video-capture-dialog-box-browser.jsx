@@ -1,286 +1,115 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import RelaksMediaCapture from 'relaks-media-capture';
+import React from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import LiveVideo from 'widgets/live-video';
-import DeviceSelector from 'widgets/device-selector';
-import DevicePlaceholder from 'widgets/device-placeholder';
-import DurationIndicator from 'widgets/duration-indicator';
-import VolumeIndicator from 'widgets/volume-indicator';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { LiveVideo } from 'common/widgets/live-video.jsx';
+import { DeviceSelector } from '../widgets/device-selector.jsx';
+import { DevicePlaceholder } from '../widgets/device-placeholder.jsx';
+import { DurationIndicator } from '../widgets/duration-indicator.jsx';
+import { VolumeIndicator } from '../widgets/volume-indicator.jsx';
+
+// custom hooks
+import {
+    useMediaCapture,
+    useStreamHandling,
+} from '../hooks';
 
 import './video-capture-dialog-box-browser.scss';
 
 /**
  * Dialog box for capturing a video in the web browser.
- *
- * @extends AsyncComponent
  */
-class VideoCaptureDialogBoxBrowser extends AsyncComponent {
-    constructor(props) {
-        super(props);
-        let options = {
-            video: true,
-            audio: true,
-            preferredDevice: 'front',
-            watchVolume: true,
-            segmentDuration: 2000,
-        };
-        this.capture = new RelaksMediaCapture(options);
-        this.capture.addEventListener('chunk', this.handleCaptureChunk);
-        this.capture.addEventListener('end', this.handleCaptureEnd);
-        this.stream = null;
-    }
+async function VideoCaptureDialogBoxBrowser(props) {
+    const { env, payloads, onCapture, onClose } = props;
+    const { t } = env.locale;
+    const [ show ] = useProgress(50, 50);
+    const stream = useStreamHandling(payloads);
+    const capture = useMediaCapture({
+        video: true,
+        audio: true,
+        preferredDevice: 'front',
+        watchVolume: true,
+        segmentDuration: 2000,
+    }, stream);
 
-    /**
-     * Render component asynchronously
-     *
-     * @param  {Meanwhile}  meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { env, show } = this.props;
-        meanwhile.delay(50, 50);
-        let props = {
-            env,
-            show,
-            onStart: this.handleStart,
-            onStop: this.handleStop,
-            onPause: this.handlePause,
-            onResume: this.handleResume,
-            onClear: this.handleClear,
-            onChoose: this.handleChoose,
-            onAccept: this.handleAccept,
-            onCancel: this.handleCancel,
-        };
-        if (show) {
-            this.capture.activate();
-            do {
-                props.status = this.capture.status;
-                props.devices = this.capture.devices;
-                props.chosenDeviceID = this.capture.chosenDeviceID;
-                props.liveVideo = this.capture.liveVideo;
-                props.duration = this.capture.duration;
-                props.volume = (this.capture.volume < 5) ? 0 : this.capture.volume;
-                props.capturedImage = this.capture.capturedImage;
-                props.capturedVideo = this.capture.capturedVideo;
-                meanwhile.show(<VideoCaptureDialogBoxBrowserSync {...props} />);
-                await this.capture.change();
-            } while (this.capture.active);
-        }
-        return <VideoCaptureDialogBoxBrowserSync {...props} />;
-    }
-
-    /**
-     * Deactivate media capture object when dialog box is hidden
-     */
-    componentDidUpdate(prevProps, prevState) {
-        if (prevProps.show) {
-            setTimeout(() => {
-                let { show } = this.props;
-                if (!show) {
-                    this.capture.deactivate();
-                    this.capture.clear();
-                }
-            }, 500);
-        }
-    }
-
-    /**
-     * Deactivate media capture object when component unmounts
-     */
-    componentWillUnmount() {
-        this.capture.deactivate();
-    }
-
-    /**
-     * Called when user wants to start recording
-     *
-     * @param  {Event} evt
-     */
-    handleStart = (evt) => {
-        let { payloads } = this.props;
-        this.stream = payloads.stream();
-        this.stream.start();
-        this.capture.start();
-        this.capture.snap();
-    }
-
-    /**
-     * Called when user wants to stop recording
-     *
-     * @param  {Event} evt
-     */
-    handleStop = (evt) => {
-        this.capture.stop();
-    }
-
-    /**
-     * Called when user wants to pause recording
-     *
-     * @param  {Event} evt
-     */
-    handlePause = (evt) => {
-        this.capture.pause();
-    }
-
-    /**
-     * Called when user wants to resume recording
-     *
-     * @param  {Event} evt
-     */
-    handleResume = (evt) => {
-        this.capture.resume();
-    }
-
-    /**
-     * Called when user wants to start over
-     *
-     * @param  {Event} evt
-     */
-    handleClear = (evt) => {
-        this.capture.clear();
-        if (this.stream) {
-            this.stream.cancel();
-            this.stream = null;
-        }
-    }
-
-    /**
-     * Called when user selects a different input device
-     *
-     * @param  {Object} evt
-     */
-    handleChoose = (evt) => {
-        this.capture.choose(evt.id);
-    }
-
-    /**
-     * Called when user closes the dialog box
-     *
-     * @param  {Event} evt
-     */
-    handleCancel = (evt) => {
-        let { onClose } = this.props;
+    const handleStartClick = useListener((evt) => {
+        stream.start();
+        capture.start();
+        capture.snap();
+    });
+    const handleStopClick = useListener((evt) => capture.stop());
+    const handlePauseClick = useListener((evt) => capture.pause());
+    const handleResumeClick = useListener((evt) => capture.resume());
+    const handleRetakeClick = useListener((evt) => {
+        capture.clear();
+        stream.cancel();
+    });
+    const handleCancelClick = useListener((evt) => {
         if (onClose) {
-            onClose({
-                type: 'cancel',
-                target: this,
-            });
+            onClose({});
         }
-    }
-
-    /**
-     * Called when user accepts the recorded audio
-     *
-     * @param  {Event} evt
-     */
-    handleAccept = (evt) => {
-        let { payloads, onCapture } = this.props;
+    }, [ onClose ]);
+    const handleAcceptClick = useListener((evt) => {
         if (onCapture) {
-            let { capturedVideo, capturedImage } = this.capture;
-            let payload = payloads.add('video');
-            payload.attachStream(this.stream);
+            const { capturedVideo, capturedImage } = capture;
+            const payload = payloads.add('video');
+            payload.attachStream(stream.current);
             payload.attachFile(capturedImage.blob, 'poster');
-            let resource = {
+            const resource = {
                 type: 'video',
                 payload_token: payload.id,
                 width: capturedVideo.width,
                 height: capturedVideo.height,
                 duration: capturedVideo.duration,
-                format: _.last(_.split(this.capture.options.videoMIMEType, '/')),
+                format: _.last(_.split(capture.options.videoMIMEType, '/')),
                 bitrates: {
-                    audio: this.capture.options.audioBitsPerSecond,
-                    video: this.capture.options.videoBitsPerSecond,
+                    audio: capture.options.audioBitsPerSecond,
+                    video: capture.options.videoBitsPerSecond,
                 }
             };
-            onCapture({
-                type: 'capture',
-                target: this,
-                resource
-            });
+            onCapture({ resource });
         }
-        this.capture.deactivate();
-        this.handleCancel();
-    }
-
-    /**
-     * Called after a chunk of video has been recorded
-     *
-     * @param  {Object} evt
-     */
-    handleCaptureChunk = (evt) => {
-        if (this.stream) {
-            this.stream.push(evt.blob);
+        if (onClose) {
+            onClose({});
         }
-    }
+    }, [ payloads, onClose, onCapture ]);
+    const handleDeviceSelection = useListener((evt) => capture.choose(evt.id));
 
-    /**
-     * Called when recording endeds, after the last chunk was received
-     *
-     * @param  {Object} evt
-     */
-    handleCaptureEnd = (evt) => {
-        if (this.stream) {
-            this.stream.close();
-        }
-    }
-}
+    do {
+        render();
+        await capture.change();
+    } while (capture.active);
 
-/**
- * Synchronous component that actually draws the interface
- *
- * @extends PureComponent
- */
-class VideoCaptureDialogBoxBrowserSync extends PureComponent {
-    static displayName = 'VideoCaptureDialogBoxBrowserSync';
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { show, onCancel } = this.props;
-        let overlayProps = { show, onBackgroundClick: onCancel };
-        return (
-            <Overlay {...overlayProps}>
-                <div className="video-capture-dialog-box">
-                    <div className="container">
-                        {this.renderView()}
+    function render() {
+        show(
+            <div className="video-capture-dialog-box">
+                <div className="container">
+                    {renderView()}
+                </div>
+                <div className="controls">
+                    <div className="left">
+                        {renderDuration() || renderDeviceSelector()}
                     </div>
-                    <div className="controls">
-                        <div className="left">
-                            {this.renderDuration() || this.renderDeviceSelector()}
-                        </div>
-                        <div className="center">
-                            {this.renderVolume()}
-                        </div>
-                        <div className="right">
-                            {this.renderButtons()}
-                        </div>
+                    <div className="center">
+                        {renderVolume()}
+                    </div>
+                    <div className="right">
+                        {renderButtons()}
                     </div>
                 </div>
-            </Overlay>
+            </div>
         );
     }
 
-    /**
-     * Render either live or captured video
-     *
-     * @return {ReactElement}
-     */
-    renderView() {
-        let { status, liveVideo, capturedVideo, capturedImage } = this.props;
+    function renderView() {
+        const { status, liveVideo, capturedVideo, capturedImage } = capture;
         switch (status) {
             case 'acquiring':
             case 'denied':
-                let placeholderProps = {
+                const placeholderProps = {
                     blocked: (status === 'denied'),
                     icon: 'video-camera',
                 };
@@ -290,7 +119,7 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
             case 'previewing':
             case 'capturing':
             case 'paused':
-                let liveVideoProps = {
+                const liveVideoProps = {
                     srcObject: liveVideo.stream,
                     width: liveVideo.width,
                     height: liveVideo.height,
@@ -298,7 +127,7 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
                 };
                 return <LiveVideo  {...liveVideoProps} />;
             case 'captured':
-                let previewVideoProps = {
+                const previewVideoProps = {
                     className: 'preview',
                     src: capturedVideo.url,
                     poster: capturedImage.url,
@@ -310,72 +139,50 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
         }
     }
 
-    /**
-     * Render a dropdown if there're multiple devices
-     *
-     * @return {ReactElement|null}
-     */
-    renderDeviceSelector() {
-        let { env, devices, chosenDeviceID, onChoose } = this.props;
-        let props = {
+    function renderDeviceSelector() {
+        const { devices, chosenDeviceID, onChoose } = capture;
+        const props = {
             type: 'video',
             chosenDeviceID,
             devices,
             env,
-            onSelect: onChoose,
+            onSelect: handleDeviceSelection,
         };
         return <DeviceSelector {...props} />;
     }
 
-    /**
-     * Show duration when we're recording
-     *
-     * @return {ReactElement|null}
-     */
-    renderDuration() {
-        let { status, duration } = this.props;
+    function renderDuration() {
+        const { status, duration } = capture;
         if (typeof(duration) !== 'number') {
             return null;
         }
-        let durationProps = { duration, recording: (status === 'capturing') };
+        const durationProps = { duration, recording: (status === 'capturing') };
         return <DurationIndicator {...durationProps} />
     }
 
-    /**
-     * Show microphone volume
-     *
-     * @return {ReactElement}
-     */
-    renderVolume() {
-        let { status, volume } = this.props;
+    function renderVolume() {
+        const { status, volume } = capture;
         if (typeof(volume) !== 'number' || status === 'captured') {
             return null;
         }
-        let volumeProps = { volume, recording: (status === 'capturing') };
+        const volumeProps = { volume, recording: (status === 'capturing') };
         return <VolumeIndicator {...volumeProps} />;
     }
 
-    /**
-     * Render buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, status } = this.props;
-        let { onCancel, onStart, onPause, onResume, onStop, onClear, onAccept } = this.props;
-        let { t } = env.locale;
+    function renderButtons() {
+        const { status } = capture;
         switch (status) {
             case 'acquiring':
             case 'denied':
             case 'initiating':
             case 'previewing':
-                let cancelButtonProps = {
+                const cancelButtonProps = {
                     label: t('video-capture-cancel'),
-                    onClick: onCancel,
+                    onClick: handleCancelClick,
                 };
-                let startButtonProps = {
+                const startButtonProps = {
                     label: t('video-capture-start'),
-                    onClick: onStart,
+                    onClick: handleStartClick,
                     disabled: (status !== 'previewing'),
                     emphasized: (status === 'previewing'),
                 };
@@ -386,13 +193,13 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
                     </div>
                 );
             case 'capturing':
-                let pauseButtonProps = {
+                const pauseButtonProps = {
                     label: t('video-capture-pause'),
-                    onClick: onPause,
+                    onClick: handlePauseClick,
                 };
-                let stopButtonProps = {
+                const stopButtonProps = {
                     label: t('video-capture-stop'),
-                    onClick: onStop,
+                    onClick: handleStopClick,
                     emphasized: true
                 };
                 return (
@@ -402,14 +209,14 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
                     </div>
                 );
             case 'paused':
-                let resumeButtonProps = {
+                const resumeButtonProps = {
                     label: t('video-capture-resume'),
-                    onClick: onResume,
+                    onClick: handleResumeClick,
                     emphasized: true
                 };
-                let stopButton2Props = {
+                const stopButton2Props = {
                     label: t('video-capture-stop'),
-                    onClick: onStop,
+                    onClick: handleStopClick,
                 };
                 return (
                     <div className="buttons">
@@ -418,13 +225,13 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
                     </div>
                 );
             case 'captured':
-                let retakeButtonProps = {
+                const retakeButtonProps = {
                     label: t('video-capture-retake'),
-                    onClick: onClear,
+                    onClick: handleRetakeClick,
                 };
-                let acceptButtonProps = {
+                const acceptButtonProps = {
                     label: t('video-capture-accept'),
-                    onClick: onAccept,
+                    onClick: handleAcceptClick,
                     emphasized: true,
                 };
                 return (
@@ -437,70 +244,11 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
     }
 }
 
+const component = Overlay.create(
+    Relaks.memo(VideoCaptureDialogBoxBrowser)
+);
+
 export {
-    VideoCaptureDialogBoxBrowser as default,
-    VideoCaptureDialogBoxBrowser,
-    VideoCaptureDialogBoxBrowserSync,
+    component as default,
+    component as VideoCaptureDialogBoxBrowser,
 };
-
-import Payloads from 'transport/payloads';
-import Environment from 'env/environment';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    VideoCaptureDialogBoxBrowser.propTypes = {
-        show: PropTypes.bool,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onClose: PropTypes.func,
-        onCapture: PropTypes.func,
-    };
-    VideoCaptureDialogBoxBrowserSync.propTypes = {
-        show: PropTypes.bool,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        status: PropTypes.oneOf([
-            'acquiring',
-            'denied',
-            'initiating',
-            'previewing',
-            'capturing',
-            'paused',
-            'captured',
-        ]),
-        liveVideo: PropTypes.shape({
-            stream: PropTypes.instanceOf(Object).isRequired,
-            width: PropTypes.number.isRequired,
-            height: PropTypes.number.isRequired,
-        }),
-        capturedVideo: PropTypes.shape({
-            url: PropTypes.string.isRequired,
-            blob: PropTypes.instanceOf(Blob).isRequired,
-            width: PropTypes.number.isRequired,
-            height: PropTypes.number.isRequired,
-        }),
-        capturedImage: PropTypes.shape({
-            url: PropTypes.string.isRequired,
-            blob: PropTypes.instanceOf(Blob).isRequired,
-            width: PropTypes.number.isRequired,
-            height: PropTypes.number.isRequired,
-        }),
-        duration: PropTypes.number,
-        devices: PropTypes.arrayOf(PropTypes.shape({
-            id: PropTypes.string,
-            label: PropTypes.string,
-        })),
-        chosenDeviceID: PropTypes.string,
-
-        onChoose: PropTypes.func,
-        onCancel: PropTypes.func,
-        onStart: PropTypes.func,
-        onStop: PropTypes.func,
-        onPause: PropTypes.func,
-        onResume: PropTypes.func,
-        onClear: PropTypes.func,
-        onAccept: PropTypes.func,
-    };
-}
