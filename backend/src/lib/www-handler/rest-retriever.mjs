@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import CrossFetch from 'cross-fetch';
-import { promises as DNS } from 'dns';
 import ExcelJS from 'exceljs';
 import Database from '../database.mjs';
 import HTTPError from '../common/errors/http-error.mjs';
@@ -68,9 +67,8 @@ async function retrieve(schema, identifier, path, query) {
     }
 }
 
-async function translatePurgeRequest(url, method, address) {
+async function translatePurgeRequest(host, url, method) {
     const results = [];
-    const record = /:/.test(address) ? 'AAAA' : 'A';
     const db = await Database.open();
     const criteria = { deleted: false, disabled: false };
     const projects = await Project.find(db, 'global', criteria, 'name');
@@ -79,12 +77,11 @@ async function translatePurgeRequest(url, method, address) {
         const rests = await Rest.find(db, schema, criteria, '*');
         for (let rest of rests) {
             try {
-                const url = new URL(rest.url);
-                const sourceAddress = await DNS.resolve(url.hostname);
-                if (address === sourceAddress) {
+                const urlParts = new URL(rest.url);
+                if (urlParts.hostname === host) {
                     const identifier = rest.name;
                     const untransformed = { schema, identifier, url, method };
-                    const purge = transformPurge(untransformed)
+                    const purge = transformPurge(untransformed, rest);
                     if (purge instanceof Array) {
                         for (let p of purge) {
                             results.push(p)
@@ -170,6 +167,7 @@ function transformWPPurge(purge) {
         const m = /^(\/wp\-json\/\w+\/\w+\/\w+)\/(\d+)\/$/.exec(purge.url);
         if (m) {
             // purge folder listings as well
+            const folderPath = m[1];
             const purgeFolder = {
                 schema: purge.schema,
                 identifier: purge.identifier,

@@ -5,6 +5,7 @@ import { BasicTask, PeriodicTask } from '../task-queue.mjs';
 
 import * as CacheManager from './cache-manager.mjs';
 import * as ExcelRetriever from './excel-retriever.mjs';
+import * as RestRetriever from './rest-retriever.mjs';
 import * as TrafficMonitor from './traffic-monitor.mjs';
 
 // accessors
@@ -117,15 +118,16 @@ class TaskPurgeRest extends BasicTask {
 }
 
 class TaskPurgeRequest extends BasicTask {
-    constructor(url, method, address) {
+    constructor(host, url, method) {
+        super();
+        this.host = host;
         this.url = url;
         this.method = method;
-        this.address = address;
     }
 
     async run() {
-        const { url, method, address } = this;
-        const purges = await RestRetriever.translatePurgeRequest(url, method, address);
+        const { host, url, method } = this;
+        const purges = await RestRetriever.translatePurgeRequest(host, url, method);
         for (let { schema, identifier, url, method } of purges) {
             const prefix = `/srv/www/${schema}/data/rest/${identifier}`;
             let criteria;

@@ -335,7 +335,10 @@ function WebsiteSummaryPageSync(props) {
     }
 
     function renderSnapshots() {
-        if (!snapshots && (!project || !!project.template_repo_id)) {
+        if (!project || project.template_repo_id === null) {
+            return;
+        }
+        if (!snapshots && !!project.template_repo_id) {
             return;
         }
         const sorted = sortSnapshots(snapshots);

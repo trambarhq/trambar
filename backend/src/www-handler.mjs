@@ -1,7 +1,10 @@
 import _ from 'lodash';
 import './lib/common/utils/lodash-extra.mjs';
 import Moment from 'moment';
+import OS from 'os';
 import { promises as FS } from 'fs';
+import { promises as DNS } from 'dns';
+import Netmask from 'netmask';
 import Path from 'path';
 import QueryString from 'querystring';
 import Express from 'express';
@@ -346,19 +349,51 @@ async function handlePurgeRequest(req, res, next) {
     try {
         const url = req.url;
         const method = req.headers['x-purge-method'];
-        let address = req.headers['x-forwarded-for'];
-        if (!address) {
-            address = req.connection.remoteAddress;
+        let host = req.headers['x-forwarded-host'];
+        if (!host) {
+            host = req.headers.host;
         }
-        if (_.startsWith(address, '::ffff:')) {
-            // remote IP4 -> IP6 prefix
-            address = address.substr(7);
+        let ip = req.headers['x-forwarded-for'];
+        if (!ip) {
+            ip = req.connection.remoteAddress;
         }
-        taskQueue.add(new TaskPurgeRequest(url, method, address));
+        if (_.startsWith(ip, '::ffff:')) {
+            // remove IP4 -> IP6 prefix
+            ip = ip.substr(7);
+        }
+        if (await validatePurgeRequest(host, ip)) {
+            taskQueue.add(new TaskPurgeRequest(host, url, method));
+        }
         res.end();
     } catch (err) {
         next(err);
     }
+}
+
+async function validatePurgeRequest(host, ip) {
+    // allow a request if it's comes from the same subnet
+    // (i.e. from another Docker container)
+    const ifaces = OS.networkInterfaces();
+    for (let [ ifname, addresses ] of _.entries(ifaces)) {
+        for (let address of addresses) {
+            if (address.family === 'IPv4') {
+                const block = new Netmask.Netmask(address.cidr);
+                if (block.contains(ip)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    // require request to have come from the specified host
+    try {
+        const hostIP = await DNS.resolve4(host);
+        if (hostIP === ip) {
+            return true;
+        }
+    } catch (err) {
+    }
+    return false;
 }
 
 function handleError(err, req, res, next) {
