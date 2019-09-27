@@ -248,12 +248,12 @@ async function handleSnapshotFileRequest(req, res, next) {
 
         const buffer = await SnapshotRetriever.retrieve(schema, tag, 'www', path);
         controlCache(res);
-        res.type(ext).send(buffer);
-    } catch (err) {
-        if (req.params[0] === 'favicon.ico') {
+        if (buffer) {
+            res.type(ext).send(buffer);
+        } else {
             res.sendStatus(204);
-            return;
         }
+    } catch (err) {
         next(err);
     }
 }

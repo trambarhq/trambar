@@ -28,6 +28,10 @@ async function retrieve(schema, tag, type, path) {
         await taskLog.finish();
         return buffer;
     } catch (err) {
+        if (path === 'favicon.ico') {
+            await taskLog.finish();
+            return null;
+        }
         await taskLog.abort(err);
         throw err;
     }
