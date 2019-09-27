@@ -33,6 +33,7 @@
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.26",
     "multer": "^1.4.2",
+    "netmask": "^1.0.6",
     "parse-diff": "^0.5.1",
     "passport": "^0.4.0",
     "passport-dropbox-oauth2": "^1.1.0",
