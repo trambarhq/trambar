@@ -49,7 +49,7 @@ async function retrieve(schema, identifier, path, query) {
             throw new HTTPError(404);
         }
         const url = getExternalURL(path, query, rest);
-        const unfiltered = await fetchJSON(url);
+        const unfiltered = await fetchJSON(url, rest);
         const data = filterData(unfiltered, url, rest);
         const contents = (data instanceof Array) ? data : {
             identifier,
@@ -97,10 +97,19 @@ async function translatePurgeRequest(host, url, method) {
     return results;
 }
 
-async function fetchJSON(url) {
+async function fetchJSON(url, rest) {
     const res = await CrossFetch(url);
     if (res.status === 200) {
-        const json = await res.json();
+        let json = await res.json();
+        if (json instanceof Array) {
+            let total, pages;
+            if (rest.type === 'wordpress') {
+                total = parseInt(res.headers.get('x-wp-total'));
+                pages = parseInt(res.headers.get('x-wp-totalpages'));
+            }
+            json.total = total;
+            json.pages = pages;
+        }
         return json;
     } else {
         const args = [ res.status ];
@@ -127,10 +136,17 @@ function getExternalURL(path, query, rest) {
 }
 
 function filterData(data, url, rest) {
+    let filtered;
     if (rest.type === 'wordpress') {
-        return filterWPData(data, url);
+        filtered = filterWPData(data, url);
+    } else {
+        return data;
     }
-    return data;
+    if (filtered instanceof Array) {
+        filtered.total = data.total;
+        filtered.pages = data.pages;
+    }
+    return filtered;
 }
 
 function filterWPData(data, url) {

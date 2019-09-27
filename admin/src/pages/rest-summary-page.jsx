@@ -115,12 +115,6 @@ function RestSummaryPageSync(props) {
                 reportProblems(problems);
 
                 const restAfter = await RestSaver.saveRest(database, schema, draft.current);
-                if (rest && rest.url) {
-                    if (rest.url !== restAfter.url) {
-                        requestUpdate(project, restAfter, env);
-                    }
-                }
-
                 if (creating) {
                     setAdding(true);
                 }

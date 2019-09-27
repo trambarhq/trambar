@@ -55,7 +55,12 @@ async function start() {
     // start up Express
     const app = Express();
     const corsOptions = {
-        exposedHeaders: [ 'etag', 'X-Cache-Status' ],
+        exposedHeaders: [
+            'etag',
+            'X-Cache-Status',
+            'X-Total',
+            'X-Total-Pages',
+        ],
     };
     app.use(CORS(corsOptions));
     app.use(Compression());
@@ -427,6 +432,14 @@ function controlCache(res, override) {
 function sendDataQueryResult(res, result) {
     const { contents, cacheControl } = result;
     controlCache(res, cacheControl);
+    if (contents instanceof Array) {
+        if (typeof(contents.total) === 'number') {
+            res.set({ 'X-Total': contents.total });
+        }
+        if (typeof(contents.pages) === 'number') {
+            res.set({ 'X-Total-Pages': contents.pages });
+        }
+    }
     res.json(contents);
 }
 
