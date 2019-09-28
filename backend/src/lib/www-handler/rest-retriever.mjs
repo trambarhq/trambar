@@ -91,6 +91,7 @@ async function translatePurgeRequest(host, url, method) {
                     }
                 }
             } catch (err) {
+                console.error(err);
             }
         }
     }
@@ -171,26 +172,44 @@ function filterWPData(data, url) {
 
 function transformPurge(purge, rest) {
     if (rest.type === 'wordpress') {
-        return transformWPPurge(purge);
+        return transformWPPurge(purge, rest);
     }
     return purge;
 }
 
-function transformWPPurge(purge) {
+function transformWPPurge(purge, rest) {
     if (purge.method === 'regex') {
         return purge;
     } else if (purge.method === 'default') {
-        const m = /^(\/wp\-json\/\w+\/\w+\/\w+)\/(\d+)\/$/.exec(purge.url);
-        if (m) {
-            // purge folder listings as well
-            const folderPath = m[1];
-            const purgeFolder = {
-                schema: purge.schema,
-                identifier: purge.identifier,
-                url: `${folderPath}/\\??.*`,
-                method: 'regex'
-            };
-            return [ purge, purgeFolder ];
+        const baseURLParts = new URL(_.trimEnd(rest.url, '/'));
+        const { schema, url, identifier } = purge;
+        if (_.startsWith(url, baseURLParts.pathname + '/')) {
+            const relativeURL = url.substr(baseURLParts.pathname.length);
+            const m = /^(\/\w+\/\w+\/\w+)\/(\d+)\/$/.exec(relativeURL);
+            if (m) {
+                // purge both the file and all listings
+                const folderPath = m[1];
+                const purgeFolder = {
+                    schema,
+                    identifier,
+                    url: `${folderPath}/\\??.*`,
+                    method: 'regex'
+                };
+                const purgeFile = {
+                    schema,
+                    identifier,
+                    url: relativeURL,
+                    method: 'default'
+                };
+                return [ purgeFile, purgeFolder ];
+            } else if (relativeURL === '/') {
+                return {
+                    schema,
+                    identifier,
+                    url: relativeURL,
+                    method: 'default'
+                };
+            }
         }
     }
     return [];
