@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import { promises as FS } from 'fs';
+import Bluebird from 'bluebird';
+import CrossFetch from 'cross-fetch';
 import AsciiTable from 'ascii-table';
 import Crypto from 'crypto';
 import * as TaskLog from '../task-log.mjs'
@@ -50,11 +52,13 @@ async function purge(criteria) {
         }
 
         // purge pages that're dependent on the items to be purged as well
+        const pageURLs = [];
         for (let [ pageURL, sourceURLs ] of Object.entries(fileDependencies)) {
             const hasStaleDependencies = _.some(sourceURLs, (url) => {
                 return _.some(targets, { url });
             });
             if (hasStaleDependencies) {
+                pageURLs.push(pageURL);
                 if (!_.some(targets, { url: pageURL })) {
                     targets.push(createCacheEntry(pageURL));
                 }
@@ -67,13 +71,18 @@ async function purge(criteria) {
             if (success) {
                 purged.push(target.url);
             }
+            if (fileDependencies[target.url]) {
+                delete fileDependencies[target.url];
+            }
         }
         if (purged.length > 0) {
             taskLog.set('count', purged.length);
+            taskLog.set('dependents', pageURLs.length);
             if (process.env.NODE_ENV !== 'production') {
                 taskLog.set('purged', purged);
             }
         }
+        preload(pageURLs);
         await taskLog.finish();
         return purged;
     } catch (err) {
@@ -180,6 +189,19 @@ async function stat(pattern) {
         table.addRow(url, date, fileSize);
     }
     return table.toString();
+}
+
+async function preload(urls) {
+    const sorted = _.sortBy(urls, 'length');
+    const slice = _.slice(sorted, 0, 10);
+    for (let url of slice) {
+        try {
+            const internalURL = 'http://nginx' + url;
+            await CrossFetch(internalURL, { method: 'head' });
+            await Bluebird.delay(500);
+        } catch (err) {
+        }
+    }
 }
 
 export {
