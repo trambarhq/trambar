@@ -286,15 +286,22 @@ async function handleSnapshotPageRequest(req, res, next) {
         const target = 'hydrate';
         const protocol = req.headers['x-forwarded-proto'];
         const host = req.headers.host;
-        let baseURL = `${protocol}://${host}`;
-        if (!req.redirected) {
-            baseURL += `/srv/www/${schema}`;
-        }
+        const prefix = `/srv/www/${schema}`;
+        const baseURL = `${protocol}://${host}` + (req.redirected ? '' : prefix);
         const buffer = await PageGenerator.generate(schema, tag, path, baseURL, target, lang);
         controlCache(res);
         res.type('html').send(buffer);
 
-        CacheManager.link(path, buffer.sourceURLs);
+        // link the URLs used by the page to its URL
+        // so it gets purged when the data it uses gets purged
+        const sourceURLs = [];
+        for (let sourceURL of buffer.sourceURLs) {
+            if (_.startsWith(sourceURL, baseURL)) {
+                sourceURLs.push(prefix + sourceURL.substr(baseURL.length));
+            }
+        }
+        const pageURL = prefix + path;
+        CacheManager.link(pageURL, sourceURLs);
     } catch (err) {
         next(err);
     }
