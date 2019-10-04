@@ -41,18 +41,16 @@ module.exports = function(config) {
                         type: 'javascript/auto',
                         query: {
                             presets: [
-                                'env',
-                                'react',
-                                'stage-0',
+                                [ '@babel/env', { modules: false } ],
+                                [ '@babel/react' ],
                             ],
                             plugins: [
-                                'syntax-dynamic-import',
+                                '@babel/plugin-proposal-class-properties',
+                                '@babel/transform-regenerator',
+                                '@babel/transform-runtime',
                                 'syntax-async-functions',
-                                'syntax-class-properties',
-                                'transform-regenerator',
-                                'transform-runtime',
-                            ],
-                        },
+                            ]
+                        }
                     },
                     {
                         test: /\.jpg|\.mp4/,

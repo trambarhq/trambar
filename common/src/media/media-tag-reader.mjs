@@ -1,7 +1,7 @@
 import _ from 'lodash';
 
 async function extractAlbumArt(blob) {
-    let module = await import('jsmediatags/dist/jsmediatags' /* webpackChunkName: "jsmediatags" */);
+    let module = await import('jsmediatags/dist/jsmediatags.min.js' /* webpackChunkName: "jsmediatags" */);
     return new Promise((resolve, reject) => {
         let reader = new module.Reader(blob);
         reader.setTagsToRead([ 'picture' ]);
