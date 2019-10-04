@@ -97,7 +97,7 @@ function SignInPageSync(props) {
     );
 
     function renderForm() {
-        const title = p(_.get(system, 'details.title'));
+        const title = p(system?.details?.title);
         const usernameProps = {
             id: 'username',
             type: 'text',

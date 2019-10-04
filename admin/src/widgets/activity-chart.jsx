@@ -175,7 +175,7 @@ const getActivitySeries = memoizeWeak(null, function(activities, dates) {
         // don't include series that are completely empty
         let empty = true;
         const series = _.map(dates, (date) => {
-            const value = _.get(activities, [ date, type ], 0);
+            const value = activities?.[date]?.[type] ?? 0;
             if (value) {
                 empty = false;
             }

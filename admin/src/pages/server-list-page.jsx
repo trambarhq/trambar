@@ -339,25 +339,17 @@ const sortServers = memoizeWeak(null, function(servers, users, env, sort) {
 });
 
 function hasOAuthCredentials(server) {
-    if (server && server.settings) {
-        const oauth = server.settings.oauth;
-        if (oauth) {
-            if (oauth.client_id && oauth.client_secret) {
-                return true;
-            }
-        }
+    const oauth = server?.settings?.oauth;
+    if (oauth?.client_id && oauth?.client_secret) {
+        return true;
     }
     return false;
 }
 
 function hasAPICredentials(server) {
-    if (server && server.settings) {
-        const api = server.settings.api;
-        if (api) {
-            if (api.access_token) {
-                return true;
-            }
-        }
+    const api = server?.settings?.api;
+    if (api?.access_token) {
+        return true;
     }
     return false;
 }

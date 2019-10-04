@@ -55,7 +55,7 @@ function RoleSummaryPageSync(props) {
     const { system, role, users, creating } = props;
     const { database, route, env, editing } = props;
     const { t, p } = env.locale;
-    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
+    const availableLanguageCodes = system?.settings?.input_languages ?? [];
     const readOnly = !editing && !creating;
     const [ adding, setAdding ] = useState(false);
     const draft = useDraftBuffer({
@@ -175,7 +175,7 @@ function RoleSummaryPageSync(props) {
 
     function renderButtons() {
         if (readOnly) {
-            const active = (role) ? !role.deleted && !role.disabled : true;
+            const active = !role?.deleted && !role?.disabled;
             let preselected;
             if (active) {
                 preselected = (adding) ? 'add' : 'return';

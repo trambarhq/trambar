@@ -142,11 +142,9 @@ async function TaskList(props) {
         if (!task.failed) {
             return null;
         }
-        let error = _.get(task, 'details.error.stack');
-        if (!error) {
-            error = _.get(task, 'details.error.message');
-        }
-        return <div className="error">{error}</div>;
+        const error = task.details?.error;
+        const msg = error?.stack || error?.message;
+        return <div className="error">{msg}</div>;
     }
 
     function getMessage(task) {

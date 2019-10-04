@@ -238,7 +238,7 @@ async function NavigationTree(props) {
         const page = 'wiki-summary-page';
         let label;
         if (wiki) {
-            label = _.get(wiki, 'details.title', '-');
+            label = wiki.details?.title || '-';
         } else {
             return null;
         }

@@ -93,8 +93,8 @@ function SortableTable(props) {
     );
 
     function highlightHeading(thead) {
-        const sortColumn = _.get(sortColumns, 0);
-        const sortDirection = _.get(sortDirections, 0, 'asc');
+        const sortColumn = sortColumns?.[0];
+        const sortDirection = sortDirections?.[0] || 'asc';
         const tr = findChild(thead.props.children, 'tr');
         const children = React.Children.toArray(tr.props.children);
         const newChildren = _.map(children, (child) => {

@@ -82,9 +82,9 @@ function WebsiteSummaryPageSync(props) {
         return _.sortBy(_.map(timezoneOptions, 'label'));
     }, [ timezoneOptions ]);
     const selectedTimezoneLabel = useMemo(() => {
-        const timezone = _.get(project, 'settings.timezone');
+        const timezone = project?.settings?.timezone;
         const option = _.find(timezoneOptions, { timezone })
-        return (option) ? option.label : '';
+        return option?.label ?? '';
     }, [ timezoneOptions, project ]);
     const timezoneBuf = useSaveBuffer({
         original: selectedTimezoneLabel,
@@ -144,7 +144,7 @@ function WebsiteSummaryPageSync(props) {
     const handleTimeZoneChange = useListener((evt) => {
         const label = _.trim(evt.target.value);
         const option = _.find(timezoneOptions, { label });
-        draft.set('settings.timezone', _.get(option, 'timezone'));
+        draft.set('settings.timezone', option?.timezone);
         timezoneBuf.set(evt.target.value);
     });
 
@@ -269,7 +269,7 @@ function WebsiteSummaryPageSync(props) {
     }
 
     function renderRepoLink() {
-        const url = _.get(template, 'details.web_url');
+        const url = template?.details?.web_url;
         if (!url) {
             return;
         }

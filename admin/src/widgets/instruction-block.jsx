@@ -130,7 +130,7 @@ async function loadImages(element, folder) {
         } else {
             return React.cloneElement(element, { target: '_blank' });
         }
-    } else if (element.props && !_.isEmpty(element.props.children)) {
+    } else if (!_.isEmpty(element.props?.children)) {
         const newChildren = [];
         for (let child of element.props.children) {
             const newChild = await loadImages(child, folder);

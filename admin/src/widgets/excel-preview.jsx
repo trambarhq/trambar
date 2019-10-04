@@ -19,7 +19,7 @@ function ExcelPreview(props) {
     });
 
     useEffect(() => {
-        if (sheet && sheet.rows.length > limit) {
+        if (sheet?.rows?.length > limit) {
             setTimeout(() => {
                 setLimit(Infinity);
             }, 50);

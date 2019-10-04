@@ -191,7 +191,7 @@ function WikiListPageSync(props) {
         if (!wiki) {
             return <TH id="title">{t('wiki-list-column-title')}</TH>;
         } else {
-            const name = _.get(wiki, 'details.title', '');
+            const name = wiki.details?.title ?? '';
             let url, badge;
             if (selection.shown) {
                 if (selection.isAdding(wiki)) {

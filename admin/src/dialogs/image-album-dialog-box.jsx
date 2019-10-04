@@ -81,7 +81,7 @@ async function ImageAlbumDialogBox(props) {
             setDeletionCandidateIDs(newList);
         } else {
             const picture = _.find(pictures, { id: pictureID });
-            if (!picture || (image && image.url === picture.details.url)) {
+            if (!picture || image?.url === picture.details.url) {
                 setSelectedPictureID(0);
             } else {
                 setSelectedPictureID(pictureID);

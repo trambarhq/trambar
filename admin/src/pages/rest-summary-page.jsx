@@ -186,7 +186,7 @@ function RestSummaryPageSync(props) {
 
     function renderButtons() {
         if (readOnly) {
-            const active = (rest) ? !rest.deleted && !rest.disabled : true;
+            const active = !rest?.deleted && !rest?.disabled;
             let preselected;
             if (active) {
                 preselected = (adding) ? 'add' : 'return';

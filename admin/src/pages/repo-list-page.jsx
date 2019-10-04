@@ -268,9 +268,9 @@ function RepoListPageSync(props) {
         if (!repo) {
             return <TH id="range">{t('repo-list-column-date-range')}</TH>
         } else {
-            const range = _.get(statistics, [ repo.id, 'range' ]);
-            const start = f(_.get(range, 'start'));
-            const end = f(_.get(range, 'end'));
+            const range = statistics?.[repo.id]?.range;
+            const start = f(range?.start);
+            const end = f(range?.end);
             return <td>{t('date-range-$start-$end', start, end)}</td>;
         }
     }
@@ -283,7 +283,7 @@ function RepoListPageSync(props) {
             return <TH id="last_month">{t('repo-list-column-last-month')}</TH>
         } else {
             const props = {
-                statistics: _.get(statistics, [ repo.id, 'last_month' ]),
+                statistics: statistics?.[repo.id]?.last_month,
                 disabled: selection.shown,
                 env,
             };
@@ -299,7 +299,7 @@ function RepoListPageSync(props) {
             return <TH id="this_month">{t('repo-list-column-this-month')}</TH>
         } else {
             const props = {
-                statistics: _.get(statistics, [ repo.id, 'this_month' ]),
+                statistics: statistics?.[repo.id]?.this_month,
                 disabled: selection.shown,
                 env,
             };
@@ -315,7 +315,7 @@ function RepoListPageSync(props) {
             return <TH id="to_date">{t('repo-list-column-to-date')}</TH>
         } else {
             const props = {
-                statistics: _.get(statistics, [ repo.id, 'to_date' ]),
+                statistics: statistics?.[repo.id]?.to_date,
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -355,19 +355,19 @@ const sortRepos = memoizeWeak(null, function(repos, servers, statistics, env, so
                 return 'details.issues_enabled';
             case 'range':
                 return (repo) => {
-                    return _.get(statistics, [ repo.id, 'range', 'start' ], '');
+                    return statistics?.[repo.id]?.range?.start ?? '';
                 };
             case 'last_month':
                 return (repo) => {
-                    return _.get(statistics, [ repo.id, 'last_month', 'total' ], 0);
+                    return statistics?.[repo.id]?.last_month?.total ?? 0;
                 };
             case 'this_month':
                 return (repo) => {
-                    return _.get(statistics, [ repo.id, 'this_month', 'total' ], 0);
+                    return statistics?.[repo.id]?.this_month?.total ?? 0;
                 };
             case 'to_date':
                 return (repo) => {
-                    return _.get(statistics, [ repo.id, 'to_date', 'total' ], 0);
+                    return statistics?.[repo.id]?.to_date?.total ?? 0;
                 };
             default:
                 return column;

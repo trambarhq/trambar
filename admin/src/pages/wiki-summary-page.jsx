@@ -71,7 +71,7 @@ function WikiSummaryPageSync(props) {
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     const warnDataLoss = useDataLossWarning(route, env, confirm);
-    const baseURL = _.get(repo, 'details.web_url');
+    const baseURL = repo?.details?.web_url;
 
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
@@ -111,7 +111,7 @@ function WikiSummaryPageSync(props) {
 
     warnDataLoss(draft.changed);
 
-    const title = _.get(wiki, 'details.title', '');
+    const title = wiki?.details?.title ?? '';
     return (
         <div className="wiki-summary-page">
             {renderButtons()}
@@ -126,7 +126,7 @@ function WikiSummaryPageSync(props) {
 
     function renderButtons() {
         if (readOnly) {
-            const chosen = wiki && wiki.chosen;
+            const chosen = !!wiki?.chosen;
             let preselected;
             return (
                 <div className="buttons">
@@ -178,7 +178,7 @@ function WikiSummaryPageSync(props) {
     function renderTitle() {
         const props = {
             id: 'title',
-            value: _.get(wiki, 'details.title', ''),
+            value: wiki?.details?.title ?? '',
             readOnly: true,
             env,
         };
@@ -190,7 +190,7 @@ function WikiSummaryPageSync(props) {
     }
 
     function renderSlug() {
-        const slug = _.get(wiki, 'slug', '');
+        const slug = wiki?.slug ?? '';
         const url = (baseURL && slug) ? `${baseURL}/wikis/${slug}` : '';
         const props = {
             id: 'title',
@@ -210,7 +210,7 @@ function WikiSummaryPageSync(props) {
     function renderRepo() {
         const props = {
             id: 'repo',
-            value: _.get(repo, 'name'),
+            value: repo?.name ?? '',
             readOnly: true,
             env,
         };
@@ -280,7 +280,7 @@ function WikiSummaryPageSync(props) {
     }
 
     function renderContents() {
-        if (wiki && wiki.public) {
+        if (wiki?.public) {
             const props = { wiki, wikis, route, env };
             return <WikiContents {...props} />
         }
@@ -309,7 +309,7 @@ function WikiContents(props) {
     const [ open, setOpen ] = useState(() => {
         // show wiki contents when navigated from another wiki
         const prev = route.history[route.history.length - 2];
-        if (prev && prev.name === route.name) {
+        if (prev?.name === route.name) {
             return true;
         } else {
             // see if it was opened before

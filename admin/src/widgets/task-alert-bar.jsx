@@ -50,7 +50,7 @@ function TaskAlertBarSync(props) {
     });
 
     useEffect(() => {
-        if (selectedTask && selectedTask.failed && env.focus) {
+        if (selectedTask?.failed && env.focus) {
             const timeout = setTimeout(async () => {
                 await TaskSaver.markTaskAsSeen(database, selectedTask);
             }, 10 * 1000);
@@ -125,9 +125,9 @@ function TaskAlertBarSync(props) {
     }
 
     function getURL(task) {
-        const serverID = _.get(task, 'options.server_id');
+        const serverID = task?.options?.server_id;
         if (serverID) {
-            let params = {
+            const params = {
                 serverID: serverID,
                 scrollToTaskID: task.id,
             };

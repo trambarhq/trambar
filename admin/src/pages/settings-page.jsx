@@ -43,7 +43,7 @@ function SettingsPageSync(props) {
     const { system, editing } = props;
     const { database, route, env, payloads } = props;
     const { t, p, directory } = env.locale;
-    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
+    const availableLanguageCodes = system?.settings?.input_languages ?? [];
     const readOnly = !editing;
     const draft = useDraftBuffer({
         original: system,

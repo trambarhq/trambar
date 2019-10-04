@@ -60,7 +60,7 @@ function ServerSummaryPageSync(props) {
     const { system, server, roles, creating } = props;
     const { database, route, env, editing, scrollToTaskID } = props;
     const { t, p, languageCode } = env.locale;
-    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
+    const availableLanguageCodes = system?.settings?.input_languages ?? [];
     const readOnly = !(editing || creating);
     const [ adding, setAdding ] = useState(false);
     const [ credentialsChanged, setCredentialsChanged ] = useState(false);
@@ -72,6 +72,7 @@ function ServerSummaryPageSync(props) {
     const [ problems, reportProblems ] = useValidation(!readOnly);
     const [ confirmationRef, confirm ] = useConfirmation();
     const warnDataLoss = useDataLossWarning(route, env, confirm);
+    const address = _.trimEnd(system?.settings?.address ?? window.location.origin, '/');
 
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
@@ -269,10 +270,11 @@ function ServerSummaryPageSync(props) {
 
     function renderButtons() {
         if (readOnly) {
-            const active = (server) ? !server.deleted && !server.disabled : true;
-            const hasIntegration = _.includes(IntegratedServerTypes, _.get(server, 'type'));
-            const hasAccessToken = !!_.get(server, 'settings.api.access_token');
-            const hasOAuthCredentials = !!(_.get(server, 'settings.oauth.client_id') && _.get(server, 'settings.oauth.client_secret'));
+            const active = !server?.deleted && !server?.disabled;
+            const hasIntegration = _.includes(IntegratedServerTypes, server?.type);
+            const hasAccessToken = !!server?.settings?.api?.access_token;
+            const hasOAuthCredentials = !!server?.settings?.oauth?.client_id
+                                     && !!server?.settings?.oauth?.client_secret;
             let preselected, alert;
             if (active) {
                 if (hasIntegration && !hasAccessToken && hasOAuthCredentials) {
@@ -576,13 +578,9 @@ function ServerSummaryPageSync(props) {
     }
 
     function renderSiteURL() {
-        let address = _.get(system, 'settings.address');
         let warning;
-        if (!address) {
-            if (system) {
-                warning = t('server-summary-system-address-missing');
-            }
-            address = window.location.origin;
+        if (!system?.settings?.address) {
+            warning = t('server-summary-system-address-missing');
         }
         const props = {
             id: 'oauth_callback',
@@ -600,11 +598,6 @@ function ServerSummaryPageSync(props) {
 
     function renderOAuthCallbackURL() {
         const type = draft.get('type');
-        let address = _.get(system, 'settings.address');
-        if (!address) {
-            address = window.location.origin;
-        }
-        address = _.trimEnd(address, '/');
         const url = `${address}/srv/session/${type || '...'}/callback/`;
         const props = {
             id: 'oauth_callback',
@@ -628,7 +621,6 @@ function ServerSummaryPageSync(props) {
         if (!_.includes(needed, type)) {
             return null;
         }
-        const address = _.get(system, 'settings.address', window.location.origin);
         const url = `${address}/srv/session/${type || '...'}/deauthorize/`;
         const props = {
             id: 'deauthize_callback',
@@ -645,12 +637,6 @@ function ServerSummaryPageSync(props) {
         if (!_.includes(needed, type)) {
             return null;
         }
-        let warning;
-        let address = _.get(system, 'settings.address');
-        if (!address) {
-            warning = t('server-summary-system-address-missing');
-            address = window.location.origin;
-        }
         const url = `${address}/srv/session/privacy/`;
         const props = {
             id: 'oauth_privacy',
@@ -661,7 +647,6 @@ function ServerSummaryPageSync(props) {
         return (
             <TextField {...props}>
                 {t('server-summary-privacy-policy-url')}
-                <InputError type="warning">{warning}</InputError>
             </TextField>
         );
     }
@@ -671,12 +656,6 @@ function ServerSummaryPageSync(props) {
         const needed = [ 'facebook', 'google', 'windows' ];
         if (!_.includes(needed, type)) {
             return null;
-        }
-        let warning;
-        let address = _.get(system, 'settings.address');
-        if (!address) {
-            warning = t('server-summary-system-address-missing');
-            address = window.location.origin;
         }
         const url = `${address}/srv/session/terms/`;
         const props = {
@@ -688,7 +667,6 @@ function ServerSummaryPageSync(props) {
         return (
             <TextField {...props}>
                 {t('server-summary-terms-and-conditions-url')}
-                <InputError type="warning">{warning}</InputError>
             </TextField>
         );
     }

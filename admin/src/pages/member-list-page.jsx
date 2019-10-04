@@ -314,9 +314,9 @@ function MemberListPageSync(props) {
         if (!user) {
             return <TH id="range">{t('member-list-column-date-range')}</TH>
         } else {
-            const range = _.get(statistics, [ user.id, 'range' ]);
-            const start = f(_.get(range, 'start'));
-            const end = f(_.get(range, 'end'));
+            const range = statistics?.[user.id]?.range;
+            const start = f(range?.start);
+            const end = f(range?.end);
             return <td>{t('date-range-$start-$end', start, end)}</td>;
         }
     }
@@ -329,7 +329,7 @@ function MemberListPageSync(props) {
             return <TH id="last_month">{t('member-list-column-last-month')}</TH>
         } else {
             const props = {
-                statistics: _.get(statistics, [ user.id, 'last_month' ]),
+                statistics: statistics?.[user.id]?.last_month,
                 disabled: selection.shown,
                 env,
             };
@@ -345,7 +345,7 @@ function MemberListPageSync(props) {
             return <TH id="this_month">{t('member-list-column-this-month')}</TH>
         } else {
             const props = {
-                statistics: _.get(statistics, [ user.id, 'this_month' ]),
+                statistics: statistics?.[user.id]?.this_month,
                 disabled: selection.shown,
                 env,
             };
@@ -361,7 +361,7 @@ function MemberListPageSync(props) {
             return <TH id="to_date">{t('member-list-column-to-date')}</TH>
         } else {
             const props = {
-                statistics: _.get(statistics, [ user.id, 'to_date' ]),
+                statistics: statistics?.[user.id]?.to_date,
                 disabled: selection.shown,
                 env,
             };
@@ -395,19 +395,19 @@ const sortUsers = memoizeWeak(null, function(users, roles, statistics, env, sort
                 };
             case 'range':
                 return (user) => {
-                    return _.get(statistics, [ user.id, 'range', 'start' ], '');
+                    return statistics?.[user.id]?.range?.start ?? '';
                 };
             case 'last_month':
                 return (user) => {
-                    return _.get(statistics, [ user.id, 'last_month', 'total' ], 0);
+                    return statistics?.[user.id]?.last_month?.total ?? 0;
                 };
             case 'this_month':
                 return (user) => {
-                    return _.get(statistics, [ user.id, 'this_month', 'total' ], 0);
+                    return statistics?.[user.id]?.this_month?.total ?? 0;
                 };
             case 'to_date':
                 return (user) => {
-                    return _.get(statistics, [ user.id, 'to_date', 'total' ], 0);
+                    return statistics?.[user.id]?.to_date?.total ?? 0;
                 };
             default:
                 return column;

@@ -11,11 +11,10 @@ import './profile-image.scss';
  * Stateless component that renders a user's profile image.
  */
 function ProfileImage(props) {
-    let { env, user, size } = props;
-    let classNames = [ 'profile-image', size ];
+    const { env, user, size } = props;
+    const classNames = [ 'profile-image', size ];
     if (user) {
-        let resources = _.get(user, 'details.resources');
-        let image = _.find(resources, { type: 'image' });
+        const image = _.find(user?.details?.resources, { type: 'image' });
         if (image) {
             let width = imageResolutions[size];
             let props = {

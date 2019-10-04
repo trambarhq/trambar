@@ -54,7 +54,7 @@ function RepoSummaryPageSync(props) {
     const { system, repo, project, statistics } = props;
     const { database, route, env, editing } = props;
     const { t, p } = env.locale;
-    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
+    const availableLanguageCodes = system?.settings?.input_languages ?? [];
     const readOnly = !editing;
     const draft = useDraftBuffer({
         original: repo,
@@ -64,7 +64,7 @@ function RepoSummaryPageSync(props) {
     const [ problems, reportProblems ] = useValidation(!readOnly);
     const [ confirmationRef, confirm ] = useConfirmation();
     const warnDataLoss = useDataLossWarning(route, env, confirm);
-    const baseURL = _.get(repo, 'details.web_url');
+    const baseURL = repo?.details?.web_url;
 
     const handleEditClick = useListener((evt) => {
         route.push({ editing: true });

@@ -14,7 +14,7 @@ function SpreadsheetCountTooltip(props) {
     if (!spreadsheet) {
         return null;
     }
-    const sheets = _.get(spreadsheet, 'details.sheets', []);
+    const sheets = spreadsheet.details?.sheets ?? [];
     const list = _.map(sheets, (sheet, i) => {
         const { name, flags } = sheet;
         let label = name;

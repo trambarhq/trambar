@@ -86,8 +86,10 @@ function SpreadsheetSummaryPageSync(props) {
     const [ confirmationRef, confirm ] = useConfirmation();
     const warnDataLoss = useDataLossWarning(route, env, confirm);
     const excel = useMemo(() => {
-        if (spreadsheet && !spreadsheet.disabled && !spreadsheet.deleted) {
-            return ExcelFile.create(spreadsheet.details);
+        if (spreadsheet) {
+            if (!spreadsheet.disabled && !spreadsheet.deleted) {
+                return ExcelFile.create(spreadsheet.details);
+            }
         }
     }, [ spreadsheet ]);
     const excelLocalized = useMemo(() => {
@@ -139,10 +141,8 @@ function SpreadsheetSummaryPageSync(props) {
                 reportProblems(problems);
 
                 const spreadsheetAfter = await SpreadsheetSaver.saveSpreadsheet(database, schema, draft.current);
-                if (spreadsheet && spreadsheet.url) {
-                    if (spreadsheet.url !== spreadsheetAfter.url) {
-                        requestUpdate(project, spreadsheetAfter, env);
-                    }
+                if (spreadsheet?.url !== spreadsheetAfter.url) {
+                    requestUpdate(project, spreadsheetAfter, env);
                 }
 
                 if (creating) {
@@ -174,7 +174,7 @@ function SpreadsheetSummaryPageSync(props) {
 
     useEffect(() => {
         run(() => {
-            const error = _.get(spreadsheet, 'details.error');
+            const error = spreadsheet?.details?.error;
             if (error) {
                 throw new Error(error);
             }
@@ -395,7 +395,7 @@ function SpreadsheetSummaryPageSync(props) {
             if (!_.isEmpty(excel.sheets)) {
                 return _.map(excel.sheets, renderSheet);
             } else {
-                const error = _.get(spreadsheet, 'details.error');
+                const error = spreadsheet?.details?.error;
                 if (!error) {
                     return (
                         <div className="sheet">
@@ -495,12 +495,14 @@ function Sheet(props) {
 }
 
 async function requestUpdate(project, spreadsheet, env) {
-    const baseURL = ProjectUtils.getWebsiteAddress(project);
-    const url = `${baseURL}/excel/${spreadsheet.name}`;
-    try {
-        await HTTPRequest.fetch('HEAD', url);
-    } catch (err) {
-        console.error(err);
+    if (spreadsheet.url) {
+        const baseURL = ProjectUtils.getWebsiteAddress(project);
+        const url = `${baseURL}/excel/${spreadsheet.name}`;
+        try {
+            await HTTPRequest.fetch('HEAD', url);
+        } catch (err) {
+            console.error(err);
+        }
     }
 }
 

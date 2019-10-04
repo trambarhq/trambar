@@ -57,7 +57,7 @@ function ProjectSummaryPageSync(props) {
     const { system, project, statistics } = props;
     const { database, route, env, payloads, editing, creating } = props;
     const { t, p } = env.locale;
-    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
+    const availableLanguageCodes = system?.settings?.input_languages ?? [];
     const readOnly = !(editing || creating);
     const [ adding, setAdding ] = useState(false);
     const draft = useDraftBuffer({

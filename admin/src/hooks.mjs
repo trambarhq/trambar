@@ -71,10 +71,10 @@ function useAutogenID(draft, params) {
         let after = _.decoupleSet(draft.current, titleKey, title);
 
         // derive name from title
-        const titleBefore = _.get(draft.current, titleKey, {});
+        const titleBefore = draft.current?.[titleKey] ?? {};
         const autoNameBefore = f(titleBefore);
         const autoName = f(title);
-        const nameBefore = _.get(draft.current, nameKey, '');
+        const nameBefore = draft.current?.[nameKey] ?? '';
         if (!nameBefore || nameBefore === autoNameBefore) {
             after = _.decoupleSet(after, nameKey, autoName);
         }

@@ -290,9 +290,9 @@ function ProjectListPageSync(props) {
             return <TH id="range">{t('project-list-column-date-range')}</TH>
         } else {
             if (!project.deleted) {
-                const range = _.get(statistics, [ project.id, 'range' ]);
-                const start = f(_.get(range, 'start'));
-                const end = f(_.get(range, 'end'));
+                const range = statistics?.[project.id]?.range;
+                const start = f(range?.start);
+                const end = f(range?.end);
                 return <td>{t('date-range-$start-$end', start, end)}</td>;
             } else {
                 return <td>{t('project-list-status-deleted')}</td>;
@@ -308,7 +308,7 @@ function ProjectListPageSync(props) {
             return <TH id="last_month">{t('project-list-column-last-month')}</TH>
         } else {
             const props = {
-                statistics: _.get(statistics, [ project.id, 'last_month' ]),
+                statistics: statistics?.[project.id]?.last_month,
                 disabled: selection.shown,
                 env,
             };
@@ -324,7 +324,7 @@ function ProjectListPageSync(props) {
             return <TH id="this_month">{t('project-list-column-this-month')}</TH>
         } else {
             const props = {
-                statistics: _.get(statistics, [ project.id, 'this_month' ]),
+                statistics: statistics?.[project.id]?.this_month,
                 disabled: selection.shown,
                 env,
             };
@@ -340,7 +340,7 @@ function ProjectListPageSync(props) {
             return <TH id="to_date">{t('project-list-column-to-date')}</TH>
         } else {
             const props = {
-                statistics: _.get(statistics, [ project.id, 'to_date' ]),
+                statistics: statistics?.[project.id]?.to_date,
                 disabled: selection.shown,
                 env,
             };
@@ -382,19 +382,19 @@ const sortProjects = memoizeWeak(null, function(projects, users, repos, statisti
                 };
             case 'range':
                 return (project) => {
-                    return _.get(statistics, [ project.id, 'range', 'start' ], '');
+                    return statistics?.[project.id]?.range?.start;
                 };
             case 'last_month':
                 return (project) => {
-                    return _.get(statistics, [ project.id, 'last_month', 'total' ], 0);
+                    return statistics?.[project.id]?.last_month?.total ?? 0;
                 };
             case 'this_month':
                 return (project) => {
-                    return _.get(statistics, [ project.id, 'this_month', 'total' ], 0);
+                    return statistics?.[project.id]?.this_month?.total ?? 0;
                 };
             case 'to_date':
                 return (project) => {
-                    return _.get(statistics, [ project.id, 'to_date', 'total' ], 0);
+                    return statistics?.[project.id]?.to_date?.total ?? 0;
                 };
             default:
                 return column;

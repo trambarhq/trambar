@@ -36,7 +36,7 @@ function MarkdownPreview(props) {
     }, [ page ]);
 
     useEffect(() => {
-        if (page && page.blocks.length > limit) {
+        if (page?.blocks.length > limit) {
             setTimeout(() => {
                 setLimit(Infinity);
             }, 50);
@@ -82,7 +82,7 @@ function MarkdownPreview(props) {
             classNames.push('rtl');
         }
         const code = block.code();
-        if (code && code.language === 'json') {
+        if (code?.language === 'json') {
             try {
                 JSON.parse(code.text);
             } catch (err) {
