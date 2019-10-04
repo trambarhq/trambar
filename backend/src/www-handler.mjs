@@ -337,6 +337,7 @@ async function handleMetadataRequest(req, res, next) {
         const meta = {
             name: project.name,
             title: project.details.title,
+            description: project.details.description,
         };
         controlCache(res);
         res.json(meta);
