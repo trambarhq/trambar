@@ -6,12 +6,12 @@ async function markNotificationsAsSeen(db, notifications) {
     const changes = _.map(notifications, (notification) => {
         return { id: notification.id, seen: true };
     });
-    const notificationsAfter = async db.save({ table }, changes);
+    const notificationsAfter = await db.save({ table }, changes);
     return notificationsAfter;
 }
 
 async function markNotificationAsSeen(db, notification) {
-    const [ notificationAfter ] = async markNotificationsAsSeen(db, [ notification ]);
+    const [ notificationAfter ] = await markNotificationsAsSeen(db, [ notification ]);
     return notificationAfter;
 }
 
