@@ -15,8 +15,7 @@ import './profile-image.scss';
 function ProfileImage(props) {
     const { env, href, user, robot, size } = props;
     const className = `profile-image ${size}`;
-    const resources = _.get(user, 'details.resources');
-    const profileImage = _.find(resources, { type: 'image' });
+    const profileImage = _.find(user?.details?.resources, { type: 'image' });
     let image;
     if (profileImage) {
         const width = imageResolutions[size];

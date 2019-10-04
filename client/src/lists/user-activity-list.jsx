@@ -54,8 +54,8 @@ function UserActivityList(props) {
     }
 
     function renderText(story) {
-        const name = _.get(user, 'details.name');
-        const gender = _.get(user, 'details.gender');
+        const name = user?.details?.name;
+        const gender = user?.details?.gender;
         g(name, gender);
         switch (story.type) {
             case 'push':

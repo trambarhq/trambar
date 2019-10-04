@@ -44,7 +44,7 @@ function UserList(props) {
         return renderUser(evt.item, evt.needed, evt.previousHeight, evt.estimatedHeight);
     };
     const handleUserAnchorChange = useListener((evt) => {
-        const scrollToUserID = _.get(evt.item, 'id');
+        const scrollToUserID = evt.item?.id;
         route.replace({ scrollToUserID });
     });
 
@@ -78,13 +78,13 @@ function UserList(props) {
             } else {
                 userStories = findUserStories(stories, user);
             }
-            if (userStories && userStories.length > 5) {
+            if (userStories?.length > 5) {
                 userStories = _.slice(userStories, -5);
             }
             const userProps = {
                 user,
                 roles: findRoles(roles, user),
-                dailyActivities: _.get(dailyActivities, user.id),
+                dailyActivities: dailyActivities?.[user.id],
                 stories: userStories,
                 options: viewOptions,
                 currentUser,

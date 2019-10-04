@@ -94,7 +94,7 @@ async function processMobileAlert(alert, database, route) {
 }
 
 function getNotificationURL(notification, route) {
-    let params = { ...route.params };
+    const params = { ...route.params };
     switch (notification.type) {
         case 'like':
         case 'comment':
@@ -116,7 +116,7 @@ function getNotificationURL(notification, route) {
             params.highlightStoryID = notification.story_id;
             return route.find('bookmarks-page', params);
         case 'join-request':
-            let projectId = _.get(notification, 'details.project_id');
+            const projectId = notification.details?.project_id;
             return `/admin/projects/${projectId}/members/`;
     }
 }

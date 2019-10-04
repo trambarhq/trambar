@@ -61,7 +61,7 @@ function StoryEditor(props) {
             recipients,
             hidden: false,
             issue: null,
-            preview: _.includes([ 'task-list', 'survey' ], _.get(story, 'type')) ? 'text' : '',
+            preview: _.includes([ 'task-list', 'survey' ], story?.type) ? 'text' : '',
         }
     });
     const draft = useDraftBuffer({
@@ -634,7 +634,7 @@ function appendListItem(textArea) {
     const lineFeedIndex = _.lastIndexOf(textInFront.substr(0, textInFront.length - 1), '\n');
     const lineInFront = textInFront.substr(lineFeedIndex + 1);
     const tokens = ListParser.extract(lineInFront);
-    const item = _.get(tokens, [ 0, 0 ]);
+    const item = tokens?.[0]?.[0];
     if (item instanceof Object) {
         if (item.label) {
             // the item is not empty--start the next item automatically

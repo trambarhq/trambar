@@ -34,7 +34,7 @@ async function NotificationList(props) {
         return renderNotification(evt.item, evt.needed, evt.previousHeight, evt.estimatedHeight);
     };
     const handleNotificationAnchorChange = (evt) => {
-        const scrollToNotificationID = _.get(evt.item, 'id');
+        const scrollToNotificationID = evt.item?.id;
         route.replace({ scrollToNotificationID });
     };
     const handleNotificationBeforeAnchor = (evt) => {

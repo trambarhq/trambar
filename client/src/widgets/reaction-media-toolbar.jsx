@@ -17,7 +17,7 @@ function ReactionMediaToolbar(props) {
     const canCaptureImage = _.includes(env.recorders, 'image');
     const canCaptureVideo = _.includes(env.recorders, 'video');
     const canCaptureAudio = _.includes(env.recorders, 'audio');
-    const resources = _.get(reaction, 'details.resources', []);
+    const resources = reaction?.details?.resources ?? [];
 
     const handleClick = useListener((evt) => {
         const action = evt.currentTarget.getAttribute('data-action');
@@ -89,7 +89,7 @@ function ReactionMediaToolbar(props) {
     const markdownProps = {
         tooltip: t('story-markdown'),
         icon: 'pencil-square',
-        highlighted: _.get(reaction, 'details.markdown', false),
+        highlighted: reaction?.details?.markdown ?? false,
         'data-action': 'markdown-set',
         onClick: handleClick,
     };

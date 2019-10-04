@@ -707,7 +707,7 @@ const phrases = {
     },
     'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
         let text = `Sujungė kodą`;
-        if (branches && branches.length > 0) {
+        if (branches?.length > 0) {
             let sources = branches.map((branch) => {
                 return `„${branch}”`;
             });

@@ -73,7 +73,6 @@ function UserViewOptions(props) {
     }
 
     function renderButtons(section) {
-        const details = _.get(user, 'details', {});
         if (section === 'main') {
             const {
                 phone,
@@ -85,7 +84,7 @@ function UserViewOptions(props) {
                 github_url: githubURL,
                 linkedin_url: linkedinURL,
                 stackoverflow_url: stackoverflowURL,
-            } = _.get(user, 'details', {});
+            } = user?.details ?? {};
             const phoneProps = {
                 label: t('action-contact-by-phone'),
                 icon: 'phone-square',

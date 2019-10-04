@@ -18,9 +18,9 @@ import './bottom-navigation.scss';
 function BottomNavigation(props) {
     const { database, route, env, settings } = props;
     const { t } = env.locale;
-    const routeParams = _.get(settings, 'navigation.route');
-    const activeSection = _.get(settings, 'navigation.section');
-    const isHidden = !_.get(settings, 'navigation.bottom', true);
+    const routeParams = settings?.navigation?.route;
+    const activeSection = settings?.navigation?.section;
+    const isHidden = settings?.navigation?.bottom ?? true;
     const [ height, setHeight ] = useState();
     const [ stacking, setStacking ] = useState();
     const containerRef = useRef();

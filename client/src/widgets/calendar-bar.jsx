@@ -46,7 +46,7 @@ async function CalendarBar(props) {
         const { year, month, showYear } = mon;
         const props = { year, month, showYear, selection, env };
         const handleDateURL = (evt) => {
-            const activities = _.get(dailyActivities, [ 'daily', evt.date ]);
+            const activities = dailyActivities?.daily?.[evt.date];
             if (activities) {
                 const params = { date: evt.date, ...settings.route };
                 const url = route.find(route.name, params);
@@ -60,8 +60,8 @@ async function CalendarBar(props) {
     function getMonths() {
         const endOfThisMonth = Moment().endOf('month');
         const months = [];
-        const startTime = _.get(dailyActivities, 'range.start');
-        const endTime = _.get(dailyActivities, 'range.end');
+        const startTime = dailyActivities?.range?.start;
+        const endTime = dailyActivities?.range?.end;
         let multiyear = false;
         if (startTime && endTime) {
             let s = Moment(startTime).startOf('month');

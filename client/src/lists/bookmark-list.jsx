@@ -34,7 +34,7 @@ async function BookmarkList(props) {
         return renderBookmark(evt.item, evt.needed, evt.previousHeight, evt.estimatedHeight);
     };
     const handleBookmarkAnchorChange = (evt) => {
-        const scrollToStoryID  = _.get(evt.item, 'story_id');
+        const scrollToStoryID  = evt.item?.story_id;
         route.replace({ scrollToStoryID, highlightStoryID: undefined });
     };
     const handleBookmarkBeforeAnchor = (evt) => {

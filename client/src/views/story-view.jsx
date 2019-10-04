@@ -218,7 +218,7 @@ function StoryView(props) {
     }
 
     function renderProfileImage() {
-        const leadAuthor = _.get(authors, 0);
+        const leadAuthor = authors?.[0];
         let url;
         if (leadAuthor) {
             url = route.find('person-page', { selectedUserID: leadAuthor.id });

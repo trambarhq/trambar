@@ -15,8 +15,8 @@ function UserStatistics(props) {
     const { user, dailyActivities } = props;
     const { route, env, selectedDate, chartType, chartRange } = props;
     const { t, localeCode } = env.locale;
-    const activities = _.get(dailyActivities, 'daily', {});
-    const range = _.get(dailyActivities, 'range');
+    const activities = dailyActivities?.daily ?? {};
+    const range = dailyActivities?.range;
     const date = selectedDate || env.date;
     const dates = useMemo(() => {
         switch (chartRange) {
@@ -254,9 +254,9 @@ function UserStatistics(props) {
             }
         } else if (cxt.type === 'bar') {
             // add mouseover title
-            let tooltip = _.get(tooltips, [ cxt.seriesIndex, cxt.index ]);
-            let date = dates[cxt.index];
-            let title = new Svg('title');
+            const tooltip = tooltips?.[cxt.seriesIndex]?.[cxt.index];
+            const date = dates[cxt.index];
+            const title = new Svg('title');
             title.text(tooltip);
             cxt.element.append(title);
             cxt.element.attr({ 'data-date': date });
@@ -288,7 +288,7 @@ const getActivitySeries = memoizeWeak(null, function(activities, dates) {
         // don't include series that are completely empty
         let empty = true;
         let series = _.map(dates, (date) => {
-            let value = _.get(activities, [ date, type ], 0);
+            let value = activities?.[date]?.[type] ?? 0;
             if (value) {
                 empty = false;
             }

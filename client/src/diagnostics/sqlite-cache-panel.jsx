@@ -19,8 +19,8 @@ function SQLiteCachePanel(props) {
         readCount,
         deleteCount,
     } = cache;
-    const localRowCount = _.get(recordCounts, 'local-data');
-    const remoteRowCount = _.get(recordCounts, 'remote-data');
+    const localRowCount = recordCounts?.['local-data'];
+    const remoteRowCount = recordCounts?.['remote-data'];
     return (
         <SettingsPanel className="sqlite-cache">
             <header>

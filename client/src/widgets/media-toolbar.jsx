@@ -16,7 +16,7 @@ function MediaToolbar(props) {
     const canCaptureImage = _.includes(env.recorders, 'image');
     const canCaptureVideo = _.includes(env.recorders, 'video');
     const canCaptureAudio = _.includes(env.recorders, 'audio');
-    const resources = _.get(story, 'details.resources', []);
+    const resources = story?.details?.resources ?? [];
 
     const handleClick = useListener((evt) => {
         const action = evt.currentTarget.getAttribute('data-action');

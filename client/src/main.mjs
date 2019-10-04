@@ -30,12 +30,8 @@ function hideSplashScreen() {
     if (screen) {
         screen.className = 'transition-out';
         setTimeout(() => {
-            if (screen.parentNode) {
-                screen.parentNode.removeChild(screen);
-            }
-            if (style && style.parentNode) {
-                style.parentNode.removeChild(style);
-            }
+            screen.parentNode?.removeChild?.(screen);
+            style?.parentNode?.removeChild?.(style);
         }, 1000);
     }
     if (splashScreen) {

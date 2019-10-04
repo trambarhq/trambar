@@ -188,13 +188,10 @@ async function StartPage(props) {
     function renderForBrowser() {
         const classNames = [ 'start-page browser' ];
         const style = {};
-        if (system) {
-            const resources = _.get(system, 'details.resources');
-            const backgroundImage = _.find(resources, { type: 'image' });
-            if (backgroundImage) {
-                const imageURL = ResourceUtils.getImageURL(backgroundImage, { width: 1024, quality: 40 }, env);
-                style.backgroundImage = `url(${imageURL})`;
-            }
+        const backgroundImage = _.find(system?.details?.resources, { type: 'image' });
+        if (backgroundImage) {
+            const imageURL = ResourceUtils.getImageURL(backgroundImage, { width: 1024, quality: 40 }, env);
+            style.backgroundImage = `url(${imageURL})`;
         }
         let onTransitionEnd;
         if (transitionOut) {

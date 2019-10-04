@@ -23,8 +23,8 @@ function SystemDescriptionDialogBox(props) {
     );
 
     function renderText() {
-        const title = p(_.get(system, 'details.title'));
-        const description = p(_.get(system, 'details.description'));
+        const title = p(system?.details?.title);
+        const description = p(system?.details?.description);
         return (
             <Scrollable>
                 <div className="title">{title}</div>

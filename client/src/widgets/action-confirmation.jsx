@@ -54,7 +54,7 @@ function ActionConfirmation(props, ref) {
         dangerous: true,
         env,
         onConfirm: handleConfirm,
-        onCancel: (question && question.cancelable) ? handleCancel : undefined,
+        onCancel: (question?.cancelable) ? handleCancel : undefined,
     };
     return (
         <ConfirmationDialogBox {...dialogProps}>

@@ -32,8 +32,7 @@ function ReactionView(props) {
     const { env, route, repo, highlighting, access } = props;
     const { t, p, g } = env.locale;
     const [ options, setOptions ] = useState({});
-    const resources = _.get(reaction, 'details.resources');
-    const markdownResources = useMarkdownResources(resources);
+    const markdownResources = useMarkdownResources(reaction?.details?.resources);
 
     const handleOptionsChange = useListener((evt) => {
         const newOptions = evt.options;

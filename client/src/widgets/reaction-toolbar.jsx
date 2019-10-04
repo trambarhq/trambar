@@ -14,7 +14,7 @@ function ReactionToolbar(props) {
     const { env, access, reactions, currentUser, addingComment, disabled, onAction } = props;
     const { t } = env.locale;
     const canComment = (access === 'read-comment' || access === 'read-write');
-    const userID = _.get(currentUser, 'id');
+    const userID = currentUser?.id;
     const userLike =  _.find(reactions, { type: 'like', user_id: userID });
     const userComments = _.filter(reactions, (reaction) => {
         if (reaction.user_id === userID) {

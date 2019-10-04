@@ -16,7 +16,7 @@ import './top-navigation.scss';
  */
 function TopNavigation(props) {
     const { database, route, env, payloads, settings, makingRequests } = props;
-    const isHidden = !_.get(settings, 'navigation.top', true);
+    const isHidden = !settings?.navigation?.top ?? true;
     const [ height, setHeight ] = useState();
     const containerRef = useRef();
     const selectedControl = useMemo(() => {
@@ -67,9 +67,9 @@ function TopNavigation(props) {
 
     function renderButton(control, i) {
         const { name, icon } = control;
-        const controlSettings = _.get(settings, name);
+        const controlSettings = settings?.name;
         const className = `${name}-btn`;
-        const active = (selectedControl && selectedControl.name === name);
+        const active = (selectedControl?.name === name);
         let url;
         if (controlSettings) {
             let params = { ...controlSettings.route };
@@ -87,7 +87,7 @@ function TopNavigation(props) {
         let contents;
         if (selectedControl) {
             const { name, component: Control } = selectedControl;
-            const controlSettings = _.get(settings, name, {});
+            const controlSettings = settings?.name ?? {};
             let props = {
                 settings: controlSettings,
                 database,

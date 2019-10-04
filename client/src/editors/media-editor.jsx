@@ -17,7 +17,7 @@ function MediaEditor(props) {
     const { resources, resourceIndex, allowEmbedding, allowShifting } = props;
     const { env, payloads, children, onChange, onEmbed } = props;
     const { t } = env.locale;
-    const resource = _.get(resources, resourceIndex);
+    const resource = resources?.[resourceIndex];
 
     const handleShiftClick = useListener((evt) => {
         if (resourceIndex < 1) {
@@ -46,7 +46,7 @@ function MediaEditor(props) {
                 selection: newIndex
             });
         }
-        if (resource && resource.payload_token) {
+        if (resource?.payload_token) {
             payloads.cancel(resource.payload_token);
         }
     });

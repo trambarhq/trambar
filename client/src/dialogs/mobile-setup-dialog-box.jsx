@@ -39,7 +39,7 @@ async function MobileSetupDialogBox(props) {
 
     function render() {
         let { address, schema } = database.context;
-        const systemAddress = _.get(system, 'settings.address');
+        const systemAddress = system?.settings?.address;
         if (!systemAddress) {
             // use the address in the system object if there's one
             address = systemAddress;

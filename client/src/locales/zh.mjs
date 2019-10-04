@@ -744,7 +744,7 @@ let traditionalPhrases = {
     },
     'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
         let text = `將`;
-        if (branches && branches.length > 0) {
+        if (branches?.length > 0) {
             let sources = branches.map((branch) => {
                 return `《${branch}》`;
             });
@@ -1670,7 +1670,7 @@ let simplifiedPhrases = {
     },
     'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
         let text = `将`;
-        if (branches && branches.length > 0) {
+        if (branches?.length > 0) {
             let sources = branches.map((branch) => {
                 return `《${branch}》`;
             });
@@ -2174,7 +2174,7 @@ let cantonesePhrases = {
     },
     'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
         let text = `將`;
-        if (branches && branches.length > 0) {
+        if (branches?.length > 0) {
             let sources = branches.map((branch) => {
                 return `《${branch}》`;
             });
