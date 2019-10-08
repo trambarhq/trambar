@@ -61,6 +61,22 @@ class TaskPurgeProject extends BasicTask {
     }
 }
 
+class TaskPurgeMetadata extends BasicTask {
+    constructor(schema, name) {
+        super();
+        this.schema = schema;
+    }
+
+    async run() {
+        const { schema } = this;
+        const project = ProjectSettings.find({ name: schema });
+        if (project) {
+            const pattern = new RegExp(`^/data/meta/$`);
+            await CacheManager.purge(project, pattern);
+        }
+    }
+}
+
 class TaskPurgeSpreadsheet extends BasicTask {
     constructor(schema, name) {
         super();
@@ -210,6 +226,7 @@ export {
     TaskImportSpreadsheet,
     TaskPurgeTemplate,
     TaskPurgeProject,
+    TaskPurgeMetadata,
     TaskPurgeSpreadsheet,
     TaskPurgeWiki,
     TaskPurgeRest,

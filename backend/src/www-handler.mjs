@@ -34,6 +34,7 @@ import {
     TaskImportSpreadsheet,
     TaskPurgeTemplate,
     TaskPurgeProject,
+    TaskPurgeMetadata,
     TaskPurgeSpreadsheet,
     TaskPurgeWiki,
     TaskPurgeRest,
@@ -139,7 +140,8 @@ async function stop() {
 async function handleCacheStatusRequest(req, res, next) {
     try {
         const { project } = req;
-        const text = await CacheManager.stat(project);
+        const options = { md5: !!req.query.md5 };
+        const text = await CacheManager.stat(project, options);
         res.set({ 'X-Accel-Expires': 0 });
         res.type('text').send(text);
     } catch (err) {
@@ -499,20 +501,22 @@ async function handleStaticFileRequest(req, res, next) {
  *
  * @param  {Array<Object>} events
  */
-function handleDatabaseChanges(events) {
+async function handleDatabaseChanges(events) {
     const db = this;
     for (let event of events) {
         const { id, schema, table, diff, previous, current } = event;
         if (table === 'project') {
+            await ProjectSettings.update(db, id);
+
             if (diff.name || diff.repo_ids || diff.template_repo_id) {
                 const name = previous.name || current.name;
                 taskQueue.add(new TaskPurgeProject(name));
+            } else if (diff.details) {
+                const name = previous.name || current.name;
+                taskQueue.add(new TaskPurgeMetadata(name));
             }
             if (diff.name) {
                 TrafficMonitor.moveStatistics(previous.name, current.name);
-            }
-            if (diff.name || diff.settings || diff.deleted) {
-                ProjectSettings.update(db, id);
             }
         } else if (table === 'snapshot') {
             if (diff.head && !current.head) {
