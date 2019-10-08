@@ -9,9 +9,13 @@ import * as MediaImporter from '../media-server/media-importer.mjs';
 import Repo from '../accessors/repo.mjs';
 import Wiki from '../accessors/wiki.mjs';
 
-async function discover(schema, identifier, search) {
-    const taskLog = TaskLog.start('wiki-discover', { project: schema, identifier });
+async function discover(project, identifier, search) {
+    const taskLog = TaskLog.start('wiki-discover', {
+        project: project.name,
+        identifier
+    });
     try {
+        const schema = project.name;
         const contents = [];
         const db = await Database.open();
         const criteria = await addRepoCheck(db, identifier, {
@@ -50,9 +54,14 @@ async function discover(schema, identifier, search) {
     }
 }
 
-async function retrieve(schema, identifier, slug) {
-    const taskLog = TaskLog.start('wiki-retrieve', { project: schema, identifier, slug });
+async function retrieve(project, identifier, slug) {
+    const taskLog = TaskLog.start('wiki-retrieve', {
+        project: project.name,
+        identifier,
+        slug
+    });
     try {
+        const schema = project.name;
         const db = await Database.open();
         const criteria = await addRepoCheck(db, identifier, {
             slug,

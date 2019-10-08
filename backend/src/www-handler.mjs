@@ -32,7 +32,7 @@ import System from './lib/accessors/system.mjs';
 import TaskQueue from './lib/task-queue.mjs';
 import {
     TaskImportSpreadsheet,
-    TaskPurgeSnapshotHead,
+    TaskPurgeTemplate,
     TaskPurgeProject,
     TaskPurgeSpreadsheet,
     TaskPurgeWiki,
@@ -62,28 +62,27 @@ async function start() {
             'X-Total-Pages',
         ],
     };
+    app.set('json spaces', 2);
     app.use(CORS(corsOptions));
     app.use(Compression());
-    app.use(redirectToCanonical);
-    app.use(redirectToProject);
-    app.set('json spaces', 2);
-    app.get('/srv/www/:schema/.cache', handleCacheStatusRequest);
-    app.get('/srv/www/:schema/data/geoip/', handleGeoIPRequest);
-    app.get('/srv/www/:schema/data/wiki/:identifier/:slug/', handleWikiRequest);
-    app.get('/srv/www/:schema/data/wiki/:identifier/', handleWikiListRequest);
-    app.get('/srv/www/:schema/data/wiki/', handleWikiListRequest);
-    app.get('/srv/www/:schema/data/excel/:identifier/', handleExcelRequest);
-    app.get('/srv/www/:schema/data/excel/', handleExcelListRequest);
-    app.get('/srv/www/:schema/data/rest/:identifier/*', handleRestRequest);
-    app.get('/srv/www/:schema/data/rest/', handleRestListRequest);
-    app.get('/srv/www/:schema/data/meta/', handleMetadataRequest);
-    app.get('/srv/www/:schema/:type(images|video|audio)/*', handleMediaRequest);
-    app.get('/srv/www/:schema/\\(:tag\\)/*', handleSnapshotFileRequest);
-    app.get('/srv/www/:schema/*', handleSnapshotFileRequest);
-    app.get('/srv/www/:schema/\\(:tag\\)/*', handleSnapshotPageRequest);
-    app.get('/srv/www/:schema/*', handleSnapshotPageRequest);
-    app.get('/admin/*', handleStaticFileRequest);
-    app.get('/*', handleStaticFileRequest);
+    app.get('*', redirectToCanonical);
+    app.get('*', matchProjectDomain);
+    app.get('*', handleStaticFileRequest);
+    app.get('/.cache', handleCacheStatusRequest);
+    app.get('/data/geoip/', handleGeoIPRequest);
+    app.get('/data/wiki/:identifier/:slug/', handleWikiRequest);
+    app.get('/data/wiki/:identifier/', handleWikiListRequest);
+    app.get('/data/wiki/', handleWikiListRequest);
+    app.get('/data/excel/:identifier/', handleExcelRequest);
+    app.get('/data/excel/', handleExcelListRequest);
+    app.get('/data/rest/:identifier/*', handleRestRequest);
+    app.get('/data/rest/', handleRestListRequest);
+    app.get('/data/meta/', handleMetadataRequest);
+    app.get('/:type(images|video|audio)/*', handleMediaRequest);
+    app.get('/\\(:tag\\)/*', handleSnapshotFileRequest);
+    app.get('/*', handleSnapshotFileRequest);
+    app.get('/\\(:tag\\)/*', handleSnapshotPageRequest);
+    app.get('/*', handleSnapshotPageRequest);
     app.purge('*', handlePurgeRequest);
 
     app.use(handleError);
@@ -139,9 +138,8 @@ async function stop() {
 
 async function handleCacheStatusRequest(req, res, next) {
     try {
-        const { schema } = req.params;
-        const pattern = new RegExp(`^/srv/www/${schema}/`);
-        const text = await CacheManager.stat(pattern);
+        const { project } = req;
+        const text = await CacheManager.stat(project);
         res.set({ 'X-Accel-Expires': 0 });
         res.type('text').send(text);
     } catch (err) {
@@ -151,13 +149,13 @@ async function handleCacheStatusRequest(req, res, next) {
 
 async function handleGeoIPRequest(req, res, next) {
     try {
-        const { schema } = req.params;
+        const { project } = req;
         //const ip = req.headers['x-forwarded-for'];
         const ip = '213.171.195.48';
         if (!ip) {
             throw new Error('Nginx did not send X-Forwarded-For header');
         }
-        const country = await TrafficMonitor.recordIP(schema, ip);
+        const country = await TrafficMonitor.recordIP(project, ip);
         res.set({ 'X-Accel-Expires': 0 });
         res.json({ country });
     } catch (err) {
@@ -167,8 +165,9 @@ async function handleGeoIPRequest(req, res, next) {
 
 async function handleWikiRequest(req, res, next) {
     try {
-        const { schema, identifier, slug } = req.params;
-        const result = await WikiRetriever.retrieve(schema, identifier, slug);
+        const { project } = req;
+        const { identifier, slug } = req.params;
+        const result = await WikiRetriever.retrieve(project, identifier, slug);
         sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
@@ -177,9 +176,10 @@ async function handleWikiRequest(req, res, next) {
 
 async function handleWikiListRequest(req, res, next) {
     try {
-        const { schema, identifier } = req.params;
+        const { project } = req;
+        const { identifier } = req.params;
         const search = await getSearchParameters(req);
-        const result = await WikiRetriever.discover(schema, identifier, search);
+        const result = await WikiRetriever.discover(project, identifier, search);
         sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
@@ -188,8 +188,9 @@ async function handleWikiListRequest(req, res, next) {
 
 async function handleExcelRequest(req, res, next) {
     try {
-        const { schema, identifier } = req.params;
-        const result = await ExcelRetriever.retrieve(schema, identifier);
+        const { project } = req;
+        const { identifier } = req.params;
+        const result = await ExcelRetriever.retrieve(project, identifier);
         sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
@@ -198,9 +199,9 @@ async function handleExcelRequest(req, res, next) {
 
 async function handleExcelListRequest(req, res, next) {
     try {
-        const { schema } = req.params;
+        const { project } = req;
         const search = await getSearchParameters(req);
-        const result = await ExcelRetriever.discover(schema, search);
+        const result = await ExcelRetriever.discover(project, search);
         sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
@@ -209,10 +210,11 @@ async function handleExcelListRequest(req, res, next) {
 
 async function handleRestRequest(req, res, next) {
     try {
-        const { schema, identifier } = req.params;
+        const { project } = req;
+        const { identifier } = req.params;
         const path = req.params[0]
         const query = req.query;
-        const result = await RestRetriever.retrieve(schema, identifier, path, query);
+        const result = await RestRetriever.retrieve(project, identifier, path, query);
         sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
@@ -221,9 +223,9 @@ async function handleRestRequest(req, res, next) {
 
 async function handleRestListRequest(req, res, next) {
     try {
-        const { schema } = req.params;
+        const { project } = req;
         const { type } = req.query;
-        const result = await RestRetriever.discover(schema, type);
+        const result = await RestRetriever.discover(project, type);
         sendDataQueryResult(res, result);
     } catch (err) {
         next(err);
@@ -232,7 +234,8 @@ async function handleRestListRequest(req, res, next) {
 
 async function handleSnapshotFileRequest(req, res, next) {
     try {
-        const { schema, tag } = req.params;
+        const { project } = req;
+        const { tag } = req.params;
         const path = req.params[0];
         const m = /\.\w+$/.exec(path);
         if (!m) {
@@ -251,7 +254,7 @@ async function handleSnapshotFileRequest(req, res, next) {
             return;
         }
 
-        const buffer = await SnapshotRetriever.retrieve(schema, tag, 'www', path);
+        const buffer = await SnapshotRetriever.retrieve(project, tag, 'www', path);
         controlCache(res);
         if (buffer) {
             res.type(ext).send(buffer);
@@ -265,6 +268,7 @@ async function handleSnapshotFileRequest(req, res, next) {
 
 async function handleSnapshotPageRequest(req, res, next) {
     try {
+        const { project } = req;
         const { lang } = req.query;
         if (!lang) {
             let selected = getPreferredLanguage(req);
@@ -273,67 +277,36 @@ async function handleSnapshotPageRequest(req, res, next) {
             }
             const vars = { ...req.query, lang: selected };
             const qs = QueryString.stringify(vars);
-            const uri = `${req.path}?${qs}`;
+            const originalPath = _.replace(req.originalUrl, /\?.*/, '');
+            let uri = `${originalPath}?${qs}`;
             res.set({ 'X-Accel-Expires': 0 });
             res.set({ 'X-Accel-Redirect': uri });
             res.end();
             return;
         }
 
-        const { schema, tag } = req.params;
-        const qs = QueryString.stringify(req.query);
-        const path = `/${req.params[0]}?${qs}`;
+        const { tag } = req.params;
+        const qs = QueryString.stringify(_.omit(req.query, 'lang'));
+        const pageURL = `/${req.params[0]}${qs ? `?${qs}` : ''}`;
         const target = 'hydrate';
         const protocol = req.headers['x-forwarded-proto'];
         const host = req.headers.host;
-        const prefix = `/srv/www/${schema}`;
-        const baseURL = `${protocol}://${host}` + (req.redirected ? '' : prefix);
-        const buffer = await PageGenerator.generate(schema, tag, path, baseURL, target, lang);
+        const baseURL = `${protocol}://${host}${req.basePath}`;
+        const buffer = await PageGenerator.generate(project, tag, pageURL, baseURL, target, lang);
         controlCache(res);
         res.type('html').send(buffer);
 
         // link the URLs used by the page to its URL
         // so it gets purged when the data it uses gets purged
-        const sourceURLs = [];
-        for (let sourceURL of buffer.sourceURLs) {
-            if (_.startsWith(sourceURL, baseURL)) {
-                sourceURLs.push(prefix + sourceURL.substr(baseURL.length));
-            }
-        }
-        const pageURL = prefix + path;
-        CacheManager.link(pageURL, sourceURLs);
+        CacheManager.link(project, req.url, buffer.sourceURLs);
     } catch (err) {
         next(err);
     }
 }
 
-async function handleStaticFileRequest(req, res, next) {
-    const isAdmin = _.startsWith(req.path, '/admin/');
-    try {
-        const folder = (isAdmin) ? 'admin' : 'client';
-        const file = req.params[0] || 'index.html';
-        const path = Path.resolve(`../../${folder}/www/${file}`);
-        const stats = await FS.stat(path);
-        controlCache(res);
-        res.sendFile(path);
-    } catch (err) {
-        if (err.code === 'ENOENT') {
-            const uri = (isAdmin) ? `/admin/index.html` : `/index.html`;
-            res.set({ 'X-Accel-Redirect': uri });
-            res.end();
-        } else {
-            next(err);
-        }
-    }
-}
-
 async function handleMetadataRequest(req, res, next) {
     try {
-        const { schema } = req.params;
-        const project = ProjectSettings.find({ name: schema });
-        if (!project) {
-            throw new HTTPError(404);
-        }
+        const { project } = req;
         const meta = {
             name: project.name,
             title: project.details.title,
@@ -414,6 +387,7 @@ function handleError(err, req, res, next) {
         const status = err.status || err.statusCode || 400;
         res.type('text').status(status).send(err.message);
     }
+    console.log(err.stack);
 }
 
 const defaultCacheControl = {
@@ -451,6 +425,39 @@ function sendDataQueryResult(res, result) {
     res.json(contents);
 }
 
+function matchProjectDomain(req, res, next) {
+    let host = req.headers.host;
+    let project = ProjectSettings.find({ host });
+    let basePath = '';
+    if (!project) {
+        // look for domain name with "www." prepended or stripped
+        // redirect to that name if it's listed for the project
+        host = _.startsWith(host, 'www.') ? host.substr(4) : 'www.' + host;
+        project = ProjectSettings.find({ host });
+        if (project) {
+            const protocol = req.headers['x-forwarded-proto'];
+            const url = `${protocol}://${host}${req.originalUrl}`;
+            res.redirect(301, url);
+            return;
+        }
+    }
+    if (!project) {
+        //
+        const m = /^\/srv\/www\/(\w+)\//.exec(req.url);
+        if (m) {
+            const name = m[1];
+            project = ProjectSettings.find({ name });
+            if (project) {
+                basePath = `/srv/www/${name}`;
+                req.url = req.url.substr(basePath.length);
+            }
+        }
+    }
+    req.project = project;
+    req.basePath = basePath;
+    next();
+}
+
 function redirectToCanonical(req, res, next) {
     if (!_.endsWith(req.path, '/')) {
         if (!Path.extname(req.path)) {
@@ -462,22 +469,29 @@ function redirectToCanonical(req, res, next) {
     next();
 }
 
-function redirectToProject(req, res, next) {
-    const host = req.headers.host;
-    const project = ProjectSettings.find({ host });
-    if (project) {
-        if (_.startsWith(req.url, '/srv/www')) {
-            req.redirected = true;
-        } else {
-            const uri = `/srv/www/${project.name}${req.url}`;
+async function handleStaticFileRequest(req, res, next) {
+    if (req.project) {
+        next();
+        return;
+    }
+    const isAdmin = _.startsWith(req.path, '/admin/');
+    try {
+        throw new Error('asd');
+        const folder = (isAdmin) ? 'admin' : 'client';
+        const file = Path.basename(req.path) || 'index.html';
+        const path = Path.resolve(`../../${folder}/www/${file}`);
+        const stats = await FS.stat(path);
+        controlCache(res);
+        res.sendFile(path);
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            const uri = (isAdmin) ? `/admin/index.html` : `/index.html`;
             res.set({ 'X-Accel-Redirect': uri });
             res.end();
-            return;
+        } else {
+            next(err);
         }
-    } else {
-        req.redirected = false;
     }
-    next();
 }
 
 /**
@@ -502,7 +516,8 @@ function handleDatabaseChanges(events) {
             }
         } else if (table === 'snapshot') {
             if (diff.head && !current.head) {
-                taskQueue.add(new TaskPurgeSnapshotHead(id));
+                const repoID = current.repo_id;
+                taskQueue.add(new TaskPurgeTemplate(repoID));
             }
         } else if (table === 'spreadsheet') {
             const name = previous.name || current.name;

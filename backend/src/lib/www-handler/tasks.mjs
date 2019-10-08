@@ -7,6 +7,7 @@ import * as CacheManager from './cache-manager.mjs';
 import * as ExcelRetriever from './excel-retriever.mjs';
 import * as RestRetriever from './rest-retriever.mjs';
 import * as TrafficMonitor from './traffic-monitor.mjs';
+import * as ProjectSettings from './project-settings.mjs';
 
 // accessors
 import Project from '../accessors/project.mjs';
@@ -29,21 +30,18 @@ class TaskImportSpreadsheet extends BasicTask {
     }
 }
 
-class TaskPurgeSnapshotHead extends BasicTask {
-    constructor(snapshotID) {
+class TaskPurgeTemplate extends BasicTask {
+    constructor(repoID) {
         super();
-        this.snapshotID = snapshotID;
+        this.repoID = repoID;
     }
 
     async run() {
-        const { snapshotID } = this;
-        const db = await Database.open();
-        const snapshot = await getSnapshot(db, snapshotID);
-        const projects = await getSnapshotProjects(db, snapshot);
+        const { repoID } = this;
+        const projects = ProjectSettings.filter({ template_repo_id: repoID });
         for (let project of projects) {
-            const schema = project.name;
-            const pattern = new RegExp(`^/srv/www/${schema}/`);
-            await CacheManager.purge(pattern);
+            const pattern = new RegExp(`^(?!/data/)`);
+            await CacheManager.purge(project, pattern);
         }
     }
 }
@@ -56,8 +54,10 @@ class TaskPurgeProject extends BasicTask {
 
     async run() {
         const { schema } = this;
-        const pattern = new RegExp(`^/srv/www/${schema}/`);
-        await CacheManager.purge(pattern);
+        const project = ProjectSettings.find({ name: schema });
+        if (project) {
+            await CacheManager.purge(project);
+        }
     }
 }
 
@@ -70,11 +70,14 @@ class TaskPurgeSpreadsheet extends BasicTask {
 
     async run() {
         const { schema, name } = this;
-        const pattern = new RegExp(`^/srv/www/${schema}/data/excel/${name}/`);
-        await CacheManager.purge(pattern);
+        const project = ProjectSettings.find({ name: schema });
+        if (project) {
+            const pattern = new RegExp(`^/data/excel/${name}/`);
+            await CacheManager.purge(project, pattern);
 
-        const listPattern = new RegExp(`^/srv/www/${schema}/data/excel/(\\?|$)`);
-        await CacheManager.purge(listPattern);
+            const listPattern = new RegExp(`^/data/excel/(\\?|$)`);
+            await CacheManager.purge(project, listPattern);
+        }
     }
 }
 
@@ -90,13 +93,15 @@ class TaskPurgeWiki extends BasicTask {
         const { schema, repoID, slug } = this;
         const db = Database.open();
         const name = await getRepoName(db, repoID);
-        const pattern = new RegExp(`^/srv/www/${schema}/data/wiki/${name}/${slug}/`);
-        await CacheManager.purge(pattern);
-
-        const listPattern1 = new RegExp(`^/srv/www/${schema}/data/wiki/${name}/(\\?|$)`);
-        await CacheManager.purge(listPattern1);
-        const listPattern2 = new RegExp(`^/srv/www/${schema}/data/wiki/(\\?|$)`);
-        await CacheManager.purge(listPattern2);
+        const project = ProjectSettings.find({ name: schema });
+        if (project) {
+            const pattern = new RegExp(`^/data/wiki/${name}/${slug}/`);
+            await CacheManager.purge(project, pattern);
+            const listPattern1 = new RegExp(`^/data/wiki/${name}/(\\?|$)`);
+            await CacheManager.purge(project, listPattern1);
+            const listPattern2 = new RegExp(`^/data/wiki/(\\?|$)`);
+            await CacheManager.purge(project, listPattern2);
+        }
     }
 }
 
@@ -109,11 +114,14 @@ class TaskPurgeRest extends BasicTask {
 
     async run() {
         const { schema, name } = this;
-        const pattern = new RegExp(`^/srv/www/${schema}/data/rest/${name}/`);
-        await CacheManager.purge(pattern);
+        const project = ProjectSettings.find({ name: schema });
+        if (project) {
+            const pattern = new RegExp(`^/data/rest/${name}/`);
+            await CacheManager.purge(project, pattern);
 
-        const listPattern = new RegExp(`^/srv/www/${schema}/data/rest/(\\?|$)`);
-        await CacheManager.purge(listPattern);
+            const listPattern = new RegExp(`^/data/rest/(\\?|$)`);
+            await CacheManager.purge(project, listPattern);
+        }
     }
 }
 
@@ -128,23 +136,22 @@ class TaskPurgeRequest extends BasicTask {
     async run() {
         const { host, url, method } = this;
         const purges = await RestRetriever.translatePurgeRequest(host, url, method);
-        for (let { schema, identifier, url, method } of purges) {
-            const prefix = `/srv/www/${schema}/data/rest/${identifier}`;
+        for (let { project, identifier, url, method } of purges) {
+            const prefix = `/data/rest/${identifier}`;
             let criteria;
             if (method === 'regex') {
                 criteria = new RegExp(prefix + url);
             } else if (method === 'default') {
                 criteria = prefix + url;
             }
-            await CacheManager.purge(criteria);
+            await CacheManager.purge(project, criteria);
         }
     }
 }
 
 class TaskPurgeAll extends BasicTask {
     async run() {
-        const pattern = new RegExp('.*');
-        await CacheManager.purge(pattern);
+        await CacheManager.purge();
     }
 }
 
@@ -191,17 +198,6 @@ function getSnapshot(db, snapshotID) {
     return Snapshot.findOne(db, 'global', criteria, '*');
 }
 
-function getSnapshotProjects(db, snapshot) {
-    if (!snapshot) {
-        return [];
-    }
-    const criteria = {
-        id: snapshot.repo_id,
-        deleted: false,
-    };
-    return Project.find(db, 'global', criteria, '*');
-}
-
 function getRepoName(db, repoID) {
     const criteria = {
         id: repoID,
@@ -212,8 +208,7 @@ function getRepoName(db, repoID) {
 
 export {
     TaskImportSpreadsheet,
-
-    TaskPurgeSnapshotHead,
+    TaskPurgeTemplate,
     TaskPurgeProject,
     TaskPurgeSpreadsheet,
     TaskPurgeWiki,

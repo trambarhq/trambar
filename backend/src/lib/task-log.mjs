@@ -336,7 +336,9 @@ class TaskLog {
                     continue;
                 }
             }
-            pairs.push(`${name}: ${value}`);
+            if (value !== undefined) {
+                pairs.push(`${name}: ${value}`);
+            }
         }
         if (pairs.length > 0) {
             return ` (${pairs.join(', ')})`;

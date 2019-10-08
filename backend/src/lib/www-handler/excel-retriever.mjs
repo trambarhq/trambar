@@ -8,9 +8,13 @@ import * as TaskLog from '../task-log.mjs'
 import Spreadsheet from '../accessors/spreadsheet.mjs';
 import * as MediaImporter from '../media-server/media-importer.mjs';
 
-async function discover(schema, search) {
-    const taskLog = TaskLog.start('excel-discover', { project: schema });
+async function discover(project, search) {
+    const taskLog = TaskLog.start('excel-discover', {
+        project: project.name,
+        search,
+    });
     try {
+        const schema = project.name;
         const contents = [];
         const db = await Database.open();
         const criteria = {
@@ -36,9 +40,13 @@ async function discover(schema, search) {
     }
 }
 
-async function retrieve(schema, identifier) {
-    const taskLog = TaskLog.start('excel-retrieve', { project: schema, identifier });
+async function retrieve(project, identifier) {
+    const taskLog = TaskLog.start('excel-retrieve', {
+        project: project.name,
+        identifier
+    });
     try {
+        const schema = project.name;
         const db = await Database.open();
         const criteria = {
             name: identifier,
@@ -101,6 +109,19 @@ async function retrieve(schema, identifier) {
                 }
                 spreadsheet = await Spreadsheet.saveUnique(db, schema, spreadsheetChanges);
                 changed = true;
+            } else {
+                const { error } = spreadsheet.details;
+                if (error) {
+                    // clear the error
+                    const spreadsheetChanges = {
+                        id: spreadsheet.id,
+                        details: {
+                            ...spreadsheet.details,
+                            error: undefined,
+                        },
+                    };
+                    spreadsheet = await Spreadsheet.saveUnique(db, schema, spreadsheetChanges);
+                }
             }
             taskLog.set('changed', changed);
             if (buffer && buffer.filename) {

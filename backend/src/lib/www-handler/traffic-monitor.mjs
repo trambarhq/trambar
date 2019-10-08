@@ -14,17 +14,14 @@ import Story from '../accessors/story.mjs';
 
 let traffic = {};
 
-async function recordIP(schema, ip) {
+async function recordIP(project, ip) {
     try {
         const country = await findCountry(ip);
-        const project = ProjectSettings.find({ name: schema });
-        if (project) {
-            const tz = _.get(project.settings, 'timezone');
-            const date = getDate(tz);
-            const path = [ schema, date, country ];
-            const count = _.get(traffic, path, 0);
-            _.set(traffic, path, count + 1);
-        }
+        const tz = _.get(project.settings, 'timezone');
+        const date = getDate(tz);
+        const path = [ schema, date, country ];
+        const count = _.get(traffic, path, 0);
+        _.set(traffic, path, count + 1);
         return country;
     } catch (err) {
         return 'zz';
@@ -186,6 +183,7 @@ async function updateDatabase() {
 const geoLite2URL = 'https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz';
 
 async function downloadGeoLite2(lastModified) {
+    return {};
     const taskLog = TaskLog.start('geoip-database-download');
     try {
         const options = {};

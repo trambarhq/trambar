@@ -9,12 +9,12 @@ import HTTPError from '../common/errors/http-error.mjs';
 
 import * as SnapshotRetriever from './snapshot-retriever.mjs';
 
-async function generate(schema, tag, path, baseURL, target, lang) {
+async function generate(project, tag, path, baseURL, target, lang) {
     if (!tag) {
         tag = 'master';
     }
     const taskLog = TaskLog.start('page-generate', {
-        project: schema,
+        project: project.name,
         tag,
         path,
         lang,
@@ -22,7 +22,7 @@ async function generate(schema, tag, path, baseURL, target, lang) {
     try {
         const start = new Date;
         taskLog.describe(`retrieving index.js`);
-        const codeBuffer = await SnapshotRetriever.retrieve(schema, tag, 'ssr', 'index.js');
+        const codeBuffer = await SnapshotRetriever.retrieve(project, tag, 'ssr', 'index.js');
         taskLog.describe(`running code in subprocess`);
 
         const env = {
@@ -30,7 +30,7 @@ async function generate(schema, tag, path, baseURL, target, lang) {
             ROUTE_BASE_PATH: URL.parse(baseURL).pathname,
             ROUTE_PAGE_PATH: path,
             SSR_TARGET: target,
-            DATABASE_SCHEMA: schema,
+            DATABASE_SCHEMA: project.name,
             GIT_TAG: tag,
             PREFERRED_LANG: lang,
         };

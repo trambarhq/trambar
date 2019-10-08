@@ -24,6 +24,9 @@ class Snapshot extends Data {
         };
         this.eventColumns = {
             ...this.eventColumns,
+            repo_id: Number,
+            branch_name: String,
+            commit_id: String,
             head: Boolean,
         };
         this.version = 3;

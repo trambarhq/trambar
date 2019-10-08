@@ -30,6 +30,8 @@ class Project extends Data {
             user_ids: Array(Number),
             template_repo_id: Number,
             archived: Boolean,
+
+            website: Boolean,
         };
         this.eventColumns = {
             ...this.eventColumns,
@@ -134,6 +136,27 @@ class Project extends Data {
         await this.createResourceCoalescenceTrigger(db, schema, []);
         // completion of tasks will automatically update details->resources
         await Task.createUpdateTrigger(db, schema, 'updateProject', 'updateResource', [ this.table ]);
+    }
+
+    /**
+     * Add conditions to SQL query based on criteria object
+     *
+     * @param  {Object} criteria
+     * @param  {Object} query
+     */
+    apply(criteria, query) {
+        const { website, ...basic } = criteria;
+        super.apply(basic, query);
+
+        const params = query.parameters;
+        const conds = query.conditions;
+        if (website) {
+            if (website) {
+                conds.push(`template_repo_id IS NOT NULL`);
+            } else {
+                conds.push(`template_repo_id IS NULL`);
+            }
+        }
     }
 
     /**

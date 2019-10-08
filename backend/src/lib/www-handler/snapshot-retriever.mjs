@@ -2,17 +2,18 @@ import CrossFetch from 'cross-fetch';
 import * as TaskLog from '../task-log.mjs'
 import HTTPError from '../common/errors/http-error.mjs';
 
-async function retrieve(schema, tag, type, path) {
+async function retrieve(project, tag, type, path) {
     if (!tag) {
         tag = 'master';
     }
     const taskLog = TaskLog.start('snapshot-retrieve', {
-        project: schema,
+        project: project.name,
         tag,
         type,
         path
     });
     try {
+        const schema = project.name;
         const start = new Date;
         taskLog.describe(`retrieving ${tag}:${path}`);
         const url = `http://gitlab_adapter/internal/retrieve/${schema}/${tag}/${type}/${path}`;

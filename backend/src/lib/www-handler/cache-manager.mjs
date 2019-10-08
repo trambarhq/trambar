@@ -4,90 +4,100 @@ import { promises as FS } from 'fs';
 import Bluebird from 'bluebird';
 import CrossFetch from 'cross-fetch';
 import AsciiTable from 'ascii-table';
-import Crypto from 'crypto';
 import * as TaskLog from '../task-log.mjs'
 
 const CACHE_PATH = '/var/cache/nginx/data';
 
-const fileDependencies = {};
-
-function link(url, sourceURLs) {
-    fileDependencies[url] = sourceURLs;
-}
-
-async function purge(criteria) {
-    let params, url, pattern, callback;
-    if (typeof(criteria) === 'string') {
-        url = criteria;
-        params = { url };
-    } else if (criteria instanceof RegExp) {
-        pattern = criteria;
-        params = { pattern };
-    } else if (criteria instanceof Function) {
-        callback = criteria;
-        params = { callback: callback.name };
-    } else {
-        return;
-    }
-    const taskLog = TaskLog.start('nginx-cache-purge', params);
+async function purge(project, criteria) {
+    const taskLog = TaskLog.start('nginx-cache-purge', {
+        project: (project) ? project.name : undefined,
+        criteria: criteria,
+    });
     try {
-        const targets = [];
-        if (url) {
-            targets.push(createCacheEntry(url));
-        } else {
-            const cacheEntries = await loadCacheEntries();
-            if (pattern) {
-                for (let cacheEntry of cacheEntries) {
-                    if (pattern.test(cacheEntry.url)) {
-                        targets.push(cacheEntry);
-                    }
-                }
-            } else if (callback) {
-                for (let cacheEntry of cacheEntries) {
-                    if (callback(cacheEntry.url)) {
-                        targets.push(cacheEntry);
-                    }
-                }
-            }
-        }
+        const cacheEntries = await loadCacheEntries();
+        const targetEntries = [];
+        let dependentURLs;
 
-        // purge pages that're dependent on the items to be purged as well
-        const pageURLs = [];
-        for (let [ pageURL, sourceURLs ] of Object.entries(fileDependencies)) {
-            const hasStaleDependencies = _.some(sourceURLs, (url) => {
-                return _.some(targets, { url });
-            });
-            if (hasStaleDependencies) {
-                pageURLs.push(pageURL);
-                if (!_.some(targets, { url: pageURL })) {
-                    targets.push(createCacheEntry(pageURL));
+        if (project) {
+            const targetURLs = [];
+            for (let entry of cacheEntries) {
+                if (matchProject(entry, project)) {
+                    if (matchCriteria(entry, criteria)) {
+                        targetEntries.push(entry);
+                        targetURLs.push(entry.url);
+                    }
                 }
             }
+
+            // purge pages that're dependent on the items to be purged as well
+            dependentURLs = pullDependents(project, targetURLs);
+            for (let entry of cacheEntries) {
+                if (matchCriteria(entry, dependentURLs)) {
+                    console.log('DEP: ', entry);
+                    if (!_.includes(targetEntries, entry)) {
+                        targetEntries.push(entry);
+                    }
+                }
+            }
+        } else {
+            for (let entry of cacheEntries) {
+                targetEntries.push(entry);
+            }
+            clearDependents();
         }
 
         const purged = [];
-        for (let target of targets) {
-            const success = await removeCacheEntry(target);
-            if (success) {
-                purged.push(target.url);
-            }
-            if (fileDependencies[target.url]) {
-                delete fileDependencies[target.url];
+        for (let entry of targetEntries) {
+            try {
+                await removeCacheEntry(entry);
+                purged.push(entry.url);
+            } catch (err) {
             }
         }
         if (purged.length > 0) {
             taskLog.set('count', purged.length);
-            taskLog.set('dependents', pageURLs.length);
+            if (dependentURLs) {
+                taskLog.set('dependents', dependentURLs.length);
+            }
             if (process.env.NODE_ENV !== 'production') {
                 taskLog.set('purged', purged);
             }
+
+            // reload HTML pages--which always has a language code attached
+            // due to the way we cache language-specific pages
+            const htmlEntries = _.filter(targetEntries, (entry) => {
+                return /\?lang=/.test(entry.url);
+            });
+            reloadCacheEntries(htmlEntries, 10, 250);
         }
-        preload(pageURLs);
         await taskLog.finish();
         return purged;
     } catch (err) {
         await taskLog.abort(err);
     }
+}
+
+function link(project, url, sourceURLs) {
+    addDependent(project, url, sourceURLs);
+}
+
+async function stat(project) {
+    const entries = await loadCacheEntries();
+    const matching = _.filter(entries, (entry) => {
+        return matchProject(entry, project);
+    });
+    if (_.isEmpty(matching)) {
+        return 'EMPTY';
+    }
+    const sorted = _.orderBy(matching, 'mtime', 'desc');
+    const table = new AsciiTable;
+    table.setHeading('URL', 'Date', 'Size');
+    for (let { url, mtime, size } of sorted) {
+        const date = Moment(mtime).format('LLL');
+        const fileSize = _.fileSize(size);
+        table.addRow(url, date, fileSize);
+    }
+    return table.toString();
 }
 
 let cacheEntriesPromise = null;
@@ -122,19 +132,17 @@ async function loadCacheEntriesUncached() {
 
 const cacheEntryCache = {};
 
-function createCacheEntry(url) {
-    const md5 = Crypto.createHash('md5').update(url).digest('hex');
-    return { url, md5 };
-}
-
 async function loadCacheEntry(md5) {
     try {
         const path = `${CACHE_PATH}/${md5}`;
         const { mtime, size } = await FS.stat(path);
         let entry = cacheEntryCache[md5];
         if (!entry || entry.mtime !== mtime) {
-            const url = await loadCacheEntryKey(path);
-            entry = cacheEntryCache[md5] = { url, md5, mtime, size };
+            const key = await loadCacheEntryKey(path);
+            const slashIndex = _.indexOf(key, '/');
+            const host = key.substr(0, slashIndex);
+            const url = key.substr(slashIndex);
+            entry = cacheEntryCache[md5] = { host, url, md5, mtime, size };
         }
         return entry;
     } catch (err) {
@@ -162,50 +170,99 @@ async function loadCacheEntryKey(path) {
 }
 
 async function removeCacheEntry(entry) {
+    delete cacheEntryCache[entry.md5];
+    await FS.unlink(`${CACHE_PATH}/${entry.md5}`);
+    return true;
+}
+
+async function reloadCacheEntries(entries, limit, delay) {
+    // favor pages with shorter URLs
+    entries = _.sortBy(entries, 'url.length');
+    if (limit) {
+        entries = _.slice(entries, 0, limit)
+    }
+    for (let entry of entries) {
+        if (delay) {
+            await Bluebird.delay(delay);
+        }
+        await reloadCacheEntry(entry);
+    }
+}
+
+async function reloadCacheEntry(entry) {
     try {
-        delete cacheEntryCache[entry.md5];
-        delete fileDependencies[entry.url];
-        await FS.unlink(`${CACHE_PATH}/${entry.md5}`);
+        const options = {
+            method: 'head',
+            headers: {
+                'Host': entry.host
+            }
+        };
+        const internalURL = 'http://nginx' + entry.url;
+        await CrossFetch(internalURL, options);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function matchProject(entry, project) {
+    const domainNames = _.get(project, 'settings.domains', []);
+    if (_.includes(domainNames, entry.host)) {
         return true;
-    } catch (err){
-        return false;
-    }
-}
-
-async function stat(pattern) {
-    const entries = await loadCacheEntries();
-    const matching = _.filter(entries, (entry) => {
-        return pattern.test(entry.url);
-    });
-    if (_.isEmpty(matching)) {
-        return 'EMPTY';
-    }
-    const sorted = _.orderBy(matching, 'mtime', 'desc');
-    const table = new AsciiTable;
-    table.setHeading('URL', 'Date', 'Size');
-    for (let { url, mtime, size } of sorted) {
-        const date = Moment(mtime).format('LLL');
-        const fileSize = _.fileSize(size);
-        table.addRow(url, date, fileSize);
-    }
-    return table.toString();
-}
-
-async function preload(urls) {
-    const sorted = _.sortBy(urls, 'length');
-    const slice = _.slice(sorted, 0, 10);
-    for (let url of slice) {
-        try {
-            const internalURL = 'http://nginx' + url;
-            await CrossFetch(internalURL, { method: 'head' });
-            await Bluebird.delay(500);
-        } catch (err) {
+    } else if (_.isEmpty(domainNames)) {
+        if (_.startsWith(entry.url, `/srv/www/${project.name}/`)) {
+            return true;
         }
     }
+    return false;
+}
+
+function matchCriteria(entry, criteria) {
+    if (criteria === undefined) {
+        return true;
+    } else if (typeof(criteria) === 'string') {
+        return (criteria === entry.url);
+    } else if (criteria instanceof RegExp) {
+        return criteria.test(entry.url);
+    } else if (criteria instanceof Function) {
+        return criteria(entry.url);
+    } else if (criteria instanceof Array) {
+        return _.includes(criteria, entry.url);
+    }
+    return false;
+}
+
+const fileDependencies = [];
+
+function addDependent(project, url, sourceURLs) {
+    _.remove(fileDependencies, (dependency) => {
+        if (dependency.schema === project.name) {
+            return (dependency.url === url);
+        }
+    });
+
+    const schema = project.name;
+    fileDependencies.push({ schema, url, sourceURLs });
+}
+
+function pullDependents(project, targetURLs) {
+    const dependencies = _.remove(fileDependencies, (dependency) => {
+        if (dependency.schema === project.name) {
+            for (let targetURL of targetURLs) {
+                if (_.includes(dependency.sourceURLs, targetURL)) {
+                    return true;
+                }
+            }
+        }
+    });
+    return _.map(dependencies, 'url');
+}
+
+function clearDependents() {
+    _.remove(fileDependencies);
 }
 
 export {
-    link,
     purge,
+    link,
     stat,
 };

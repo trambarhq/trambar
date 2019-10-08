@@ -5,12 +5,16 @@ import Database from '../database.mjs';
 import HTTPError from '../common/errors/http-error.mjs';
 import * as TaskLog from '../task-log.mjs';
 
-import Project from '../accessors/project.mjs';
+import * as ProjectSettings from './project-settings.mjs';
 import Rest from '../accessors/rest.mjs';
 
-async function discover(schema, type) {
-    const taskLog = TaskLog.start('rest-discover', { project: schema, type });
+async function discover(project, type) {
+    const taskLog = TaskLog.start('rest-discover', {
+        project: project.name,
+        type
+    });
     try {
+        const schema = project.name;
         const contents = [];
         const db = await Database.open();
         const criteria = {
@@ -35,9 +39,14 @@ async function discover(schema, type) {
     }
 }
 
-async function retrieve(schema, identifier, path, query) {
-    const taskLog = TaskLog.start('rest-retrieve', { project: schema, identifier, path });
+async function retrieve(project, identifier, path, query) {
+    const taskLog = TaskLog.start('rest-retrieve', {
+        project: project.name,
+        identifier,
+        path
+    });
     try {
+        const schema = project.name;
         const db = await Database.open();
         const criteria = {
             name: identifier,
@@ -71,7 +80,7 @@ async function translatePurgeRequest(host, url, method) {
     const results = [];
     const db = await Database.open();
     const criteria = { deleted: false, disabled: false };
-    const projects = await Project.find(db, 'global', criteria, 'name');
+    const projects = ProjectSettings.all();
     for (let project of projects) {
         const schema = project.name;
         const rests = await Rest.find(db, schema, criteria, '*');
@@ -80,7 +89,7 @@ async function translatePurgeRequest(host, url, method) {
                 const urlParts = new URL(rest.url);
                 if (urlParts.hostname === host) {
                     const identifier = rest.name;
-                    const untransformed = { schema, identifier, url, method };
+                    const untransformed = { project, identifier, url, method };
                     const purge = transformPurge(untransformed, rest);
                     if (purge instanceof Array) {
                         for (let p of purge) {
@@ -182,7 +191,7 @@ function transformWPPurge(purge, rest) {
         return purge;
     } else if (purge.method === 'default') {
         const baseURLParts = new URL(_.trimEnd(rest.url, '/'));
-        const { schema, url, identifier } = purge;
+        const { project, url, identifier } = purge;
         if (_.startsWith(url, baseURLParts.pathname + '/')) {
             const relativeURL = url.substr(baseURLParts.pathname.length);
             const m = /^(\/\w+\/\w+\/\w+)\/(\d+)\/$/.exec(relativeURL);
@@ -190,13 +199,13 @@ function transformWPPurge(purge, rest) {
                 // purge both the file and all listings
                 const folderPath = m[1];
                 const purgeFolder = {
-                    schema,
+                    project,
                     identifier,
                     url: `${folderPath}/\\??.*`,
                     method: 'regex'
                 };
                 const purgeFile = {
-                    schema,
+                    project,
                     identifier,
                     url: relativeURL,
                     method: 'default'
@@ -204,7 +213,7 @@ function transformWPPurge(purge, rest) {
                 return [ purgeFile, purgeFolder ];
             } else if (relativeURL === '/') {
                 return {
-                    schema,
+                    project,
                     identifier,
                     url: relativeURL,
                     method: 'default'

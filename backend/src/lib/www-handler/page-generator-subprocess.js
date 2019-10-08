@@ -29,12 +29,15 @@ async function run() {
         const sourceURLs = [];
         const agent = new HTTP.Agent({ keepAlive: true });
         const fetchFunc = (url, options) => {
-            sourceURLs.push(url);
-
             const urlParts = new URL(url);
             if (urlParts.origin === baseURLParts.origin) {
+                // remember the URL so we can purge the page
+                // when data it uses is purged
+                const sourceURL = urlParts.pathname + urlParts.search;
+                sourceURLs.push(sourceURL);
+
                 // talk to Nginx without using HTTPS
-                url = 'http://nginx' + urlParts.pathname + urlParts.search;
+                url = 'http://nginx' + sourceURL;
                 options = { agent, ...options };
                 options.headers = {
                     ...options.headers,
