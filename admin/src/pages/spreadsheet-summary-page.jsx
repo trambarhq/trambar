@@ -173,12 +173,12 @@ function SpreadsheetSummaryPageSync(props) {
     });
 
     useEffect(() => {
-        run(() => {
-            const error = spreadsheet?.details?.error;
-            if (error) {
-                throw new Error(error);
-            }
-        });
+        const msg = spreadsheet?.details?.error;
+        if (msg) {
+            run(() => { throw new ImportError(msg) });
+        } else if (error instanceof ImportError) {
+            run(() => {});
+        }
     }, [ spreadsheet ]);
 
     warnDataLoss(draft.changed);
@@ -497,13 +497,16 @@ function Sheet(props) {
 async function requestUpdate(project, spreadsheet, env) {
     if (spreadsheet.url) {
         const baseURL = ProjectUtils.getWebsiteAddress(project);
-        const url = `${baseURL}/excel/${spreadsheet.name}`;
+        const url = `${baseURL}/data/excel/${spreadsheet.name}`;
         try {
             await HTTPRequest.fetch('HEAD', url);
         } catch (err) {
             console.error(err);
         }
     }
+}
+
+class ImportError extends Error {
 }
 
 const component = Relaks.memo(SpreadsheetSummaryPage);
