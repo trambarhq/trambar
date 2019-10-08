@@ -33,7 +33,6 @@ async function purge(project, criteria) {
             dependentURLs = pullDependents(project, targetURLs);
             for (let entry of cacheEntries) {
                 if (matchCriteria(entry, dependentURLs)) {
-                    console.log('DEP: ', entry);
                     if (!_.includes(targetEntries, entry)) {
                         targetEntries.push(entry);
                     }
@@ -81,7 +80,7 @@ function link(project, url, sourceURLs) {
     addDependent(project, url, sourceURLs);
 }
 
-async function stat(project) {
+async function stat(project, options) {
     const entries = await loadCacheEntries();
     const matching = _.filter(entries, (entry) => {
         return matchProject(entry, project);
@@ -89,13 +88,22 @@ async function stat(project) {
     if (_.isEmpty(matching)) {
         return 'EMPTY';
     }
+    const showHash = (options) ? options.md5 : false;
     const sorted = _.orderBy(matching, 'mtime', 'desc');
     const table = new AsciiTable;
-    table.setHeading('URL', 'Date', 'Size');
-    for (let { url, mtime, size } of sorted) {
+    const heading = [ 'URL', 'Date', 'Size' ];
+    if (showHash) {
+        heading.push('MD5')
+    }
+    table.setHeading(heading);
+    for (let { url, mtime, size, md5 } of sorted) {
         const date = Moment(mtime).format('LLL');
         const fileSize = _.fileSize(size);
-        table.addRow(url, date, fileSize);
+        const row = [ url, date, fileSize ];
+        if (showHash) {
+            row.push(md5)
+        }
+        table.addRow(row);
     }
     return table.toString();
 }
