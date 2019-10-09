@@ -122,7 +122,7 @@ function SortableTable(props) {
                 return tr;
             }
             if (transitionRowLimit && i >= transitionRowLimit) {
-                return tr;
+                return (expanded) ? tr : null;
             }
             const tds = React.Children.toArray(tr.props.children);
             const c = tr.props.className;
