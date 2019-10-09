@@ -20,14 +20,14 @@ function BottomNavigation(props) {
     const { t } = env.locale;
     const routeParams = settings?.navigation?.route;
     const activeSection = settings?.navigation?.section;
-    const isHidden = settings?.navigation?.bottom ?? true;
+    const showing = settings?.navigation?.bottom ?? true;
     const [ height, setHeight ] = useState();
     const [ stacking, setStacking ] = useState();
     const containerRef = useRef();
 
     useEffect(() => {
         const contentHeight = containerRef.current.offsetHeight;
-        if (isHidden) {
+        if (!showing) {
             setHeight(contentHeight);
             setTimeout(() => {
                 setHeight(0);
@@ -38,7 +38,7 @@ function BottomNavigation(props) {
                 setHeight('auto');
             }, 1000);
         }
-    }, [ isHidden ]);
+    }, [ showing ]);
     useEffect(() => {
         const detectStacking = () => {
             const icon = containerRef.current.getElementsByClassName('fa')[1];

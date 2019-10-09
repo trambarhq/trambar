@@ -16,7 +16,7 @@ import './top-navigation.scss';
  */
 function TopNavigation(props) {
     const { database, route, env, payloads, settings, makingRequests } = props;
-    const isHidden = !settings?.navigation?.top ?? true;
+    const showing = settings?.navigation?.top ?? true;
     const [ height, setHeight ] = useState();
     const containerRef = useRef();
     const selectedControl = useMemo(() => {
@@ -29,7 +29,7 @@ function TopNavigation(props) {
 
     useEffect(() => {
         const contentHeight = containerRef.current.offsetHeight;
-        if (isHidden) {
+        if (!showing) {
             setHeight(contentHeight);
             setTimeout(() => {
                 setHeight(0);
@@ -40,7 +40,7 @@ function TopNavigation(props) {
                 setHeight('auto');
             }, 1000);
         }
-    }, [ isHidden ]);
+    }, [ showing ]);
 
     return (
         <header className="top-navigation" style={{ height }}>
