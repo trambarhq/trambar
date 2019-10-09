@@ -73,8 +73,13 @@ async function run() {
         chunks.push(`${status} ${statusText}\n`);
         chunks.push(`\n`);
         chunks.push(`${err.message}\n`);
-        await writeStream(stderr, chunks);
-        process.exit(1);
+        if (err.html) {
+            await writeStream(stdout, chunks);
+            process.exit(0);
+        } else {
+            await writeStream(stderr, chunks);
+            process.exit(1);
+        }
     }
 }
 

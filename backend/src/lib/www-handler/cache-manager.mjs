@@ -65,7 +65,9 @@ async function purge(project, criteria) {
             // reload HTML pages--which always has a language code attached
             // due to the way we cache language-specific pages
             const htmlEntries = _.filter(targetEntries, (entry) => {
-                return /\?lang=/.test(entry.url);
+                if (entry.status === 200) {
+                    return /\?lang=/.test(entry.url);
+                }
             });
             reloadCacheEntries(htmlEntries, 10, 250);
         }
@@ -96,10 +98,11 @@ async function stat(project, options) {
         heading.push('MD5')
     }
     table.setHeading(heading);
-    for (let { url, mtime, size, md5 } of sorted) {
+    for (let { url, mtime, size, md5, status } of sorted) {
         const date = Moment(mtime).format('LLL');
-        const fileSize = _.fileSize(size);
-        const row = [ url, date, fileSize ];
+        const fileSize = (status === 200) ? _.fileSize(size) : '-';
+        const title = (status === 200) ? url : `${url} [${status}]`;
+        const row = [ title, date, fileSize ];
         if (showHash) {
             row.push(md5)
         }
@@ -146,11 +149,11 @@ async function loadCacheEntry(md5) {
         const { mtime, size } = await FS.stat(path);
         let entry = cacheEntryCache[md5];
         if (!entry || entry.mtime !== mtime) {
-            const key = await loadCacheEntryKey(path);
+            const { key, status } = await loadCacheEntryProps(path);
             const slashIndex = _.indexOf(key, '/');
             const host = key.substr(0, slashIndex);
             const url = key.substr(slashIndex);
-            entry = cacheEntryCache[md5] = { host, url, md5, mtime, size };
+            entry = cacheEntryCache[md5] = { host, url, md5, mtime, size, status };
         }
         return entry;
     } catch (err) {
@@ -159,7 +162,7 @@ async function loadCacheEntry(md5) {
     }
 }
 
-async function loadCacheEntryKey(path) {
+async function loadCacheEntryProps(path) {
     const buf = Buffer.alloc(1024);
     const fh = await FS.open(path, 'r');
     try {
@@ -167,11 +170,14 @@ async function loadCacheEntryKey(path) {
     } finally {
         await fh.close();
     }
-    const si = buf.indexOf('KEY:');
-    const ei = buf.indexOf('\n', si);
-    if (si !== -1 && ei !== -1) {
-        const s = buf.toString('utf-8', si + 4, ei).trim();;
-        return s;
+    const keySI = buf.indexOf('KEY:');
+    const keyEI = buf.indexOf('\n', keySI);
+    const statusSI = buf.indexOf(' ', keyEI + 1);
+    const statusEI = buf.indexOf(' ', statusSI + 1);
+    if (keySI !== -1 && keyEI !== -1) {
+        const key = buf.toString('utf-8', keySI + 4, keyEI).trim();
+        const status = parseInt(buf.toString('utf-8', statusSI + 1, statusEI));
+        return { key, status };
     } else {
         throw new Error('Unable to find key');
     }

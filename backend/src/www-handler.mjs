@@ -295,7 +295,11 @@ async function handleSnapshotPageRequest(req, res, next) {
         const host = req.headers.host;
         const baseURL = `${protocol}://${host}${req.basePath}`;
         const buffer = await PageGenerator.generate(project, tag, pageURL, baseURL, target, lang);
-        controlCache(res);
+        if (buffer.statusCode == 200) {
+            controlCache(res);
+        } else {
+            res.status(buffer.statusCode);
+        }
         res.type('html').send(buffer);
 
         // link the URLs used by the page to its URL

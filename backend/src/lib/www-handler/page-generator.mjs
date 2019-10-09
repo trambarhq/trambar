@@ -34,7 +34,7 @@ async function generate(project, tag, path, baseURL, target, lang) {
             GIT_TAG: tag,
             PREFERRED_LANG: lang,
         };
-        const { body, headers } = await runSubprocess(codeBuffer, env, 5000);
+        const { status, body, headers } = await runSubprocess(codeBuffer, env, 5000);
         const html = '<!DOCTYPE html>\n' + body;
         const pageBuffer = Buffer.from(html);
         const sourceURLs = extractSourceURLs(headers);
@@ -42,8 +42,12 @@ async function generate(project, tag, path, baseURL, target, lang) {
         taskLog.set('duration', `${end - start} ms`);
         taskLog.set('size', `${pageBuffer.length} bytes`);
         taskLog.set('sources', sourceURLs);
+        if (status !== 200) {
+            taskLog.set('status', status);
+        }
         await taskLog.finish();
         pageBuffer.sourceURLs = sourceURLs;
+        pageBuffer.statusCode = status;
         return pageBuffer;
     } catch (err) {
         await taskLog.abort(err);
@@ -78,9 +82,6 @@ async function runSubprocess(input, env, timeLimit) {
     try {
         const output = await readStream(child.stdout);
         clearTimeout(timeout);
-        if (output.length === 0) {
-            throw new Error('WTF?');
-        }
         return parseResponse(output);
     } catch (err) {
         const errorOutput = await readStream(child.stderr);
