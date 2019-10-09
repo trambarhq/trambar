@@ -13,6 +13,7 @@ import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
 import { OptionList } from '../widgets/option-list.jsx';
 import { ImageSelector } from '../widgets/image-selector.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
+import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 
 // custom hooks
 import {
@@ -58,7 +59,7 @@ function SettingsPageSync(props) {
         route.replace({ editing: true });
     });
     const handleCancelClick = useListener((evt) => {
-        route.replace({ editing: false });
+        route.replace({ editing: undefined });
     });
     const handleSaveClick = useListener((evt) => {
         run(async () => {
@@ -108,6 +109,7 @@ function SettingsPageSync(props) {
             <UnexpectedError error={error} />
             {renderForm()}
             {renderInstructions()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
         </div>
     );
 
