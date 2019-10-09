@@ -317,6 +317,7 @@ async function handleMetadataRequest(req, res, next) {
             name: project.name,
             title: project.details.title,
             description: project.details.description,
+            archived: project.archived,
         };
         controlCache(res);
         res.json(meta);
@@ -515,7 +516,7 @@ async function handleDatabaseChanges(events) {
             if (diff.name || diff.repo_ids || diff.template_repo_id) {
                 const name = previous.name || current.name;
                 taskQueue.add(new TaskPurgeProject(name));
-            } else if (diff.details) {
+            } else if (diff.details || diff.archived) {
                 const name = previous.name || current.name;
                 taskQueue.add(new TaskPurgeMetadata(name));
             }
