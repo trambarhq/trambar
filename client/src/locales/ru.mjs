@@ -1003,9 +1003,11 @@ let phrases = {
     'user-statistics-legend-post': 'Сообщения',
     'user-statistics-legend-push': 'Помещения',
     'user-statistics-legend-repo': 'Изменения репозитория',
+    'user-statistics-legend-snapshot': 'Ревизии сайта',
     'user-statistics-legend-survey': 'Опросы',
     'user-statistics-legend-tag': 'Теги',
     'user-statistics-legend-task-list': 'Списки задач',
+    'user-statistics-legend-website-traffic': 'Отчеты о трафике',
     'user-statistics-legend-wiki': 'Правки wiki',
     'user-statistics-today': 'Cегодня',
     'user-statistics-tooltip-$count-branch': (count) => {

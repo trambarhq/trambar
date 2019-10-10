@@ -901,9 +901,11 @@ const phrases = {
     'user-statistics-legend-post': 'Įrašai',
     'user-statistics-legend-push': 'Pakeitimų siuntimai',
     'user-statistics-legend-repo': 'Saugyklos pakeitimai',
+    'user-statistics-legend-snapshot': 'Svetainės revizijos',
     'user-statistics-legend-survey': 'Anketos',
     'user-statistics-legend-tag': 'Naujos žymos',
     'user-statistics-legend-task-list': 'Užduočių sąrašai',
+    'user-statistics-legend-website-traffic': 'Eismo ataskaitos',
     'user-statistics-legend-wiki': 'Wiki redagavimai',
     'user-statistics-today': 'Šiandien',
     'user-statistics-tooltip-$count-branch': (count) => {

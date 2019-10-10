@@ -882,9 +882,11 @@ const phrases = {
     'user-statistics-legend-post': 'Innlegg',
     'user-statistics-legend-push': 'Pusher',
     'user-statistics-legend-repo': 'Repo endringer',
+    'user-statistics-legend-snapshot': 'Nettstedsrevisjoner',
     'user-statistics-legend-survey': 'Undersøkelser',
     'user-statistics-legend-tag': 'Nye tagger',
     'user-statistics-legend-task-list': 'Oppgavelister',
+    'user-statistics-legend-website-traffic': 'Trafikkmeldinger',
     'user-statistics-legend-wiki': 'Wiki redigeringer',
     'user-statistics-today': 'I dag',
     'user-statistics-tooltip-$count-branch': (count) => {

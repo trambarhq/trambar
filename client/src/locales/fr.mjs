@@ -886,9 +886,11 @@ const phrases = {
     'user-statistics-legend-post': "Messages",
     'user-statistics-legend-push': "Poussées de code",
     'user-statistics-legend-repo': "Modification de dépôt",
+    'user-statistics-legend-snapshot': "Révisions du site",
     'user-statistics-legend-survey': "Sondages",
     'user-statistics-legend-tag': "Nouvelles étiquettes",
     'user-statistics-legend-task-list': "Listes de tâches",
+    'user-statistics-legend-website-traffic': "Rapports de circulation",
     'user-statistics-legend-wiki': "Éditions wiki",
     'user-statistics-today': "Aujourd'hui",
     'user-statistics-tooltip-$count-branch': (count) => {

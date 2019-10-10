@@ -989,9 +989,11 @@ let phrases = {
     'user-statistics-legend-post': 'Příspěvky',
     'user-statistics-legend-push': 'Přesuny',
     'user-statistics-legend-repo': 'Změny repozitářů',
+    'user-statistics-legend-snapshot': 'Revize webových stránek',
     'user-statistics-legend-survey': 'Ankety',
     'user-statistics-legend-tag': 'Nové tagy',
     'user-statistics-legend-task-list': 'Seznamy úkolů',
+    'user-statistics-legend-website-traffic': 'Dopravní zprávy',
     'user-statistics-legend-wiki': 'Úpravy wiki',
     'user-statistics-today': 'Dnes',
     'user-statistics-tooltip-$count-branch': (count) => {

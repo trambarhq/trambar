@@ -930,10 +930,11 @@ let americanPhrases = {
     'user-statistics-legend-post': 'Posts',
     'user-statistics-legend-push': 'Code pushes',
     'user-statistics-legend-repo': 'Repo changes',
+    'user-statistics-legend-snapshot': 'Website changes',
     'user-statistics-legend-survey': 'Surveys',
     'user-statistics-legend-tag': 'New tags',
-    'user-statistics-legend-snapshot': 'Website changes',
     'user-statistics-legend-task-list': 'Task lists',
+    'user-statistics-legend-website-traffic': 'Traffic reports',
     'user-statistics-legend-wiki': 'Wiki edits',
     'user-statistics-today': 'Today',
     'user-statistics-tooltip-$count-branch': (count) => {

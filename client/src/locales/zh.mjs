@@ -924,9 +924,11 @@ let traditionalPhrases = {
     'user-statistics-legend-post': '貼文',
     'user-statistics-legend-push': '推送',
     'user-statistics-legend-repo': '數據庫修改',
+    'user-statistics-legend-snapshot': '網站修訂',
     'user-statistics-legend-survey': '調查',
     'user-statistics-legend-tag': '標籤',
     'user-statistics-legend-task-list': '任務列表',
+    'user-statistics-legend-website-traffic': '網站流量報告',
     'user-statistics-legend-wiki': 'wiki修改',
     'user-statistics-today': '今天',
     'user-statistics-tooltip-$count-branch': (count) => {
@@ -1850,9 +1852,11 @@ let simplifiedPhrases = {
     'user-statistics-legend-post': '贴文',
     'user-statistics-legend-push': '推送',
     'user-statistics-legend-repo': '数据库修改',
+    'user-statistics-legend-snapshot': '网站修订',
     'user-statistics-legend-survey': '调查',
     'user-statistics-legend-tag': '标签',
     'user-statistics-legend-task-list': '任务列表',
+    'user-statistics-legend-website-traffic': '网站流量报告',
     'user-statistics-legend-wiki': 'wiki修改',
     'user-statistics-today': '今天',
     'user-statistics-tooltip-$count-branch': (count) => {

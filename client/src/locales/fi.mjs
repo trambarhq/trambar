@@ -897,9 +897,11 @@ const phrases = {
     'user-statistics-legend-post': 'Viestejä',
     'user-statistics-legend-push': 'Työnnöt',
     'user-statistics-legend-repo': 'Muutokset arkistoon',
+    'user-statistics-legend-snapshot': 'Verkkosivustojen versiot',
     'user-statistics-legend-survey': 'Kyselyt',
     'user-statistics-legend-tag': 'Tagit',
     'user-statistics-legend-task-list': 'Tehtäväluettelot',
+    'user-statistics-legend-website-traffic': 'Liikenneraportit',
     'user-statistics-legend-wiki': 'Wiki-muokkaukset',
     'user-statistics-today': 'Tänään',
     'user-statistics-tooltip-$count-branch': (count) => {
