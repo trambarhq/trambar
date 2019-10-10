@@ -414,6 +414,9 @@ const phrases = {
     'notification-$name-merged-code-to-$branch': (name, branch) => {
         return `${name} yhdisti koodin haaraan “${branch}”`;
     },
+    'notification-$name-modified-project-website': (name) => {
+        return `${name} muutti projektisivua`;
+    },
     'notification-$name-opened-an-issue': (name) => {
         return `${name} avasi asian`;
     },
@@ -457,6 +460,7 @@ const phrases = {
     'notification-option-merge': 'Kun joku linkittää koodin master-haaraan',
     'notification-option-note': 'Kun joku lähettää viestin commitista tai liikkeestä',
     'notification-option-push': 'Kun joku työntää koodia arkistoon',
+    'notification-option-snapshot': 'Kun joku teki muutoksia projektisivustolle',
     'notification-option-survey': 'Kun joku lähettää kyselyn',
     'notification-option-task-completion': 'Kun joku täyttää tehtävän luettelossasi',
     'notification-option-vote': 'Kun joku vastaa kyselyyn',
@@ -570,6 +574,8 @@ const phrases = {
     'reaction-status-transcoding': 'Koodaaminen',
     'reaction-status-uploading': 'Lataaminen',
 
+    'robot-name-traffic': 'Verkkosivuston liikenneraportti',
+
     'role-filter-no-roles': 'Ei rooleja määritelty',
 
     'search-bar-keywords': 'avainsanoja tai #hashtagia',
@@ -650,6 +656,9 @@ const phrases = {
     'story-$count-reactions': (count) => {
         return cardinal(count, '1 reaktio', '2 reaktiota');
     },
+    'story-$name-changed-production-website': (name) => {
+        return `Muutti projektisivuston live-version`;
+    },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `Loi haaran “${branch}” projektissa “${repo}”`;
     },
@@ -668,6 +677,9 @@ const phrases = {
     },
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
         return `Loi tagin “${tag}” projektissa “${repo}”`;
+    },
+    'story-$name-created-website-version-in-$branch': (name, branch) => {
+        return 'Loi uuden version projektisivustosta haarassa “${branch}”';
     },
     'story-$name-deleted-$page': (name, page) => {
         return `Poisti wiki-sivun “${page}”`;
@@ -807,6 +819,10 @@ const phrases = {
     'story-task-list': 'Tehtäväluettelo',
     'story-video': 'Video',
     'story-vote-submit': 'Tallenna',
+    'story-website-traffic-$count-on-$date': (count, date) => {
+        let visitors = cardinal(count, '1 kävijä', '2 kävijää');
+        return `Projektin verkkosivustolla oli ${visitors} päivämääränä ${date}`;
+    },
 
     'telephone-dialog-close': 'Sulje',
 
@@ -849,6 +865,7 @@ const phrases = {
     'user-activity-$name-joined-repo': 'Liittyi git-projektiin',
     'user-activity-$name-left-repo': 'Jätti git-projektin',
     'user-activity-$name-merged-code': 'Teki koodin yhdistämisen',
+    'user-activity-$name-modified-website': 'Muutti projektin verkkosivustoa',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         let audios = cardinal(count, 'äänileikkeen', '2 äänileikkeitä');
         return `Lähetti ${audios}`;

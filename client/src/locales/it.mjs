@@ -408,6 +408,9 @@ const phrases = {
     'notification-$name-merged-code-to-$branch': (name, branch) => {
         return `${name} ha incorporato modifiche nel branch «${branch}»`;
     },
+    'notification-$name-modified-project-website': (name) => {
+        return `${name} ha modificato il sito web del progetto`;
+    },
     'notification-$name-opened-an-issue': (name) => {
         return `${name} ha aperto un problema`;
     },
@@ -451,6 +454,7 @@ const phrases = {
     'notification-option-merge': "Quando qualcuno unisce il codice nel branch master",
     'notification-option-note': "Quando qualcuno pubblica una nota su un commit o un problema",
     'notification-option-push': "Quando qualcuno inserisce il codice in Git",
+    'notification-option-snapshot': "Quando qualcuno ha apportato modifiche al sito Web del progetto",
     'notification-option-survey': "Quando qualcuno pubblica un sondaggio",
     'notification-option-task-completion': "Quando qualcuno completa un'attività nel tuo elenco",
     'notification-option-vote': "Quando qualcuno risponde al tuo sondaggio",
@@ -563,6 +567,8 @@ const phrases = {
     'reaction-status-transcoding': "Transcodifica",
     'reaction-status-uploading': "Caricamento",
 
+    'robot-name-traffic': "Rapporto sul traffico del sito web",
+
     'role-filter-no-roles': "Nessun ruolo definito",
 
     'search-bar-keywords': "termini di ricerca o #hashtag",
@@ -643,6 +649,9 @@ const phrases = {
     'story-$count-reactions': (count) => {
         return cardinal(count, "1 reazione", "2 reazioni");
     },
+    'story-$name-changed-production-website': (name) => {
+        return `Ha modificato la versione live del sito Web del progetto`;
+    },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `Ha creato il branch «${branch}» nel repository «${repo}»`;
     },
@@ -661,6 +670,9 @@ const phrases = {
     },
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
         return `Ha creato il tag «${tag}» nel repository «${repo}»`;
+    },
+    'story-$name-created-website-version-in-$branch': (name, branch) => {
+        return `Ha creato una nuova versione del sito web del progetto nel branch «${branch}»`;
     },
     'story-$name-deleted-$page': (name, page) => {
         return `Ha rimosso la pagina wiki «${page}»`;
@@ -798,6 +810,10 @@ const phrases = {
     'story-task-list': "Elenco delle attività",
     'story-video': "Video",
     'story-vote-submit': "Invia",
+    'story-website-traffic-$count-on-$date': (count, date) => {
+        let visitors = cardinal(count, "1 visitatore", "2 visitatori");
+        return `Il sito web del progetto ha avuto ${visitors} alla data del ${date}`;
+    },
 
     'telephone-dialog-close': "Chiudi",
 
@@ -839,6 +855,7 @@ const phrases = {
     'user-activity-$name-joined-repo': "Si è unito a un progetto git",
     'user-activity-$name-left-repo': "Ha lasciato un progetto git",
     'user-activity-$name-merged-code': "Ha eseguito un merge",
+    'user-activity-$name-modified-website': "Ha modificato il sito web del progetto",
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         let audios = cardinal(count, "un audioclip", "2 audioclip");
         return `Ha pubblicato ${audios}`;
@@ -888,7 +905,7 @@ const phrases = {
     'user-statistics-legend-post': "Post",
     'user-statistics-legend-push': "Push",
     'user-statistics-legend-repo': "Cambiamenti del repository",
-    'user-statistics-legend-snapshot': "Revisioni del sito Web",
+    'user-statistics-legend-snapshot': "Revisioni del sito web",
     'user-statistics-legend-survey': "Sondaggi",
     'user-statistics-legend-tag': "Nuovi tag",
     'user-statistics-legend-task-list': "Elenchi di attività",

@@ -404,6 +404,9 @@ const phrases = {
     'notification-$name-merged-code-to-$branch': (name, branch) => {
         return `${name} merget kode inn i branchen “${branch}”`;
     },
+    'notification-$name-modified-project-website': (name) => {
+        return `${name} endret prosjektnettsted`;
+    },
     'notification-$name-opened-an-issue': (name) => {
         return `${name} åpnet et problem`;
     },
@@ -447,6 +450,7 @@ const phrases = {
     'notification-option-merge': 'Når noen fusjonerer kode inn i master versjonen',
     'notification-option-note': 'Når noen legger inn et notat om et begå eller et problem',
     'notification-option-push': 'Når noen trykker på kode i Git',
+    'notification-option-snapshot': 'Når noen gjorde endringer på prosjektnettstedet',
     'notification-option-survey': 'Når noen legger inn en undersøkelse',
     'notification-option-task-completion': 'Når noen fullfører en oppgave på listen din',
     'notification-option-vote': 'Når noen svarer på undersøkelsen din',
@@ -559,6 +563,8 @@ const phrases = {
     'reaction-status-transcoding': 'Transkoding',
     'reaction-status-uploading': 'Opplasting',
 
+    'robot-name-traffic': 'Trafikkrapport for nettstedet',
+
     'role-filter-no-roles': 'Ingen roller definert',
 
     'search-bar-keywords': 'Søkeorder',
@@ -639,6 +645,9 @@ const phrases = {
     'story-$count-reactions': (count) => {
         return cardinal(count, '1 reaksjon', '2 reaksjoner');
     },
+    'story-$name-changed-production-website': (name) => {
+        return `Endret liveversjonen av prosjektnettstedet`;
+    },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `Skapte branchen “${branch}” i prosjektet “${repo}”`;
     },
@@ -657,6 +666,9 @@ const phrases = {
     },
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
         return `Skapte taggen “${tag}” i prosjektet “${repo}”`;
+    },
+    'story-$name-created-website-version-in-$branch': (name, branch) => {
+        return `Han opprettet en ny versjon av prosjektnettstedet i branchen “${branch}”`;
     },
     'story-$name-deleted-$page': (name, page) => {
         return `Fjernet wiki-siden “${page}”`;
@@ -791,6 +803,10 @@ const phrases = {
     'story-task-list': 'Oppgaveliste',
     'story-video': 'Video',
     'story-vote-submit': 'Sende inn',
+    'story-website-traffic-$count-on-$date': (count, date) => {
+        let visitors = cardinal(count, '1 besøkende', '2 besøkende');
+        return `Prosjektnettstedet hadde ${visitors} på datoen ${date}`;
+    },
 
     'telephone-dialog-close': 'Lukk',
 
@@ -833,6 +849,7 @@ const phrases = {
     'user-activity-$name-joined-repo': 'Ble med i et git-prosjekt',
     'user-activity-$name-left-repo': 'Dro et git-prosjek',
     'user-activity-$name-merged-code': 'Utført en kodefusjon',
+    'user-activity-$name-modified-website': 'Modifiserte prosjektnettstedet',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         let audios = cardinal(count, 'et audioklipp', '2 audioklipp');
         return `Skrevet ${audios}`;

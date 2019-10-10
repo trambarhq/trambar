@@ -412,6 +412,9 @@ const phrases = {
     'notification-$name-merged-code-to-$branch': (name, branch) => {
         return `${name} a fusionné les changements en branche «${branch}»`;
     },
+    'notification-$name-modified-project-website': (name) => {
+        return `${name} a modifié le site web du projet`;
+    },
     'notification-$name-opened-an-issue': (name) => {
         return `${name} a ouvert un problème`;
     },
@@ -455,6 +458,7 @@ const phrases = {
     'notification-option-merge': "Quand quelqu'un fusionne le code dans la branche «master»",
     'notification-option-note': "Quand quelqu'un publie une note sur un commit ou un problème",
     'notification-option-push': "Quand quelqu'un pousse le code dans Git",
+    'notification-option-snapshot': "Quand quelqu'un apporte des modifications au site Web du projet",
     'notification-option-survey': "Quand quelqu'un publie un sondage",
     'notification-option-task-completion': "Quand quelqu'un termine une tâche sur votre liste",
     'notification-option-vote': "Quand quelqu'un répond à votre sondage",
@@ -566,6 +570,8 @@ const phrases = {
     'reaction-status-transcoding': "Transcodage",
     'reaction-status-uploading': "Téléchargement",
 
+    'robot-name-traffic': "Rapport de circulation sur le site web",
+
     'role-filter-no-roles': "Aucun rôle défini",
 
     'search-bar-keywords': "mots-clés ou #hashtags",
@@ -646,6 +652,9 @@ const phrases = {
     'story-$count-reactions': (count) => {
         return cardinal(count, "1 réaction", "2 réactions");
     },
+    'story-$name-changed-production-website': (name) => {
+        return `A changé la version en direct du site du projet`;
+    },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `A créé la branche «${branch}» dans le projet «${repo}»`;
     },
@@ -664,6 +673,9 @@ const phrases = {
     },
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
         return `A créé la étiquette «${tag}» dans le projet «${repo}»`;
+    },
+    'story-$name-created-website-version-in-$branch': (name) => {
+        return `A créé une nouvelle version du site web du projet dans la branche «${branch}»`;
     },
     'story-$name-deleted-$page': (name, page) => {
         return `A supprimé la page wiki «${page}»`;
@@ -795,6 +807,10 @@ const phrases = {
     'story-task-list': "Liste de tâches",
     'story-video': "Vidéo",
     'story-vote-submit': "Soumettre",
+    'story-website-traffic-$count-on-$date': (count, date) => {
+        let visitors = cardinal(count, "1 visiteur", "2 visiteurs");
+        return `Le site web du projet a eu ${visitors} à la date du ${date}`;
+    },
 
     'telephone-dialog-close': "Fermer",
 
@@ -837,6 +853,7 @@ const phrases = {
     'user-activity-$name-joined-repo': "A rejoint un projet git",
     'user-activity-$name-left-repo': "A quitté un projet git",
     'user-activity-$name-merged-code': "A effectué une fusion de code",
+    'user-activity-$name-modified-website': "A modifié le site web du projet",
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         let audios = cardinal(count, "un clip audio", "2 un clips audio");
         return `A posté ${audios}`;

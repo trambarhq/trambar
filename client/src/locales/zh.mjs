@@ -459,6 +459,9 @@ let traditionalPhrases = {
     'notification-$name-merged-code-to-$branch': (name, branch) => {
         return `${name}將代碼合併到《${branch}》分支`;
     },
+    'notification-$name-modified-project-website': (name) => {
+        return `${name}修改了項目網站`;
+    },
     'notification-$name-opened-an-issue': (name) => {
         return `${name}開了一個問題`;
     },
@@ -502,6 +505,7 @@ let traditionalPhrases = {
     'notification-option-merge': '當有人將代碼合併到《master》分支',
     'notification-option-note': '當有人在提交或問題上發布註釋',
     'notification-option-push': '當有人推入代碼到git數據庫',
+    'notification-option-snapshot': '當有人對項目網站進行更改時',
     'notification-option-survey': '當有人發布調查',
     'notification-option-task-completion': '當有人完成你列表上的任務',
     'notification-option-vote': '當有人回答你的調查',
@@ -612,6 +616,8 @@ let traditionalPhrases = {
     'reaction-status-transcoding': '轉碼',
     'reaction-status-uploading': '上傳',
 
+    'robot-name-traffic': '網站流量報告',
+
     'role-filter-no-roles': '沒有角色',
 
     'search-bar-keywords': '關鍵字或井號標籤',
@@ -687,6 +693,9 @@ let traditionalPhrases = {
     'story-$count-reactions': (count) => {
         return cardinalT(count, '一個反應');
     },
+    'story-$name-changed-production-website': (name) => {
+        return `更改了項目網站的實時版本`;
+    },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `在《${repo}》數據庫中創建了《${branch}》分支`;
     },
@@ -706,6 +715,9 @@ let traditionalPhrases = {
     },
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
         return `在《${repo}》數據庫中創建了《${tag}》標籤`;
+    },
+    'story-$name-created-website-version-in-$branch': (name) => {
+        return `在《${branch}》分支中創建了項目網站的新版本`;
     },
     'story-$name-deleted-$page': (name, page) => {
         return `刪除了wiki頁面《${page}》”`;
@@ -842,6 +854,10 @@ let traditionalPhrases = {
     'story-task-list': '任務列表',
     'story-video': '影片',
     'story-vote-submit': '遞交',
+    'story-website-traffic-$count-on-$date': (count, date) => {
+        let visitors = cardinalT(count, '一位訪問者');
+        return `項目網站在1${date}上有${visitors}`;
+    },
 
     'telephone-dialog-close': '關閉',
 
@@ -880,6 +896,7 @@ let traditionalPhrases = {
     'user-activity-$name-joined-repo': '加入了數據庫',
     'user-activity-$name-left-repo': '離開了數據庫',
     'user-activity-$name-merged-code': '合併了代碼',
+    'user-activity-$name-modified-website': '修改了項目網站',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         return cardinalT(count, '新增了一個音頻剪輯');
     },
@@ -1387,6 +1404,9 @@ let simplifiedPhrases = {
     'notification-$name-merged-code-to-$branch': (name, branch) => {
         return `${name}将代码合并到《${branch}》分支`;
     },
+    'notification-$name-modified-project-website': (name) => {
+        return `${name}修改了项目网站`;
+    },
     'notification-$name-opened-an-issue': (name) => {
         return `${name}开了一个问题`;
     },
@@ -1430,6 +1450,7 @@ let simplifiedPhrases = {
     'notification-option-merge': '当有人将代码合并到《master》分支',
     'notification-option-note': '当有人在提交或问题上发布注释',
     'notification-option-push': '当有人推入代码到git数据库',
+    'notification-option-snapshot': '当有人对项目网站进行更改时',
     'notification-option-survey': '当有人发布调查',
     'notification-option-task-completion': '当有人完成你列表上的任务',
     'notification-option-vote': '当有人回答你的调查',
@@ -1540,6 +1561,8 @@ let simplifiedPhrases = {
     'reaction-status-transcoding': '转码',
     'reaction-status-uploading': '上传',
 
+    'robot-name-traffic': '网站流量报告',
+
     'role-filter-no-roles': '没有角色',
 
     'search-bar-keywords': '关键字或井号标签',
@@ -1615,6 +1638,9 @@ let simplifiedPhrases = {
     'story-$count-reactions': (count) => {
         return cardinalS(count, '一个反应');
     },
+    'story-$name-changed-production-website': (name) => {
+        return `更改了项目网站的实时版本`;
+    },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `在《${repo}》数据库中创建了《${branch}》分支`;
     },
@@ -1634,6 +1660,9 @@ let simplifiedPhrases = {
     },
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
         return `在《${repo}》数据库中创建了《${tag}》标签`;
+    },
+    'story-$name-created-website-version-in-$branch': (name, branch) => {
+        return `在《${branch}》分支中创建了项目网站的新版本`;
     },
     'story-$name-deleted-$page': (name, page) => {
         return `删除了wiki页面《${page}》”`;
@@ -1770,6 +1799,10 @@ let simplifiedPhrases = {
     'story-task-list': '任务列表',
     'story-video': '影片',
     'story-vote-submit': '递交',
+    'story-website-traffic-$count-on-$date': (count, date) => {
+        let visitors = cardinalS(count, '一位访问者');
+        return `项目网站在${date}上有${visitors}`;
+    },
 
     'telephone-dialog-close': '关闭',
 
@@ -1808,6 +1841,7 @@ let simplifiedPhrases = {
     'user-activity-$name-joined-repo': '加入了数据库',
     'user-activity-$name-left-repo': '离开了数据库',
     'user-activity-$name-merged-code': '合并了代码',
+    'user-activity-$name-modified-website': '修改了项目网站',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         return cardinalS(count, '新增了一个音频剪辑');
     },
