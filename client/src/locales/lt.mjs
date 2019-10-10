@@ -420,6 +420,9 @@ const phrases = {
     'notification-$name-merged-code-to-$branch': (name, branch) => {
         return `${name} sujungė pakeitimus į šaką „${branch}”`;
     },
+    'notification-$name-modified-project-website': (name) => {
+        return `${name} modifikuota projekto svetainė`;
+    },
     'notification-$name-opened-an-issue': (name) => {
         return `${name} parašė klaidos ataskaitą`;
     },
@@ -463,6 +466,7 @@ const phrases = {
     'notification-option-merge': 'Kai kas nors sujungia kodą į šaką „master”',
     'notification-option-note': 'Kai kas nors skelbia pastabą apie reviziją ar problemą',
     'notification-option-push': 'Kai kas nors įkelia kodą į Git',
+    'notification-option-snapshot': 'Kai kas nors pakeitė projekto svetainę',
     'notification-option-survey': 'Kai kas nors skelbia anketą',
     'notification-option-task-completion': 'Kai kas nors baigia užduotį tavo sąraše',
     'notification-option-vote': 'Kai kas nors atsako į tavo anketą',
@@ -575,6 +579,8 @@ const phrases = {
     'reaction-status-transcoding': 'Perkodavimas',
     'reaction-status-uploading': 'Przesyłanie',
 
+    'robot-name-traffic': 'Svetainių lankomumo ataskaita',
+
     'role-filter-no-roles': 'Nėra vaidmenų',
 
     'search-bar-keywords': 'Raktiniai žodžiai arba #hashtags',
@@ -655,6 +661,9 @@ const phrases = {
     'story-$count-reactions': (count) => {
         return cardinal(count, '1 atsakymas', '2 atsakymai', '10 atsakymų');
     },
+    'story-$name-changed-production-website': (name) => {
+        return `Pakeitė tiesioginę projekto svetainės versiją`;
+    },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `Sukūrė šaką „${branch}” projekte „${repo}”`;
     },
@@ -672,7 +681,10 @@ const phrases = {
         return text;
     },
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
-        return `sukūrė žymę „${tag}” projekte „${repo}”`;
+        return `Sukūrė žymę „${tag}” projekte „${repo}”`;
+    },
+    'story-$name-created-website-version-in-$branch': (name, branch) => {
+        return `Sukūrė naują versiją projekto tinklalapyje šakoje „${branch}”`;
     },
     'story-$name-deleted-$page': (name, page) => {
         return `Ištrino wiki puslapį „${page}”`;
@@ -810,6 +822,10 @@ const phrases = {
     'story-task-list': 'Užduočių sąrašas',
     'story-video': 'Video',
     'story-vote-submit': 'Pateikti',
+    'story-website-traffic-$count-on-$date': (count, date) => {
+        let visitors = cardinal(count, '1 lankytojas', '2 lankytojai', '10 lankytojų');
+        return `Projekto svetainėje buvo ${visitors} ${date}`;
+    },
 
     'telephone-dialog-close': 'Uždaryti',
 
@@ -852,6 +868,7 @@ const phrases = {
     'user-activity-$name-joined-repo': 'Prisijungė prie git projekto',
     'user-activity-$name-left-repo': 'Paliko git projektą',
     'user-activity-$name-merged-code': 'Padarė pakeitimų sujungimą',
+    'user-activity-$name-modified-website': 'Pakeitė projekto svetainę',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         let audios = cardinal(count, 'audio klipą', '2 audio klipus', '10 audio klipų');
         return `Pasiuntė ${audios}`;

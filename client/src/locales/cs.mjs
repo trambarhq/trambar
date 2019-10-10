@@ -418,6 +418,10 @@ let phrases = {
         let l = pastTenseEnding(name);
         return `${name} slouči${l} změny do větve „${branch}”`;
     },
+    'notification-$name-modified-project-website': (name) => {
+        let l = pastTenseEnding(name);
+        return `${name} upravi${l} webovou stránku projektu`;
+    },
     'notification-$name-opened-an-issue': (name) => {
         let l = pastTenseEnding(name);
         return `${name} otevře${l} problém`;
@@ -468,6 +472,7 @@ let phrases = {
     'notification-option-merge': 'Když někdo sloučí kód do větve „master”',
     'notification-option-note': 'Když někdo komentoval commit nebo problém',
     'notification-option-push': 'Když někdo posune kód do repozitáře',
+    'notification-option-snapshot': 'Když někdo provedl změny na webových stránkách projektu',
     'notification-option-survey': 'Když někdo zveřejní anketu',
     'notification-option-task-completion': 'Když někdo dokončí úkol v vaší seznamu',
     'notification-option-vote': 'Když někdo odpoví vaše ankety',
@@ -594,6 +599,8 @@ let phrases = {
     'reaction-status-transcoding': 'Překódování',
     'reaction-status-uploading': 'Nahrávání',
 
+    'robot-name-traffic': 'Zpráva o provozu na webu',
+
     'role-filter-no-roles': 'Žádné role nejsou definovány',
 
     'search-bar-keywords': 'klíčová slova or #hashtagy',
@@ -674,6 +681,10 @@ let phrases = {
     'story-$count-reactions': (count) => {
         return cardinal(count, '1 reakce', '2 reakcí', '5 reakcí');
     },
+    'story-$name-changed-production-website': (name) => {
+        let l = pastTenseEnding(name);
+        return `Změni${l} živou verzi webových stránek projektu`;
+    },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         let l = pastTenseEnding(name);
         return `Stvoři${l} větve „${branch}” v projektu „${repo}”`;
@@ -697,6 +708,10 @@ let phrases = {
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
         let l = pastTenseEnding(name);
         return `Stvoři${l} tag „${tag}” v projektu „${repo}”`;
+    },
+    'story-$name-created-website-version-in-$branch': (name, branch) => {
+        let l = pastTenseEnding(name);
+        return `Stvoři${l} novou verzi webových stránek projektu ve větvi „${branch}“`;
     },
     'story-$name-deleted-$page': (name, page) => {
         let l = pastTenseEnding(name);
@@ -846,6 +861,10 @@ let phrases = {
     'story-task-list': 'Seznam úkolů',
     'story-video': 'Video',
     'story-vote-submit': 'Předložit',
+    'story-website-traffic-$count-on-$date': (count, date) => {
+        let visitors = cardinal(count, '1 návštěvníka', '2 návštěvníky', '5 návštěvníků');
+        return `Webová stránka projektu měla ${visitors} ${date}`;        
+    },
 
     'telephone-dialog-close': 'Zavřít',
 
@@ -920,6 +939,10 @@ let phrases = {
     'user-activity-$name-merged-code': (name) => {
         let l = pastTenseEnding(name);
         return `Proved${l} sloučení kódu.`;
+    },
+    'user-activity-$name-modified-website': (name) => {
+        let l = pastTenseEnding(name);
+        return `Upravi${l} webovou stránku projektu`;
     },
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         let audios = cardinal(count, 'audioklip', '2 audioklipy', '5 audioklipů');

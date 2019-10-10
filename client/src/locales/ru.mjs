@@ -428,6 +428,10 @@ let phrases = {
         let l = pastTenseEnding(name);
         return `${name} сли${l} изменения в ветку «${branch}»`;
     },
+    'notification-$name-modified-project-website': (name) => {
+        let l = pastTenseEnding(name);
+        return `${name} модифицирова${l} сайт проекта`;
+    },
     'notification-$name-opened-an-issue': (name) => {
         let l = pastTenseEnding(name);
         return `${name} написа${l} отчёт об ошибке`;
@@ -478,6 +482,7 @@ let phrases = {
     'notification-option-merge': 'Когда кто-то сливает код в ветку «master»',
     'notification-option-note': 'Когда кто-то публикует заметку о коммите или отчёте об ошибке',
     'notification-option-push': 'Когда кто-то отправляет код в репозиторий git',
+    'notification-option-snapshot': 'Когда кто-то вносил изменения в сайт проекта',
     'notification-option-survey': 'Когда кто-то публикует опрос',
     'notification-option-task-completion': 'Когда кто-то завершает задачу в вашем списке',
     'notification-option-vote': 'Когда кто-то отвечает на ваш опрос',
@@ -606,6 +611,8 @@ let phrases = {
     'reaction-status-transcoding': 'Tранскодирование',
     'reaction-status-uploading': 'Загрузка',
 
+    'robot-name-traffic': 'Отчет о посещаемости сайта',
+
     'role-filter-no-roles': 'Роли не определены',
 
     'search-bar-keywords': 'ключевые слова или #hashtags',
@@ -686,6 +693,10 @@ let phrases = {
     'story-$count-reactions': (count) => {
         return cardinal(count, '1 реакция', '2 реакции', '5 реакций');
     },
+    'story-$name-changed-production-website': (name) => {
+        let l = pastTenseEnding(name);
+        return `Измени${l} живую версию сайта проекта`;
+    },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         let l = pastTenseEnding(name);
         return `Созда${l} ветку «${branch}» в репозитории «${repo}»`;
@@ -709,6 +720,10 @@ let phrases = {
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
         let l = pastTenseEnding(name);
         return `Созда${l} тег «${tag}» в репозитории «${repo}»`;
+    },
+    'story-$name-created-website-version-in-$branch': (name, branch) => {
+        let l = pastTenseEnding(name);
+        return `Созда${l} новую версию сайта проекта в ветке «${branch}»`;
     },
     'story-$name-deleted-$page': (name, page) => {
         let l = pastTenseEnding(name);
@@ -861,6 +876,10 @@ let phrases = {
     'story-task-list': 'Список задач',
     'story-video': 'Видео',
     'story-vote-submit': 'Отправить',
+    'story-website-traffic-$count-on-$date': (count, date) => {
+        let visitors = cardinal(count, '1 посетитель', '2 посетителя', '5 посетителей');
+        return `На сайте проекта было ${visitors} в день ${date}`;
+    },
 
     'telephone-dialog-close': 'Закрыть',
 
@@ -935,6 +954,10 @@ let phrases = {
     'user-activity-$name-merged-code': (name) => {
         let l = pastTenseEnding(name);
         return `Выполни${l} слияние`;
+    },
+    'user-activity-$name-modified-website': (name) => {
+        let l = pastTenseEnding(name);
+        return `Изменил${l} сайт проекта`;
     },
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         let audios = cardinal(count, 'аудиоклип', '2 аудиоклипа', '5 аудиоклипов');
@@ -1061,7 +1084,7 @@ let phrases = {
     'warning-no-connection': 'Нет мгновенного обновления',
 };
 
-module.exports = {
+export {
     phrases,
     genderize,
 };

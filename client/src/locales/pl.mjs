@@ -444,6 +444,10 @@ const phrases = {
         let l = pastTenseEnding(name, 3);
         return `${name} scali${l} zmiany do gałęzi „${branch}”`;
     },
+    'notification-$name-modified-project-website': (name) => {
+        let l = pastTenseEnding(name, 3);
+        return `${name} zmodyfikowa${l} stronę internetową projektu`;
+    },
     'notification-$name-opened-an-issue': (name) => {
         let l = pastTenseEnding(name, 3);
         return `${name} napisa${l} zgłoszenie błędu`;
@@ -495,6 +499,7 @@ const phrases = {
     'notification-option-merge': 'Po scalaniu kodu w gałąź master',
     'notification-option-note': 'Po komentowaniu zmian kodu ablo złoszenia błedu',
     'notification-option-push': 'Po wgrywaniu zmian do repozytorium Gita',
+    'notification-option-snapshot': 'Po wprowadzeniu zmiany na stronie projektu',
     'notification-option-survey': 'Po opublikowaniu ankiety',
     'notification-option-task-completion': 'Po wykonaniu zadania na Twojej liście przez innego',
     'notification-option-vote': 'Po odpowiadaniu Twojej ankiety przez innego',
@@ -620,6 +625,8 @@ const phrases = {
     'reaction-status-transcoding': 'Transkodowanie',
     'reaction-status-uploading': 'Przesyłanie',
 
+    'robot-name-traffic': 'Raport o ruchu na stronie',
+
     'role-filter-no-roles': 'Nie ma żadnych ról',
 
     'search-bar-keywords': 'Słowa kluczowe albo #hashtagi',
@@ -700,6 +707,10 @@ const phrases = {
     'story-$count-reactions': (count) => {
         return cardinal(count, '1 reakcja', '2 reakcje', '5 reakcji');
     },
+    'story-$name-changed-production-website': (name) => {
+        let l = pastTenseEnding(name, 3);
+        return `Zmieni${l} wersję na żywo strony internetowej projektu`;
+    },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         let l = pastTenseEnding(name, 3);
         return `Stworzy${l} gałąź „${branch}” w projektcie „${repo}”`;
@@ -723,6 +734,10 @@ const phrases = {
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
         let l = pastTenseEnding(name, 3);
         return `Stworzy${l} tag „${tag}” w projektcie „${repo}”`;
+    },
+    'story-$name-created-website-version-in-$branch': (name, branch) => {
+        let l = pastTenseEnding(name, 3);
+        return `Stworzy${l} nową wersję strony internetowej projektu do gałęzi „${branch}”`;
     },
     'story-$name-deleted-$page': (name, page) => {
         let l = pastTenseEnding(name, 3);
@@ -957,6 +972,10 @@ const phrases = {
     'user-activity-$name-merged-code': (name) => {
         let l = pastTenseEnding(name, 3);
         return `Wykona${l} scalenie zmian`;
+    },
+    'user-activity-$name-modified-website': (name) => {
+        let l = pastTenseEnding(name, 3);
+        return `Zmodyfikowa${l} stronę internetową projektu`;
     },
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         let audios = cardinal(count, 'klip audio', '2 klipy audio', '5 klipów audio');
