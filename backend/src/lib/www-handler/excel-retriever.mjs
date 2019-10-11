@@ -307,7 +307,11 @@ function extractNameFlags(text) {
 function extractCellValue(cell, importing) {
     if (importing) {
         const src = _.trim(cell.text);
-        return { src };
+        if (src) {
+            return { src };
+        } else {
+            return null;
+        }
     } else {
         const style = {};
         if (cell.alignment && !_.isEqual(cell.alignment, defaultAlignment)) {
@@ -344,7 +348,7 @@ function findMediaImports(sheets) {
     for (let sheet of sheets) {
         for (let row of sheet.rows) {
             for (let cell of row) {
-                if (/^https?:/.test(cell.src)) {
+                if (cell && /^https?:/.test(cell.src)) {
                     list.push(cell);
                 }
             }

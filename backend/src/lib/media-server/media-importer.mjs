@@ -16,11 +16,11 @@ async function importFile(url, retrievalHeaders) {
     const body = JSON.stringify({ url, headers: retrievalHeaders });
     const response = await CrossFetch(importURL, { method, headers, body, timeout: 5000 });
     const { status } = response;
+    const info = await response.json();
     if (status === 200) {
-        const info = await response.json();
         return info;
     } else {
-        throw new HTTPError(status);
+        throw new HTTPError(status, info.message);
     }
 }
 

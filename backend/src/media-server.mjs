@@ -313,7 +313,7 @@ async function handleImageImport(req, res) {
         }
         await taskLog.finish();
     } catch (err) {
-        sendError(res, err);
+        res.status(err.statusCode || 500).json({ message: err.message });
         await taskLog.abort(err);
     }
 }
