@@ -29,7 +29,7 @@ async function purge(project, criteria) {
                 }
             }
 
-            // purge pages that're dependent on the items to be purged as well
+            // purge pages that're dependent on items to be purged as well
             dependentURLs = pullDependents(project, targetURLs);
             for (let entry of cacheEntries) {
                 if (matchCriteria(entry, dependentURLs)) {

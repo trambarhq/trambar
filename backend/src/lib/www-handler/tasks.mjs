@@ -47,33 +47,47 @@ class TaskPurgeTemplate extends BasicTask {
 }
 
 class TaskPurgeProject extends BasicTask {
-    constructor(schema) {
+    constructor(project) {
         super();
-        this.schema = schema;
+        this.project = project;
     }
 
     async run() {
-        const { schema } = this;
-        const project = ProjectSettings.find({ name: schema });
-        if (project) {
+        const { project } = this;
+        await CacheManager.purge(project);
+    }
+}
+
+class TaskPurgeChangedDomains extends BasicTask {
+    constructor(projectBefore, projectAfter) {
+        super();
+        this.projectBefore = projectBefore;
+        this.projectAfter = projectAfter;
+    }
+
+    async run() {
+        const { projectBefore, projectAfter } = this;
+        const before = _.get(projectBefore, 'settings.domains', []);
+        const after = _.get(projectAfter, 'settings.domains', []);
+        const changes = _.xor(before, after);
+        if (!_.isEmpty(changes)) {
+            const project = _.cloneDeep(projectAfter);
+            project.settings.domains = changes;
             await CacheManager.purge(project);
         }
     }
 }
 
 class TaskPurgeMetadata extends BasicTask {
-    constructor(schema, name) {
+    constructor(project) {
         super();
-        this.schema = schema;
+        this.project = project;
     }
 
     async run() {
-        const { schema } = this;
-        const project = ProjectSettings.find({ name: schema });
-        if (project) {
-            const pattern = new RegExp(`^/data/meta/$`);
-            await CacheManager.purge(project, pattern);
-        }
+        const { project } = this;
+        const pattern = new RegExp(`^/data/meta/$`);
+        await CacheManager.purge(project, pattern);
     }
 }
 
@@ -226,6 +240,7 @@ export {
     TaskImportSpreadsheet,
     TaskPurgeTemplate,
     TaskPurgeProject,
+    TaskPurgeChangedDomains,
     TaskPurgeMetadata,
     TaskPurgeSpreadsheet,
     TaskPurgeWiki,

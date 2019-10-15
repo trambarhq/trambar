@@ -23,21 +23,32 @@ async function update(db, id) {
 }
 
 function find(criteria) {
-    const host = criteria.host;
-    if (host) {
-        criteria = (project) => {
-            return _.includes(project.settings.domains, host);
-        };
-    }
+    criteria = transformCriteria(criteria);
     return _.find(cache, criteria);
 }
 
 function filter(criteria) {
+    criteria = transformCriteria(criteria);
     return _.filter(cache, criteria);
 }
 
 function all() {
     return filter(undefined);
+}
+
+function transformCriteria(criteria) {
+    if (criteria) {
+        const { host } = criteria;
+        if (host) {
+            // look for domain name with "www." prepended or stripped
+            const alias = _.startsWith(host, 'www.') ? host.substr(4) : `www.${host}`;
+            return (project) => {
+                const { domains } = project.settings;
+                return _.includes(domains, host) || _.includes(domains, alias);
+            };
+        }
+    }
+    return criteria;
 }
 
 export {

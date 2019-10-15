@@ -34,6 +34,7 @@ import {
     TaskImportSpreadsheet,
     TaskPurgeTemplate,
     TaskPurgeProject,
+    TaskPurgeChangedDomains,
     TaskPurgeMetadata,
     TaskPurgeSpreadsheet,
     TaskPurgeWiki,
@@ -66,8 +67,8 @@ async function start() {
     app.set('json spaces', 2);
     app.use(CORS(corsOptions));
     app.use(Compression());
-    app.get('*', redirectToCanonical);
     app.get('*', matchProjectDomain);
+    app.get('*', redirectToCanonical);
     app.get('*', handleStaticFileRequest);
     app.get('/.cache', handleCacheStatusRequest);
     app.get('/data/geoip/', handleGeoIPRequest);
@@ -433,24 +434,11 @@ function sendDataQueryResult(res, result) {
 }
 
 function matchProjectDomain(req, res, next) {
-    let host = req.headers.host;
+    const { host } = req.headers;
     let project = ProjectSettings.find({ host });
     let basePath = '';
     if (!project) {
-        // look for domain name with "www." prepended or stripped
-        // redirect to that name if it's listed for the project
-        host = _.startsWith(host, 'www.') ? host.substr(4) : 'www.' + host;
-        project = ProjectSettings.find({ host });
-        if (project) {
-            const protocol = req.headers['x-forwarded-proto'];
-            const url = `${protocol}://${host}${req.originalUrl}`;
-            res.redirect(301, url);
-            return;
-        }
-    }
-    if (!project) {
-        //
-        const m = /^\/srv\/www\/(\w+)\//.exec(req.url);
+        const m = /^\/srv\/www\/(\w+)\/?/.exec(req.url);
         if (m) {
             const name = m[1];
             project = ProjectSettings.find({ name });
@@ -466,12 +454,24 @@ function matchProjectDomain(req, res, next) {
 }
 
 function redirectToCanonical(req, res, next) {
+    let canonical;
     if (!_.endsWith(req.path, '/')) {
         if (!Path.extname(req.path)) {
-            const canonical = req.path + '/' + req.url.substr(req.path.length);
-            res.redirect(301, canonical);
-            return;
+            canonical = req.path + '/' + req.url.substr(req.path.length);
         }
+    }
+
+    const { project } = req;
+    if (project) {
+        const { host } = req.headers;
+        const [ primary ] = project.settings.domains || [];
+        if (primary !== host) {
+            canonical = `//${primary}${req.url}`;
+        }
+    }
+    if (canonical) {
+        res.redirect(301, canonical);
+        return;
     }
     next();
 }
@@ -483,7 +483,6 @@ async function handleStaticFileRequest(req, res, next) {
     }
     const isAdmin = _.startsWith(req.path, '/admin/');
     try {
-        throw new Error('asd');
         const folder = (isAdmin) ? 'admin' : 'client';
         const file = Path.basename(req.path) || 'index.html';
         const path = Path.resolve(`../../${folder}/www/${file}`);
@@ -511,14 +510,21 @@ async function handleDatabaseChanges(events) {
     for (let event of events) {
         const { id, schema, table, diff, previous, current } = event;
         if (table === 'project') {
+            const projectBefore = ProjectSettings.find({ id });
             await ProjectSettings.update(db, id);
+            const projectAfter = ProjectSettings.find({ id });
 
+            if (diff.settings) {
+                taskQueue.add(new TaskPurgeChangedDomains(projectBefore, projectAfter));
+            }
             if (diff.name || diff.repo_ids || diff.template_repo_id) {
-                const name = previous.name || current.name;
-                taskQueue.add(new TaskPurgeProject(name));
+                if (projectBefore) {
+                    taskQueue.add(new TaskPurgeProject(projectBefore));
+                }
             } else if (diff.details || diff.archived) {
-                const name = previous.name || current.name;
-                taskQueue.add(new TaskPurgeMetadata(name));
+                if (projectBefore) {
+                    taskQueue.add(new TaskPurgeMetadata(projectBefore));
+                }
             }
             if (diff.name) {
                 TrafficMonitor.moveStatistics(previous.name, current.name);
