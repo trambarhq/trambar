@@ -105,7 +105,7 @@ function WebsiteSummaryPageSync(props) {
     });
     const handleSaveClick = useListener((evt) => {
         run(async () => {
-            const domains = _.filter(draft.get('settings.domains', []));
+            const domains = _.uniq(_.filter(draft.get('settings.domains', [])));
             draft.set('settings.domains', domains);
 
             const problems = {};
@@ -124,7 +124,7 @@ function WebsiteSummaryPageSync(props) {
         });
     });
     const handleDomainChange = useListener((evt) => {
-        const text = _.replace(evt.target.value, /[;,]/g, '');
+        const text = _.replace(_.toLower(evt.target.value), /[;,]/g, ' ');
         const domains = _.split(text, /\s/);
         draft.set('settings.domains', domains);
     });
