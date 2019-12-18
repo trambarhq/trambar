@@ -465,7 +465,7 @@ function redirectToCanonical(req, res, next) {
     if (project) {
         const { host } = req.headers;
         const [ primary ] = project.settings.domains || [];
-        if (primary !== host) {
+        if (primary && primary !== host) {
             canonical = `//${primary}${req.url}`;
         }
     }
