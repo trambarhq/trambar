@@ -616,6 +616,9 @@ const traditionalPhrases = {
     'task-imported-$count-users': (count) => {
         return `導入了${count}個用戶`;
     },
+    'task-imported-$count-wikis': (count) => {
+        return `導入了${count}個Wiki頁面`;
+    },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
         return `從《${repo}》數據庫的《${branch}》分支導入有${count}個提交的代碼推送`;
     },
@@ -636,6 +639,7 @@ const traditionalPhrases = {
     },
     'task-importing-repos': '導入數據庫',
     'task-importing-users': '導入用戶',
+    'task-importing-wikis': '導入Wiki頁面',
     'task-installed-$count-hooks': (count) => {
         return `安裝了${count}個鉤`;
     },
@@ -649,12 +653,18 @@ const traditionalPhrases = {
     'task-removed-$count-users': (count) => {
         return `刪除了${count}個用戶`;
     },
+    'task-removed-$count-wikis': (count) => {
+        return `刪除了${count}個Wiki頁面`;
+    },
     'task-removing-hooks': '卸載掛鉤',
     'task-updated-$count-repos': (count) => {
         return `改性了${count}個數據庫`;
     },
     'task-updated-$count-users': (count) => {
         return `改性了${count}個用戶`;
+    },
+    'task-updated-$count-wikis': (count) => {
+        return `改性了${count}個Wiki頁面`;
     },
 
     'text-field-placeholder-none': '空白',
@@ -1915,6 +1925,9 @@ const simplifiedPhrases = {
     'task-imported-$count-users': (count) => {
         return `导入了${count}个用户`;
     },
+    'task-imported-$count-wikis': (count) => {
+        return `导入了${count}个Wiki頁面`;
+    },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
         return `从《${repo}》数据库的《${branch}》分支导入有${count}个提交的代码推送`;
     },
@@ -1935,6 +1948,7 @@ const simplifiedPhrases = {
     },
     'task-importing-repos': '导入数据库',
     'task-importing-users': '导入用户',
+    'task-importing-wikis': '导入Wiki頁面',
     'task-installed-$count-hooks': (count) => {
         return `安装了${count}个挂钩`;
     },
@@ -1948,12 +1962,18 @@ const simplifiedPhrases = {
     'task-removed-$count-users': (count) => {
         return `删除了${count}个用户`;
     },
+    'task-removed-$count-wikis': (count) => {
+        return `删除了${count}个Wiki頁面`;
+    },
     'task-removing-hooks': '卸载挂钩',
     'task-updated-$count-repos': (count) => {
         return `改性了${count}个数据库`;
     },
     'task-updated-$count-users': (count) => {
         return `改性了${count}个用户`;
+    },
+    'task-updated-$count-wikis': (count) => {
+        return `改性了${count}个Wiki頁面`;
     },
 
     'text-field-placeholder-none': '沒有',

@@ -578,6 +578,10 @@ const phrases = {
         let users = cardinal(count, '1 użytkownika', '2 użytkowników');
         return `Zaimportowano ${users}`;
     },
+    'task-imported-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 stronę wiki', '2 strony wiki', '5 stron wiki');
+        return `Zaimportowano ${wikis}`;
+    },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
         let commits = cardinal(count, '1 rewizją', '2 rewizjami', '5 rewizjami');
         return `Zaimportowano wgrywanie z ${commits} do gałęzi „${branch}” projektu „${repo}”`;
@@ -599,6 +603,7 @@ const phrases = {
     },
     'task-importing-repos': 'Importowanie repozytoriów',
     'task-importing-users': 'Importowanie użytkowników',
+    'task-importing-wikis': 'Importowanie stron wiki',
     'task-installed-$count-hooks': (count) => {
         let hooks = cardinal(count, '1 hak', '2 haki', '5 haków');
         return `Zainstalowano ${hooks}`;
@@ -616,6 +621,10 @@ const phrases = {
         let users = cardinal(count, '1 użytkownik', '2 użytkowników');
         return `Usunięto ${users}`;
     },
+    'task-removed-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 stronę wiki', '2 strony wiki', '5 stron wiki');
+        return `Usunięto ${wikis}`;
+    },
     'task-removing-hooks': 'Odinstalowanie haków',
     'task-updated-$count-repos': (count) => {
         let repos = cardinal(count, '1 repozytorium', '2 repozytoria', '5 repozytoriów');
@@ -624,6 +633,10 @@ const phrases = {
     'task-updated-$count-users': (count) => {
         let users = cardinal(count, '1 użytkownik', '2 użytkowników');
         return `Zaktualizowano ${users}`;
+    },
+    'task-updated-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 stronę wiki', '2 strony wiki', '5 stron wiki');
+        return `Zaktualizowano ${wikis}`;
     },
 
     'text-field-placeholder-none': 'brak',

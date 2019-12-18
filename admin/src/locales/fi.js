@@ -574,6 +574,10 @@ const phrases = {
         let users = cardinal(count, '1 käyttäjä', '2 käyttäjää');
         return `Tuotu ${users}`;
     },
+    'task-imported-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 wiki-sivu', '2 wiki-sivua');
+        return `Tuotu ${wikis}`;
+    },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
         let commits = cardinal(count, '1 commiti', '2 commitia');
         return `Tuotu työntö jossa ${commits} haarasta “${branch}” arkiston “${repo}”`;
@@ -595,6 +599,7 @@ const phrases = {
     },
     'task-importing-repos': 'Tuodaan arkistot',
     'task-importing-users': 'Tuodaan käyttäjät',
+    'task-importing-wikis': 'Tuodaan wiki-sivut',
     'task-installed-$count-hooks': (count) => {
         let hooks = cardinal(count, '1 koukku', '2 koukkua');
         return `Asennettu ${hooks}`;
@@ -612,6 +617,10 @@ const phrases = {
         let users = cardinal(count, '1 käyttäjä', '2 käyttäjää');
         return `Poistetut ${users}`;
     },
+    'task-removed-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 wiki-sivu', '2 wiki-sivua');
+        return `Poistetut ${wikis}`;
+    },
     'task-removing-hooks': 'Poistamalla koukut',
     'task-updated-$count-repos': (count) => {
         let repos = cardinal(count, '1 arkisto', '2 arkistoa');
@@ -620,6 +629,10 @@ const phrases = {
     'task-updated-$count-users': (count) => {
         let users = cardinal(count, '1 käyttäjä', '2 käyttäjää');
         return `Päivitetty ${users}`;
+    },
+    'task-updated-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 wiki-sivu', '2 wiki-sivua');
+        return `Päivitetty ${wikis}`;
     },
 
     'text-field-placeholder-none': 'ei mitään',

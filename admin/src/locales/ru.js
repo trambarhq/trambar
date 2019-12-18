@@ -577,6 +577,10 @@ const phrases = {
         let users = cardinal(count, '1 пользователь', '2 пользователя', '5 пользователей');
         return `Импортировано ${users}`;
     },
+    'task-imported-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 вики-страницу', '2 вики-страницы', '5 вики-страниц');
+        return `Импортировано ${wikis}`;
+    },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
         let commits = cardinal(count, '1 коммитом', '2 коммитами');
         return `Импортировано из ветки «${branch}» репозитория «${repo}» помещения с ${commits}`;
@@ -598,6 +602,7 @@ const phrases = {
     },
     'task-importing-repos': 'Импортирования репозиториев',
     'task-importing-users': 'Импортирования пользователей',
+    'task-importing-wikis': 'Импортирования вики-страниц',
     'task-installed-$count-hooks': (count) => {
         let hooks = cardinal(count, '1 обратный вызов', '2 обратного вызова', '5 обратных вызовов');
         return `Установлен ${hooks}`;
@@ -615,6 +620,10 @@ const phrases = {
         let users = cardinal(count, '1 пользователь', '2 пользователя', '5 пользователей');
         return `Удален ${users}`;
     },
+    'task-removed-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 вики-страницу', '2 вики-страницы', '5 вики-страниц');
+        return `Удален ${wikis}`;
+    },
     'task-removing-hooks': 'Удаление обратных вызовов',
     'task-updated-$count-repos': (count) => {
         let repos = cardinal(count, '1 репозиторий', '2 репозитория', '5 репозиториев');
@@ -623,6 +632,10 @@ const phrases = {
     'task-updated-$count-users': (count) => {
         let users = cardinal(count, '1 пользователь', '2 пользователя', '5 пользователей');
         return `Обновлено ${users}`;
+    },
+    'task-updated-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 вики-страницу', '2 вики-страницы', '5 вики-страниц');
+        return `Обновлено ${wikis}`;
     },
 
     'text-field-placeholder-none': 'нет',

@@ -578,6 +578,10 @@ const phrases = {
         let users = cardinal(count, '1 uživatel', '2 uživatelé', '5 uživatelů');
         return `Importováno ${users}`;
     },
+    'task-imported-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 wiki stránku', '2 wiki stránky', 'wiki stránek');
+        return `Importováno ${wikis}`;
+    },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
         let commits = cardinal(count, '1 commitu', '2 commitů');
         return `Importováno přesun ${commits} z větve „${branch}” repozitářu „${repo}”`;
@@ -599,6 +603,7 @@ const phrases = {
     },
     'task-importing-repos': 'Importování repozitářů',
     'task-importing-users': 'Importování uživatelů',
+    'task-importing-wikis': 'Importování wiki stránek',
     'task-installed-$count-hooks': (count) => {
         let hooks = cardinal(count, '1 hák', '2 háki', '5 háků');
         return `Instalováno ${hooks}`;
@@ -616,6 +621,10 @@ const phrases = {
         let users = cardinal(count, '1 uživatel', '2 uživatelé', '5 uživatelů');
         return `Odstraněno ${users}`;
     },
+    'task-removed-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 wiki stránku', '2 wiki stránky', 'wiki stránek');
+        return `Odstraněno ${wikis}`;
+    },
     'task-removing-hooks': 'Odinstalování háků',
     'task-updated-$count-repos': (count) => {
         let repos = cardinal(count, '1 repozitář', '2 repozitáře', '5 repozitářů');
@@ -624,6 +633,10 @@ const phrases = {
     'task-updated-$count-users': (count) => {
         let users = cardinal(count, '1 uživatel', '2 uživatelé', '5 uživatelů');
         return `Aktualizováno ${users}`;
+    },
+    'task-updated-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 wiki stránku', '2 wiki stránky', 'wiki stránek');
+        return `Aktualizováno ${wikis}`;
     },
 
     'text-field-placeholder-none': 'žádné',
@@ -1280,7 +1293,7 @@ const phrases = {
     },
     'wiki-list-confirm-select-$count': (count) => {
         let pages = cardinal(count, 'tuto stránku', 'tyto 2 stránky', 'těchto 5 stránek');
-        return `Opravdu chcete tyto ${pages} zveřejnit?`;
+        return `Opravdu chcete ${pages} zveřejnit?`;
     },
     'wiki-list-edit': 'Upravit seznam stránek',
     'wiki-list-public-always': 'vždy',

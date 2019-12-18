@@ -594,6 +594,13 @@ const phrases = {
             return `Si ${count} utenti sono importati`;
         }
     },
+    'task-imported-$count-wikis': (count) => {
+        if (count === 1) {
+            return `Si 1 pagina wiki è importato`;
+        } else {
+            return `Si ${count} pagine wiki sono importati`;
+        }
+    },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
         let commits = `${count} commit`;
         return `Si un push con ${commits} è importato dal branch «${branch}» del repository «${repo}»`;
@@ -615,6 +622,7 @@ const phrases = {
     },
     'task-importing-repos': "Si sta importando i repository",
     'task-importing-users': "Si sta importando gli utenti",
+    'task-importing-wikis': "Si sta importando le pagine wiki",
     'task-installed-$count-hooks': (count) => {
         if (count === 1) {
             return `Si 1 webhook è installato`;
@@ -644,6 +652,13 @@ const phrases = {
             return `Si ${count} utenti sono rimossi`;
         }
     },
+    'task-removed-$count-wikis': (count) => {
+        if (count === 1) {
+            return `Si 1 pagina wiki è rimosso`;
+        } else {
+            return `Si ${count} pagine wiki sono rimossi`;
+        }
+    },
     'task-removing-hooks': "Si sta disinstallando i webhook",
     'task-updated-$count-repos': (count) => {
         if (count === 1) {
@@ -657,6 +672,13 @@ const phrases = {
             return `Si 1 utente è modificato`;
         } else {
             return `Si ${count} utenti sono modificati`;
+        }
+    },
+    'task-updated-$count-wikis': (count) => {
+        if (count === 1) {
+            return `Si 1 pagina wiki è modificato`;
+        } else {
+            return `Si ${count} pagine wiki sono modificati`;
         }
     },
 

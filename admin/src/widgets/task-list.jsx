@@ -173,6 +173,15 @@ async function TaskList(props) {
                         return t('task-updated-$count-users', modified);
                     }
                     break;
+                case 'gitlab-wiki-import':
+                    if (added) {
+                        return t('task-imported-$count-wikis', added);
+                    } else if (deleted) {
+                        return t('task-removed-$count-wikis', deleted);
+                    } else if (modified) {
+                        return t('task-updated-$count-wikis', modified);
+                    }
+                    break;
                 case 'gitlab-hook-install':
                     return t('task-installed-$count-hooks', added);
                 case 'gitlab-hook-remove':
@@ -195,6 +204,8 @@ async function TaskList(props) {
                     return t('task-importing-repos');
                 case 'gitlab-user-import':
                     return t('task-importing-users');
+                case 'gitlab-wiki-import':
+                    return t('task-importing-wikis');
                 case 'gitlab-hook-install':
                     return t('task-installing-hooks');
                 case 'gitlab-hook-remove':
@@ -224,6 +235,7 @@ async function TaskList(props) {
             case 'gitlab-commit-comment-import':
             case 'gitlab-issue-comment-import':
             case 'gitlab-merge-request-comment-import':
+            case 'gitlab-wiki-import':
                 return formatAddedDeleteChanged(task.details);
             default:
                 return '';

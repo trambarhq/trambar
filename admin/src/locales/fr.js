@@ -576,6 +576,10 @@ const phrases = {
         let users = cardinal(count, "1 utilisateur", "2 utilisateurs");
         return `Importé ${users}`;
     },
+    'task-imported-$count-wikis': (count) => {
+        let wikis = cardinal(count, "1 page wiki", "2 pages wiki");
+        return `Importé ${wikis}`;
+    },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
         let commits = cardinal(count, "1 commit", "2 commits");
         return `Importé une poussée avec ${commits} de la “${branch}” de “${repo}”`;
@@ -597,6 +601,7 @@ const phrases = {
     },
     'task-importing-repos': "Importation de dépôts",
     'task-importing-users': "Importation de utilisateurs",
+    'task-importing-wikis': "Importation de pages wiki",
     'task-installed-$count-hooks': (count) => {
         let hooks = cardinal(count, "1 hook", "2 hooks");
         return `Installée ${hooks}`;
@@ -614,6 +619,10 @@ const phrases = {
         let users = cardinal(count, "1 utilisateur", "2 utilisateurs");
         return `Supprimé ${users}`;
     },
+    'task-removed-$count-wikis': (count) => {
+        let wikis = cardinal(count, "1 page wiki", "2 pages wiki");
+        return `Supprimé ${wikis}`;
+    },
     'task-removing-hooks': "Désinstallation de hooks",
     'task-updated-$count-repos': (count) => {
         let repos = cardinal(count, "1 dépôt", "2 dépôts");
@@ -622,6 +631,10 @@ const phrases = {
     'task-updated-$count-users': (count) => {
         let users = cardinal(count, "1 utilisateur", "2 utilisateurs");
         return `Actualisé ${users}`;
+    },
+    'task-updated-$count-wikis': (count) => {
+        let wikis = cardinal(count, "1 page wiki", "2 pages wiki");
+        return `Actualisé ${wikis}`;
     },
 
     'text-field-placeholder-none': "Aucun",

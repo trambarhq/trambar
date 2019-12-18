@@ -551,7 +551,7 @@ const phrases = {
     'spreadsheet-summary-url': 'URL',
 
     'task-$seconds': (seconds) => {
-        return cardinal(count, '1 Sekunde', '2 Sekunden');
+        return cardinal(seconds, '1 Sekunde', '2 Sekunden');
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
         let comments = cardinal(count, '1 Commit-Kommentar', '2 Commit-Kommentare');
@@ -583,6 +583,11 @@ const phrases = {
         let were = (count === 1) ? `wurde` : `wurden`;
         return `${users} ${were} importiert`;
     },
+    'task-imported-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 Wiki-Seite', '2 Wiki-Seiten');
+        let were = (count === 1) ? `wurde` : `wurden`;
+        return `${wikis} ${were} importiert`;
+    },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
         return `Push mit ${count} aus dem Branch “${branch}” des Repositorys “${repo}” wurde importiert.`;
     },
@@ -603,6 +608,7 @@ const phrases = {
     },
     'task-importing-repos': 'Repositorys werden importiert',
     'task-importing-users': 'Benutzer werden importiert',
+    'task-importing-wikis': 'Wiki-Seiten werden importiert',
     'task-installed-$count-hooks': (count) => {
         let hooks = `${count} Webhaken`;
         let were = (count === 1) ? `wurde` : `wurden`;
@@ -624,6 +630,11 @@ const phrases = {
         let were = (count === 1) ? `wurde` : `wurden`;
         return `${users} ${were} entfernt`;
     },
+    'task-removed-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 Wiki-Seite', '2 Wiki-Seiten');
+        let were = (count === 1) ? `wurde` : `wurden`;
+        return `${wikis} ${were} entfernt`;
+    },
     'task-removing-hooks': 'Webhaken werden deinstalliert',
     'task-updated-$count-repos': (count) => {
         let repos = cardinal(count, '1 Repository', '2 Repositorys');
@@ -634,6 +645,11 @@ const phrases = {
         let users = `${count} Benutzer`;
         let were = (count === 1) ? `wurde` : `wurden`;
         return `${users} ${were} aktualisiert`;
+    },
+    'task-updated-$count-wikis': (count) => {
+        let wikis = cardinal(count, '1 Wiki-Seite', '2 Wiki-Seiten');
+        let were = (count === 1) ? `wurde` : `wurden`;
+        return `${wikis} ${were} aktualisiert`;
     },
 
     'text-field-placeholder-none': 'keiner',

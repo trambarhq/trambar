@@ -570,6 +570,9 @@ const phrases = {
     'task-imported-$count-users': (count) => {
         return cardinal(count, '1 vartotojas importuotas', '2 vartotojai importuoti', '10 vartotojų importuoti');
     },
+    'task-imported-$count-wikis': (count) => {
+        return cardinal(count, '1 wiki puslapis importuotas', '2 wiki puslapiai importuoti', '10 wiki puslapių importuoti');
+    },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
         let commits = cardinal(count, '1 revizija', '2 rewizjomis', '5 rewizjomis');
         return `1 pakeitimų siuntimas į šaką „${branch}” su ${commits} importuotas iš projekto „${repo}”`;
@@ -591,6 +594,7 @@ const phrases = {
     },
     'task-importing-repos': 'Importuojamos saugyklas',
     'task-importing-users': 'Importuojamos vartotojus',
+    'task-importing-wikis': 'Importuojamos wiki puslapius',
     'task-installed-$count-hooks': (count) => {
         return cardinal(count, '1 kabliukas įrengtas', '2 kabliukai įrengti', '10 kabliukų įrengti');
     },
@@ -604,12 +608,18 @@ const phrases = {
     'task-removed-$count-users': (count) => {
         return cardinal(count, '1 vartotojas ištrintas', '2 vartotojai ištrinti', '10 vartotojų ištrinti');
     },
+    'task-removed-$count-wikis': (count) => {
+        return cardinal(count, '1 wiki puslapis ištrintas', '2 wiki puslapiai ištrinti', '10 wiki puslapių ištrinti');
+    },
     'task-removing-hooks': 'Pašalinimas kabliukus',
     'task-updated-$count-repos': (count) => {
         return cardinal(count, '1 saugykla atnaujinta', '2 saugyklos atnaujintos', '10 saugyklų atnaujintos');
     },
     'task-updated-$count-users': (count) => {
         return cardinal(count, '1 vartotojas atnaujintas', '2 vartotojai atnaujinti', '10 vartotojų atnaujinti');
+    },
+    'task-updated-$count-wikis': (count) => {
+        return cardinal(count, '1 wiki puslapis atnaujintas', '2 wiki puslapiai atnaujinti', '10 wiki puslapių atnaujinti');
     },
 
     'text-field-placeholder-none': 'nieko',
