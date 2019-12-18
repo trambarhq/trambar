@@ -71,7 +71,7 @@ async function importUsers(db, server) {
             const userAfter = (userChanges) ? await User.saveUnique(db, 'global', userChanges) : user;
             usersAfter.push(userAfter);
             if (userChanges) {
-                taskLog.append((user) ? 'modified' : 'added', userAfter.name);
+                taskLog.append((user) ? 'modified' : 'added', userAfter.username);
             }
             taskLog.report(userNumber++, userCount);
         }
