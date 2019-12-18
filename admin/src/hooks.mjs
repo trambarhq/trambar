@@ -54,7 +54,6 @@ function useRowToggle(selection, objects) {
     const handleRowClick = useListener((evt) => {
         const id = parseInt(evt.currentTarget.getAttribute('data-id'));
         const object = _.find(objects, { id });
-        console.log(id, object);
         if (object) {
             selection.toggle(object);
         }
@@ -71,10 +70,10 @@ function useAutogenID(draft, params) {
         let after = _.decoupleSet(draft.current, titleKey, title);
 
         // derive name from title
-        const titleBefore = draft.current?.[titleKey] ?? {};
+        const titleBefore = _.get(draft.current, titleKey, {});
         const autoNameBefore = f(titleBefore);
         const autoName = f(title);
-        const nameBefore = draft.current?.[nameKey] ?? '';
+        const nameBefore = _.get(draft.current, nameKey, '');
         if (!nameBefore || nameBefore === autoNameBefore) {
             after = _.decoupleSet(after, nameKey, autoName);
         }
