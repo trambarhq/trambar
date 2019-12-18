@@ -253,7 +253,7 @@ class Database {
 
     async processNotification(listener, msg) {
         if (listener.channels.indexOf(msg.channel) !== -1) {
-            const event = JSON.parse(msg.payload);
+            let event = JSON.parse(msg.payload);
             if (typeof(event) === 'number') {
                 // we received the id of an oversized message
                 // fetch it from the database
