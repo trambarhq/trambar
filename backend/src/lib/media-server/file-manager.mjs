@@ -146,10 +146,11 @@ async function downloadFile(source, dstFolder) {
  *
  * @param  {Object} source
  * @param  {String} dstFolder
+ * @param  {TaskLog|null} taskLog
  *
  * @return {Promise<String|null>}
  */
-async function preserveFile(source, dstFolder) {
+async function preserveFile(source, dstFolder, taskLog) {
     if (source.file) {
         const srcPath = source.file.path;
         const hash = await hashFile(srcPath);
@@ -157,6 +158,9 @@ async function preserveFile(source, dstFolder) {
         await moveFile(srcPath, dstPath);
         return dstPath;
     } else if (source.url) {
+        if (taskLog) {
+            taskLog.describe(`downloading ${source.url}`);
+        }
         return downloadFile(source, dstFolder);
     }
     return null;
