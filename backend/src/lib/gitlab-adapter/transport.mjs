@@ -231,7 +231,7 @@ async function createImpersonation(server, userID, props) {
  *
  * @param  {Server} server
  *
- * @return {Promise<server>}
+ * @return {Promise<Server>}
  */
 async function refresh(server) {
     const payload = {
@@ -240,34 +240,23 @@ async function refresh(server) {
         client_id: server.settings.oauth.client_id,
         client_secret: server.settings.oauth.client_secret,
     };
-    const options = {
-        json: true,
-        body: payload,
-        baseURL: server.settings.oauth.base_url,
-        uri: '/oauth/token',
-        method: 'post',
-    };
-    let response = await attempt(options);
-    if (response) {
-        await updateAccessTokens(server, response);
+    const baseURL = _.trimEnd(server.settings.oauth.base_url, '/');
+    const url = baseURL + '/oauth/token';
+    const method = 'post';
+    const headers = { 'Content-Type': 'application/json' };
+    const body = JSON.stringify(payload);
+    const response = await CrossFetch(url, { method, headers, body });
+    const { status } = response;
+    if (status !== 200) {
+        throw new HTTPError(status);
     }
-}
-
-/**
- * Save new OAuth tokens to server record in database
- *
- * @param  {Server} server
- * @param  {Object} response
- *
- * @return {Promise<Server>}
- */
-async function updateAccessTokens(server, response) {
-    // modifying server so any code reusing the object would have the updated
-    // avalues
-    let db = await Database.open();
-    server.settings.api.access_token = response.access_token;
-    server.settings.api.refresh_token = response.refresh_token;
-    await Server.updateOne(db, 'global', server)
+    const json = await response.json();
+    // modifying given server object so any code reusing the object would
+    // have the updated values
+    server.settings.api.access_token = json.access_token;
+    server.settings.api.refresh_token = json.refresh_token;
+    const db = await Database.open();
+    await Server.updateOne(db, 'global', server);
     return server;
 }
 
@@ -303,39 +292,61 @@ async function request(server, uri, method, query, payload, userToken) {
     }
     const body = (payload instanceof Object) ? JSON.stringify(payload) : undefined;
 
+    const maxAttempts = _.includes(unreachableLocations, baseURL) ? 1 : 5;
+    let attempts = 1;
     let delayInterval = 500;
-    let chances = _.includes(unreachableLocations, baseURL) ? 1 : 5;
-    while (chances-- > 0) {
-        const response = await CrossFetch(url, { method, headers, body });
-        const { status } = response;
-        if (status >= 200 && status <= 299) {
-            _.pull(unreachableLocations, baseURL);
-            if (status === 204) {
-                return null;
-            } else {
-                const json = await response.json();
-                return json;
-            }
-        } else {
-            if (status === 401 || status === 467) {
-                if (!userToken) {
-                    // refresh access token
-                    const serverAfter = await refresh(server, err);
-                    // then try the request again
-                    return request(serverAfter, uri, method, query, payload);
+    while (attempts <= maxAttempts) {
+        try {
+            const response = await CrossFetch(url, { method, headers, body });
+            const { status } = response;
+            if (status >= 200 && status <= 299) {
+                // remove location if it's listed as unreachable
+                _.pull(unreachableLocations, baseURL);
+                if (status === 204) {
+                    return null;
+                } else {
+                    const json = await response.json();
+                    return json;
                 }
+            } else if (status === 401 && !userToken) {
+                // refresh access token
+                const serverAfter = await refresh(server);
+                // then try the request again
+                return request(serverAfter, uri, method, query, payload);
             } else if (status === 429) {
                 await Bluebird.delay(5000);
-            } else if ((status >= 400 && status <= 499) || chances === 0) {
+            } else if ((status >= 400 && status <= 499) || attempts >= maxAttempts) {
                 if (!_.includes(unreachableLocations, baseURL)) {
+                    // remember we've failed with the location after multiple attempts
                     unreachableLocations.push(baseURL);
                 }
                 throw new HTTPError(status);
             }
+            await Bluebird.delay(delayInterval);
+            delayInterval *= 2;
+
+            // a 502 bad gateway error probably means GitLab is still starting
+            // give it five minutes before erroring out
+            if (status !== 502 || sinceStartUp(5 * 60)) {
+                attempts++;
+            }
+        } catch (err) {
+            // give Docker Compose a minute to
+            if (sinceStartUp(1 * 60)) {
+                throw err;
+            } else {
+                await Bluebird.delay(delayInterval);
+            }
         }
-        await Bluebird.delay(delayInterval);
-        delayInterval *= 2;
     }
+}
+
+const startUpTime = new Date;
+
+function sinceStartUp(seconds) {
+    const now = new Date;
+    const elapsed = now - startUpTime;
+    return (elapsed > seconds * 1000);
 }
 
 export {
