@@ -79,7 +79,7 @@ async function importWikis(db, system, server, repo, project) {
                     }
                 }
             }
-        }
+        };
         for (let wiki of wikis) {
             if (wiki.chosen) {
                 const glWikiParsed = _.find(glWikisParsed, { slug: wiki.slug });
@@ -230,27 +230,28 @@ function parseMarkdownWiki(glWiki) {
     const references = [];
     const resources = [];
     const languages = [];
-    for (let blockToken of blockTokens) {
-        if (blockToken.children instanceof Array) {
-            for (let inlineToken of blockToken.children) {
-                if (inlineToken.type === 'link') {
-                    references.push(inlineToken.href);
-                } else if (inlineToken.type === 'image') {
-                    resources.push({ src: inlineToken.href });
+    const scanTokens = (tokens) => {
+        for (let token of tokens) {
+            if (token.type === 'link') {
+                references.push(token.href);
+            } else if (token.type === 'image') {
+                resources.push({ src: token.href });
+            } else if (token.type === 'heading') {
+                const cap = token.captured.trim();
+                const m = /^#\s*([a-z]{2})(-[a-z]{2})?$/i.exec(cap);
+                if (m) {
+                    const code = _.toLower(m[1]);
+                    if (!_.includes(languages, code) && code !== 'zz') {
+                        languages.push(code);
+                    }
                 }
             }
-        }
-        if (blockToken.type === 'heading') {
-            const cap = blockToken.captured.trim();
-            const m = /^#\s*([a-z]{2})(-[a-z]{2})?$/i.exec(cap);
-            if (m) {
-                const code = _.toLower(m[1]);
-                if (!_.includes(languages, code) && code !== 'zz') {
-                    languages.push(code);
-                }
+            if (token.children instanceof Array) {
+                scanTokens(token.children);
             }
         }
-    }
+    };
+    scanTokens(blockTokens);
 
     return {
         slug,
