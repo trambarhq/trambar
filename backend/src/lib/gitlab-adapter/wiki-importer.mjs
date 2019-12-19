@@ -97,7 +97,9 @@ async function importWikis(db, system, server, repo, project) {
                 if (/^\w+:/.test(src)) {
                     url = src;
                 } else {
-                    url = baseURL + src;
+                    url = new URL(src, `${baseURL}/wikis/`).toString();
+                }
+                if (_.startsWith(url, baseURL)) {
                     headers = { Authorization: `Bearer ${oauthToken}` };
                 }
                 taskLog.describe(`importing ${url}`);
