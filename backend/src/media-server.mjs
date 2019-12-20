@@ -41,13 +41,13 @@ async function start() {
     app.use(CORS());
     app.use(BodyParser.json());
     app.set('json spaces', 2);
-    app.get('/srv/media/images/:filename/original/:alias', handleImageOriginalRequest);
-    app.get('/srv/media/images/:hash/:filename', handleImageFiltersRequest);
-    app.get('/srv/media/images/:filename', handleImageOriginalRequest);
-    app.get('/srv/media/videos/:filename/original/:alias', handleVideoRequest);
-    app.get('/srv/media/videos/:filename', handleVideoRequest);
-    app.get('/srv/media/audios/:filename/original/:alias', handleAudioRequest);
-    app.get('/srv/media/audios/:filename', handleAudioRequest);
+    app.get('/srv/media/images/:hash/original/:alias', handleImageRequest);
+    app.get('/srv/media/images/:hash/:filename', handleImageRequest);
+    app.get('/srv/media/images/:hash', handleImageRequest);
+    app.get('/srv/media/videos/:hash/original/:alias', handleVideoRequest);
+    app.get('/srv/media/videos/:hash', handleVideoRequest);
+    app.get('/srv/media/audios/:hash/original/:alias', handleAudioRequest);
+    app.get('/srv/media/audios/:hash', handleAudioRequest);
     app.get('/srv/media/cliparts/:filename', handleClipartRequest);
     app.post('/srv/media/images/upload/:schema/', upload.single('file'), handleImageUpload);
     app.post('/srv/media/videos/upload/:schema/', upload.single('file'), handleVideoUpload);
@@ -157,41 +157,33 @@ function sendError(res, err) {
 }
 
 /**
- * Handle image request that makes use of filters
+ * Handle image request
  *
  * @param  {Request} req
  * @param  {Response} res
  */
-async function handleImageFiltersRequest(req, res) {
+async function handleImageRequest(req, res) {
     try {
-        const hash = req.params.hash;
-        const filename = req.params.filename;
-        const m = /([^.]*?)(\.(.+))?$/i.exec(filename);
-        if (!m) {
-            throw new HTTPError(400, 'Invalid filename');
-        }
-        const filters = m[1];
-        let format = m[3];
-        if (!format || format === 'jpg') {
-            format = 'jpeg';
-        }
+        const { hash, filename } = req.params;
         const path = `${CacheFolders.image}/${hash}`;
-        const buffer = await ImageManager.applyFilters(path, filters, format);
-        sendFile(res, buffer, format, cacheControl.image);
+        if (filename) {
+            const m = /([^.]*?)(\.(.+))?$/i.exec(filename);
+            if (!m) {
+                throw new HTTPError(400, 'Invalid filename');
+            }
+            const filters = m[1];
+            let format = m[3];
+            if (!format || format === 'jpg') {
+                format = 'jpeg';
+            }
+            const buffer = await ImageManager.applyFilters(path, filters, format);
+            sendFile(res, buffer, format, cacheControl.image);
+        } else {
+            await sendStaticFile(res, path, cacheControl.image);
+        }
     } catch (err) {
         sendError(res, err);
     }
-}
-
-/**
- * Handle request of original images
- *
- * @param  {Request} req
- * @param  {Response} res
- */
-async function handleImageOriginalRequest(req, res) {
-    const path = `${CacheFolders.image}/${req.params.filename}`;
-    await sendStaticFile(res, path, cacheControl.video);
 }
 
 /**
@@ -201,8 +193,13 @@ async function handleImageOriginalRequest(req, res) {
  * @param  {Response} res
  */
 async function handleVideoRequest(req, res) {
-    const path = `${CacheFolders.video}/${req.params.filename}`;
-    await sendStaticFile(res, path, cacheControl.video);
+    try {
+        const { hash } = req.params;
+        const path = `${CacheFolders.video}/${hash}`;
+        await sendStaticFile(res, path, cacheControl.video);
+    } catch (err) {
+        sendError(res, err);
+    }
 }
 
 /**
@@ -212,8 +209,13 @@ async function handleVideoRequest(req, res) {
  * @param  {Response} res
  */
 async function handleAudioRequest(req, res) {
-    const path = `${CacheFolders.audio}/${req.params.filename}`;
-    await sendStaticFile(res, path, cacheControl.audio);
+    try {
+        const { hash } = req.params;
+        const path = `${CacheFolders.audio}/${hash}`;
+        await sendStaticFile(res, path, cacheControl.audio);
+    } catch (err) {
+        sendError(res, err);
+    }
 }
 
 /**
@@ -224,7 +226,8 @@ async function handleAudioRequest(req, res) {
  */
 async function handleClipartRequest(req, res) {
     try {
-        const path = Path.resolve(`../media/cliparts/${req.params.filename}`);
+        const { filename } = req.params;
+        const path = Path.resolve(`../media/cliparts/${filename}`);
         const info = await getFileType(path);
         res.type(info.mime);
         res.set('Cache-Control', 'max-age=86400');

@@ -67,6 +67,7 @@ async function start() {
     app.set('json spaces', 2);
     app.use(CORS(corsOptions));
     app.use(Compression());
+    app.get('*', addTrailingSlash);
     app.get('*', matchProjectDomain);
     app.get('*', redirectToCanonical);
     app.get('*', handleStaticFileRequest);
@@ -433,6 +434,17 @@ function sendDataQueryResult(res, result) {
     res.json(contents);
 }
 
+function addTrailingSlash(req, res, next) {
+    const { path, url } = req;
+    if (!_.endsWith(path, '/')) {
+        if (!Path.extname(path)) {
+            res.redirect(301, `${path}/${url.substr(path.length)}`);
+            return;
+        }
+    }
+    next();
+}
+
 function matchProjectDomain(req, res, next) {
     const { host } = req.headers;
     let project = ProjectSettings.find({ host });
@@ -454,24 +466,14 @@ function matchProjectDomain(req, res, next) {
 }
 
 function redirectToCanonical(req, res, next) {
-    let canonical;
-    if (!_.endsWith(req.path, '/')) {
-        if (!Path.extname(req.path)) {
-            canonical = req.path + '/' + req.url.substr(req.path.length);
-        }
-    }
-
     const { project } = req;
     if (project) {
         const { host } = req.headers;
         const [ primary ] = project.settings.domains || [];
         if (primary && primary !== host) {
-            canonical = `//${primary}${req.url}`;
+            res.redirect(301, `//${primary}${req.url}`);
+            return;
         }
-    }
-    if (canonical) {
-        res.redirect(301, canonical);
-        return;
     }
     next();
 }
