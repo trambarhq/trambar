@@ -220,7 +220,7 @@ function getRemoteImageURL(res, params, env) {
         return;
     }
 
-    let versionPath = '';
+    let filename = '';
     if (!params.original) {
         let filters = [];
         // apply clipping rect
@@ -281,9 +281,9 @@ function getRemoteImageURL(res, params, env) {
                 }
             }
         }
-        versionPath = `/${filters.join('+')}.${ext}`;
+        filename = `${filters.join('+')}.${ext}`;
     }
-    return `${env.address}${resURL}${versionPath}`;
+    return `${env.address}${resURL}/${filename}`;
 }
 
 /**
