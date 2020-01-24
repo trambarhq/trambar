@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import CrossFetch from 'cross-fetch';
 import Moment from 'moment';
+import AsciiDoctor from 'asciidoctor';
 import MarkdownParser from 'mark-gor/src/async-parser.mjs';
 import JsonRenderer from 'mark-gor/src/json-renderer.mjs';
 import * as TaskLog from '../task-log.mjs';
@@ -226,15 +227,20 @@ async function parseGitlabWiki(glWiki, baseURL) {
     const { slug, format, title, content } = glWiki;
 
     // parse content and convert to JSON
-    let json;
+    let tokens;
     if (format === 'markdown') {
         const parser = new MarkdownParser;
-        const tokens = await parser.parse(content);
-        const renderer = new JsonRenderer;
-        json = renderer.render(tokens);
+        tokens = await parser.parse(content);
+    } else if (format === 'asciidoc') {
+        const asciiDoctor = AsciiDoctor();
+        const html = asciiDoctor.convert(content);
+        const parser = new MarkdownParser;
+        tokens = await parser.parse(html, { htmlOnly: true });
     } else {
-        json = [];
+        tokens = [];
     }
+    const renderer = new JsonRenderer;
+    const json = renderer.render(tokens);
 
     // look for references and import images
     const references = [];
