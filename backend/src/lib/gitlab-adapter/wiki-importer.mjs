@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import CrossFetch from 'cross-fetch';
 import Moment from 'moment';
-import MarkGorParser from 'mark-gor/lib/parser.js';
+import MarkdownParser from 'mark-gor/src/async-parser.mjs';
+import JsonRenderer from 'mark-gor/src/json-renderer.mjs';
 import * as TaskLog from '../task-log.mjs';
 import * as Localization from '../localization.mjs';
 import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
@@ -51,7 +52,7 @@ async function importWikis(db, system, server, repo, project) {
         // parse the wikis
         const glWikisParsed = [];
         for (let glWiki of glWikis) {
-            const glWikiParsed = parseGitlabWiki(glWiki);
+            const glWikiParsed = await parseGitlabWiki(glWiki);
             if (glWikiParsed) {
                 glWikisParsed.push(glWikiParsed);
             }
@@ -203,12 +204,16 @@ function copyWikiProperties(wiki, system, server, repo, glWikiParsed) {
         value: (glWikiParsed.public) ? glWikiParsed.content : undefined,
         overwrite: 'always',
     });
+    ExternalDataUtils.importProperty(wikiChanges, server, 'details.json', {
+        value: (glWikiParsed.public) ? glWikiParsed.json : undefined,
+        overwrite: 'always',
+    });
     ExternalDataUtils.importProperty(wikiChanges, server, 'details.format', {
         value: glWikiParsed.format,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(wikiChanges, server, 'details.resources', {
-        value: glWikiParsed.resources,
+        value: (glWikiParsed.public) ? glWikiParsed.resources : undefined,
         overwrite: 'always',
     });
     if (_.isEqual(wikiChanges, wiki)) {
@@ -217,55 +222,81 @@ function copyWikiProperties(wiki, system, server, repo, glWikiParsed) {
     return wikiChanges;
 }
 
-function parseGitlabWiki(glWiki, baseURL) {
-    if (glWiki.format === 'markdown') {
-        return parseMarkdownWiki(glWiki, baseURL);
-    }
-}
-
-function parseMarkdownWiki(glWiki) {
+async function parseGitlabWiki(glWiki, baseURL) {
     const { slug, format, title, content } = glWiki;
-    const parser = new MarkGorParser;
-    const blockTokens = parser.parse(content);
+
+    // parse content and convert to JSON
+    let json;
+    if (format === 'markdown') {
+        const parser = new MarkdownParser;
+        const tokens = await parser.parse(content);
+        const renderer = new JsonRenderer;
+        json = renderer.render(tokens);
+    } else {
+        json = [];
+    }
 
     // look for references and import images
     const references = [];
     const resources = [];
     const languages = [];
-    const scanTokens = (tokens) => {
-        for (let token of tokens) {
-            if (token.type === 'link') {
-                references.push(token.href);
-            } else if (token.type === 'image') {
-                resources.push({ src: token.href });
-            } else if (token.type === 'heading') {
-                const cap = token.captured.trim();
-                const m = /^#\s*([a-z]{2})(-[a-z]{2})?$/i.exec(cap);
-                if (m) {
-                    const code = _.toLower(m[1]);
-                    if (!_.includes(languages, code) && code !== 'zz') {
-                        languages.push(code);
-                    }
+    const getText = (elements) => {
+        const strings = [];
+        if (elements instanceof Array) {
+            for (let element of elements) {
+                if (typeof(element) === 'string') {
+                    strings.push(element);
+                } else if (typeof(element) === 'object') {
+                    strings.push(getText(element.children));
                 }
             }
-            if (token.children instanceof Array) {
-                scanTokens(token.children);
+        }
+        return strings.join('');
+    };
+    const scanElements = (elements) => {
+        if (elements instanceof Array) {
+            for (let element of elements) {
+                if (typeof(element) === 'object') {
+                    const { type, props, children } = element;
+                    if (type === 'a') {
+                        if (props.href) {
+                            references.push(props.href);
+                        }
+                    } else if (type === 'img') {
+                        if (props.src) {
+                            resources.push({ src: props.src });
+                        }
+                    } else if (/^h[1-6]$/.test(type)) {
+                        const text = getText(children);
+                        const m = /^\s*([a-z]{2})(-[a-z]{2})?\b/i.exec(text);
+                        if (m) {
+                            const code = _.toLower(m[1]);
+                            if (!_.includes(languages, code) && code !== 'zz') {
+                                languages.push(code);
+                            }
+                        }
+
+                    }
+                    scanElements(children);
+                }
             }
         }
     };
-    scanTokens(blockTokens);
+    scanElements(json);
 
     return {
         slug,
         format,
         title,
         content,
+        json,
         resources,
         references,
         languages,
         public: false
     };
 }
+
 
 /**
  * Retrieve milestone from Gitlab

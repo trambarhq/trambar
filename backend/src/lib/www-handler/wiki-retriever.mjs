@@ -105,7 +105,7 @@ async function retrieve(project, identifier, slug) {
             identifier,
             slug: wiki.slug,
             title: wiki.details.title || '',
-            markdown: wiki.details.content || '',
+            json: wiki.details.json || {},
             resources: wiki.details.resources || [],
         };
         // expires frequently when wiki links to external images

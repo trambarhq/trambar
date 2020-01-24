@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Path from 'path';
 import Ignore from 'ignore';
-import MarkGorParser from 'mark-gor/lib/parser.js';
+import MarkdownParser from 'mark-gor/src/async-parser.mjs';
 import HTTPError from '../common/errors/http-error.mjs';
 import * as TaskLog from '../task-log.mjs';
 import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
@@ -284,8 +284,8 @@ async function loadDescriptors(cxt, folderPath) {
 async function parseDescriptorFile(cxt, path) {
     const file = await retrieveFile(cxt, path);
     const text = getFileContents(file, 'utf-8');
-    const parser = new MarkGorParser;
-    const tokens = parser.parse(text);
+    const parser = new MarkdownParser;
+    const tokens = await parser.parse(text);
 
     const languageTokens = {};
     const defaultLanguageTokens = [];
@@ -295,8 +295,7 @@ async function parseDescriptorFile(cxt, path) {
 
     for (let token of tokens) {
         if (token.type === 'heading') {
-            const cap = _.trim(token.captured);
-            const m = /^#\s*([a-z]{2})\b/i.exec(cap);
+            const m = /^\s*([a-z]{2})(-[a-z]{2})?\b$/i.exec(token.markdown);
             if (m) {
                 const code = m[1];
                 languageTokens[code] = currentLanguageTokens = [];
