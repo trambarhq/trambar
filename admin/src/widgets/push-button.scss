@@ -1,37 +1,37 @@
 @import '../colors';
 
 .push-button {
-    font-size: 1.2em;
-    padding: 0.14em 0.5em 0.14em 0.5em;
-    background-color: $button-background-color;
-    border: 2px outset $button-border-color;
-    color: $button-text-color;
+  font-size: 1.2em;
+  padding: 0.14em 0.5em 0.14em 0.5em;
+  background-color: $button-background-color;
+  border: 2px outset $button-border-color;
+  color: $button-text-color;
+
+  &:disabled {
+    color: $button-disabled-text-color;
+  }
+
+  &.emphasis {
+    color: $button-emphasis-text-color;
+    background-color: $button-emphasis-background-color;
+    border: 2px outset $button-emphasis-border-color;
 
     &:disabled {
-        color: $button-disabled-text-color;
+      color: $button-emphasis-disabled-text-color;
     }
+  }
 
-    &.emphasis {
-        color: $button-emphasis-text-color;
-        background-color: $button-emphasis-background-color;
-        border: 2px outset $button-emphasis-border-color;
+  &.danger {
+    color: $button-danger-text-color;
+    background-color: $button-danger-background-color;
+    border: 2px outset $button-danger-border-color;
 
-        &:disabled {
-            color: $button-emphasis-disabled-text-color;
-        }
+    &:disabled {
+      color: $button-danger-disabled-text-color;
     }
+  }
 
-    &.danger {
-        color: $button-danger-text-color;
-        background-color: $button-danger-background-color;
-        border: 2px outset $button-danger-border-color;
-
-        &:disabled {
-            color: $button-danger-disabled-text-color;
-        }
-    }
-
-    &:active {
-        border-style: inset;
-    }
+  &:active {
+    border-style: inset;
+  }
 }

@@ -103,11 +103,11 @@ function leLong(b1, b2, b3, b4) {
  * @return {Object|null}
  */
 function extractPaths(bytes) {
-    let p = findPhotoshopSegment(bytes);
-    if(p !== -1) {
-        return parse8BIMData(bytes, p);
-    }
-    return null;
+  let p = findPhotoshopSegment(bytes);
+  if(p !== -1) {
+    return parse8BIMData(bytes, p);
+  }
+  return null;
 };
 
 /**

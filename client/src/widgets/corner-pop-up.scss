@@ -1,35 +1,35 @@
 @import '../colors';
 
 .corner-pop-up {
-    float: right;
+  float: right;
 
+  .button {
+    color: $header-button-text-color;
+    touch-action: manipulation;
+    padding: 4px 4px 4px 4px;
+    margin: -4px -4px -4px -4px;
+
+    .single-col & {
+      // make target even bigger
+      padding: 8px 8px 8px 8px;
+      margin: -8px -8px -8px -8px;
+    }
+
+    .no-touch & {
+      &:hover {
+        color: $header-button-hover-text-color;
+      }
+    }
+  }
+
+  &.open {
     .button {
-        color: $header-button-text-color;
-        touch-action: manipulation;
-        padding: 4px 4px 4px 4px;
-        margin: -4px -4px -4px -4px;
-
-        .single-col & {
-            // make target even bigger
-            padding: 8px 8px 8px 8px;
-            margin: -8px -8px -8px -8px;
-        }
-
-        .no-touch & {
-            &:hover {
-                color: $header-button-hover-text-color;
-            }
-        }
+      color: $header-button-hover-text-color;
     }
+  }
 
-    &.open {
-        .button {
-            color: $header-button-hover-text-color;
-        }
-    }
-
-    .container {
-        right: 0.3em;
-        top: 1.5em;
-    }
+  .container {
+    right: 0.3em;
+    top: 1.5em;
+  }
 }

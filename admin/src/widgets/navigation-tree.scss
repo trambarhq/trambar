@@ -1,157 +1,157 @@
 @import '../colors';
 
 .navigation-tree {
-    position: relative;
+  position: relative;
 
-    .level1 {
-        font-size: 1.4em;
-        padding-left: 2em;
-        margin-bottom: 0.5em;
+  .level1 {
+    font-size: 1.4em;
+    padding-left: 2em;
+    margin-bottom: 0.5em;
+  }
+
+  .level2 {
+    font-size: 0.8em;
+    padding-left: 0.5em;
+    margin-top: 0.2em;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .level3 {
+    font-size: 0.95em;
+    padding-left: 0.6em;
+    margin-top: 0.2em;
+  }
+
+  .level4 {
+    font-size: 0.95em;
+    padding-left: 0.5em;
+    margin-top: 0.2em;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .level5 {
+    padding-left: 0.5em;
+    margin-top: 0.2em;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  A {
+    cursor: default;
+    user-select: none;
+
+    &:link, &:visited {
+      color: $navigation-text-color;
+      text-decoration: none;
+      cursor: pointer;
+
+      &:hover {
+        color: $navigation-hover-text-color;
+      }
+    }
+  }
+
+  .collapsible-container {
+    transition: height .25s;
+  }
+
+  .arrow {
+    position: absolute;
+    font-size: 1.2em;
+    left: 16px;
+    opacity: 1;
+    transition: top 0.5s, opacity 0.8s;
+
+    .second, .third, .fourth, .fifth {
+      position: absolute;
+      transition: left 0.3s;
     }
 
-    .level2 {
-        font-size: 0.8em;
-        padding-left: 0.5em;
-        margin-top: 0.2em;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        white-space: nowrap;
+    &.extending {
+      // delay extension animation until movement is nearly complete
+      .second, .third, .fourth, .fifth {
+        transition: left 0.3s linear 0.3s;
+      }
     }
 
-    .level3 {
-        font-size: 0.95em;
-        padding-left: 0.6em;
-        margin-top: 0.2em;
+    &.retracting {
+      // delay movement of arrow until retraction is nearly complete
+      transition: top 0.5s linear 0.2s, opacity 0.8s linear 0.2s;
     }
 
-    .level4 {
-        font-size: 0.95em;
-        padding-left: 0.5em;
-        margin-top: 0.2em;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        white-space: nowrap;
+
+    &.zero {
+      visibility: hidden;
+      opacity: 0;
     }
 
-    .level5 {
-        padding-left: 0.5em;
-        margin-top: 0.2em;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        white-space: nowrap;
+    &.one {
+      .second, .third, .fourth, .fifth {
+        left: 0px;
+      }
     }
 
+    &.two {
+      .second, .third, .fourth, .fifth {
+        left: 0.5em;
+      }
+    }
+
+    &.three {
+      .second {
+        left: 0.5em;
+      }
+
+      .third, .fourth, .fifth {
+        left: 1em;
+      }
+    }
+
+    &.four {
+      .second {
+        left: 0.5em;
+      }
+
+      .third {
+        left: 1em;
+      }
+
+      .fourth, .fifth {
+        left: 1.5em;
+      }
+    }
+
+    &.five {
+      .second {
+        left: 0.5em;
+      }
+
+      .third {
+        left: 1em;
+      }
+
+      .fourth {
+        left: 1.5em;
+      }
+
+      .fifth {
+        left: 2em;
+      }
+    }
+  }
+
+  &.disabled {
     A {
-        cursor: default;
-        user-select: none;
-
-        &:link, &:visited {
-            color: $navigation-text-color;
-            text-decoration: none;
-            cursor: pointer;
-
-            &:hover {
-                color: $navigation-hover-text-color;
-            }
-        }
-    }
-
-    .collapsible-container {
-        transition: height .25s;
+      color: $navigation-disabled-text-color;
     }
 
     .arrow {
-        position: absolute;
-        font-size: 1.2em;
-        left: 16px;
-        opacity: 1;
-        transition: top 0.5s, opacity 0.8s;
-
-        .second, .third, .fourth, .fifth {
-            position: absolute;
-            transition: left 0.3s;
-        }
-
-        &.extending {
-            // delay extension animation until movement is nearly complete
-            .second, .third, .fourth, .fifth {
-                transition: left 0.3s linear 0.3s;
-            }
-        }
-
-        &.retracting {
-            // delay movement of arrow until retraction is nearly complete
-            transition: top 0.5s linear 0.2s, opacity 0.8s linear 0.2s;
-        }
-
-
-        &.zero {
-            visibility: hidden;
-            opacity: 0;
-        }
-
-        &.one {
-            .second, .third, .fourth, .fifth {
-                left: 0px;
-            }
-        }
-
-        &.two {
-            .second, .third, .fourth, .fifth {
-                left: 0.5em;
-            }
-        }
-
-        &.three {
-            .second {
-                left: 0.5em;
-            }
-
-            .third, .fourth, .fifth {
-                left: 1em;
-            }
-        }
-
-        &.four {
-            .second {
-                left: 0.5em;
-            }
-
-            .third {
-                left: 1em;
-            }
-
-            .fourth, .fifth {
-                left: 1.5em;
-            }
-        }
-
-        &.five {
-            .second {
-                left: 0.5em;
-            }
-
-            .third {
-                left: 1em;
-            }
-
-            .fourth {
-                left: 1.5em;
-            }
-
-            .fifth {
-                left: 2em;
-            }
-        }
+      opacity: 0;
     }
-
-    &.disabled {
-        A {
-            color: $navigation-disabled-text-color;
-        }
-
-        .arrow {
-            opacity: 0;
-        }
-    }
+  }
 }

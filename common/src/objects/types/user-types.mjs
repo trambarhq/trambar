@@ -1,11 +1,11 @@
 const UserTypes = [
-    'guest',
-    'regular',
-    'moderator',
-    'admin',
+  'guest',
+  'regular',
+  'moderator',
+  'admin',
 ];
 
 export {
-    UserTypes as default,
-    UserTypes,
+  UserTypes as default,
+  UserTypes,
 };

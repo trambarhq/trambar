@@ -18,29 +18,29 @@ import { SQLiteCachePanel } from './sqlite-cache-panel.jsx';
 import { WebsocketNotifierPanel } from './websocket-notifier-panel.jsx';
 
 CodePushPanel.propTypes = {
-    codePush: PropTypes.instanceOf(CodePush),
+  codePush: PropTypes.instanceOf(CodePush),
 };
 EnvironmentMonitorPanel.propTypes = {
-    envMonitor: PropTypes.instanceOf(EnvironmentMonitor),
+  envMonitor: PropTypes.instanceOf(EnvironmentMonitor),
 };
 IndexedDBCachePanel.propTypes = {
-    cache: PropTypes.instanceOf(IndexedDBCache),
+  cache: PropTypes.instanceOf(IndexedDBCache),
 };
 LocaleManagerPanel.propTypes = {
-    localeManager: PropTypes.instanceOf(LocaleManager),
+  localeManager: PropTypes.instanceOf(LocaleManager),
 };
 PayloadManagerPanel.propTypes = {
-    payloadManager: PropTypes.instanceOf(PayloadManager),
+  payloadManager: PropTypes.instanceOf(PayloadManager),
 };
 PushNotifierPanel.propTypes = {
-    notifier: PropTypes.instanceOf(PushNotifier),
+  notifier: PropTypes.instanceOf(PushNotifier),
 };
 RemoteDataSourcePanel.propTypes = {
-    dataSource: PropTypes.instanceOf(RemoteDataSource),
+  dataSource: PropTypes.instanceOf(RemoteDataSource),
 };
 SQLiteCachePanel.propTypes = {
-    cache: PropTypes.instanceOf(SQLiteCache),
+  cache: PropTypes.instanceOf(SQLiteCache),
 };
 WebsocketNotifierPanel.propTypes = {
-    notifier: PropTypes.instanceOf(WebsocketNotifier),
+  notifier: PropTypes.instanceOf(WebsocketNotifier),
 };

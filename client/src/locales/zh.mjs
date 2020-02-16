@@ -9,2331 +9,2331 @@ Moment.defineLocale('zh-mo', { parentLocale: 'zh-hk' });
 
 // make relative time consistent with how we count things
 ['zh-cn', 'zh-hk', 'zh-tw'].forEach((locale) => {
-    let localeData = Moment.localeData(locale);
-    let rt = localeData._relativeTime;
-    if (locale === 'zh-cn') {
-        rt.ss = n => cardinalS(n, '一秒');
-        rt.m = '一分钟';
-        rt.mm = n => cardinalS(n, rt.m);
-        rt.h = '一小时';
-        rt.hh = n => cardinalS(n, rt.h);
-        rt.d = '一天';
-        rt.dd = n => cardinalS(n, rt.d);
-        rt.M = '一个月';
-        rt.MM = n => cardinalS(n, rt.M);
-        rt.y = '一年';
-        rt.yy = n => cardinalS(n, rt.y);
-    } else {
-        rt.ss = n => cardinalT(n, '一秒');
-        rt.m = '一分鐘';
-        rt.mm = n => cardinalT(n, rt.m);
-        rt.h = '一小時';
-        rt.hh = n => cardinalT(n, rt.h);
-        rt.d = '一天';
-        rt.dd = n => cardinalT(n, rt.d);
-        rt.M = '一個月';
-        rt.MM = n => cardinalT(n, rt.M);
-        rt.y = '一年';
-        rt.yy = n => cardinalT(n, rt.y);
-    }
+  let localeData = Moment.localeData(locale);
+  let rt = localeData._relativeTime;
+  if (locale === 'zh-cn') {
+    rt.ss = n => cardinalS(n, '一秒');
+    rt.m = '一分钟';
+    rt.mm = n => cardinalS(n, rt.m);
+    rt.h = '一小时';
+    rt.hh = n => cardinalS(n, rt.h);
+    rt.d = '一天';
+    rt.dd = n => cardinalS(n, rt.d);
+    rt.M = '一个月';
+    rt.MM = n => cardinalS(n, rt.M);
+    rt.y = '一年';
+    rt.yy = n => cardinalS(n, rt.y);
+  } else {
+    rt.ss = n => cardinalT(n, '一秒');
+    rt.m = '一分鐘';
+    rt.mm = n => cardinalT(n, rt.m);
+    rt.h = '一小時';
+    rt.hh = n => cardinalT(n, rt.h);
+    rt.d = '一天';
+    rt.dd = n => cardinalT(n, rt.d);
+    rt.M = '一個月';
+    rt.MM = n => cardinalT(n, rt.M);
+    rt.y = '一年';
+    rt.yy = n => cardinalT(n, rt.y);
+  }
 });
 
 function chooseVariant(countryCode) {
-    switch (countryCode) {
-        case 'mo':
-        case 'hk':
-            let merged = {};
-            for (let name in traditionalPhrases) {
-                merged[name] = cantonesePhrases[name] || traditionalPhrases[name];
-            }
-            return merged
-        case 'tw':
-            return traditionalPhrases;
-        default:
-            return simplifiedPhrases;
-    }
+  switch (countryCode) {
+    case 'mo':
+    case 'hk':
+      let merged = {};
+      for (let name in traditionalPhrases) {
+        merged[name] = cantonesePhrases[name] || traditionalPhrases[name];
+      }
+      return merged
+    case 'tw':
+      return traditionalPhrases;
+    default:
+      return simplifiedPhrases;
+  }
 }
 
 let traditionalPhrases = {
-    'action-contact-by-email': '用電子郵件聯繫',
-    'action-contact-by-ichat': '用iChat聯繫',
-    'action-contact-by-phone': '用電話聯繫',
-    'action-contact-by-skype': '用Skype聯繫',
-    'action-contact-by-slack': '用Slack聯繫',
-    'action-contact-by-twitter': '用Twitter聯繫',
-    'action-view-github-page': '查看GitHub個人頁面',
-    'action-view-gitlab-page': '查看GitLab個人頁面',
-    'action-view-linkedin-page': '查看LinkedIn個人頁面',
-    'action-view-stackoverflow-page': '查看StackOverflow個人頁面',
+  'action-contact-by-email': '用電子郵件聯繫',
+  'action-contact-by-ichat': '用iChat聯繫',
+  'action-contact-by-phone': '用電話聯繫',
+  'action-contact-by-skype': '用Skype聯繫',
+  'action-contact-by-slack': '用Slack聯繫',
+  'action-contact-by-twitter': '用Twitter聯繫',
+  'action-view-github-page': '查看GitHub個人頁面',
+  'action-view-gitlab-page': '查看GitLab個人頁面',
+  'action-view-linkedin-page': '查看LinkedIn個人頁面',
+  'action-view-stackoverflow-page': '查看StackOverflow個人頁面',
 
-    'activation-address': '服務器地址',
-    'activation-cancel': '取消',
-    'activation-code': '授權碼',
-    'activation-ok': '完成',
-    'activation-schema': '項目',
+  'activation-address': '服務器地址',
+  'activation-cancel': '取消',
+  'activation-code': '授權碼',
+  'activation-ok': '完成',
+  'activation-schema': '項目',
 
-    'alert-$count-new-bookmarks': (count) => {
-        return cardinalT(count, '一張新書籤');
-    },
-    'alert-$count-new-notifications': (count) => {
-        return cardinalT(count, '一個新通知');
-    },
-    'alert-$count-new-stories': (count) => {
-        return cardinalT(count, '一個新故事');
-    },
+  'alert-$count-new-bookmarks': (count) => {
+    return cardinalT(count, '一張新書籤');
+  },
+  'alert-$count-new-notifications': (count) => {
+    return cardinalT(count, '一個新通知');
+  },
+  'alert-$count-new-stories': (count) => {
+    return cardinalT(count, '一個新故事');
+  },
 
-    'app-component-close': '關閉',
+  'app-component-close': '關閉',
 
-    'app-name': '電車吧',
+  'app-name': '電車吧',
 
-    'audio-capture-accept': '接受',
-    'audio-capture-cancel': '取消',
-    'audio-capture-pause': '暫停',
-    'audio-capture-rerecord': '重新錄製',
-    'audio-capture-resume': '繼續',
-    'audio-capture-start': '開始',
-    'audio-capture-stop': '停止',
+  'audio-capture-accept': '接受',
+  'audio-capture-cancel': '取消',
+  'audio-capture-pause': '暫停',
+  'audio-capture-rerecord': '重新錄製',
+  'audio-capture-resume': '繼續',
+  'audio-capture-start': '開始',
+  'audio-capture-stop': '停止',
 
-    'bookmark-$count-other-users': (count) => {
-        return cardinalT(count, '另外一個人');
-    },
-    'bookmark-$count-users': (count) => {
-        return cardinalT(count, '一個人');
-    },
-    'bookmark-$name-recommends-this': (name) => {
-        return `${name}推薦這個`;
-    },
-    'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
-        return [ name1, `和`, name2, `推薦這個` ];
-    },
-    'bookmark-$you-bookmarked-it': '你加了這個書籤',
-    'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
-        return `你加了這個書籤（${name}推薦）`;
-    },
-    'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others) => {
-        return [ `你加了這個書籤（`, others, `推薦）` ];
-    },
-    'bookmark-recommendations': '推薦',
+  'bookmark-$count-other-users': (count) => {
+    return cardinalT(count, '另外一個人');
+  },
+  'bookmark-$count-users': (count) => {
+    return cardinalT(count, '一個人');
+  },
+  'bookmark-$name-recommends-this': (name) => {
+    return `${name}推薦這個`;
+  },
+  'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
+    return [ name1, `和`, name2, `推薦這個` ];
+  },
+  'bookmark-$you-bookmarked-it': '你加了這個書籤',
+  'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
+    return `你加了這個書籤（${name}推薦）`;
+  },
+  'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others) => {
+    return [ `你加了這個書籤（`, others, `推薦）` ];
+  },
+  'bookmark-recommendations': '推薦',
 
-    'bookmarks-no-bookmarks': '沒有書籤',
+  'bookmarks-no-bookmarks': '沒有書籤',
 
-    'bottom-nav-bookmarks': '書籤',
-    'bottom-nav-news': '信息',
-    'bottom-nav-notifications': '通知',
-    'bottom-nav-people': '人員',
-    'bottom-nav-settings': '設置',
+  'bottom-nav-bookmarks': '書籤',
+  'bottom-nav-news': '信息',
+  'bottom-nav-notifications': '通知',
+  'bottom-nav-people': '人員',
+  'bottom-nav-settings': '設置',
 
-    'confirmation-cancel': '取消',
-    'confirmation-confirm': '肯定',
+  'confirmation-cancel': '取消',
+  'confirmation-confirm': '肯定',
 
-    'country-name-ad': '安道爾',
-    'country-name-ae': '阿拉伯聯合酋長國',
-    'country-name-af': '阿富汗',
-    'country-name-ag': '安提瓜和巴布達',
-    'country-name-al': '阿爾巴尼亞',
-    'country-name-am': '亞美尼亞',
-    'country-name-ao': '安哥拉',
-    'country-name-ar': '阿根廷',
-    'country-name-at': '奧地利',
-    'country-name-au': '澳大利亞',
-    'country-name-az': '阿塞拜疆',
-    'country-name-ba': '波斯尼亞和黑塞哥維那',
-    'country-name-bb': '巴巴多斯',
-    'country-name-bd': '孟加拉國',
-    'country-name-be': '比利時',
-    'country-name-bf': '布基納法索',
-    'country-name-bg': '保加利亞',
-    'country-name-bh': '巴林',
-    'country-name-bi': '布隆迪',
-    'country-name-bj': '貝寧',
-    'country-name-bn': '文萊',
-    'country-name-bo': '玻利維亞',
-    'country-name-br': '巴西',
-    'country-name-bs': '巴哈馬',
-    'country-name-bt': '不丹',
-    'country-name-bw': '博茨瓦納',
-    'country-name-by': '白俄羅斯',
-    'country-name-bz': '伯利茲',
-    'country-name-ca': '加拿大',
-    'country-name-cd ': '剛果',
-    'country-name-cf': '中非共和國',
-    'country-name-cg': '剛果共和國',
-    'country-name-ch': '瑞士',
-    'country-name-ci': '科特迪瓦',
-    'country-name-cl': '智利',
-    'country-name-cm': '喀麥隆',
-    'country-name-cn': '中國',
-    'country-name-co': '哥倫比亞',
-    'country-name-cr': '哥斯達黎加',
-    'country-name-cu': '古巴',
-    'country-name-cv': '佛得角',
-    'country-name-cy': '塞浦路斯',
-    'country-name-cz': '捷克共和國',
-    'country-name-de': '德國',
-    'country-name-dj': '吉布提',
-    'country-name-dk': '丹麥',
-    'country-name-dm': '多米尼加',
-    'country-name-do': '多明尼加共和國',
-    'country-name-dz': '阿爾及利亞',
-    'country-name-ec': '厄瓜多爾',
-    'country-name-ee': '愛沙尼亞',
-    'country-name-eg': '埃及',
-    'country-name-er': '厄立特里亞',
-    'country-name-es': '西班牙',
-    'country-name-et': '埃塞俄比亞',
-    'country-name-fi': '芬蘭',
-    'country-name-fj': '斐',
-    'country-name-fm': '密克羅尼西亞',
-    'country-name-fr': '法國',
-    'country-name-ga': '加蓬',
-    'country-name-gb': '英國',
-    'country-name-gd': '格林納達',
-    'country-name-ge': '格魯吉亞',
-    'country-name-gh': '加納',
-    'country-name-gm': '岡比亞',
-    'country-name-gn': '幾內亞',
-    'country-name-gq': '赤道幾內亞',
-    'country-name-gr': '希臘',
-    'country-name-gt': '危地馬拉',
-    'country-name-gw': '幾內亞比紹',
-    'country-name-gy': '圭亞那',
-    'country-name-hk': '香港',
-    'country-name-hn': '洪都拉斯',
-    'country-name-hr': '克羅地亞',
-    'country-name-ht': '海地',
-    'country-name-hu': '匈牙利',
-    'country-name-id': '印度尼西亞',
-    'country-name-ie': '愛爾蘭',
-    'country-name-il': '以色列',
-    'country-name-in': '印度',
-    'country-name-iq': '伊拉克',
-    'country-name-ir': '伊朗',
-    'country-name-is': '冰島',
-    'country-name-it': '意大利',
-    'country-name-jm': '牙買加',
-    'country-name-jo': '約旦',
-    'country-name-jp': '日本',
-    'country-name-ke': '肯尼亞',
-    'country-name-kg': '吉爾吉斯斯坦',
-    'country-name-kh': '柬埔寨',
-    'country-name-ki': '基里巴斯',
-    'country-name-km': '科摩羅',
-    'country-name-kn': '聖基茨和尼維斯',
-    'country-name-kp': '北朝鮮',
-    'country-name-kr': '韓國',
-    'country-name-kw': '科威特',
-    'country-name-kz': '哈薩克斯坦',
-    'country-name-la': '老撾',
-    'country-name-lb': '黎巴嫩',
-    'country-name-lc': '聖盧西亞',
-    'country-name-li': '列支敦士登',
-    'country-name-lk': '斯里蘭卡',
-    'country-name-lr': '利比里亞',
-    'country-name-ls': '萊索托',
-    'country-name-lt': '立陶宛',
-    'country-name-lu': '盧森堡',
-    'country-name-lv': '拉脫維亞',
-    'country-name-ly': '利比亞',
-    'country-name-ma': '摩洛哥',
-    'country-name-mc': '摩納哥',
-    'country-name-md': '摩爾多瓦',
-    'country-name-me': '黑山',
-    'country-name-mg': '馬達加斯加',
-    'country-name-mh': '馬紹爾群島',
-    'country-name-mk': '北馬其頓',
-    'country-name-ml': '馬里',
-    'country-name-mm': '緬甸',
-    'country-name-mn': '蒙古',
-    'country-name-mo': '澳門',
-    'country-name-mr': '毛里塔尼亞',
-    'country-name-mt': '馬耳他',
-    'country-name-mu': '毛里求斯',
-    'country-name-mv': '馬爾代夫',
-    'country-name-mw': '馬拉維',
-    'country-name-mx': '墨西哥',
-    'country-name-my': '馬來西亞',
-    'country-name-mz': '莫桑比克',
-    'country-name-na': '納米比亞',
-    'country-name-ne': '尼日爾',
-    'country-name-ng': '尼日利亞',
-    'country-name-ni': '尼加拉瓜',
-    'country-name-nl': '荷蘭',
-    'country-name-no': '挪威',
-    'country-name-np': '尼泊爾',
-    'country-name-nr': '瑙魯',
-    'country-name-nz': '新西蘭',
-    'country-name-om': '阿曼',
-    'country-name-pa': '巴拿馬',
-    'country-name-pe': '秘魯',
-    'country-name-pg': '巴布亞新幾內亞',
-    'country-name-ph': '菲律賓',
-    'country-name-pk': '巴基斯坦',
-    'country-name-pl': '波蘭',
-    'country-name-ps': '巴勒斯坦',
-    'country-name-pt': '葡萄牙',
-    'country-name-pw': '帕勞',
-    'country-name-py': '巴拉圭',
-    'country-name-qa': '卡塔爾',
-    'country-name-ro': '羅馬尼亞',
-    'country-name-rs': '塞爾維亞',
-    'country-name-ru': '俄羅斯',
-    'country-name-rw': '盧旺達',
-    'country-name-sa': '沙特阿拉伯',
-    'country-name-sb': '所羅門群島',
-    'country-name-sc': '塞舌爾',
-    'country-name-sd': '蘇丹',
-    'country-name-se': '瑞典',
-    'country-name-sg': '新加坡',
-    'country-name-si': '斯洛文尼亞',
-    'country-name-sk': '斯洛伐克',
-    'country-name-sl': '塞拉利昂',
-    'country-name-sm': '聖馬力諾',
-    'country-name-sn': '塞內加爾',
-    'country-name-so': '索馬里',
-    'country-name-sr': '蘇里南',
-    'country-name-ss': '南蘇丹',
-    'country-name-st': '聖多美和普林西比',
-    'country-name-sv': '薩爾瓦多',
-    'country-name-sy': '敘利亞',
-    'country-name-sz': '斯威士兰',
-    'country-name-td': '乍得',
-    'country-name-tg': '多哥',
-    'country-name-th': '泰國',
-    'country-name-tj': '塔吉克斯坦',
-    'country-name-tl': '東帝汶',
-    'country-name-tm': '土庫曼斯坦',
-    'country-name-tn': '突尼斯',
-    'country-name-to': '湯加',
-    'country-name-tr': '土耳其',
-    'country-name-tt': '特立尼達和多巴哥',
-    'country-name-tv': '圖瓦盧',
-    'country-name-tw': '台灣',
-    'country-name-tz': '坦桑尼亞',
-    'country-name-ua': '烏克蘭',
-    'country-name-ug': '烏干達',
-    'country-name-us': '美國',
-    'country-name-uy': '烏拉圭',
-    'country-name-uz': '烏茲別克斯坦',
-    'country-name-va': '梵蒂岡',
-    'country-name-vc': '聖文森特和格林納丁斯',
-    'country-name-ve': '委內瑞拉',
-    'country-name-vn': '越南',
-    'country-name-vu': '瓦努阿圖',
-    'country-name-ws': '薩摩亞',
-    'country-name-ye': '也門',
-    'country-name-za': '南非',
-    'country-name-zm': '贊比亞',
-    'country-name-zw': '津巴布韋',
-    'country-name-zz': '其他',
+  'country-name-ad': '安道爾',
+  'country-name-ae': '阿拉伯聯合酋長國',
+  'country-name-af': '阿富汗',
+  'country-name-ag': '安提瓜和巴布達',
+  'country-name-al': '阿爾巴尼亞',
+  'country-name-am': '亞美尼亞',
+  'country-name-ao': '安哥拉',
+  'country-name-ar': '阿根廷',
+  'country-name-at': '奧地利',
+  'country-name-au': '澳大利亞',
+  'country-name-az': '阿塞拜疆',
+  'country-name-ba': '波斯尼亞和黑塞哥維那',
+  'country-name-bb': '巴巴多斯',
+  'country-name-bd': '孟加拉國',
+  'country-name-be': '比利時',
+  'country-name-bf': '布基納法索',
+  'country-name-bg': '保加利亞',
+  'country-name-bh': '巴林',
+  'country-name-bi': '布隆迪',
+  'country-name-bj': '貝寧',
+  'country-name-bn': '文萊',
+  'country-name-bo': '玻利維亞',
+  'country-name-br': '巴西',
+  'country-name-bs': '巴哈馬',
+  'country-name-bt': '不丹',
+  'country-name-bw': '博茨瓦納',
+  'country-name-by': '白俄羅斯',
+  'country-name-bz': '伯利茲',
+  'country-name-ca': '加拿大',
+  'country-name-cd ': '剛果',
+  'country-name-cf': '中非共和國',
+  'country-name-cg': '剛果共和國',
+  'country-name-ch': '瑞士',
+  'country-name-ci': '科特迪瓦',
+  'country-name-cl': '智利',
+  'country-name-cm': '喀麥隆',
+  'country-name-cn': '中國',
+  'country-name-co': '哥倫比亞',
+  'country-name-cr': '哥斯達黎加',
+  'country-name-cu': '古巴',
+  'country-name-cv': '佛得角',
+  'country-name-cy': '塞浦路斯',
+  'country-name-cz': '捷克共和國',
+  'country-name-de': '德國',
+  'country-name-dj': '吉布提',
+  'country-name-dk': '丹麥',
+  'country-name-dm': '多米尼加',
+  'country-name-do': '多明尼加共和國',
+  'country-name-dz': '阿爾及利亞',
+  'country-name-ec': '厄瓜多爾',
+  'country-name-ee': '愛沙尼亞',
+  'country-name-eg': '埃及',
+  'country-name-er': '厄立特里亞',
+  'country-name-es': '西班牙',
+  'country-name-et': '埃塞俄比亞',
+  'country-name-fi': '芬蘭',
+  'country-name-fj': '斐',
+  'country-name-fm': '密克羅尼西亞',
+  'country-name-fr': '法國',
+  'country-name-ga': '加蓬',
+  'country-name-gb': '英國',
+  'country-name-gd': '格林納達',
+  'country-name-ge': '格魯吉亞',
+  'country-name-gh': '加納',
+  'country-name-gm': '岡比亞',
+  'country-name-gn': '幾內亞',
+  'country-name-gq': '赤道幾內亞',
+  'country-name-gr': '希臘',
+  'country-name-gt': '危地馬拉',
+  'country-name-gw': '幾內亞比紹',
+  'country-name-gy': '圭亞那',
+  'country-name-hk': '香港',
+  'country-name-hn': '洪都拉斯',
+  'country-name-hr': '克羅地亞',
+  'country-name-ht': '海地',
+  'country-name-hu': '匈牙利',
+  'country-name-id': '印度尼西亞',
+  'country-name-ie': '愛爾蘭',
+  'country-name-il': '以色列',
+  'country-name-in': '印度',
+  'country-name-iq': '伊拉克',
+  'country-name-ir': '伊朗',
+  'country-name-is': '冰島',
+  'country-name-it': '意大利',
+  'country-name-jm': '牙買加',
+  'country-name-jo': '約旦',
+  'country-name-jp': '日本',
+  'country-name-ke': '肯尼亞',
+  'country-name-kg': '吉爾吉斯斯坦',
+  'country-name-kh': '柬埔寨',
+  'country-name-ki': '基里巴斯',
+  'country-name-km': '科摩羅',
+  'country-name-kn': '聖基茨和尼維斯',
+  'country-name-kp': '北朝鮮',
+  'country-name-kr': '韓國',
+  'country-name-kw': '科威特',
+  'country-name-kz': '哈薩克斯坦',
+  'country-name-la': '老撾',
+  'country-name-lb': '黎巴嫩',
+  'country-name-lc': '聖盧西亞',
+  'country-name-li': '列支敦士登',
+  'country-name-lk': '斯里蘭卡',
+  'country-name-lr': '利比里亞',
+  'country-name-ls': '萊索托',
+  'country-name-lt': '立陶宛',
+  'country-name-lu': '盧森堡',
+  'country-name-lv': '拉脫維亞',
+  'country-name-ly': '利比亞',
+  'country-name-ma': '摩洛哥',
+  'country-name-mc': '摩納哥',
+  'country-name-md': '摩爾多瓦',
+  'country-name-me': '黑山',
+  'country-name-mg': '馬達加斯加',
+  'country-name-mh': '馬紹爾群島',
+  'country-name-mk': '北馬其頓',
+  'country-name-ml': '馬里',
+  'country-name-mm': '緬甸',
+  'country-name-mn': '蒙古',
+  'country-name-mo': '澳門',
+  'country-name-mr': '毛里塔尼亞',
+  'country-name-mt': '馬耳他',
+  'country-name-mu': '毛里求斯',
+  'country-name-mv': '馬爾代夫',
+  'country-name-mw': '馬拉維',
+  'country-name-mx': '墨西哥',
+  'country-name-my': '馬來西亞',
+  'country-name-mz': '莫桑比克',
+  'country-name-na': '納米比亞',
+  'country-name-ne': '尼日爾',
+  'country-name-ng': '尼日利亞',
+  'country-name-ni': '尼加拉瓜',
+  'country-name-nl': '荷蘭',
+  'country-name-no': '挪威',
+  'country-name-np': '尼泊爾',
+  'country-name-nr': '瑙魯',
+  'country-name-nz': '新西蘭',
+  'country-name-om': '阿曼',
+  'country-name-pa': '巴拿馬',
+  'country-name-pe': '秘魯',
+  'country-name-pg': '巴布亞新幾內亞',
+  'country-name-ph': '菲律賓',
+  'country-name-pk': '巴基斯坦',
+  'country-name-pl': '波蘭',
+  'country-name-ps': '巴勒斯坦',
+  'country-name-pt': '葡萄牙',
+  'country-name-pw': '帕勞',
+  'country-name-py': '巴拉圭',
+  'country-name-qa': '卡塔爾',
+  'country-name-ro': '羅馬尼亞',
+  'country-name-rs': '塞爾維亞',
+  'country-name-ru': '俄羅斯',
+  'country-name-rw': '盧旺達',
+  'country-name-sa': '沙特阿拉伯',
+  'country-name-sb': '所羅門群島',
+  'country-name-sc': '塞舌爾',
+  'country-name-sd': '蘇丹',
+  'country-name-se': '瑞典',
+  'country-name-sg': '新加坡',
+  'country-name-si': '斯洛文尼亞',
+  'country-name-sk': '斯洛伐克',
+  'country-name-sl': '塞拉利昂',
+  'country-name-sm': '聖馬力諾',
+  'country-name-sn': '塞內加爾',
+  'country-name-so': '索馬里',
+  'country-name-sr': '蘇里南',
+  'country-name-ss': '南蘇丹',
+  'country-name-st': '聖多美和普林西比',
+  'country-name-sv': '薩爾瓦多',
+  'country-name-sy': '敘利亞',
+  'country-name-sz': '斯威士兰',
+  'country-name-td': '乍得',
+  'country-name-tg': '多哥',
+  'country-name-th': '泰國',
+  'country-name-tj': '塔吉克斯坦',
+  'country-name-tl': '東帝汶',
+  'country-name-tm': '土庫曼斯坦',
+  'country-name-tn': '突尼斯',
+  'country-name-to': '湯加',
+  'country-name-tr': '土耳其',
+  'country-name-tt': '特立尼達和多巴哥',
+  'country-name-tv': '圖瓦盧',
+  'country-name-tw': '台灣',
+  'country-name-tz': '坦桑尼亞',
+  'country-name-ua': '烏克蘭',
+  'country-name-ug': '烏干達',
+  'country-name-us': '美國',
+  'country-name-uy': '烏拉圭',
+  'country-name-uz': '烏茲別克斯坦',
+  'country-name-va': '梵蒂岡',
+  'country-name-vc': '聖文森特和格林納丁斯',
+  'country-name-ve': '委內瑞拉',
+  'country-name-vn': '越南',
+  'country-name-vu': '瓦努阿圖',
+  'country-name-ws': '薩摩亞',
+  'country-name-ye': '也門',
+  'country-name-za': '南非',
+  'country-name-zm': '贊比亞',
+  'country-name-zw': '津巴布韋',
+  'country-name-zz': '其他',
 
-    'development-code-push-$deployment': (deployment) => {
-        return `從《${deployment}》獲取代碼更新`;
-    },
-    'development-show-diagnostics': '顯示診斷',
-    'development-show-panel': '顯示這個面板',
+  'development-code-push-$deployment': (deployment) => {
+    return `從《${deployment}》獲取代碼更新`;
+  },
+  'development-show-diagnostics': '顯示診斷',
+  'development-show-panel': '顯示這個面板',
 
-    'device-selector-camera-$number': (number) => {
-        return `攝影機${number}`;
-    },
-    'device-selector-camera-back': '後置',
-    'device-selector-camera-front': '前置',
-    'device-selector-mic-$number': (number) => {
-        return `麥克風${number}`;
-    },
+  'device-selector-camera-$number': (number) => {
+    return `攝影機${number}`;
+  },
+  'device-selector-camera-back': '後置',
+  'device-selector-camera-front': '前置',
+  'device-selector-mic-$number': (number) => {
+    return `麥克風${number}`;
+  },
 
-    'empty-currently-offline': '你目前離線',
+  'empty-currently-offline': '你目前離線',
 
-    'image-editor-image-transfer-in-progress': '正在複製網站圖像⋯⋯',
-    'image-editor-page-rendering-in-progress': '正在制作網站預覽⋯⋯',
-    'image-editor-poster-extraction-in-progress': '正在從影片中提取預覽⋯⋯',
-    'image-editor-upload-in-progress': '正在上傳⋯⋯',
+  'image-editor-image-transfer-in-progress': '正在複製網站圖像⋯⋯',
+  'image-editor-page-rendering-in-progress': '正在制作網站預覽⋯⋯',
+  'image-editor-poster-extraction-in-progress': '正在從影片中提取預覽⋯⋯',
+  'image-editor-upload-in-progress': '正在上傳⋯⋯',
 
-    'issue-cancel': '取消',
-    'issue-delete': '刪除',
-    'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
-        let objects = [];
-        if (photos > 0) {
-            objects.push('圖片');
-        }
-        if (videos > 0) {
-            objects.push('影片');
-        }
-        if (audios > 0) {
-            objects.push('音頻片段');
-        }
-        return `${list(names)}發布了以下${list(objects)}：`;
-    },
-    'issue-export-$names-wrote': (names) => {
-        return `${list(names)}寫：`;
-    },
-    'issue-ok': '完成',
-    'issue-repo': '數據庫',
-    'issue-title': '標題',
+  'issue-cancel': '取消',
+  'issue-delete': '刪除',
+  'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
+    let objects = [];
+    if (photos > 0) {
+      objects.push('圖片');
+    }
+    if (videos > 0) {
+      objects.push('影片');
+    }
+    if (audios > 0) {
+      objects.push('音頻片段');
+    }
+    return `${list(names)}發布了以下${list(objects)}：`;
+  },
+  'issue-export-$names-wrote': (names) => {
+    return `${list(names)}寫：`;
+  },
+  'issue-ok': '完成',
+  'issue-repo': '數據庫',
+  'issue-title': '標題',
 
-    'list-$count-more': (count) => {
-        return cardinalT(count, '重有一個⋯⋯');
-    },
+  'list-$count-more': (count) => {
+    return cardinalT(count, '重有一個⋯⋯');
+  },
 
-    'media-close': '關閉',
-    'media-download-original': '下載原本文件',
-    'media-editor-embed': '嵌入',
-    'media-editor-remove': '刪除',
-    'media-editor-shift': '推前',
-    'media-next': '下一個',
-    'media-previous': '上一個',
+  'media-close': '關閉',
+  'media-download-original': '下載原本文件',
+  'media-editor-embed': '嵌入',
+  'media-editor-remove': '刪除',
+  'media-editor-shift': '推前',
+  'media-next': '下一個',
+  'media-previous': '上一個',
 
-    'membership-request-$you-are-member': '你是這個項目的成員',
-    'membership-request-$you-are-now-member': '你成為了這個項目的成員',
-    'membership-request-$you-have-requested-membership': '你要求成為這個項目的成員',
-    'membership-request-browse': '瀏覽',
-    'membership-request-cancel': '取消',
-    'membership-request-join': '加入',
-    'membership-request-ok': '完成',
-    'membership-request-proceed': '繼續',
-    'membership-request-withdraw': '退出',
+  'membership-request-$you-are-member': '你是這個項目的成員',
+  'membership-request-$you-are-now-member': '你成為了這個項目的成員',
+  'membership-request-$you-have-requested-membership': '你要求成為這個項目的成員',
+  'membership-request-browse': '瀏覽',
+  'membership-request-cancel': '取消',
+  'membership-request-join': '加入',
+  'membership-request-ok': '完成',
+  'membership-request-proceed': '繼續',
+  'membership-request-withdraw': '退出',
 
-    'mobile-device-revoke': '吊銷',
-    'mobile-device-revoke-are-you-sure': '你確定要吊銷此裝置的授權嗎？',
+  'mobile-device-revoke': '吊銷',
+  'mobile-device-revoke-are-you-sure': '你確定要吊銷此裝置的授權嗎？',
 
-    'mobile-setup-address': '服務器地址',
-    'mobile-setup-close': '關閉',
-    'mobile-setup-code': '授權碼',
-    'mobile-setup-project': '項目',
+  'mobile-setup-address': '服務器地址',
+  'mobile-setup-close': '關閉',
+  'mobile-setup-code': '授權碼',
+  'mobile-setup-project': '項目',
 
-    'news-no-stories-by-role': '沒有這個角色的人的故事',
-    'news-no-stories-found': '沒有找到匹配的故事',
-    'news-no-stories-on-date': '那天沒有故事',
-    'news-no-stories-yet': '沒有故事',
+  'news-no-stories-by-role': '沒有這個角色的人的故事',
+  'news-no-stories-found': '沒有找到匹配的故事',
+  'news-no-stories-on-date': '那天沒有故事',
+  'news-no-stories-yet': '沒有故事',
 
-    'notification-$name-added-you-as-coauthor': (name) => {
-        return `${name}邀請你共同編輯一個貼文`;
-    },
-    'notification-$name-added-your-post-to-issue-tracker': (name) => {
-        return `${name}把你的帖子放到問題跟踪器上`;
-    },
-    'notification-$name-commented-on-your-$story': (name, story) => {
-        switch (story) {
-            case 'push': story = '推送'; break;
-            case 'merge': story = '合併'; break;
-            case 'survey': story = '調查'; break;
-            case 'task-list': story = '任務列表'; break;
-            case 'post': story = '貼文'; break;
-            default: story = '故事';
-        }
-        return `${name}回應了你的${story}`;
-    },
-    'notification-$name-completed-task': (name) => {
-        return `${name}完成了在你的列表上一個任務`;
-    },
-    'notification-$name-is-assigned-to-your-$story': (name, story) => {
-        switch (story) {
-            case 'issue': story = '問題'; break;
-            case 'merge-request': story = '合併請求'; break;
-        }
-        return `${name}被分配到你的${story}`;
-    },
-    'notification-$name-likes-your-$story': (name, story) => {
-        switch (story) {
-            case 'survey': story = '調查'; break;
-            case 'task-list': story = '任務列表'; break;
-            case 'post': story = '貼文'; break;
-            default: story = '故事';
-        }
-        return `${name}喜歡你的${story}`;
-    },
-    'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
-        reaction = '一個回應中';
-        return `${name}在${reaction}提到你`;
-    },
-    'notification-$name-mentioned-you-in-$story': (name, story) => {
-        switch (story) {
-            case 'survey': story = '一個調查上'; break;
-            case 'task-list': story = '一個任務列表上'; break;
-            case 'post': story = '一個貼文中'; break;
-            case 'issue': story = '一個問題上'; break;
-            case 'merge-request': story = '一個合併請求中'; break;
-            default: story = '一個故事中';
-        }
-        return `${name}在${story}提到你`;
-    },
-    'notification-$name-merged-code-to-$branch': (name, branch) => {
-        return `${name}將代碼合併到《${branch}》分支`;
-    },
-    'notification-$name-modified-project-website': (name) => {
-        return `${name}修改了項目網站`;
-    },
-    'notification-$name-opened-an-issue': (name) => {
-        return `${name}開了一個問題`;
-    },
-    'notification-$name-posted-a-note-about-your-$story': (name, story) => {
-        switch (story) {
-            case 'push': story = '提交'; break;
-            case 'issue': story = '問題'; break;
-            case 'merge-request': story = '合併請求'; break;
-        }
-        return `${name}回應了你的${story}`;
-    },
-    'notification-$name-posted-a-survey': (name) => {
-        return `${name}發布了一個調查`;
-    },
-    'notification-$name-pushed-code-to-$branch': (name, branch) => {
-        return `${name}推了一些代碼修改入到《${branch}》分支`;
-    },
-    'notification-$name-requested-to-join': (name) => {
-        return `${name}要求加入這個項目`;
-    },
-    'notification-$name-sent-bookmark-to-$story': (name, story) => {
-        switch (story) {
-            case 'survey': story = '調查'; break;
-            case 'task-list': story = '任務列表'; break;
-            case 'post': story = '貼文'; break;
-            default: story = '故事';
-        }
-        return `${name}送你一個${story}書籤`;
-    },
-    'notification-$name-voted-in-your-survey': (name) => {
-        return `${name}回答了你的調查`;
-    },
-    'notification-option-assignment': '當有人被分配到你的問題',
-    'notification-option-bookmark': '當你收到某人的書籤',
-    'notification-option-coauthor': '當你收到共同編輯貼文的邀請',
-    'notification-option-comment': '當有人回應你的貼文',
-    'notification-option-issue': '當有人打開了一個問題',
-    'notification-option-join-request': '當有人想加入這個項目',
-    'notification-option-like': '當有人喜歡你的貼文',
-    'notification-option-mention': '當有人在故事或回應中提到你時',
-    'notification-option-merge': '當有人將代碼合併到《master》分支',
-    'notification-option-note': '當有人在提交或問題上發布註釋',
-    'notification-option-push': '當有人推入代碼到git數據庫',
-    'notification-option-snapshot': '當有人對項目網站進行更改時',
-    'notification-option-survey': '當有人發布調查',
-    'notification-option-task-completion': '當有人完成你列表上的任務',
-    'notification-option-vote': '當有人回答你的調查',
-    'notification-option-web-session': '當你用網絡瀏覽器查看這個網站時',
+  'notification-$name-added-you-as-coauthor': (name) => {
+    return `${name}邀請你共同編輯一個貼文`;
+  },
+  'notification-$name-added-your-post-to-issue-tracker': (name) => {
+    return `${name}把你的帖子放到問題跟踪器上`;
+  },
+  'notification-$name-commented-on-your-$story': (name, story) => {
+    switch (story) {
+      case 'push': story = '推送'; break;
+      case 'merge': story = '合併'; break;
+      case 'survey': story = '調查'; break;
+      case 'task-list': story = '任務列表'; break;
+      case 'post': story = '貼文'; break;
+      default: story = '故事';
+    }
+    return `${name}回應了你的${story}`;
+  },
+  'notification-$name-completed-task': (name) => {
+    return `${name}完成了在你的列表上一個任務`;
+  },
+  'notification-$name-is-assigned-to-your-$story': (name, story) => {
+    switch (story) {
+      case 'issue': story = '問題'; break;
+      case 'merge-request': story = '合併請求'; break;
+    }
+    return `${name}被分配到你的${story}`;
+  },
+  'notification-$name-likes-your-$story': (name, story) => {
+    switch (story) {
+      case 'survey': story = '調查'; break;
+      case 'task-list': story = '任務列表'; break;
+      case 'post': story = '貼文'; break;
+      default: story = '故事';
+    }
+    return `${name}喜歡你的${story}`;
+  },
+  'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
+    reaction = '一個回應中';
+    return `${name}在${reaction}提到你`;
+  },
+  'notification-$name-mentioned-you-in-$story': (name, story) => {
+    switch (story) {
+      case 'survey': story = '一個調查上'; break;
+      case 'task-list': story = '一個任務列表上'; break;
+      case 'post': story = '一個貼文中'; break;
+      case 'issue': story = '一個問題上'; break;
+      case 'merge-request': story = '一個合併請求中'; break;
+      default: story = '一個故事中';
+    }
+    return `${name}在${story}提到你`;
+  },
+  'notification-$name-merged-code-to-$branch': (name, branch) => {
+    return `${name}將代碼合併到《${branch}》分支`;
+  },
+  'notification-$name-modified-project-website': (name) => {
+    return `${name}修改了項目網站`;
+  },
+  'notification-$name-opened-an-issue': (name) => {
+    return `${name}開了一個問題`;
+  },
+  'notification-$name-posted-a-note-about-your-$story': (name, story) => {
+    switch (story) {
+      case 'push': story = '提交'; break;
+      case 'issue': story = '問題'; break;
+      case 'merge-request': story = '合併請求'; break;
+    }
+    return `${name}回應了你的${story}`;
+  },
+  'notification-$name-posted-a-survey': (name) => {
+    return `${name}發布了一個調查`;
+  },
+  'notification-$name-pushed-code-to-$branch': (name, branch) => {
+    return `${name}推了一些代碼修改入到《${branch}》分支`;
+  },
+  'notification-$name-requested-to-join': (name) => {
+    return `${name}要求加入這個項目`;
+  },
+  'notification-$name-sent-bookmark-to-$story': (name, story) => {
+    switch (story) {
+      case 'survey': story = '調查'; break;
+      case 'task-list': story = '任務列表'; break;
+      case 'post': story = '貼文'; break;
+      default: story = '故事';
+    }
+    return `${name}送你一個${story}書籤`;
+  },
+  'notification-$name-voted-in-your-survey': (name) => {
+    return `${name}回答了你的調查`;
+  },
+  'notification-option-assignment': '當有人被分配到你的問題',
+  'notification-option-bookmark': '當你收到某人的書籤',
+  'notification-option-coauthor': '當你收到共同編輯貼文的邀請',
+  'notification-option-comment': '當有人回應你的貼文',
+  'notification-option-issue': '當有人打開了一個問題',
+  'notification-option-join-request': '當有人想加入這個項目',
+  'notification-option-like': '當有人喜歡你的貼文',
+  'notification-option-mention': '當有人在故事或回應中提到你時',
+  'notification-option-merge': '當有人將代碼合併到《master》分支',
+  'notification-option-note': '當有人在提交或問題上發布註釋',
+  'notification-option-push': '當有人推入代碼到git數據庫',
+  'notification-option-snapshot': '當有人對項目網站進行更改時',
+  'notification-option-survey': '當有人發布調查',
+  'notification-option-task-completion': '當有人完成你列表上的任務',
+  'notification-option-vote': '當有人回答你的調查',
+  'notification-option-web-session': '當你用網絡瀏覽器查看這個網站時',
 
-    'notifications-no-notifications-on-date': '那天沒有通知',
-    'notifications-no-notifications-yet': '還沒有通知',
+  'notifications-no-notifications-on-date': '那天沒有通知',
+  'notifications-no-notifications-yet': '還沒有通知',
 
-    'option-add-bookmark': '加書籤',
-    'option-add-issue': '加問題入跟蹤管理系統',
-    'option-bump-story': '推動故事',
-    'option-edit-comment': '編輯回應',
-    'option-edit-post': '編輯貼文',
-    'option-hide-comment': '訪客用戶看不到',
-    'option-hide-story': '訪客用戶看不到',
-    'option-keep-bookmark': '保留書籤',
-    'option-remove-comment': '刪除回應',
-    'option-remove-story': '刪除故事',
-    'option-send-bookmarks': '發送書籤給其他人',
-    'option-send-bookmarks-to-$count-users': (count) => {
-        return cardinalT(count, '發送書籤給一個人');
-    },
-    'option-show-media-preview': '顯示附件媒體',
-    'option-show-text-preview': '顯示課文預覽',
-    'option-statistics-14-days': '顯示過去十四天的活動',
-    'option-statistics-biweekly': '顯示雙週的活動',
-    'option-statistics-monthly': '顯示每月的活動',
-    'option-statistics-to-date': '顯示至今的活動',
+  'option-add-bookmark': '加書籤',
+  'option-add-issue': '加問題入跟蹤管理系統',
+  'option-bump-story': '推動故事',
+  'option-edit-comment': '編輯回應',
+  'option-edit-post': '編輯貼文',
+  'option-hide-comment': '訪客用戶看不到',
+  'option-hide-story': '訪客用戶看不到',
+  'option-keep-bookmark': '保留書籤',
+  'option-remove-comment': '刪除回應',
+  'option-remove-story': '刪除故事',
+  'option-send-bookmarks': '發送書籤給其他人',
+  'option-send-bookmarks-to-$count-users': (count) => {
+    return cardinalT(count, '發送書籤給一個人');
+  },
+  'option-show-media-preview': '顯示附件媒體',
+  'option-show-text-preview': '顯示課文預覽',
+  'option-statistics-14-days': '顯示過去十四天的活動',
+  'option-statistics-biweekly': '顯示雙週的活動',
+  'option-statistics-monthly': '顯示每月的活動',
+  'option-statistics-to-date': '顯示至今的活動',
 
-    'people-no-stories-found': '沒有找到匹配的故事',
-    'people-no-stories-on-date': '那天沒有活動',
-    'people-no-users-by-role': '沒有項目成員有這個角色',
-    'people-no-users-yet': '沒有項目成員',
+  'people-no-stories-found': '沒有找到匹配的故事',
+  'people-no-stories-on-date': '那天沒有活動',
+  'people-no-users-by-role': '沒有項目成員有這個角色',
+  'people-no-users-yet': '沒有項目成員',
 
-    'person-no-stories-found': '沒有找到匹配的故事',
-    'person-no-stories-on-date': '那天沒有故事',
-    'person-no-stories-yet': '還沒有故事',
+  'person-no-stories-found': '沒有找到匹配的故事',
+  'person-no-stories-on-date': '那天沒有故事',
+  'person-no-stories-yet': '還沒有故事',
 
-    'photo-capture-accept': '接受',
-    'photo-capture-cancel': '取消',
-    'photo-capture-retake': '重拍',
-    'photo-capture-snap': '拍照',
+  'photo-capture-accept': '接受',
+  'photo-capture-cancel': '取消',
+  'photo-capture-retake': '重拍',
+  'photo-capture-snap': '拍照',
 
-    'project-description-close': '關閉',
+  'project-description-close': '關閉',
 
-    'project-management-add': '添加',
-    'project-management-cancel': '取消',
-    'project-management-description': '項目介紹',
-    'project-management-join-project': '加入項目',
-    'project-management-manage': '管理列表',
-    'project-management-mobile-set-up': '手機設置',
-    'project-management-remove': '刪除',
-    'project-management-sign-out': '註銷',
-    'project-management-sign-out-are-you-sure': '你確定你想從該服務器註銷？',
-    'project-management-withdraw-request': '取消會員資格申請',
+  'project-management-add': '添加',
+  'project-management-cancel': '取消',
+  'project-management-description': '項目介紹',
+  'project-management-join-project': '加入項目',
+  'project-management-manage': '管理列表',
+  'project-management-mobile-set-up': '手機設置',
+  'project-management-remove': '刪除',
+  'project-management-sign-out': '註銷',
+  'project-management-sign-out-are-you-sure': '你確定你想從該服務器註銷？',
+  'project-management-withdraw-request': '取消會員資格申請',
 
-    'qr-scanner-cancel': '取消',
-    'qr-scanner-code-found': '找到ＱＲ碼',
-    'qr-scanner-code-invalid': '不正確的ＱＲ碼',
-    'qr-scanner-code-used': '過時的ＱＲ碼',
+  'qr-scanner-cancel': '取消',
+  'qr-scanner-code-found': '找到ＱＲ碼',
+  'qr-scanner-code-invalid': '不正確的ＱＲ碼',
+  'qr-scanner-code-used': '過時的ＱＲ碼',
 
-    'reaction-$name-added-story-to-issue-tracker': (name) => {
-        return `${name}把這個貼文放到問題跟踪器上`;
-    },
-    'reaction-$name-cast-a-vote': (name) => {
-        return `${name}投了一票`;
-    },
-    'reaction-$name-commented-on-branch': (name) => {
-        return `${name}回應了這個分支`;
-    },
-    'reaction-$name-commented-on-issue': (name) => {
-        return `${name}回應了這個問題`;
-    },
-    'reaction-$name-commented-on-merge': (name) => {
-        return `${name}回應了這個合併`;
-    },
-    'reaction-$name-commented-on-merge-request': (name) => {
-        return `${name}回應了這個合併請求`;
-    },
-    'reaction-$name-commented-on-push': (name) => {
-        return `${name}回應了這個推送`;
-    },
-    'reaction-$name-commented-on-tag': (name) => {
-        return `${name}回應了這個標籤`;
-    },
-    'reaction-$name-completed-a-task': (name) => {
-        return `${name}完成了一個任務`;
-    },
-    'reaction-$name-is-assigned-to-issue': (name) => {
-        return `${name}被分配到這個問題`;
-    },
-    'reaction-$name-is-assigned-to-merge-request': (name) => {
-        return `${name}被分配到這個合併請求`;
-    },
-    'reaction-$name-is-editing': (name) => {
-        return `${name}正在編輯一個回應⋯⋯`;
-    },
-    'reaction-$name-is-sending': (name) => {
-        return `${name}正在發表一個回應⋯⋯`;
-    },
-    'reaction-$name-is-writing': (name) => {
-        return `${name}正在寫一個回應⋯⋯`;
-    },
-    'reaction-$name-likes-this': (name) => {
-        return `${name}喜歡這個`;
-    },
-    'reaction-status-storage-pending': '等待連接',
-    'reaction-status-transcoding': '轉碼',
-    'reaction-status-uploading': '上傳',
+  'reaction-$name-added-story-to-issue-tracker': (name) => {
+    return `${name}把這個貼文放到問題跟踪器上`;
+  },
+  'reaction-$name-cast-a-vote': (name) => {
+    return `${name}投了一票`;
+  },
+  'reaction-$name-commented-on-branch': (name) => {
+    return `${name}回應了這個分支`;
+  },
+  'reaction-$name-commented-on-issue': (name) => {
+    return `${name}回應了這個問題`;
+  },
+  'reaction-$name-commented-on-merge': (name) => {
+    return `${name}回應了這個合併`;
+  },
+  'reaction-$name-commented-on-merge-request': (name) => {
+    return `${name}回應了這個合併請求`;
+  },
+  'reaction-$name-commented-on-push': (name) => {
+    return `${name}回應了這個推送`;
+  },
+  'reaction-$name-commented-on-tag': (name) => {
+    return `${name}回應了這個標籤`;
+  },
+  'reaction-$name-completed-a-task': (name) => {
+    return `${name}完成了一個任務`;
+  },
+  'reaction-$name-is-assigned-to-issue': (name) => {
+    return `${name}被分配到這個問題`;
+  },
+  'reaction-$name-is-assigned-to-merge-request': (name) => {
+    return `${name}被分配到這個合併請求`;
+  },
+  'reaction-$name-is-editing': (name) => {
+    return `${name}正在編輯一個回應⋯⋯`;
+  },
+  'reaction-$name-is-sending': (name) => {
+    return `${name}正在發表一個回應⋯⋯`;
+  },
+  'reaction-$name-is-writing': (name) => {
+    return `${name}正在寫一個回應⋯⋯`;
+  },
+  'reaction-$name-likes-this': (name) => {
+    return `${name}喜歡這個`;
+  },
+  'reaction-status-storage-pending': '等待連接',
+  'reaction-status-transcoding': '轉碼',
+  'reaction-status-uploading': '上傳',
 
-    'robot-name-traffic': '網站流量報告',
+  'robot-name-traffic': '網站流量報告',
 
-    'role-filter-no-roles': '沒有角色',
+  'role-filter-no-roles': '沒有角色',
 
-    'search-bar-keywords': '關鍵字或井號標籤',
+  'search-bar-keywords': '關鍵字或井號標籤',
 
-    'selection-cancel': '取消',
-    'selection-ok': '接受',
+  'selection-cancel': '取消',
+  'selection-ok': '接受',
 
-    'server-type-dropbox': 'Dropbox',
-    'server-type-facebook': 'Facebook',
-    'server-type-github': 'GitHub',
-    'server-type-gitlab': 'GitLab',
-    'server-type-google': 'Google',
-    'server-type-windows': 'Windows Live',
+  'server-type-dropbox': 'Dropbox',
+  'server-type-facebook': 'Facebook',
+  'server-type-github': 'GitHub',
+  'server-type-gitlab': 'GitLab',
+  'server-type-google': 'Google',
+  'server-type-windows': 'Windows Live',
 
-    'settings-development': '開發人員選項',
-    'settings-device': '行動裝置',
-    'settings-devices': '行動裝置',
-    'settings-language': '語言',
-    'settings-mobile-alert': '行動裝置警報',
-    'settings-notification': '通知',
-    'settings-profile-image': '檔案圖像',
-    'settings-projects': '項目',
-    'settings-social-networks': '社交網絡',
-    'settings-user-information': '用戶資料',
-    'settings-web-alert': '瀏覽器警報',
+  'settings-development': '開發人員選項',
+  'settings-device': '行動裝置',
+  'settings-devices': '行動裝置',
+  'settings-language': '語言',
+  'settings-mobile-alert': '行動裝置警報',
+  'settings-notification': '通知',
+  'settings-profile-image': '檔案圖像',
+  'settings-projects': '項目',
+  'settings-social-networks': '社交網絡',
+  'settings-user-information': '用戶資料',
+  'settings-web-alert': '瀏覽器警報',
 
-    'social-network-github': 'GitHub個人資料網址',
-    'social-network-gitlab': 'GitLab個人資料網址',
-    'social-network-ichat': 'iChat用戶名',
-    'social-network-linkedin': 'LinkedIn個人資料網址',
-    'social-network-skype': 'Skype用戶名',
-    'social-network-slack': 'Slack用戶ID',
-    'social-network-slack-team': 'Slack團體ID',
-    'social-network-stackoverflow': 'StackOverflow個人資料網址',
-    'social-network-twitter': 'Twitter用戶名',
+  'social-network-github': 'GitHub個人資料網址',
+  'social-network-gitlab': 'GitLab個人資料網址',
+  'social-network-ichat': 'iChat用戶名',
+  'social-network-linkedin': 'LinkedIn個人資料網址',
+  'social-network-skype': 'Skype用戶名',
+  'social-network-slack': 'Slack用戶ID',
+  'social-network-slack-team': 'Slack團體ID',
+  'social-network-stackoverflow': 'StackOverflow個人資料網址',
+  'social-network-twitter': 'Twitter用戶名',
 
-    'start-activation-add-server': '從另一台服務器添加項目',
-    'start-activation-instructions': (ui) => {
-        return [
-            '請先使用網絡瀏覽器登錄電車吧服務器。選擇一個項目，然後進入',
-            ui.settings,
-            '。在',
-            ui.projects,
-            '面板中單擊',
-            ui.mobileSetup,
-            '。 ＱＲ碼將出現在屏幕上。在此裝置按下面的按鈕，然後掃描ＱＲ碼。如果相機出現故障，你可以用鍵盤輸入授權碼。'
-        ];
-    },
-    'start-activation-instructions-short': (ui) => {
-        return '請先使用網絡瀏覽器登錄電車吧服務器，然後掃描ＱＲ碼。';
-    },
-    'start-activation-manual': '鍵盤輸入',
-    'start-activation-new-server': '新服務器',
-    'start-activation-others-servers': '可用服務器',
-    'start-activation-return': '返回',
-    'start-activation-scan-code': '掃描ＱＲ碼',
-    'start-error-access-denied': '請求被拒絕',
-    'start-error-account-disabled': '帳戶目前被禁用',
-    'start-error-existing-users-only': '只有授權人員才能訪問此系統',
-    'start-error-undefined': '意外的錯誤',
-    'start-no-projects': '沒有項目',
-    'start-no-servers': '沒有OAuth提供者',
-    'start-projects': '項目',
-    'start-social-login': '社交登錄',
-    'start-system-title-default': '電車吧',
-    'start-welcome': '歡迎!',
-    'start-welcome-again': '再次歡迎',
+  'start-activation-add-server': '從另一台服務器添加項目',
+  'start-activation-instructions': (ui) => {
+    return [
+      '請先使用網絡瀏覽器登錄電車吧服務器。選擇一個項目，然後進入',
+      ui.settings,
+      '。在',
+      ui.projects,
+      '面板中單擊',
+      ui.mobileSetup,
+      '。 ＱＲ碼將出現在屏幕上。在此裝置按下面的按鈕，然後掃描ＱＲ碼。如果相機出現故障，你可以用鍵盤輸入授權碼。'
+    ];
+  },
+  'start-activation-instructions-short': (ui) => {
+    return '請先使用網絡瀏覽器登錄電車吧服務器，然後掃描ＱＲ碼。';
+  },
+  'start-activation-manual': '鍵盤輸入',
+  'start-activation-new-server': '新服務器',
+  'start-activation-others-servers': '可用服務器',
+  'start-activation-return': '返回',
+  'start-activation-scan-code': '掃描ＱＲ碼',
+  'start-error-access-denied': '請求被拒絕',
+  'start-error-account-disabled': '帳戶目前被禁用',
+  'start-error-existing-users-only': '只有授權人員才能訪問此系統',
+  'start-error-undefined': '意外的錯誤',
+  'start-no-projects': '沒有項目',
+  'start-no-servers': '沒有OAuth提供者',
+  'start-projects': '項目',
+  'start-social-login': '社交登錄',
+  'start-system-title-default': '電車吧',
+  'start-welcome': '歡迎!',
+  'start-welcome-again': '再次歡迎',
 
-    'statistics-bar': '條圖',
-    'statistics-line': '線圖',
-    'statistics-pie': '餅圖',
+  'statistics-bar': '條圖',
+  'statistics-line': '線圖',
+  'statistics-pie': '餅圖',
 
-    'story-$count-reactions': (count) => {
-        return cardinalT(count, '一個反應');
-    },
-    'story-$name-changed-production-website': (name) => {
-        return `更改了項目網站的實時版本`;
-    },
-    'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
-        return `在《${repo}》數據庫中創建了《${branch}》分支`;
-    },
-    'story-$name-created-$milestone': (name, milestone) => {
-        return `建立了《${milestone}》里程碑`;
-    },
-    'story-$name-created-$page': (name, page) => {
-        return `建立了wiki頁面《${page}》”`;
-    },
-    'story-$name-created-$repo': (name, repo) => {
-        let text = `建立了`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `數據庫`;
-        return text;
-    },
-    'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
-        return `在《${repo}》數據庫中創建了《${tag}》標籤`;
-    },
-    'story-$name-created-website-version-in-$branch': (name) => {
-        return `在《${branch}》分支中創建了項目網站的新版本`;
-    },
-    'story-$name-deleted-$page': (name, page) => {
-        return `刪除了wiki頁面《${page}》”`;
-    },
-    'story-$name-deleted-$repo': (name, repo) => {
-        let text = `刪除了`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `數據庫`;
-        return text;
-    },
-    'story-$name-imported-$repo': (name, repo) => {
-        let text = `導入了`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `數據庫`;
-        return text;
-    },
-    'story-$name-joined-$repo': (name, repo) => {
-        let text = `加入了`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `數據庫`;
-        return text;
-    },
-    'story-$name-left-$repo': (name, repo) => {
-        let text = `離開了`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `數據庫`;
-        return text;
-    },
-    'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-        let text = `將`;
-        if (branches?.length > 0) {
-            let sources = branches.map((branch) => {
-                return `《${branch}》`;
-            });
-            text += `${sources.join('、')}分支的代碼合併到`;
-        }
-        if (repo) {
-            text += `《${repo}》數據庫的`;
-        }
-        text += `《${branch}》分支`;
-        return text;
-    },
-    'story-$name-opened-issue-$number-$title': (name, number, title) => {
-        let text = `開了問題${number}`;
-        if (title) {
-            text += `： ${title}`;
-        }
-        return text;
-    },
-    'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-        let text = `推了一些代碼修改入到`
-        if (repo) {
-            text += `《${repo}》數據庫的`;
-        }
-        text += `《${branch}》分支`;
-        return text;
-    },
-    'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
-        return `要求將《${branch1}》分支合併到《${branch2}》分支`;
-    },
-    'story-$name-updated-$page': (name, page) => {
-        return `修正了wiki頁面《${page}》`;
-    },
-    'story-add-coauthor': '加合著者',
-    'story-add-remove-coauthor': '替代合著者',
-    'story-audio': '音頻',
-    'story-author-$count-others': (count) => {
-        return cardinalT(count, '另外一個人');
-    },
-    'story-author-$name1-and-$name2': (name1, name2) => {
-        return [ name1, `和`, name2 ];
-    },
-    'story-cancel': '取消',
-    'story-cancel-are-you-sure': '你確定要取消這個貼文？',
-    'story-cancel-edit-are-you-sure': '你確定要取消這些更正？',
-    'story-coauthors': '合著者',
-    'story-comment': '留言',
-    'story-drop-files-here': '在此處拖放媒體文件',
-    'story-file': '文件',
-    'story-issue-current-status': '當前狀態：',
-    'story-issue-status-closed': '關閉',
-    'story-issue-status-merged': '合成',
-    'story-issue-status-opened': '開設',
-    'story-issue-status-reopened': '重開',
-    'story-like': '喜歡',
-    'story-markdown': 'Markdown',
-    'story-milestone-due-date': '截止日期：',
-    'story-milestone-start-date': '開始日期：',
-    'story-options': '選項',
-    'story-paste-image-here': '粘貼到文本編輯器中的圖像會在這裡出現',
-    'story-pending': '听候⋯⋯',
-    'story-photo': '照片',
-    'story-post': '發送',
-    'story-push-added-$count-files': (count) => {
-        return `加了${count}個文件`;
-    },
-    'story-push-added-$count-lines': (count) => {
-        return `加了${count}行代碼`;
-    },
-    'story-push-components-changed': '更改了以下部分：',
-    'story-push-deleted-$count-files': (count) => {
-        return `刪除了${count}個文件`;
-    },
-    'story-push-deleted-$count-lines': (count) => {
-        return `刪除了${count}行代碼`;
-    },
-    'story-push-modified-$count-files': (count) => {
-        return `修改了${count}個文件`;
-    },
-    'story-push-modified-$count-lines': (count) => {
-        return `修改了${count}行代碼`;
-    },
-    'story-push-renamed-$count-files': (count) => {
-        return `改了${count}個文件的名`;
-    },
-    'story-remove-yourself': '放棄作者權力',
-    'story-remove-yourself-are-you-sure': '你確定你不要做這個貼文的合著者？',
-    'story-status-storage-pending': '等待連接',
-    'story-status-transcoding-$progress': (progress) => {
-        return `轉碼（${progress}%）`;
-    },
-    'story-status-uploading-$progress': (progress) => {
-        return `上傳（${progress}%）`;
-    },
-    'story-survey': '調查',
-    'story-task-list': '任務列表',
-    'story-video': '影片',
-    'story-vote-submit': '遞交',
-    'story-website-traffic-$count-on-$date': (count, date) => {
-        let visitors = cardinalT(count, '一位訪問者');
-        return `項目網站在1${date}上有${visitors}`;
-    },
+  'story-$count-reactions': (count) => {
+    return cardinalT(count, '一個反應');
+  },
+  'story-$name-changed-production-website': (name) => {
+    return `更改了項目網站的實時版本`;
+  },
+  'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
+    return `在《${repo}》數據庫中創建了《${branch}》分支`;
+  },
+  'story-$name-created-$milestone': (name, milestone) => {
+    return `建立了《${milestone}》里程碑`;
+  },
+  'story-$name-created-$page': (name, page) => {
+    return `建立了wiki頁面《${page}》”`;
+  },
+  'story-$name-created-$repo': (name, repo) => {
+    let text = `建立了`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `數據庫`;
+    return text;
+  },
+  'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
+    return `在《${repo}》數據庫中創建了《${tag}》標籤`;
+  },
+  'story-$name-created-website-version-in-$branch': (name) => {
+    return `在《${branch}》分支中創建了項目網站的新版本`;
+  },
+  'story-$name-deleted-$page': (name, page) => {
+    return `刪除了wiki頁面《${page}》”`;
+  },
+  'story-$name-deleted-$repo': (name, repo) => {
+    let text = `刪除了`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `數據庫`;
+    return text;
+  },
+  'story-$name-imported-$repo': (name, repo) => {
+    let text = `導入了`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `數據庫`;
+    return text;
+  },
+  'story-$name-joined-$repo': (name, repo) => {
+    let text = `加入了`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `數據庫`;
+    return text;
+  },
+  'story-$name-left-$repo': (name, repo) => {
+    let text = `離開了`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `數據庫`;
+    return text;
+  },
+  'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
+    let text = `將`;
+    if (branches?.length > 0) {
+      let sources = branches.map((branch) => {
+        return `《${branch}》`;
+      });
+      text += `${sources.join('、')}分支的代碼合併到`;
+    }
+    if (repo) {
+      text += `《${repo}》數據庫的`;
+    }
+    text += `《${branch}》分支`;
+    return text;
+  },
+  'story-$name-opened-issue-$number-$title': (name, number, title) => {
+    let text = `開了問題${number}`;
+    if (title) {
+      text += `： ${title}`;
+    }
+    return text;
+  },
+  'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
+    let text = `推了一些代碼修改入到`
+    if (repo) {
+      text += `《${repo}》數據庫的`;
+    }
+    text += `《${branch}》分支`;
+    return text;
+  },
+  'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
+    return `要求將《${branch1}》分支合併到《${branch2}》分支`;
+  },
+  'story-$name-updated-$page': (name, page) => {
+    return `修正了wiki頁面《${page}》`;
+  },
+  'story-add-coauthor': '加合著者',
+  'story-add-remove-coauthor': '替代合著者',
+  'story-audio': '音頻',
+  'story-author-$count-others': (count) => {
+    return cardinalT(count, '另外一個人');
+  },
+  'story-author-$name1-and-$name2': (name1, name2) => {
+    return [ name1, `和`, name2 ];
+  },
+  'story-cancel': '取消',
+  'story-cancel-are-you-sure': '你確定要取消這個貼文？',
+  'story-cancel-edit-are-you-sure': '你確定要取消這些更正？',
+  'story-coauthors': '合著者',
+  'story-comment': '留言',
+  'story-drop-files-here': '在此處拖放媒體文件',
+  'story-file': '文件',
+  'story-issue-current-status': '當前狀態：',
+  'story-issue-status-closed': '關閉',
+  'story-issue-status-merged': '合成',
+  'story-issue-status-opened': '開設',
+  'story-issue-status-reopened': '重開',
+  'story-like': '喜歡',
+  'story-markdown': 'Markdown',
+  'story-milestone-due-date': '截止日期：',
+  'story-milestone-start-date': '開始日期：',
+  'story-options': '選項',
+  'story-paste-image-here': '粘貼到文本編輯器中的圖像會在這裡出現',
+  'story-pending': '听候⋯⋯',
+  'story-photo': '照片',
+  'story-post': '發送',
+  'story-push-added-$count-files': (count) => {
+    return `加了${count}個文件`;
+  },
+  'story-push-added-$count-lines': (count) => {
+    return `加了${count}行代碼`;
+  },
+  'story-push-components-changed': '更改了以下部分：',
+  'story-push-deleted-$count-files': (count) => {
+    return `刪除了${count}個文件`;
+  },
+  'story-push-deleted-$count-lines': (count) => {
+    return `刪除了${count}行代碼`;
+  },
+  'story-push-modified-$count-files': (count) => {
+    return `修改了${count}個文件`;
+  },
+  'story-push-modified-$count-lines': (count) => {
+    return `修改了${count}行代碼`;
+  },
+  'story-push-renamed-$count-files': (count) => {
+    return `改了${count}個文件的名`;
+  },
+  'story-remove-yourself': '放棄作者權力',
+  'story-remove-yourself-are-you-sure': '你確定你不要做這個貼文的合著者？',
+  'story-status-storage-pending': '等待連接',
+  'story-status-transcoding-$progress': (progress) => {
+    return `轉碼（${progress}%）`;
+  },
+  'story-status-uploading-$progress': (progress) => {
+    return `上傳（${progress}%）`;
+  },
+  'story-survey': '調查',
+  'story-task-list': '任務列表',
+  'story-video': '影片',
+  'story-vote-submit': '遞交',
+  'story-website-traffic-$count-on-$date': (count, date) => {
+    let visitors = cardinalT(count, '一位訪問者');
+    return `項目網站在1${date}上有${visitors}`;
+  },
 
-    'telephone-dialog-close': '關閉',
+  'telephone-dialog-close': '關閉',
 
-    'time-$days-ago': (days) => {
-        return cardinalT(days, '一天前');
-    },
-    'time-$hours-ago': (hours) => {
-        return cardinalT(hours, '一小時前');
-    },
-    'time-$hr-ago': (hr) => {
-        return cardinalT(hr, '一小時前');
-    },
-    'time-$min-ago': (min) => {
-        return cardinalT(min, '一分鐘前');
-    },
-    'time-$minutes-ago': (minutes) => {
-        return cardinalT(minutes, '一分鐘前');
-    },
-    'time-just-now': '剛才',
-    'time-yesterday': '昨天',
+  'time-$days-ago': (days) => {
+    return cardinalT(days, '一天前');
+  },
+  'time-$hours-ago': (hours) => {
+    return cardinalT(hours, '一小時前');
+  },
+  'time-$hr-ago': (hr) => {
+    return cardinalT(hr, '一小時前');
+  },
+  'time-$min-ago': (min) => {
+    return cardinalT(min, '一分鐘前');
+  },
+  'time-$minutes-ago': (minutes) => {
+    return cardinalT(minutes, '一分鐘前');
+  },
+  'time-just-now': '剛才',
+  'time-yesterday': '昨天',
 
-    'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        return `上傳${num}個文件，剩下${size}`;
-    },
+  'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
+    return `上傳${num}個文件，剩下${size}`;
+  },
 
-    'user-actions': '行動',
+  'user-actions': '行動',
 
-    'user-activity-$name-created-branch': '建立了一個分支',
-    'user-activity-$name-created-merge-request': '發出一個合併請求',
-    'user-activity-$name-created-milestone': '建立了一個里程碑',
-    'user-activity-$name-created-repo': '建立了一個git數據庫',
-    'user-activity-$name-created-tag': '建立了一個標籤',
-    'user-activity-$name-deleted-repo': '刪除了數據庫',
-    'user-activity-$name-edited-wiki-page': '編輯了一個wiki頁面',
-    'user-activity-$name-imported-repo': '導入了數據庫',
-    'user-activity-$name-joined-repo': '加入了數據庫',
-    'user-activity-$name-left-repo': '離開了數據庫',
-    'user-activity-$name-merged-code': '合併了代碼',
-    'user-activity-$name-modified-website': '修改了項目網站',
-    'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        return cardinalT(count, '新增了一個音頻剪輯');
-    },
-    'user-activity-$name-posted-$count-links': (name, count) => {
-        return cardinalT(count, '新增了一個網頁鏈接');
-    },
-    'user-activity-$name-posted-$count-pictures': (name, count) => {
-        return cardinalT(count, '新增了一張相片');
-    },
-    'user-activity-$name-posted-$count-video-clips': (name, count) => {
-        return cardinalT(count, '新增了一張影片');
-    },
-    'user-activity-$name-pushed-code': '將代碼推送到數據庫',
-    'user-activity-$name-reported-issue': '報告了一個問題',
-    'user-activity-$name-started-survey': '發布了一個調查',
-    'user-activity-$name-started-task-list': '發布了一個任務列表',
-    'user-activity-$name-wrote-post': '寫了一個貼文',
-    'user-activity-back': '返回',
-    'user-activity-more': '更多',
+  'user-activity-$name-created-branch': '建立了一個分支',
+  'user-activity-$name-created-merge-request': '發出一個合併請求',
+  'user-activity-$name-created-milestone': '建立了一個里程碑',
+  'user-activity-$name-created-repo': '建立了一個git數據庫',
+  'user-activity-$name-created-tag': '建立了一個標籤',
+  'user-activity-$name-deleted-repo': '刪除了數據庫',
+  'user-activity-$name-edited-wiki-page': '編輯了一個wiki頁面',
+  'user-activity-$name-imported-repo': '導入了數據庫',
+  'user-activity-$name-joined-repo': '加入了數據庫',
+  'user-activity-$name-left-repo': '離開了數據庫',
+  'user-activity-$name-merged-code': '合併了代碼',
+  'user-activity-$name-modified-website': '修改了項目網站',
+  'user-activity-$name-posted-$count-audio-clips': (name, count) => {
+    return cardinalT(count, '新增了一個音頻剪輯');
+  },
+  'user-activity-$name-posted-$count-links': (name, count) => {
+    return cardinalT(count, '新增了一個網頁鏈接');
+  },
+  'user-activity-$name-posted-$count-pictures': (name, count) => {
+    return cardinalT(count, '新增了一張相片');
+  },
+  'user-activity-$name-posted-$count-video-clips': (name, count) => {
+    return cardinalT(count, '新增了一張影片');
+  },
+  'user-activity-$name-pushed-code': '將代碼推送到數據庫',
+  'user-activity-$name-reported-issue': '報告了一個問題',
+  'user-activity-$name-started-survey': '發布了一個調查',
+  'user-activity-$name-started-task-list': '發布了一個任務列表',
+  'user-activity-$name-wrote-post': '寫了一個貼文',
+  'user-activity-back': '返回',
+  'user-activity-more': '更多',
 
-    'user-image-adjust': '調整',
-    'user-image-cancel': '取消',
-    'user-image-replace': '替換',
-    'user-image-save': '保存',
-    'user-image-select': '選擇',
-    'user-image-snap': '拍照',
+  'user-image-adjust': '調整',
+  'user-image-cancel': '取消',
+  'user-image-replace': '替換',
+  'user-image-save': '保存',
+  'user-image-select': '選擇',
+  'user-image-snap': '拍照',
 
-    'user-info-email': '電子郵件地址',
-    'user-info-gender': '性別',
-    'user-info-gender-female': '女性',
-    'user-info-gender-male': '男性',
-    'user-info-gender-unspecified': '未指定',
-    'user-info-name': '名稱',
-    'user-info-phone': '電話號碼',
+  'user-info-email': '電子郵件地址',
+  'user-info-gender': '性別',
+  'user-info-gender-female': '女性',
+  'user-info-gender-male': '男性',
+  'user-info-gender-unspecified': '未指定',
+  'user-info-name': '名稱',
+  'user-info-phone': '電話號碼',
 
-    'user-statistics-legend-branch': '分支',
-    'user-statistics-legend-issue': '問題',
-    'user-statistics-legend-member': '成員變更',
-    'user-statistics-legend-merge': '代碼合併',
-    'user-statistics-legend-merge-request': '合併請求',
-    'user-statistics-legend-milestone': '里程碑',
-    'user-statistics-legend-post': '貼文',
-    'user-statistics-legend-push': '推送',
-    'user-statistics-legend-repo': '數據庫修改',
-    'user-statistics-legend-snapshot': '網站修訂',
-    'user-statistics-legend-survey': '調查',
-    'user-statistics-legend-tag': '標籤',
-    'user-statistics-legend-task-list': '任務列表',
-    'user-statistics-legend-website-traffic': '網站流量報告',
-    'user-statistics-legend-wiki': 'wiki修改',
-    'user-statistics-today': '今天',
-    'user-statistics-tooltip-$count-branch': (count) => {
-        return `${count}個分支`;
-    },
-    'user-statistics-tooltip-$count-issue': (count) => {
-        return `${count}個問題`
-    },
-    'user-statistics-tooltip-$count-member': (count) => {
-        return `${count}個成員變更`;
-    },
-    'user-statistics-tooltip-$count-merge': (count) => {
-        return `${count}個代碼合併`;
-    },
-    'user-statistics-tooltip-$count-merge-request': (count) => {
-        return `${count}個合併請求`;
-    },
-    'user-statistics-tooltip-$count-milestone': (count) => {
-        return `${count}個里程碑`
-    },
-    'user-statistics-tooltip-$count-post': (count) => {
-        return `${count}個貼文`;
-    },
-    'user-statistics-tooltip-$count-push': (count) => {
-        return `${count}個代碼推送`;
-    },
-    'user-statistics-tooltip-$count-repo': (count) => {
-        return `${count}個數據庫變更`;
-    },
-    'user-statistics-tooltip-$count-survey': (count) => {
-        return `${count}個調查`;
-    },
-    'user-statistics-tooltip-$count-tag': (count) => {
-        return `${count}個標籤`;
-    },
-    'user-statistics-tooltip-$count-task-list': (count) => {
-        return `${count}個任務列表`;
-    },
-    'user-statistics-tooltip-$count-wiki': (count) => {
-        return `${count}個wiki修改`;
-    },
+  'user-statistics-legend-branch': '分支',
+  'user-statistics-legend-issue': '問題',
+  'user-statistics-legend-member': '成員變更',
+  'user-statistics-legend-merge': '代碼合併',
+  'user-statistics-legend-merge-request': '合併請求',
+  'user-statistics-legend-milestone': '里程碑',
+  'user-statistics-legend-post': '貼文',
+  'user-statistics-legend-push': '推送',
+  'user-statistics-legend-repo': '數據庫修改',
+  'user-statistics-legend-snapshot': '網站修訂',
+  'user-statistics-legend-survey': '調查',
+  'user-statistics-legend-tag': '標籤',
+  'user-statistics-legend-task-list': '任務列表',
+  'user-statistics-legend-website-traffic': '網站流量報告',
+  'user-statistics-legend-wiki': 'wiki修改',
+  'user-statistics-today': '今天',
+  'user-statistics-tooltip-$count-branch': (count) => {
+    return `${count}個分支`;
+  },
+  'user-statistics-tooltip-$count-issue': (count) => {
+    return `${count}個問題`
+  },
+  'user-statistics-tooltip-$count-member': (count) => {
+    return `${count}個成員變更`;
+  },
+  'user-statistics-tooltip-$count-merge': (count) => {
+    return `${count}個代碼合併`;
+  },
+  'user-statistics-tooltip-$count-merge-request': (count) => {
+    return `${count}個合併請求`;
+  },
+  'user-statistics-tooltip-$count-milestone': (count) => {
+    return `${count}個里程碑`
+  },
+  'user-statistics-tooltip-$count-post': (count) => {
+    return `${count}個貼文`;
+  },
+  'user-statistics-tooltip-$count-push': (count) => {
+    return `${count}個代碼推送`;
+  },
+  'user-statistics-tooltip-$count-repo': (count) => {
+    return `${count}個數據庫變更`;
+  },
+  'user-statistics-tooltip-$count-survey': (count) => {
+    return `${count}個調查`;
+  },
+  'user-statistics-tooltip-$count-tag': (count) => {
+    return `${count}個標籤`;
+  },
+  'user-statistics-tooltip-$count-task-list': (count) => {
+    return `${count}個任務列表`;
+  },
+  'user-statistics-tooltip-$count-wiki': (count) => {
+    return `${count}個wiki修改`;
+  },
 
-    'video-capture-accept': '接受',
-    'video-capture-cancel': '取消',
-    'video-capture-pause': '暫停',
-    'video-capture-resume': '繼續',
-    'video-capture-retake': '重新錄製',
-    'video-capture-start': '開始',
-    'video-capture-stop': '停止',
+  'video-capture-accept': '接受',
+  'video-capture-cancel': '取消',
+  'video-capture-pause': '暫停',
+  'video-capture-resume': '繼續',
+  'video-capture-retake': '重新錄製',
+  'video-capture-start': '開始',
+  'video-capture-stop': '停止',
 
-    'warning-no-connection': '無法即時更新',
+  'warning-no-connection': '無法即時更新',
 };
 
 let simplifiedPhrases = {
-    'action-contact-by-email': '用电子邮件联系',
-    'action-contact-by-ichat': '用iChat联系',
-    'action-contact-by-phone': '用电话联系',
-    'action-contact-by-skype': '用Skype联系',
-    'action-contact-by-slack': '用Slack联系',
-    'action-contact-by-twitter': '用Twitter联系',
-    'action-view-github-page': '查看GitHub个人页面',
-    'action-view-gitlab-page': '查看GitLab个人页面',
-    'action-view-linkedin-page': '查看LinkedIn个人页面',
-    'action-view-stackoverflow-page': '查看StackOverflow个人页面',
+  'action-contact-by-email': '用电子邮件联系',
+  'action-contact-by-ichat': '用iChat联系',
+  'action-contact-by-phone': '用电话联系',
+  'action-contact-by-skype': '用Skype联系',
+  'action-contact-by-slack': '用Slack联系',
+  'action-contact-by-twitter': '用Twitter联系',
+  'action-view-github-page': '查看GitHub个人页面',
+  'action-view-gitlab-page': '查看GitLab个人页面',
+  'action-view-linkedin-page': '查看LinkedIn个人页面',
+  'action-view-stackoverflow-page': '查看StackOverflow个人页面',
 
-    'activation-address': '服务器地址',
-    'activation-cancel': '取消',
-    'activation-code': '授权码',
-    'activation-ok': '完成',
-    'activation-schema': '项目',
+  'activation-address': '服务器地址',
+  'activation-cancel': '取消',
+  'activation-code': '授权码',
+  'activation-ok': '完成',
+  'activation-schema': '项目',
 
-    'alert-$count-new-bookmarks': (count) => {
-        return cardinalS(count, '一张新书签');
-    },
-    'alert-$count-new-notifications': (count) => {
-        return cardinalS(count, '一个新通知');
-    },
-    'alert-$count-new-stories': (count) => {
-        return cardinalS(count, '一个新故事');
-    },
+  'alert-$count-new-bookmarks': (count) => {
+    return cardinalS(count, '一张新书签');
+  },
+  'alert-$count-new-notifications': (count) => {
+    return cardinalS(count, '一个新通知');
+  },
+  'alert-$count-new-stories': (count) => {
+    return cardinalS(count, '一个新故事');
+  },
 
-    'app-component-close': '关闭',
+  'app-component-close': '关闭',
 
-    'app-name': '电车吧',
+  'app-name': '电车吧',
 
-    'audio-capture-accept': '接受',
-    'audio-capture-cancel': '取消',
-    'audio-capture-pause': '暂停',
-    'audio-capture-rerecord': '重新录制',
-    'audio-capture-resume': '继续',
-    'audio-capture-start': '开始',
-    'audio-capture-stop': '停止',
+  'audio-capture-accept': '接受',
+  'audio-capture-cancel': '取消',
+  'audio-capture-pause': '暂停',
+  'audio-capture-rerecord': '重新录制',
+  'audio-capture-resume': '继续',
+  'audio-capture-start': '开始',
+  'audio-capture-stop': '停止',
 
-    'bookmark-$count-other-users': (count) => {
-        return cardinalS(count, '另外一个人');
-    },
-    'bookmark-$count-users': (count) => {
-        return cardinalS(count, '一个人');
-    },
-    'bookmark-$name-recommends-this': (name) => {
-        return `${name}推荐这个`;
-    },
-    'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
-        return [ name1, `和`, name2, `推荐这个` ];
-    },
-    'bookmark-$you-bookmarked-it': '你加了这个书签',
-    'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
-        return `你加了这个书签（${name}推荐）`;
-    },
-    'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others) => {
-        return [ `你加了这个书签（`, others, `推荐）` ];
-    },
-    'bookmark-recommendations': '推荐',
+  'bookmark-$count-other-users': (count) => {
+    return cardinalS(count, '另外一个人');
+  },
+  'bookmark-$count-users': (count) => {
+    return cardinalS(count, '一个人');
+  },
+  'bookmark-$name-recommends-this': (name) => {
+    return `${name}推荐这个`;
+  },
+  'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
+    return [ name1, `和`, name2, `推荐这个` ];
+  },
+  'bookmark-$you-bookmarked-it': '你加了这个书签',
+  'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
+    return `你加了这个书签（${name}推荐）`;
+  },
+  'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others) => {
+    return [ `你加了这个书签（`, others, `推荐）` ];
+  },
+  'bookmark-recommendations': '推荐',
 
-    'bookmarks-no-bookmarks': '没有书签',
+  'bookmarks-no-bookmarks': '没有书签',
 
-    'bottom-nav-bookmarks': '书签',
-    'bottom-nav-news': '信息',
-    'bottom-nav-notifications': '通知',
-    'bottom-nav-people': '人员',
-    'bottom-nav-settings': '设置',
+  'bottom-nav-bookmarks': '书签',
+  'bottom-nav-news': '信息',
+  'bottom-nav-notifications': '通知',
+  'bottom-nav-people': '人员',
+  'bottom-nav-settings': '设置',
 
-    'confirmation-cancel': '取消',
-    'confirmation-confirm': '肯定',
+  'confirmation-cancel': '取消',
+  'confirmation-confirm': '肯定',
 
-    'country-name-ad': '安道尔',
-    'country-name-ae': '阿拉伯联合酋长国',
-    'country-name-af': '阿富汗',
-    'country-name-ag': '安提瓜和巴布达',
-    'country-name-al': '阿尔巴尼亚',
-    'country-name-am': '亚美尼亚',
-    'country-name-ao': '安哥拉',
-    'country-name-ar': '阿根廷',
-    'country-name-at': '奥地利',
-    'country-name-au': '澳大利亚',
-    'country-name-az': '阿塞拜疆',
-    'country-name-ba': '波斯尼亚和黑塞哥维那',
-    'country-name-bb': '巴巴多斯',
-    'country-name-bd': '孟加拉国',
-    'country-name-be': '比利时',
-    'country-name-bf': '布基纳法索',
-    'country-name-bg': '保加利亚',
-    'country-name-bh': '巴林',
-    'country-name-bi': '布隆迪',
-    'country-name-bj': '贝宁',
-    'country-name-bn': '文莱',
-    'country-name-bo': '玻利维亚',
-    'country-name-br': '巴西',
-    'country-name-bs': '巴哈马',
-    'country-name-bt': '不丹',
-    'country-name-bw': '博茨瓦纳',
-    'country-name-by': '白俄罗斯',
-    'country-name-bz': '伯利兹',
-    'country-name-ca': '加拿大',
-    'country-name-cd ': '刚果',
-    'country-name-cf': '中非共和国',
-    'country-name-cg': '刚果共和国',
-    'country-name-ch': '瑞士',
-    'country-name-ci': '科特迪瓦',
-    'country-name-cl': '智利',
-    'country-name-cm': '喀麦隆',
-    'country-name-cn': '中国',
-    'country-name-co': '哥伦比亚',
-    'country-name-cr': '哥斯达黎加',
-    'country-name-cu': '古巴',
-    'country-name-cv': '佛得角',
-    'country-name-cy': '塞浦路斯',
-    'country-name-cz': '捷克共和国',
-    'country-name-de': '德国',
-    'country-name-dj': '吉布提',
-    'country-name-dk': '丹麦',
-    'country-name-dm': '多米尼加',
-    'country-name-do': '多明尼加共和国',
-    'country-name-dz': '阿尔及利亚',
-    'country-name-ec': '厄瓜多尔',
-    'country-name-ee': '爱沙尼亚',
-    'country-name-eg': '埃及',
-    'country-name-er': '厄立特里亚',
-    'country-name-es': '西班牙',
-    'country-name-et': '埃塞俄比亚',
-    'country-name-fi': '芬兰',
-    'country-name-fj': '斐',
-    'country-name-fm': '密克罗尼西亚',
-    'country-name-fr': '法国',
-    'country-name-ga': '加蓬',
-    'country-name-gb': '英国',
-    'country-name-gd': '格林纳达',
-    'country-name-ge': '格鲁吉亚',
-    'country-name-gh': '加纳',
-    'country-name-gm': '冈比亚',
-    'country-name-gn': '几内亚',
-    'country-name-gq': '赤道几内亚',
-    'country-name-gr': '希腊',
-    'country-name-gt': '危地马拉',
-    'country-name-gw': '几内亚比绍',
-    'country-name-gy': '圭亚那',
-    'country-name-hk': '香港',
-    'country-name-hn': '洪都拉斯',
-    'country-name-hr': '克罗地亚',
-    'country-name-ht': '海地',
-    'country-name-hu': '匈牙利',
-    'country-name-id': '印度尼西亚',
-    'country-name-ie': '爱尔兰',
-    'country-name-il': '以色列',
-    'country-name-in': '印度',
-    'country-name-iq': '伊拉克',
-    'country-name-ir': '伊朗',
-    'country-name-is': '冰岛',
-    'country-name-it': '意大利',
-    'country-name-jm': '牙买加',
-    'country-name-jo': '约旦',
-    'country-name-jp': '日本',
-    'country-name-ke': '肯尼亚',
-    'country-name-kg': '吉尔吉斯斯坦',
-    'country-name-kh': '柬埔寨',
-    'country-name-ki': '基里巴斯',
-    'country-name-km': '科摩罗',
-    'country-name-kn': '圣基茨和尼维斯',
-    'country-name-kp': '北朝鲜',
-    'country-name-kr': '韩国',
-    'country-name-kw': '科威特',
-    'country-name-kz': '哈萨克斯坦',
-    'country-name-la': '老挝',
-    'country-name-lb': '黎巴嫩',
-    'country-name-lc': '圣卢西亚',
-    'country-name-li': '列支敦士登',
-    'country-name-lk': '斯里兰卡',
-    'country-name-lr': '利比里亚',
-    'country-name-ls': '莱索托',
-    'country-name-lt': '立陶宛',
-    'country-name-lu': '卢森堡',
-    'country-name-lv': '拉脱维亚',
-    'country-name-ly': '利比亚',
-    'country-name-ma': '摩洛哥',
-    'country-name-mc': '摩纳哥',
-    'country-name-md': '摩尔多瓦',
-    'country-name-me': '黑山',
-    'country-name-mg': '马达加斯加',
-    'country-name-mh': '马绍尔群岛',
-    'country-name-mk': '北马其顿',
-    'country-name-ml': '马里',
-    'country-name-mm': '缅甸',
-    'country-name-mn': '蒙古',
-    'country-name-mo': '澳门',
-    'country-name-mr': '毛里塔尼亚',
-    'country-name-mt': '马耳他',
-    'country-name-mu': '毛里求斯',
-    'country-name-mv': '马尔代夫',
-    'country-name-mw': '马拉维',
-    'country-name-mx': '墨西哥',
-    'country-name-my': '马来西亚',
-    'country-name-mz': '莫桑比克',
-    'country-name-na': '纳米比亚',
-    'country-name-ne': '尼日尔',
-    'country-name-ng': '尼日利亚',
-    'country-name-ni': '尼加拉瓜',
-    'country-name-nl': '荷兰',
-    'country-name-no': '挪威',
-    'country-name-np': '尼泊尔',
-    'country-name-nr': '瑙鲁',
-    'country-name-nz': '新西兰',
-    'country-name-om': '阿曼',
-    'country-name-pa': '巴拿马',
-    'country-name-pe': '秘鲁',
-    'country-name-pg': '巴布亚新几内亚',
-    'country-name-ph': '菲律宾',
-    'country-name-pk': '巴基斯坦',
-    'country-name-pl': '波兰',
-    'country-name-ps': '巴勒斯坦',
-    'country-name-pt': '葡萄牙',
-    'country-name-pw': '帕劳',
-    'country-name-py': '巴拉圭',
-    'country-name-qa': '卡塔尔',
-    'country-name-ro': '罗马尼亚',
-    'country-name-rs': '塞尔维亚',
-    'country-name-ru': '俄罗斯',
-    'country-name-rw': '卢旺达',
-    'country-name-sa': '沙特阿拉伯',
-    'country-name-sb': '所罗门群岛',
-    'country-name-sc': '塞舌尔',
-    'country-name-sd': '苏丹',
-    'country-name-se': '瑞典',
-    'country-name-sg': '新加坡',
-    'country-name-si': '斯洛文尼亚',
-    'country-name-sk': '斯洛伐克',
-    'country-name-sl': '塞拉利昂',
-    'country-name-sm': '圣马力诺',
-    'country-name-sn': '塞内加尔',
-    'country-name-so': '索马里',
-    'country-name-sr': '苏里南',
-    'country-name-ss': '南苏丹',
-    'country-name-st': '圣多美和普林西比',
-    'country-name-sv': '萨尔瓦多',
-    'country-name-sy': '叙利亚',
-    'country-name-sz': '斯威士兰',
-    'country-name-td': '乍得',
-    'country-name-tg': '多哥',
-    'country-name-th': '泰国',
-    'country-name-tj': '塔吉克斯坦',
-    'country-name-tl': '东帝汶',
-    'country-name-tm': '土库曼斯坦',
-    'country-name-tn': '突尼斯',
-    'country-name-to': '汤加',
-    'country-name-tr': '土耳其',
-    'country-name-tt': '特立尼达和多巴哥',
-    'country-name-tv': '图瓦卢',
-    'country-name-tw': '台湾',
-    'country-name-tz': '坦桑尼亚',
-    'country-name-ua': '乌克兰',
-    'country-name-ug': '乌干达',
-    'country-name-us': '美国',
-    'country-name-uy': '乌拉圭',
-    'country-name-uz': '乌兹别克斯坦',
-    'country-name-va': '梵蒂冈',
-    'country-name-vc': '圣文森特和格林纳丁斯',
-    'country-name-ve': '委内瑞拉',
-    'country-name-vn': '越南',
-    'country-name-vu': '瓦努阿图',
-    'country-name-ws': '萨摩亚',
-    'country-name-ye': '也门',
-    'country-name-za': '南非',
-    'country-name-zm': '赞比亚',
-    'country-name-zw': '津巴布韦',
-    'country-name-zz': '其他',
+  'country-name-ad': '安道尔',
+  'country-name-ae': '阿拉伯联合酋长国',
+  'country-name-af': '阿富汗',
+  'country-name-ag': '安提瓜和巴布达',
+  'country-name-al': '阿尔巴尼亚',
+  'country-name-am': '亚美尼亚',
+  'country-name-ao': '安哥拉',
+  'country-name-ar': '阿根廷',
+  'country-name-at': '奥地利',
+  'country-name-au': '澳大利亚',
+  'country-name-az': '阿塞拜疆',
+  'country-name-ba': '波斯尼亚和黑塞哥维那',
+  'country-name-bb': '巴巴多斯',
+  'country-name-bd': '孟加拉国',
+  'country-name-be': '比利时',
+  'country-name-bf': '布基纳法索',
+  'country-name-bg': '保加利亚',
+  'country-name-bh': '巴林',
+  'country-name-bi': '布隆迪',
+  'country-name-bj': '贝宁',
+  'country-name-bn': '文莱',
+  'country-name-bo': '玻利维亚',
+  'country-name-br': '巴西',
+  'country-name-bs': '巴哈马',
+  'country-name-bt': '不丹',
+  'country-name-bw': '博茨瓦纳',
+  'country-name-by': '白俄罗斯',
+  'country-name-bz': '伯利兹',
+  'country-name-ca': '加拿大',
+  'country-name-cd ': '刚果',
+  'country-name-cf': '中非共和国',
+  'country-name-cg': '刚果共和国',
+  'country-name-ch': '瑞士',
+  'country-name-ci': '科特迪瓦',
+  'country-name-cl': '智利',
+  'country-name-cm': '喀麦隆',
+  'country-name-cn': '中国',
+  'country-name-co': '哥伦比亚',
+  'country-name-cr': '哥斯达黎加',
+  'country-name-cu': '古巴',
+  'country-name-cv': '佛得角',
+  'country-name-cy': '塞浦路斯',
+  'country-name-cz': '捷克共和国',
+  'country-name-de': '德国',
+  'country-name-dj': '吉布提',
+  'country-name-dk': '丹麦',
+  'country-name-dm': '多米尼加',
+  'country-name-do': '多明尼加共和国',
+  'country-name-dz': '阿尔及利亚',
+  'country-name-ec': '厄瓜多尔',
+  'country-name-ee': '爱沙尼亚',
+  'country-name-eg': '埃及',
+  'country-name-er': '厄立特里亚',
+  'country-name-es': '西班牙',
+  'country-name-et': '埃塞俄比亚',
+  'country-name-fi': '芬兰',
+  'country-name-fj': '斐',
+  'country-name-fm': '密克罗尼西亚',
+  'country-name-fr': '法国',
+  'country-name-ga': '加蓬',
+  'country-name-gb': '英国',
+  'country-name-gd': '格林纳达',
+  'country-name-ge': '格鲁吉亚',
+  'country-name-gh': '加纳',
+  'country-name-gm': '冈比亚',
+  'country-name-gn': '几内亚',
+  'country-name-gq': '赤道几内亚',
+  'country-name-gr': '希腊',
+  'country-name-gt': '危地马拉',
+  'country-name-gw': '几内亚比绍',
+  'country-name-gy': '圭亚那',
+  'country-name-hk': '香港',
+  'country-name-hn': '洪都拉斯',
+  'country-name-hr': '克罗地亚',
+  'country-name-ht': '海地',
+  'country-name-hu': '匈牙利',
+  'country-name-id': '印度尼西亚',
+  'country-name-ie': '爱尔兰',
+  'country-name-il': '以色列',
+  'country-name-in': '印度',
+  'country-name-iq': '伊拉克',
+  'country-name-ir': '伊朗',
+  'country-name-is': '冰岛',
+  'country-name-it': '意大利',
+  'country-name-jm': '牙买加',
+  'country-name-jo': '约旦',
+  'country-name-jp': '日本',
+  'country-name-ke': '肯尼亚',
+  'country-name-kg': '吉尔吉斯斯坦',
+  'country-name-kh': '柬埔寨',
+  'country-name-ki': '基里巴斯',
+  'country-name-km': '科摩罗',
+  'country-name-kn': '圣基茨和尼维斯',
+  'country-name-kp': '北朝鲜',
+  'country-name-kr': '韩国',
+  'country-name-kw': '科威特',
+  'country-name-kz': '哈萨克斯坦',
+  'country-name-la': '老挝',
+  'country-name-lb': '黎巴嫩',
+  'country-name-lc': '圣卢西亚',
+  'country-name-li': '列支敦士登',
+  'country-name-lk': '斯里兰卡',
+  'country-name-lr': '利比里亚',
+  'country-name-ls': '莱索托',
+  'country-name-lt': '立陶宛',
+  'country-name-lu': '卢森堡',
+  'country-name-lv': '拉脱维亚',
+  'country-name-ly': '利比亚',
+  'country-name-ma': '摩洛哥',
+  'country-name-mc': '摩纳哥',
+  'country-name-md': '摩尔多瓦',
+  'country-name-me': '黑山',
+  'country-name-mg': '马达加斯加',
+  'country-name-mh': '马绍尔群岛',
+  'country-name-mk': '北马其顿',
+  'country-name-ml': '马里',
+  'country-name-mm': '缅甸',
+  'country-name-mn': '蒙古',
+  'country-name-mo': '澳门',
+  'country-name-mr': '毛里塔尼亚',
+  'country-name-mt': '马耳他',
+  'country-name-mu': '毛里求斯',
+  'country-name-mv': '马尔代夫',
+  'country-name-mw': '马拉维',
+  'country-name-mx': '墨西哥',
+  'country-name-my': '马来西亚',
+  'country-name-mz': '莫桑比克',
+  'country-name-na': '纳米比亚',
+  'country-name-ne': '尼日尔',
+  'country-name-ng': '尼日利亚',
+  'country-name-ni': '尼加拉瓜',
+  'country-name-nl': '荷兰',
+  'country-name-no': '挪威',
+  'country-name-np': '尼泊尔',
+  'country-name-nr': '瑙鲁',
+  'country-name-nz': '新西兰',
+  'country-name-om': '阿曼',
+  'country-name-pa': '巴拿马',
+  'country-name-pe': '秘鲁',
+  'country-name-pg': '巴布亚新几内亚',
+  'country-name-ph': '菲律宾',
+  'country-name-pk': '巴基斯坦',
+  'country-name-pl': '波兰',
+  'country-name-ps': '巴勒斯坦',
+  'country-name-pt': '葡萄牙',
+  'country-name-pw': '帕劳',
+  'country-name-py': '巴拉圭',
+  'country-name-qa': '卡塔尔',
+  'country-name-ro': '罗马尼亚',
+  'country-name-rs': '塞尔维亚',
+  'country-name-ru': '俄罗斯',
+  'country-name-rw': '卢旺达',
+  'country-name-sa': '沙特阿拉伯',
+  'country-name-sb': '所罗门群岛',
+  'country-name-sc': '塞舌尔',
+  'country-name-sd': '苏丹',
+  'country-name-se': '瑞典',
+  'country-name-sg': '新加坡',
+  'country-name-si': '斯洛文尼亚',
+  'country-name-sk': '斯洛伐克',
+  'country-name-sl': '塞拉利昂',
+  'country-name-sm': '圣马力诺',
+  'country-name-sn': '塞内加尔',
+  'country-name-so': '索马里',
+  'country-name-sr': '苏里南',
+  'country-name-ss': '南苏丹',
+  'country-name-st': '圣多美和普林西比',
+  'country-name-sv': '萨尔瓦多',
+  'country-name-sy': '叙利亚',
+  'country-name-sz': '斯威士兰',
+  'country-name-td': '乍得',
+  'country-name-tg': '多哥',
+  'country-name-th': '泰国',
+  'country-name-tj': '塔吉克斯坦',
+  'country-name-tl': '东帝汶',
+  'country-name-tm': '土库曼斯坦',
+  'country-name-tn': '突尼斯',
+  'country-name-to': '汤加',
+  'country-name-tr': '土耳其',
+  'country-name-tt': '特立尼达和多巴哥',
+  'country-name-tv': '图瓦卢',
+  'country-name-tw': '台湾',
+  'country-name-tz': '坦桑尼亚',
+  'country-name-ua': '乌克兰',
+  'country-name-ug': '乌干达',
+  'country-name-us': '美国',
+  'country-name-uy': '乌拉圭',
+  'country-name-uz': '乌兹别克斯坦',
+  'country-name-va': '梵蒂冈',
+  'country-name-vc': '圣文森特和格林纳丁斯',
+  'country-name-ve': '委内瑞拉',
+  'country-name-vn': '越南',
+  'country-name-vu': '瓦努阿图',
+  'country-name-ws': '萨摩亚',
+  'country-name-ye': '也门',
+  'country-name-za': '南非',
+  'country-name-zm': '赞比亚',
+  'country-name-zw': '津巴布韦',
+  'country-name-zz': '其他',
 
-    'development-code-push-$deployment': (deployment) => {
-        return `从《${deployment}》获取代码更新`;
-    },
-    'development-show-diagnostics': '显示诊断',
-    'development-show-panel': '显示这个面板',
+  'development-code-push-$deployment': (deployment) => {
+    return `从《${deployment}》获取代码更新`;
+  },
+  'development-show-diagnostics': '显示诊断',
+  'development-show-panel': '显示这个面板',
 
-    'device-selector-camera-$number': (number) => {
-        return `摄影机${number}`;
-    },
-    'device-selector-camera-back': '后置',
-    'device-selector-camera-front': '前置',
-    'device-selector-mic-$number': (number) => {
-        return `麦克风${number}`;
-    },
+  'device-selector-camera-$number': (number) => {
+    return `摄影机${number}`;
+  },
+  'device-selector-camera-back': '后置',
+  'device-selector-camera-front': '前置',
+  'device-selector-mic-$number': (number) => {
+    return `麦克风${number}`;
+  },
 
-    'empty-currently-offline': '你目前离线',
+  'empty-currently-offline': '你目前离线',
 
-    'image-editor-image-transfer-in-progress': '正在复制网站图像⋯⋯',
-    'image-editor-page-rendering-in-progress': '正在制作网站预览⋯⋯',
-    'image-editor-poster-extraction-in-progress': '正在从影片中提取预览⋯⋯',
-    'image-editor-upload-in-progress': '正在上传⋯⋯',
+  'image-editor-image-transfer-in-progress': '正在复制网站图像⋯⋯',
+  'image-editor-page-rendering-in-progress': '正在制作网站预览⋯⋯',
+  'image-editor-poster-extraction-in-progress': '正在从影片中提取预览⋯⋯',
+  'image-editor-upload-in-progress': '正在上传⋯⋯',
 
-    'issue-cancel': '取消',
-    'issue-delete': '删除',
-    'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
-        let objects = [];
-        if (photos > 0) {
-            objects.push('图片');
-        }
-        if (videos > 0) {
-            objects.push('影片');
-        }
-        if (audios > 0) {
-            objects.push('音频剪辑');
-        }
-        return `${list(names)}發布了以下${list(objects)}：`;
-    },
-    'issue-export-$names-wrote': (names) => {
-        return `${list(names)}写：`;
-    },
-    'issue-ok': '完成',
-    'issue-repo': '数据库',
-    'issue-title': '标题',
+  'issue-cancel': '取消',
+  'issue-delete': '删除',
+  'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
+    let objects = [];
+    if (photos > 0) {
+      objects.push('图片');
+    }
+    if (videos > 0) {
+      objects.push('影片');
+    }
+    if (audios > 0) {
+      objects.push('音频剪辑');
+    }
+    return `${list(names)}發布了以下${list(objects)}：`;
+  },
+  'issue-export-$names-wrote': (names) => {
+    return `${list(names)}写：`;
+  },
+  'issue-ok': '完成',
+  'issue-repo': '数据库',
+  'issue-title': '标题',
 
-    'list-$count-more': (count) => {
-        return cardinalS(count, '重有一个⋯⋯');
-    },
+  'list-$count-more': (count) => {
+    return cardinalS(count, '重有一个⋯⋯');
+  },
 
-    'media-close': '关闭',
-    'media-download-original': '下载原本文件',
-    'media-editor-embed': '嵌入',
-    'media-editor-remove': '删除',
-    'media-editor-shift': '推前',
-    'media-next': '下一个',
-    'media-previous': '上一个',
+  'media-close': '关闭',
+  'media-download-original': '下载原本文件',
+  'media-editor-embed': '嵌入',
+  'media-editor-remove': '删除',
+  'media-editor-shift': '推前',
+  'media-next': '下一个',
+  'media-previous': '上一个',
 
-    'membership-request-$you-are-member': '你是这个项目的成员',
-    'membership-request-$you-are-now-member': '你成为了这个项目的成员',
-    'membership-request-$you-have-requested-membership': '你要求成为这个项目的成员',
-    'membership-request-browse': '浏览',
-    'membership-request-cancel': '取消',
-    'membership-request-join': '加入',
-    'membership-request-ok': '完成',
-    'membership-request-proceed': '继续',
-    'membership-request-withdraw': '退出',
+  'membership-request-$you-are-member': '你是这个项目的成员',
+  'membership-request-$you-are-now-member': '你成为了这个项目的成员',
+  'membership-request-$you-have-requested-membership': '你要求成为这个项目的成员',
+  'membership-request-browse': '浏览',
+  'membership-request-cancel': '取消',
+  'membership-request-join': '加入',
+  'membership-request-ok': '完成',
+  'membership-request-proceed': '继续',
+  'membership-request-withdraw': '退出',
 
-    'mobile-device-revoke': '吊销',
-    'mobile-device-revoke-are-you-sure': '你确定要吊销此装置的授权吗？',
+  'mobile-device-revoke': '吊销',
+  'mobile-device-revoke-are-you-sure': '你确定要吊销此装置的授权吗？',
 
-    'mobile-setup-address': '服务器地址',
-    'mobile-setup-close': '关闭',
-    'mobile-setup-code': '授权码',
-    'mobile-setup-project': '项目',
+  'mobile-setup-address': '服务器地址',
+  'mobile-setup-close': '关闭',
+  'mobile-setup-code': '授权码',
+  'mobile-setup-project': '项目',
 
-    'news-no-stories-by-role': '没有这个角色的人的故事',
-    'news-no-stories-found': '没有找到匹配的故事',
-    'news-no-stories-on-date': '那天没有故事',
-    'news-no-stories-yet': '还没有故事',
+  'news-no-stories-by-role': '没有这个角色的人的故事',
+  'news-no-stories-found': '没有找到匹配的故事',
+  'news-no-stories-on-date': '那天没有故事',
+  'news-no-stories-yet': '还没有故事',
 
-    'notification-$name-added-you-as-coauthor': (name) => {
-        return `${name}邀请你共同编辑一个贴文`;
-    },
-    'notification-$name-added-your-post-to-issue-tracker': (name) => {
-        return `${name}把你的贴文放到问题跟踪器上`;
-    },
-    'notification-$name-commented-on-your-$story': (name, story) => {
-        switch (story) {
-            case 'push': story = '推送'; break;
-            case 'merge': story = '合并'; break;
-            case 'survey': story = '调查'; break;
-            case 'task-list': story = '任务列表'; break;
-            case 'post': story = '贴文'; break;
-            default: story = '故事';
-        }
-        return `${name}回应了你的${story}`;
-    },
-    'notification-$name-completed-task': (name) => {
-        return `${name}完成了在你的列表上一个任务`;
-    },
-    'notification-$name-is-assigned-to-your-$story': (name, story) => {
-        switch (story) {
-            case 'issue': story = '问题'; break;
-            case 'merge-request': story = '合并请求'; break;
-        }
-        return `${name}被分配到你的${story}`;
-    },
-    'notification-$name-likes-your-$story': (name, story) => {
-        switch (story) {
-            case 'survey': story = '调查'; break;
-            case 'task-list': story = '任务列表'; break;
-            case 'post': story = '贴文'; break;
-            default: story = '故事';
-        }
-        return `${name}喜欢你的${story}`;
-    },
-    'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
-        reaction = '一个回应中';
-        return `${name}在${reaction}提到你`;
-    },
-    'notification-$name-mentioned-you-in-$story': (name, story) => {
-        switch (story) {
-            case 'survey': story = '一个调查上'; break;
-            case 'task-list': story = '一个任务列表上'; break;
-            case 'post': story = '一个贴文中'; break;
-            case 'issue': story = '一个问题上'; break;
-            case 'merge-request': story = '一个合并请求中'; break;
-            default: story = '一个故事中';
-        }
-        return `${name}在${story}提到你`;
-    },
-    'notification-$name-merged-code-to-$branch': (name, branch) => {
-        return `${name}将代码合并到《${branch}》分支`;
-    },
-    'notification-$name-modified-project-website': (name) => {
-        return `${name}修改了项目网站`;
-    },
-    'notification-$name-opened-an-issue': (name) => {
-        return `${name}开了一个问题`;
-    },
-    'notification-$name-posted-a-note-about-your-$story': (name, story) => {
-        switch (story) {
-            case 'push': story = '提交'; break;
-            case 'issue': story = '问题'; break;
-            case 'merge-request': story = '合并请求'; break;
-        }
-        return `${name}回应了你的${story}`;
-    },
-    'notification-$name-posted-a-survey': (name) => {
-        return `${name}发布了一个调查`;
-    },
-    'notification-$name-pushed-code-to-$branch': (name, branch) => {
-        return `${name}推了一些代码修改入到《${branch}》分支`;
-    },
-    'notification-$name-requested-to-join': (name) => {
-        return `${name}要求加入这个项目`;
-    },
-    'notification-$name-sent-bookmark-to-$story': (name, story) => {
-        switch (story) {
-            case 'survey': story = '调查'; break;
-            case 'task-list': story = '任务列表'; break;
-            case 'post': story = '贴文'; break;
-            default: story = '故事';
-        }
-        return `${name}送你一个${story}书签`;
-    },
-    'notification-$name-voted-in-your-survey': (name) => {
-        return `${name}回答了你的调查`;
-    },
-    'notification-option-assignment': '当有人被分配到你的问题',
-    'notification-option-bookmark': '当你收到某人的书签',
-    'notification-option-coauthor': '当你收到共同编辑贴文的邀请',
-    'notification-option-comment': '当有人回应你的贴文',
-    'notification-option-issue': '当有人打开了一个问题',
-    'notification-option-join-request': '当有人想加入这个项目',
-    'notification-option-like': '当有人喜欢你的贴文',
-    'notification-option-mention': '当有人在故事或回应中提到你时',
-    'notification-option-merge': '当有人将代码合并到《master》分支',
-    'notification-option-note': '当有人在提交或问题上发布注释',
-    'notification-option-push': '当有人推入代码到git数据库',
-    'notification-option-snapshot': '当有人对项目网站进行更改时',
-    'notification-option-survey': '当有人发布调查',
-    'notification-option-task-completion': '当有人完成你列表上的任务',
-    'notification-option-vote': '当有人回答你的调查',
-    'notification-option-web-session': '当你用网络浏览器查看这个网站时',
+  'notification-$name-added-you-as-coauthor': (name) => {
+    return `${name}邀请你共同编辑一个贴文`;
+  },
+  'notification-$name-added-your-post-to-issue-tracker': (name) => {
+    return `${name}把你的贴文放到问题跟踪器上`;
+  },
+  'notification-$name-commented-on-your-$story': (name, story) => {
+    switch (story) {
+      case 'push': story = '推送'; break;
+      case 'merge': story = '合并'; break;
+      case 'survey': story = '调查'; break;
+      case 'task-list': story = '任务列表'; break;
+      case 'post': story = '贴文'; break;
+      default: story = '故事';
+    }
+    return `${name}回应了你的${story}`;
+  },
+  'notification-$name-completed-task': (name) => {
+    return `${name}完成了在你的列表上一个任务`;
+  },
+  'notification-$name-is-assigned-to-your-$story': (name, story) => {
+    switch (story) {
+      case 'issue': story = '问题'; break;
+      case 'merge-request': story = '合并请求'; break;
+    }
+    return `${name}被分配到你的${story}`;
+  },
+  'notification-$name-likes-your-$story': (name, story) => {
+    switch (story) {
+      case 'survey': story = '调查'; break;
+      case 'task-list': story = '任务列表'; break;
+      case 'post': story = '贴文'; break;
+      default: story = '故事';
+    }
+    return `${name}喜欢你的${story}`;
+  },
+  'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
+    reaction = '一个回应中';
+    return `${name}在${reaction}提到你`;
+  },
+  'notification-$name-mentioned-you-in-$story': (name, story) => {
+    switch (story) {
+      case 'survey': story = '一个调查上'; break;
+      case 'task-list': story = '一个任务列表上'; break;
+      case 'post': story = '一个贴文中'; break;
+      case 'issue': story = '一个问题上'; break;
+      case 'merge-request': story = '一个合并请求中'; break;
+      default: story = '一个故事中';
+    }
+    return `${name}在${story}提到你`;
+  },
+  'notification-$name-merged-code-to-$branch': (name, branch) => {
+    return `${name}将代码合并到《${branch}》分支`;
+  },
+  'notification-$name-modified-project-website': (name) => {
+    return `${name}修改了项目网站`;
+  },
+  'notification-$name-opened-an-issue': (name) => {
+    return `${name}开了一个问题`;
+  },
+  'notification-$name-posted-a-note-about-your-$story': (name, story) => {
+    switch (story) {
+      case 'push': story = '提交'; break;
+      case 'issue': story = '问题'; break;
+      case 'merge-request': story = '合并请求'; break;
+    }
+    return `${name}回应了你的${story}`;
+  },
+  'notification-$name-posted-a-survey': (name) => {
+    return `${name}发布了一个调查`;
+  },
+  'notification-$name-pushed-code-to-$branch': (name, branch) => {
+    return `${name}推了一些代码修改入到《${branch}》分支`;
+  },
+  'notification-$name-requested-to-join': (name) => {
+    return `${name}要求加入这个项目`;
+  },
+  'notification-$name-sent-bookmark-to-$story': (name, story) => {
+    switch (story) {
+      case 'survey': story = '调查'; break;
+      case 'task-list': story = '任务列表'; break;
+      case 'post': story = '贴文'; break;
+      default: story = '故事';
+    }
+    return `${name}送你一个${story}书签`;
+  },
+  'notification-$name-voted-in-your-survey': (name) => {
+    return `${name}回答了你的调查`;
+  },
+  'notification-option-assignment': '当有人被分配到你的问题',
+  'notification-option-bookmark': '当你收到某人的书签',
+  'notification-option-coauthor': '当你收到共同编辑贴文的邀请',
+  'notification-option-comment': '当有人回应你的贴文',
+  'notification-option-issue': '当有人打开了一个问题',
+  'notification-option-join-request': '当有人想加入这个项目',
+  'notification-option-like': '当有人喜欢你的贴文',
+  'notification-option-mention': '当有人在故事或回应中提到你时',
+  'notification-option-merge': '当有人将代码合并到《master》分支',
+  'notification-option-note': '当有人在提交或问题上发布注释',
+  'notification-option-push': '当有人推入代码到git数据库',
+  'notification-option-snapshot': '当有人对项目网站进行更改时',
+  'notification-option-survey': '当有人发布调查',
+  'notification-option-task-completion': '当有人完成你列表上的任务',
+  'notification-option-vote': '当有人回答你的调查',
+  'notification-option-web-session': '当你用网络浏览器查看这个网站时',
 
-    'notifications-no-notifications-on-date': '那天没有通知',
-    'notifications-no-notifications-yet': '还没有通知',
+  'notifications-no-notifications-on-date': '那天没有通知',
+  'notifications-no-notifications-yet': '还没有通知',
 
-    'option-add-bookmark': '加书签',
-    'option-add-issue': '加问题入跟踪管理系统',
-    'option-bump-story': '推动故事',
-    'option-edit-comment': '编辑回应',
-    'option-edit-post': '编辑贴文',
-    'option-hide-comment': '访客用户看不到',
-    'option-hide-story': '访客用户看不到',
-    'option-keep-bookmark': '保留书签',
-    'option-remove-comment': '删除回应',
-    'option-remove-story': '删除故事',
-    'option-send-bookmarks': '发送书签给其他人',
-    'option-send-bookmarks-to-$count-users': (count) => {
-        return cardinalS(count, '发送书签给一个人');
-    },
-    'option-show-media-preview': '显示附件媒体',
-    'option-show-text-preview': '显示课文预览',
-    'option-statistics-14-days': '显示过去十四天的活动',
-    'option-statistics-biweekly': '显示双周的活动',
-    'option-statistics-monthly': '显示每月的活动',
-    'option-statistics-to-date': '显示至今的活动',
+  'option-add-bookmark': '加书签',
+  'option-add-issue': '加问题入跟踪管理系统',
+  'option-bump-story': '推动故事',
+  'option-edit-comment': '编辑回应',
+  'option-edit-post': '编辑贴文',
+  'option-hide-comment': '访客用户看不到',
+  'option-hide-story': '访客用户看不到',
+  'option-keep-bookmark': '保留书签',
+  'option-remove-comment': '删除回应',
+  'option-remove-story': '删除故事',
+  'option-send-bookmarks': '发送书签给其他人',
+  'option-send-bookmarks-to-$count-users': (count) => {
+    return cardinalS(count, '发送书签给一个人');
+  },
+  'option-show-media-preview': '显示附件媒体',
+  'option-show-text-preview': '显示课文预览',
+  'option-statistics-14-days': '显示过去十四天的活动',
+  'option-statistics-biweekly': '显示双周的活动',
+  'option-statistics-monthly': '显示每月的活动',
+  'option-statistics-to-date': '显示至今的活动',
 
-    'people-no-stories-found': '没有找到匹配的故事',
-    'people-no-stories-on-date': '那天没有活动',
-    'people-no-users-by-role': '没有项目成员有这个角色',
-    'people-no-users-yet': '没有项目成员',
+  'people-no-stories-found': '没有找到匹配的故事',
+  'people-no-stories-on-date': '那天没有活动',
+  'people-no-users-by-role': '没有项目成员有这个角色',
+  'people-no-users-yet': '没有项目成员',
 
-    'person-no-stories-found': '没有找到匹配的故事',
-    'person-no-stories-on-date': '那天没有故事',
-    'person-no-stories-yet': '还没有故事',
+  'person-no-stories-found': '没有找到匹配的故事',
+  'person-no-stories-on-date': '那天没有故事',
+  'person-no-stories-yet': '还没有故事',
 
-    'photo-capture-accept': '接受',
-    'photo-capture-cancel': '取消',
-    'photo-capture-retake': '重拍',
-    'photo-capture-snap': '拍照',
+  'photo-capture-accept': '接受',
+  'photo-capture-cancel': '取消',
+  'photo-capture-retake': '重拍',
+  'photo-capture-snap': '拍照',
 
-    'project-description-close': '关闭',
+  'project-description-close': '关闭',
 
-    'project-management-add': '添加',
-    'project-management-cancel': '取消',
-    'project-management-description': '项目介绍',
-    'project-management-join-project': '加入项目',
-    'project-management-manage': '管理列表',
-    'project-management-mobile-set-up': '手机设置',
-    'project-management-remove': '删除',
-    'project-management-sign-out': '注销',
-    'project-management-sign-out-are-you-sure': '你确定你想从该服务器注销？',
-    'project-management-withdraw-request': '取消会员资格申请',
+  'project-management-add': '添加',
+  'project-management-cancel': '取消',
+  'project-management-description': '项目介绍',
+  'project-management-join-project': '加入项目',
+  'project-management-manage': '管理列表',
+  'project-management-mobile-set-up': '手机设置',
+  'project-management-remove': '删除',
+  'project-management-sign-out': '注销',
+  'project-management-sign-out-are-you-sure': '你确定你想从该服务器注销？',
+  'project-management-withdraw-request': '取消会员资格申请',
 
-    'qr-scanner-cancel': '取消',
-    'qr-scanner-code-found': '找到QR码',
-    'qr-scanner-code-invalid': '不正确的ＱＲ码',
-    'qr-scanner-code-used': '过时的的ＱＲ码',
+  'qr-scanner-cancel': '取消',
+  'qr-scanner-code-found': '找到QR码',
+  'qr-scanner-code-invalid': '不正确的ＱＲ码',
+  'qr-scanner-code-used': '过时的的ＱＲ码',
 
-    'reaction-$name-added-story-to-issue-tracker': (name) => {
-        return `${name}把这个贴文放到问题跟踪器上`;
-    },
-    'reaction-$name-cast-a-vote': (name) => {
-        return `${name}投了一票`;
-    },
-    'reaction-$name-commented-on-branch': (name) => {
-        return `${name}回应了这个分支`;
-    },
-    'reaction-$name-commented-on-issue': (name) => {
-        return `${name}回应了这个问题`;
-    },
-    'reaction-$name-commented-on-merge': (name) => {
-        return `${name}回应了这个合并`;
-    },
-    'reaction-$name-commented-on-merge-request': (name) => {
-        return `${name}回应了这个合并请求`;
-    },
-    'reaction-$name-commented-on-push': (name) => {
-        return `${name}回应了这个推送`;
-    },
-    'reaction-$name-commented-on-tag': (name) => {
-        return `${name}回应了这个标签`;
-    },
-    'reaction-$name-completed-a-task': (name) => {
-        return `${name}完成了一个任务`;
-    },
-    'reaction-$name-is-assigned-to-issue': (name) => {
-        return `${name}被分配到这个问题`;
-    },
-    'reaction-$name-is-assigned-to-merge-request': (name) => {
-        return `${name}被分配到这个合并请求`;
-    },
-    'reaction-$name-is-editing': (name) => {
-        return `${name}正在编辑一个回应⋯⋯`;
-    },
-    'reaction-$name-is-sending': (name) => {
-        return `${name}正在发表一个回应⋯⋯`;
-    },
-    'reaction-$name-is-writing': (name) => {
-        return `${name}正在写一个回应⋯⋯`;
-    },
-    'reaction-$name-likes-this': (name) => {
-        return `${name}喜欢这个`;
-    },
-    'reaction-status-storage-pending': '等待连接',
-    'reaction-status-transcoding': '转码',
-    'reaction-status-uploading': '上传',
+  'reaction-$name-added-story-to-issue-tracker': (name) => {
+    return `${name}把这个贴文放到问题跟踪器上`;
+  },
+  'reaction-$name-cast-a-vote': (name) => {
+    return `${name}投了一票`;
+  },
+  'reaction-$name-commented-on-branch': (name) => {
+    return `${name}回应了这个分支`;
+  },
+  'reaction-$name-commented-on-issue': (name) => {
+    return `${name}回应了这个问题`;
+  },
+  'reaction-$name-commented-on-merge': (name) => {
+    return `${name}回应了这个合并`;
+  },
+  'reaction-$name-commented-on-merge-request': (name) => {
+    return `${name}回应了这个合并请求`;
+  },
+  'reaction-$name-commented-on-push': (name) => {
+    return `${name}回应了这个推送`;
+  },
+  'reaction-$name-commented-on-tag': (name) => {
+    return `${name}回应了这个标签`;
+  },
+  'reaction-$name-completed-a-task': (name) => {
+    return `${name}完成了一个任务`;
+  },
+  'reaction-$name-is-assigned-to-issue': (name) => {
+    return `${name}被分配到这个问题`;
+  },
+  'reaction-$name-is-assigned-to-merge-request': (name) => {
+    return `${name}被分配到这个合并请求`;
+  },
+  'reaction-$name-is-editing': (name) => {
+    return `${name}正在编辑一个回应⋯⋯`;
+  },
+  'reaction-$name-is-sending': (name) => {
+    return `${name}正在发表一个回应⋯⋯`;
+  },
+  'reaction-$name-is-writing': (name) => {
+    return `${name}正在写一个回应⋯⋯`;
+  },
+  'reaction-$name-likes-this': (name) => {
+    return `${name}喜欢这个`;
+  },
+  'reaction-status-storage-pending': '等待连接',
+  'reaction-status-transcoding': '转码',
+  'reaction-status-uploading': '上传',
 
-    'robot-name-traffic': '网站流量报告',
+  'robot-name-traffic': '网站流量报告',
 
-    'role-filter-no-roles': '没有角色',
+  'role-filter-no-roles': '没有角色',
 
-    'search-bar-keywords': '关键字或井号标签',
+  'search-bar-keywords': '关键字或井号标签',
 
-    'selection-cancel': '取消',
-    'selection-ok': '接受',
+  'selection-cancel': '取消',
+  'selection-ok': '接受',
 
-    'server-type-dropbox': 'Dropbox',
-    'server-type-facebook': 'Facebook',
-    'server-type-github': 'GitHub',
-    'server-type-gitlab': 'GitLab',
-    'server-type-google': 'Google',
-    'server-type-windows': 'Windows Live',
+  'server-type-dropbox': 'Dropbox',
+  'server-type-facebook': 'Facebook',
+  'server-type-github': 'GitHub',
+  'server-type-gitlab': 'GitLab',
+  'server-type-google': 'Google',
+  'server-type-windows': 'Windows Live',
 
-    'settings-development': '开发人员选项',
-    'settings-device': '行动装置',
-    'settings-devices': '行动装置',
-    'settings-language': '语言',
-    'settings-mobile-alert': '行动装置警报',
-    'settings-notification': '通知',
-    'settings-profile-image': '档案图像',
-    'settings-projects': '项目',
-    'settings-social-networks': '社交网络',
-    'settings-user-information': '用户资料',
-    'settings-web-alert': '浏览器警报',
+  'settings-development': '开发人员选项',
+  'settings-device': '行动装置',
+  'settings-devices': '行动装置',
+  'settings-language': '语言',
+  'settings-mobile-alert': '行动装置警报',
+  'settings-notification': '通知',
+  'settings-profile-image': '档案图像',
+  'settings-projects': '项目',
+  'settings-social-networks': '社交网络',
+  'settings-user-information': '用户资料',
+  'settings-web-alert': '浏览器警报',
 
-    'social-network-github': 'GitHub个人资料网址',
-    'social-network-gitlab': 'GitLab个人资料网址',
-    'social-network-ichat': 'iChat用户名',
-    'social-network-linkedin': 'LinkedIn个人资料网址',
-    'social-network-skype': 'Skype用户名',
-    'social-network-slack': 'Slack用户ID',
-    'social-network-slack-team': 'Slack团体ID',
-    'social-network-stackoverflow': 'StackOverflow个人资料网址',
-    'social-network-twitter': 'Twitter用户名',
+  'social-network-github': 'GitHub个人资料网址',
+  'social-network-gitlab': 'GitLab个人资料网址',
+  'social-network-ichat': 'iChat用户名',
+  'social-network-linkedin': 'LinkedIn个人资料网址',
+  'social-network-skype': 'Skype用户名',
+  'social-network-slack': 'Slack用户ID',
+  'social-network-slack-team': 'Slack团体ID',
+  'social-network-stackoverflow': 'StackOverflow个人资料网址',
+  'social-network-twitter': 'Twitter用户名',
 
-    'start-activation-add-server': '从另一台服务器添加项目',
-    'start-activation-instructions': (ui) => {
-        return [
-            '请先使用网络浏览器登录電車吧服务器。选择一个项目，然后进入',
-            ui.settings,
-            '。在',
-            ui.projects,
-            '面板中单击',
-            ui.mobileSetup,
-            '。 ＱＲ码将出现在屏幕上。在此装置按下面的按，钮然后扫描ＱＲ码。如果相机出现故障，你可以用键盘输入授权码。'
-        ];
-    },
-    'start-activation-instructions-short': (ui) => {
-        return '请先使用网络浏览器登录电车吧服务器，然后扫描QR码。';
-    },
-    'start-activation-manual': '键盘输入',
-    'start-activation-new-server': '新服务器',
-    'start-activation-others-servers': '可用服务器',
-    'start-activation-return': '返回',
-    'start-activation-scan-code': '扫描ＱＲ码',
-    'start-error-access-denied': '请求被拒绝',
-    'start-error-account-disabled': '帐户目前被禁用',
-    'start-error-existing-users-only': '只有授权人员才能访问此系统',
-    'start-error-undefined': '意外的错误',
-    'start-no-projects': '没有项目',
-    'start-no-servers': '没有OAuth提供者',
-    'start-projects': '项目',
-    'start-social-login': '社交登录',
-    'start-system-title-default': '电车吧',
-    'start-welcome': '欢迎!',
-    'start-welcome-again': '再次欢迎',
+  'start-activation-add-server': '从另一台服务器添加项目',
+  'start-activation-instructions': (ui) => {
+    return [
+      '请先使用网络浏览器登录電車吧服务器。选择一个项目，然后进入',
+      ui.settings,
+      '。在',
+      ui.projects,
+      '面板中单击',
+      ui.mobileSetup,
+      '。 ＱＲ码将出现在屏幕上。在此装置按下面的按，钮然后扫描ＱＲ码。如果相机出现故障，你可以用键盘输入授权码。'
+    ];
+  },
+  'start-activation-instructions-short': (ui) => {
+    return '请先使用网络浏览器登录电车吧服务器，然后扫描QR码。';
+  },
+  'start-activation-manual': '键盘输入',
+  'start-activation-new-server': '新服务器',
+  'start-activation-others-servers': '可用服务器',
+  'start-activation-return': '返回',
+  'start-activation-scan-code': '扫描ＱＲ码',
+  'start-error-access-denied': '请求被拒绝',
+  'start-error-account-disabled': '帐户目前被禁用',
+  'start-error-existing-users-only': '只有授权人员才能访问此系统',
+  'start-error-undefined': '意外的错误',
+  'start-no-projects': '没有项目',
+  'start-no-servers': '没有OAuth提供者',
+  'start-projects': '项目',
+  'start-social-login': '社交登录',
+  'start-system-title-default': '电车吧',
+  'start-welcome': '欢迎!',
+  'start-welcome-again': '再次欢迎',
 
-    'statistics-bar': '条图',
-    'statistics-line': '线图',
-    'statistics-pie': '饼图',
+  'statistics-bar': '条图',
+  'statistics-line': '线图',
+  'statistics-pie': '饼图',
 
-    'story-$count-reactions': (count) => {
-        return cardinalS(count, '一个反应');
-    },
-    'story-$name-changed-production-website': (name) => {
-        return `更改了项目网站的实时版本`;
-    },
-    'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
-        return `在《${repo}》数据库中创建了《${branch}》分支`;
-    },
-    'story-$name-created-$milestone': (name, milestone) => {
-        return `建立了《${milestone}》里程碑`;
-    },
-    'story-$name-created-$page': (name, page) => {
-        return `建立了wiki页面《${page}》”`;
-    },
-    'story-$name-created-$repo': (name, repo) => {
-        let text = `建立了`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `数据库`;
-        return text;
-    },
-    'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
-        return `在《${repo}》数据库中创建了《${tag}》标签`;
-    },
-    'story-$name-created-website-version-in-$branch': (name, branch) => {
-        return `在《${branch}》分支中创建了项目网站的新版本`;
-    },
-    'story-$name-deleted-$page': (name, page) => {
-        return `删除了wiki页面《${page}》”`;
-    },
-    'story-$name-deleted-$repo': (name, repo) => {
-        let text = `删除了`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `数据库`;
-        return text;
-    },
-    'story-$name-imported-$repo': (name, repo) => {
-        let text = `导入了`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `数据库`;
-        return text;
-    },
-    'story-$name-joined-$repo': (name, repo) => {
-        let text = `加入了`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `数据库`;
-        return text;
-    },
-    'story-$name-left-$repo': (name, repo) => {
-        let text = `离开了`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `数据库`;
-        return text;
-    },
-    'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-        let text = `将`;
-        if (branches?.length > 0) {
-            let sources = branches.map((branch) => {
-                return `《${branch}》`;
-            });
-            text += `${sources.join('、')}分支的代码合并到`;
-        }
-        if (repo) {
-            text += `《${repo}》数据库的`;
-        }
-        text += `《${branch}》分支`;
-        return text;
-    },
-    'story-$name-opened-issue-$number-$title': (name, number, title) => {
-        let text = `开了问题${number}`;
-        if (title) {
-            text += `： ${title}`;
-        }
-        return text;
-    },
-    'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-        let text = `推了一些代码修改入到`
-        if (repo) {
-            text += `《${repo}》数据库的`;
-        }
-        text += `《${branch}》分支`;
-        return text;
-    },
-    'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
-        return `要求将《${branch1}》分支合并到《${branch2}》分支`;
-    },
-    'story-$name-updated-$page': (name, page) => {
-        return `修正了wiki页面《${page}》`;
-    },
-    'story-add-coauthor': '加合著者',
-    'story-add-remove-coauthor': '替代合著者',
-    'story-audio': '音频',
-    'story-author-$count-others': (count) => {
-        return cardinalS(count, '另外一个人');
-    },
-    'story-author-$name1-and-$name2': (name1, name2) => {
-        return [ name1, `和`, name2 ];
-    },
-    'story-cancel': '取消',
-    'story-cancel-are-you-sure': '你确定要取消这个贴文？',
-    'story-cancel-edit-are-you-sure': '你确定要取消这些更正？',
-    'story-coauthors': '合著者',
-    'story-comment': '留言',
-    'story-drop-files-here': '在此处拖放媒体文件',
-    'story-file': '文件',
-    'story-issue-current-status': '当前状态：',
-    'story-issue-status-closed': '关闭',
-    'story-issue-status-merged': '合成',
-    'story-issue-status-opened': '开设',
-    'story-issue-status-reopened': '重开',
-    'story-like': '喜欢',
-    'story-markdown': 'Markdown',
-    'story-milestone-due-date': '截止日期：',
-    'story-milestone-start-date': '开始日期：',
-    'story-options': '选项',
-    'story-paste-image-here': '粘贴到文本编辑器中的图像会在这里出现',
-    'story-pending': '听候⋯⋯',
-    'story-photo': '照片',
-    'story-post': '发送',
-    'story-push-added-$count-files': (count) => {
-        return `加了${count}个文件`;
-    },
-    'story-push-added-$count-lines': (count) => {
-        return `加了${count}行代码`;
-    },
-    'story-push-components-changed': '更改了以下部分：',
-    'story-push-deleted-$count-files': (count) => {
-        return `删除了${count}个文件`;
-    },
-    'story-push-deleted-$count-lines': (count) => {
-        return `删除了${count}行代码`;
-    },
-    'story-push-modified-$count-files': (count) => {
-        return `修改了${count}个文件`;
-    },
-    'story-push-modified-$count-lines': (count) => {
-        return `修改了${count}行代码`;
-    },
-    'story-push-renamed-$count-files': (count) => {
-        return `改了${count}个文件的名`;
-    },
-    'story-remove-yourself': '放弃作者权力',
-    'story-remove-yourself-are-you-sure': '你确定你不要做这个贴文的合著者？',
-    'story-status-storage-pending': '等待连接',
-    'story-status-transcoding-$progress': (progress) => {
-        return `转码（${progress}%）`;
-    },
-    'story-status-uploading-$progress': (progress) => {
-        return `上传（${progress}%）`;
-    },
-    'story-survey': '调查',
-    'story-task-list': '任务列表',
-    'story-video': '影片',
-    'story-vote-submit': '递交',
-    'story-website-traffic-$count-on-$date': (count, date) => {
-        let visitors = cardinalS(count, '一位访问者');
-        return `项目网站在${date}上有${visitors}`;
-    },
+  'story-$count-reactions': (count) => {
+    return cardinalS(count, '一个反应');
+  },
+  'story-$name-changed-production-website': (name) => {
+    return `更改了项目网站的实时版本`;
+  },
+  'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
+    return `在《${repo}》数据库中创建了《${branch}》分支`;
+  },
+  'story-$name-created-$milestone': (name, milestone) => {
+    return `建立了《${milestone}》里程碑`;
+  },
+  'story-$name-created-$page': (name, page) => {
+    return `建立了wiki页面《${page}》”`;
+  },
+  'story-$name-created-$repo': (name, repo) => {
+    let text = `建立了`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `数据库`;
+    return text;
+  },
+  'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
+    return `在《${repo}》数据库中创建了《${tag}》标签`;
+  },
+  'story-$name-created-website-version-in-$branch': (name, branch) => {
+    return `在《${branch}》分支中创建了项目网站的新版本`;
+  },
+  'story-$name-deleted-$page': (name, page) => {
+    return `删除了wiki页面《${page}》”`;
+  },
+  'story-$name-deleted-$repo': (name, repo) => {
+    let text = `删除了`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `数据库`;
+    return text;
+  },
+  'story-$name-imported-$repo': (name, repo) => {
+    let text = `导入了`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `数据库`;
+    return text;
+  },
+  'story-$name-joined-$repo': (name, repo) => {
+    let text = `加入了`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `数据库`;
+    return text;
+  },
+  'story-$name-left-$repo': (name, repo) => {
+    let text = `离开了`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `数据库`;
+    return text;
+  },
+  'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
+    let text = `将`;
+    if (branches?.length > 0) {
+      let sources = branches.map((branch) => {
+        return `《${branch}》`;
+      });
+      text += `${sources.join('、')}分支的代码合并到`;
+    }
+    if (repo) {
+      text += `《${repo}》数据库的`;
+    }
+    text += `《${branch}》分支`;
+    return text;
+  },
+  'story-$name-opened-issue-$number-$title': (name, number, title) => {
+    let text = `开了问题${number}`;
+    if (title) {
+      text += `： ${title}`;
+    }
+    return text;
+  },
+  'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
+    let text = `推了一些代码修改入到`
+    if (repo) {
+      text += `《${repo}》数据库的`;
+    }
+    text += `《${branch}》分支`;
+    return text;
+  },
+  'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
+    return `要求将《${branch1}》分支合并到《${branch2}》分支`;
+  },
+  'story-$name-updated-$page': (name, page) => {
+    return `修正了wiki页面《${page}》`;
+  },
+  'story-add-coauthor': '加合著者',
+  'story-add-remove-coauthor': '替代合著者',
+  'story-audio': '音频',
+  'story-author-$count-others': (count) => {
+    return cardinalS(count, '另外一个人');
+  },
+  'story-author-$name1-and-$name2': (name1, name2) => {
+    return [ name1, `和`, name2 ];
+  },
+  'story-cancel': '取消',
+  'story-cancel-are-you-sure': '你确定要取消这个贴文？',
+  'story-cancel-edit-are-you-sure': '你确定要取消这些更正？',
+  'story-coauthors': '合著者',
+  'story-comment': '留言',
+  'story-drop-files-here': '在此处拖放媒体文件',
+  'story-file': '文件',
+  'story-issue-current-status': '当前状态：',
+  'story-issue-status-closed': '关闭',
+  'story-issue-status-merged': '合成',
+  'story-issue-status-opened': '开设',
+  'story-issue-status-reopened': '重开',
+  'story-like': '喜欢',
+  'story-markdown': 'Markdown',
+  'story-milestone-due-date': '截止日期：',
+  'story-milestone-start-date': '开始日期：',
+  'story-options': '选项',
+  'story-paste-image-here': '粘贴到文本编辑器中的图像会在这里出现',
+  'story-pending': '听候⋯⋯',
+  'story-photo': '照片',
+  'story-post': '发送',
+  'story-push-added-$count-files': (count) => {
+    return `加了${count}个文件`;
+  },
+  'story-push-added-$count-lines': (count) => {
+    return `加了${count}行代码`;
+  },
+  'story-push-components-changed': '更改了以下部分：',
+  'story-push-deleted-$count-files': (count) => {
+    return `删除了${count}个文件`;
+  },
+  'story-push-deleted-$count-lines': (count) => {
+    return `删除了${count}行代码`;
+  },
+  'story-push-modified-$count-files': (count) => {
+    return `修改了${count}个文件`;
+  },
+  'story-push-modified-$count-lines': (count) => {
+    return `修改了${count}行代码`;
+  },
+  'story-push-renamed-$count-files': (count) => {
+    return `改了${count}个文件的名`;
+  },
+  'story-remove-yourself': '放弃作者权力',
+  'story-remove-yourself-are-you-sure': '你确定你不要做这个贴文的合著者？',
+  'story-status-storage-pending': '等待连接',
+  'story-status-transcoding-$progress': (progress) => {
+    return `转码（${progress}%）`;
+  },
+  'story-status-uploading-$progress': (progress) => {
+    return `上传（${progress}%）`;
+  },
+  'story-survey': '调查',
+  'story-task-list': '任务列表',
+  'story-video': '影片',
+  'story-vote-submit': '递交',
+  'story-website-traffic-$count-on-$date': (count, date) => {
+    let visitors = cardinalS(count, '一位访问者');
+    return `项目网站在${date}上有${visitors}`;
+  },
 
-    'telephone-dialog-close': '关闭',
+  'telephone-dialog-close': '关闭',
 
-    'time-$days-ago': (days) => {
-        return cardinalS(days, '一天前');
-    },
-    'time-$hours-ago': (hours) => {
-        return cardinalS(hours, '一小时前');
-    },
-    'time-$hr-ago': (hr) => {
-        return cardinalS(hr, '一小时前');
-    },
-    'time-$min-ago': (min) => {
-        return cardinalS(min, '一分钟前');
-    },
-    'time-$minutes-ago': (minutes) => {
-        return cardinalS(minutes, '一分钟前');
-    },
-    'time-just-now': '刚才',
-    'time-yesterday': '昨天',
+  'time-$days-ago': (days) => {
+    return cardinalS(days, '一天前');
+  },
+  'time-$hours-ago': (hours) => {
+    return cardinalS(hours, '一小时前');
+  },
+  'time-$hr-ago': (hr) => {
+    return cardinalS(hr, '一小时前');
+  },
+  'time-$min-ago': (min) => {
+    return cardinalS(min, '一分钟前');
+  },
+  'time-$minutes-ago': (minutes) => {
+    return cardinalS(minutes, '一分钟前');
+  },
+  'time-just-now': '刚才',
+  'time-yesterday': '昨天',
 
-    'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        return `上传${num}个文件，剩下${size}`;
-    },
+  'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
+    return `上传${num}个文件，剩下${size}`;
+  },
 
-    'user-actions': '行动',
+  'user-actions': '行动',
 
-    'user-activity-$name-created-branch': '建立了一个分支',
-    'user-activity-$name-created-merge-request': '发出一个合并请求',
-    'user-activity-$name-created-milestone': '建立了一个里程碑',
-    'user-activity-$name-created-repo': '建立了一个git数据库',
-    'user-activity-$name-created-tag': '建立了一个标签',
-    'user-activity-$name-deleted-repo': '删除了数据库',
-    'user-activity-$name-edited-wiki-page': '编辑了一个wiki页面',
-    'user-activity-$name-imported-repo': '导入了数据库',
-    'user-activity-$name-joined-repo': '加入了数据库',
-    'user-activity-$name-left-repo': '离开了数据库',
-    'user-activity-$name-merged-code': '合并了代码',
-    'user-activity-$name-modified-website': '修改了项目网站',
-    'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        return cardinalS(count, '新增了一个音频剪辑');
-    },
-    'user-activity-$name-posted-$count-links': (name, count) => {
-        return cardinalS(count, '新增了一个网页链接');
-    },
-    'user-activity-$name-posted-$count-pictures': (name, count) => {
-        return cardinalS(count, '新增了一张相片');
-    },
-    'user-activity-$name-posted-$count-video-clips': (name, count) => {
-        return cardinalS(count, '新增了一张影片');
-    },
-    'user-activity-$name-pushed-code': '将代码推送到数据库',
-    'user-activity-$name-reported-issue': '报告了一个问题',
-    'user-activity-$name-started-survey': '发布了一个调查',
-    'user-activity-$name-started-task-list': '发布了一个任务列表',
-    'user-activity-$name-wrote-post': '写了一个贴文',
-    'user-activity-back': '返回',
-    'user-activity-more': '更多',
+  'user-activity-$name-created-branch': '建立了一个分支',
+  'user-activity-$name-created-merge-request': '发出一个合并请求',
+  'user-activity-$name-created-milestone': '建立了一个里程碑',
+  'user-activity-$name-created-repo': '建立了一个git数据库',
+  'user-activity-$name-created-tag': '建立了一个标签',
+  'user-activity-$name-deleted-repo': '删除了数据库',
+  'user-activity-$name-edited-wiki-page': '编辑了一个wiki页面',
+  'user-activity-$name-imported-repo': '导入了数据库',
+  'user-activity-$name-joined-repo': '加入了数据库',
+  'user-activity-$name-left-repo': '离开了数据库',
+  'user-activity-$name-merged-code': '合并了代码',
+  'user-activity-$name-modified-website': '修改了项目网站',
+  'user-activity-$name-posted-$count-audio-clips': (name, count) => {
+    return cardinalS(count, '新增了一个音频剪辑');
+  },
+  'user-activity-$name-posted-$count-links': (name, count) => {
+    return cardinalS(count, '新增了一个网页链接');
+  },
+  'user-activity-$name-posted-$count-pictures': (name, count) => {
+    return cardinalS(count, '新增了一张相片');
+  },
+  'user-activity-$name-posted-$count-video-clips': (name, count) => {
+    return cardinalS(count, '新增了一张影片');
+  },
+  'user-activity-$name-pushed-code': '将代码推送到数据库',
+  'user-activity-$name-reported-issue': '报告了一个问题',
+  'user-activity-$name-started-survey': '发布了一个调查',
+  'user-activity-$name-started-task-list': '发布了一个任务列表',
+  'user-activity-$name-wrote-post': '写了一个贴文',
+  'user-activity-back': '返回',
+  'user-activity-more': '更多',
 
-    'user-image-adjust': '调整',
-    'user-image-cancel': '取消',
-    'user-image-replace': '替换',
-    'user-image-save': '保存',
-    'user-image-select': '选择',
-    'user-image-snap': '拍照',
+  'user-image-adjust': '调整',
+  'user-image-cancel': '取消',
+  'user-image-replace': '替换',
+  'user-image-save': '保存',
+  'user-image-select': '选择',
+  'user-image-snap': '拍照',
 
-    'user-info-email': '电子邮件地址',
-    'user-info-gender': '性别',
-    'user-info-gender-female': '女性',
-    'user-info-gender-male': '男性',
-    'user-info-gender-unspecified': '未指定',
-    'user-info-name': '名称',
-    'user-info-phone': '电话号码',
+  'user-info-email': '电子邮件地址',
+  'user-info-gender': '性别',
+  'user-info-gender-female': '女性',
+  'user-info-gender-male': '男性',
+  'user-info-gender-unspecified': '未指定',
+  'user-info-name': '名称',
+  'user-info-phone': '电话号码',
 
-    'user-statistics-legend-branch': '分支',
-    'user-statistics-legend-issue': '问题',
-    'user-statistics-legend-member': '成员变更',
-    'user-statistics-legend-merge': '代码合并',
-    'user-statistics-legend-merge-request': '合并请求',
-    'user-statistics-legend-milestone': '里程碑',
-    'user-statistics-legend-post': '贴文',
-    'user-statistics-legend-push': '推送',
-    'user-statistics-legend-repo': '数据库修改',
-    'user-statistics-legend-snapshot': '网站修订',
-    'user-statistics-legend-survey': '调查',
-    'user-statistics-legend-tag': '标签',
-    'user-statistics-legend-task-list': '任务列表',
-    'user-statistics-legend-website-traffic': '网站流量报告',
-    'user-statistics-legend-wiki': 'wiki修改',
-    'user-statistics-today': '今天',
-    'user-statistics-tooltip-$count-branch': (count) => {
-        return `${count}个分支`;
-    },
-    'user-statistics-tooltip-$count-issue': (count) => {
-        return `${count}个问题`
-    },
-    'user-statistics-tooltip-$count-member': (count) => {
-        return `${count}个成员变更`;
-    },
-    'user-statistics-tooltip-$count-merge': (count) => {
-        return `${count}个代码合并`;
-    },
-    'user-statistics-tooltip-$count-merge-request': (count) => {
-        return `${count}个合并請求`;
-    },
-    'user-statistics-tooltip-$count-milestone': (count) => {
-        return `${count}个里程碑`
-    },
-    'user-statistics-tooltip-$count-post': (count) => {
-        return `${count}个贴文`;
-    },
-    'user-statistics-tooltip-$count-push': (count) => {
-        return `${count}个代码推送`;
-    },
-    'user-statistics-tooltip-$count-repo': (count) => {
-        return `${count}个数据库变更`;
-    },
-    'user-statistics-tooltip-$count-survey': (count) => {
-        return `${count}个调查`;
-    },
-    'user-statistics-tooltip-$count-tag': (count) => {
-        return `${count}个标签`;
-    },
-    'user-statistics-tooltip-$count-task-list': (count) => {
-        return `${count}个任务列表`;
-    },
-    'user-statistics-tooltip-$count-wiki': (count) => {
-        return `${count}个wiki修改`;
-    },
+  'user-statistics-legend-branch': '分支',
+  'user-statistics-legend-issue': '问题',
+  'user-statistics-legend-member': '成员变更',
+  'user-statistics-legend-merge': '代码合并',
+  'user-statistics-legend-merge-request': '合并请求',
+  'user-statistics-legend-milestone': '里程碑',
+  'user-statistics-legend-post': '贴文',
+  'user-statistics-legend-push': '推送',
+  'user-statistics-legend-repo': '数据库修改',
+  'user-statistics-legend-snapshot': '网站修订',
+  'user-statistics-legend-survey': '调查',
+  'user-statistics-legend-tag': '标签',
+  'user-statistics-legend-task-list': '任务列表',
+  'user-statistics-legend-website-traffic': '网站流量报告',
+  'user-statistics-legend-wiki': 'wiki修改',
+  'user-statistics-today': '今天',
+  'user-statistics-tooltip-$count-branch': (count) => {
+    return `${count}个分支`;
+  },
+  'user-statistics-tooltip-$count-issue': (count) => {
+    return `${count}个问题`
+  },
+  'user-statistics-tooltip-$count-member': (count) => {
+    return `${count}个成员变更`;
+  },
+  'user-statistics-tooltip-$count-merge': (count) => {
+    return `${count}个代码合并`;
+  },
+  'user-statistics-tooltip-$count-merge-request': (count) => {
+    return `${count}个合并請求`;
+  },
+  'user-statistics-tooltip-$count-milestone': (count) => {
+    return `${count}个里程碑`
+  },
+  'user-statistics-tooltip-$count-post': (count) => {
+    return `${count}个贴文`;
+  },
+  'user-statistics-tooltip-$count-push': (count) => {
+    return `${count}个代码推送`;
+  },
+  'user-statistics-tooltip-$count-repo': (count) => {
+    return `${count}个数据库变更`;
+  },
+  'user-statistics-tooltip-$count-survey': (count) => {
+    return `${count}个调查`;
+  },
+  'user-statistics-tooltip-$count-tag': (count) => {
+    return `${count}个标签`;
+  },
+  'user-statistics-tooltip-$count-task-list': (count) => {
+    return `${count}个任务列表`;
+  },
+  'user-statistics-tooltip-$count-wiki': (count) => {
+    return `${count}个wiki修改`;
+  },
 
-    'video-capture-accept': '接受',
-    'video-capture-cancel': '取消',
-    'video-capture-pause': '暂停',
-    'video-capture-resume': '继续',
-    'video-capture-retake': '重新录制',
-    'video-capture-start': '开始',
-    'video-capture-stop': '停止',
+  'video-capture-accept': '接受',
+  'video-capture-cancel': '取消',
+  'video-capture-pause': '暂停',
+  'video-capture-resume': '继续',
+  'video-capture-retake': '重新录制',
+  'video-capture-start': '开始',
+  'video-capture-stop': '停止',
 
-    'warning-no-connection': '无法即时更新',
+  'warning-no-connection': '无法即时更新',
 };
 
 let cantonesePhrases = {
-    'action-view-github-page': '睇佢嘅GitHub網頁',
-    'action-view-gitlab-page': '睇佢嘅GitLab網頁',
-    'action-view-linkedin-page': '睇佢嘅LinkedIn網頁',
-    'action-view-stackoverflow-page': '睇佢嘅StackOverflow網頁',
+  'action-view-github-page': '睇佢嘅GitHub網頁',
+  'action-view-gitlab-page': '睇佢嘅GitLab網頁',
+  'action-view-linkedin-page': '睇佢嘅LinkedIn網頁',
+  'action-view-stackoverflow-page': '睇佢嘅StackOverflow網頁',
 
-    'bookmark-$name-recommends-this': (name) => {
-        return `${name}推薦呢個`;
-    },
-    'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
-        return [ name1, `同`, name2, `都推薦呢個` ];
-    },
-    'bookmark-$you-bookmarked-it': '你加咗個書籤',
-    'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
-        return `你加咗個書籤（${name}推薦）`;
-    },
-    'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others) => {
-        return [ `你加咗個書籤（`, others, `推薦）` ];
-    },
+  'bookmark-$name-recommends-this': (name) => {
+    return `${name}推薦呢個`;
+  },
+  'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
+    return [ name1, `同`, name2, `都推薦呢個` ];
+  },
+  'bookmark-$you-bookmarked-it': '你加咗個書籤',
+  'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
+    return `你加咗個書籤（${name}推薦）`;
+  },
+  'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others) => {
+    return [ `你加咗個書籤（`, others, `推薦）` ];
+  },
 
-    'bookmarks-no-bookmarks': '冇書籤',
+  'bookmarks-no-bookmarks': '冇書籤',
 
-    'bottom-nav-people': '仆街',
+  'bottom-nav-people': '仆街',
 
-    'membership-request-$you-are-member': '你係呢個項目嘅成員',
-    'membership-request-$you-are-now-member': '你而家係呢個項目嘅成員',
-    'membership-request-$you-have-requested-membership': '你要求成為呢個項目嘅成員',
+  'membership-request-$you-are-member': '你係呢個項目嘅成員',
+  'membership-request-$you-are-now-member': '你而家係呢個項目嘅成員',
+  'membership-request-$you-have-requested-membership': '你要求成為呢個項目嘅成員',
 
-    'mobile-device-revoke-are-you-sure': '你確定要吊銷此裝置嘅授權？',
+  'mobile-device-revoke-are-you-sure': '你確定要吊銷此裝置嘅授權？',
 
-    'news-no-stories-by-role': '冇呢個角色嘅人嘅故事',
-    'news-no-stories-found': '搵唔到配合嘅故事',
-    'news-no-stories-on-date': '嗰日冇故事',
-    'news-no-stories-yet': '重未有故事',
+  'news-no-stories-by-role': '冇呢個角色嘅人嘅故事',
+  'news-no-stories-found': '搵唔到配合嘅故事',
+  'news-no-stories-on-date': '嗰日冇故事',
+  'news-no-stories-yet': '重未有故事',
 
-    'notification-$name-added-you-as-coauthor': (name) => {
-        return `${name}邀請你一齊寫一個帖子`;
-    },
-    'notification-$name-added-your-post-to-issue-tracker': (name) => {
-        return `${name}將呢個帖子放到問題跟踪器上`;
-    },
-    'notification-$name-commented-on-your-$story': (name, story) => {
-        switch (story) {
-            case 'push': story = '推送'; break;
-            case 'merge': story = '合併'; break;
-            case 'survey': story = '調查'; break;
-            case 'task-list': story = '任務列表'; break;
-            case 'post': story = '帖子'; break;
-            default: story = '故事';
-        }
-        return `${name}回應咗你嘅${story}`;
-    },
-    'notification-$name-completed-task': (name) => {
-        return `${name}完成咗喺你個列表上嘅一個任務`;
-    },
-    'notification-$name-is-assigned-to-your-$story': (name, story) => {
-        switch (story) {
-            case 'issue': story = '問題'; break;
-            case 'merge-request': story = '合併請求'; break;
-        }
-        return `${name}被分配到你嘅${story}`;
-    },
-    'notification-$name-likes-your-$story': (name, story) => {
-        switch (story) {
-            case 'push': story = '推送'; break;
-            case 'merge': story = '合併'; break;
-            case 'survey': story = '調查'; break;
-            case 'task-list': story = '任務列表'; break;
-            case 'post': story = '帖子'; break;
-            default: story = '故事';
-        }
-        return `${name}鍾意你嘅${story}`;
-    },
-    'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
-        reaction = '一個回應中';
-        return `${name}喺${reaction}提到你`;
-    },
-    'notification-$name-mentioned-you-in-$story': (name, story) => {
-        switch (story) {
-            case 'survey': story = '一個調查上'; break;
-            case 'task-list': story = '一個任務列表上'; break;
-            case 'post': story = '一個貼文中'; break;
-            case 'issue': story = '一個問題上'; break;
-            case 'merge-request': story = '一個合併請求中'; break;
-            default: story = '一個故事中';
-        }
-        return `${name}喺${story}提到你`;
-    },
-    'notification-$name-merged-code-to-$branch': (name, branch) => {
-        return `${name}將代碼合併到《${branch}》分支`;
-    },
-    'notification-$name-opened-an-issue': (name) => {
-        return `${name}開咗一個問題`;
-    },
-    'notification-$name-posted-a-note-about-your-$story': (name, story) => {
-        switch (story) {
-            case 'push': story = '提交'; break;
-            case 'issue': story = '問題'; break;
-            case 'merge-request': story = '合併請求'; break;
-        }
-        return `${name}回應咗你嘅${story}`;
-    },
-    'notification-$name-posted-a-survey': (name) => {
-        return `${name}發布咗一個調查`;
-    },
-    'notification-$name-pushed-code-to-$branch': (name, branch) => {
-        return `${name}推咗一啲代碼修改入到《${branch}》分支`;
-    },
-    'notification-$name-requested-to-join': (name) => {
-        return `${name}要求加入呢個項目`;
-    },
-    'notification-$name-voted-in-your-survey': (name) => {
-        return `${name}回答咗你嘅調查`;
-    },
-    'notification-option-assignment': '當有人被分配到你嘅問題',
-    'notification-option-bookmark': '當你收到人哋嘅書籤',
-    'notification-option-coauthor': '當有人想同你一齊寫帖子',
-    'notification-option-comment': '當有人回應你嘅帖子',
-    'notification-option-issue': '當有人開咗一個問題',
-    'notification-option-join-request': '當有人想加入呢個項目',
-    'notification-option-like': '當有人鍾意你嘅帖子',
-    'notification-option-mention': '當有人喺故事或回應中提到你',
-    'notification-option-note': '當有人喺提交或問題上發布回應',
-    'notification-option-push': '當有人推啲代碼入到git數據庫',
-    'notification-option-task-completion': '當有人完成你列表上嘅任務',
-    'notification-option-vote': '當有人回答你嘅調查',
-    'notification-option-web-session': '當你用緊網絡瀏覽器查嘞睇呢個網站',
+  'notification-$name-added-you-as-coauthor': (name) => {
+    return `${name}邀請你一齊寫一個帖子`;
+  },
+  'notification-$name-added-your-post-to-issue-tracker': (name) => {
+    return `${name}將呢個帖子放到問題跟踪器上`;
+  },
+  'notification-$name-commented-on-your-$story': (name, story) => {
+    switch (story) {
+      case 'push': story = '推送'; break;
+      case 'merge': story = '合併'; break;
+      case 'survey': story = '調查'; break;
+      case 'task-list': story = '任務列表'; break;
+      case 'post': story = '帖子'; break;
+      default: story = '故事';
+    }
+    return `${name}回應咗你嘅${story}`;
+  },
+  'notification-$name-completed-task': (name) => {
+    return `${name}完成咗喺你個列表上嘅一個任務`;
+  },
+  'notification-$name-is-assigned-to-your-$story': (name, story) => {
+    switch (story) {
+      case 'issue': story = '問題'; break;
+      case 'merge-request': story = '合併請求'; break;
+    }
+    return `${name}被分配到你嘅${story}`;
+  },
+  'notification-$name-likes-your-$story': (name, story) => {
+    switch (story) {
+      case 'push': story = '推送'; break;
+      case 'merge': story = '合併'; break;
+      case 'survey': story = '調查'; break;
+      case 'task-list': story = '任務列表'; break;
+      case 'post': story = '帖子'; break;
+      default: story = '故事';
+    }
+    return `${name}鍾意你嘅${story}`;
+  },
+  'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
+    reaction = '一個回應中';
+    return `${name}喺${reaction}提到你`;
+  },
+  'notification-$name-mentioned-you-in-$story': (name, story) => {
+    switch (story) {
+      case 'survey': story = '一個調查上'; break;
+      case 'task-list': story = '一個任務列表上'; break;
+      case 'post': story = '一個貼文中'; break;
+      case 'issue': story = '一個問題上'; break;
+      case 'merge-request': story = '一個合併請求中'; break;
+      default: story = '一個故事中';
+    }
+    return `${name}喺${story}提到你`;
+  },
+  'notification-$name-merged-code-to-$branch': (name, branch) => {
+    return `${name}將代碼合併到《${branch}》分支`;
+  },
+  'notification-$name-opened-an-issue': (name) => {
+    return `${name}開咗一個問題`;
+  },
+  'notification-$name-posted-a-note-about-your-$story': (name, story) => {
+    switch (story) {
+      case 'push': story = '提交'; break;
+      case 'issue': story = '問題'; break;
+      case 'merge-request': story = '合併請求'; break;
+    }
+    return `${name}回應咗你嘅${story}`;
+  },
+  'notification-$name-posted-a-survey': (name) => {
+    return `${name}發布咗一個調查`;
+  },
+  'notification-$name-pushed-code-to-$branch': (name, branch) => {
+    return `${name}推咗一啲代碼修改入到《${branch}》分支`;
+  },
+  'notification-$name-requested-to-join': (name) => {
+    return `${name}要求加入呢個項目`;
+  },
+  'notification-$name-voted-in-your-survey': (name) => {
+    return `${name}回答咗你嘅調查`;
+  },
+  'notification-option-assignment': '當有人被分配到你嘅問題',
+  'notification-option-bookmark': '當你收到人哋嘅書籤',
+  'notification-option-coauthor': '當有人想同你一齊寫帖子',
+  'notification-option-comment': '當有人回應你嘅帖子',
+  'notification-option-issue': '當有人開咗一個問題',
+  'notification-option-join-request': '當有人想加入呢個項目',
+  'notification-option-like': '當有人鍾意你嘅帖子',
+  'notification-option-mention': '當有人喺故事或回應中提到你',
+  'notification-option-note': '當有人喺提交或問題上發布回應',
+  'notification-option-push': '當有人推啲代碼入到git數據庫',
+  'notification-option-task-completion': '當有人完成你列表上嘅任務',
+  'notification-option-vote': '當有人回答你嘅調查',
+  'notification-option-web-session': '當你用緊網絡瀏覽器查嘞睇呢個網站',
 
-    'notifications-no-notifications-on-date': '嗰日冇通知',
-    'notifications-no-notifications-yet': '重未有通知',
+  'notifications-no-notifications-on-date': '嗰日冇通知',
+  'notifications-no-notifications-yet': '重未有通知',
 
-    'option-edit-post': '編輯帖子',
-    'option-hide-comment': '訪客用戶睇唔到',
-    'option-hide-story': '訪客用戶睇唔到',
-    'option-send-bookmarks': '發送書籤俾其他人',
-    'option-send-bookmarks-to-$count-users': (count) => {
-        return cardinalT(count, '發送書籤俾一個人');
-    },
-    'option-statistics-14-days': '顯示前十四日嘅活動',
-    'option-statistics-biweekly': '顯示兩個禮拜嘅活動',
-    'option-statistics-monthly': '顯示每個月嘅活動',
-    'option-statistics-to-date': '顯示直到今日嘅活動',
+  'option-edit-post': '編輯帖子',
+  'option-hide-comment': '訪客用戶睇唔到',
+  'option-hide-story': '訪客用戶睇唔到',
+  'option-send-bookmarks': '發送書籤俾其他人',
+  'option-send-bookmarks-to-$count-users': (count) => {
+    return cardinalT(count, '發送書籤俾一個人');
+  },
+  'option-statistics-14-days': '顯示前十四日嘅活動',
+  'option-statistics-biweekly': '顯示兩個禮拜嘅活動',
+  'option-statistics-monthly': '顯示每個月嘅活動',
+  'option-statistics-to-date': '顯示直到今日嘅活動',
 
-    'people-no-stories-found': '搵唔到配合嘅故事',
-    'people-no-stories-on-date': '嗰日冇活動',
-    'people-no-users-by-role': '冇項目成員有呢個角色',
-    'people-no-users-yet': '重未有項目成員',
+  'people-no-stories-found': '搵唔到配合嘅故事',
+  'people-no-stories-on-date': '嗰日冇活動',
+  'people-no-users-by-role': '冇項目成員有呢個角色',
+  'people-no-users-yet': '重未有項目成員',
 
-    'person-no-stories-found': '沒有找到匹配的故事',
-    'person-no-stories-on-date': '嗰日冇故事',
-    'person-no-stories-yet': '重未有故事',
+  'person-no-stories-found': '沒有找到匹配的故事',
+  'person-no-stories-on-date': '嗰日冇故事',
+  'person-no-stories-yet': '重未有故事',
 
-    'project-management-mobile-set-up': '手機設置',
-    'project-management-sign-out-are-you-sure': '你確定你想從該服務器註銷？',
+  'project-management-mobile-set-up': '手機設置',
+  'project-management-sign-out-are-you-sure': '你確定你想從該服務器註銷？',
 
-    'qr-scanner-code-invalid': '唔正確嘅ＱＲ碼',
-    'qr-scanner-code-found': '搵找到ＱＲ碼',
-    'qr-scanner-code-invalid': '過咗時嘅ＱＲ碼',
+  'qr-scanner-code-invalid': '唔正確嘅ＱＲ碼',
+  'qr-scanner-code-found': '搵找到ＱＲ碼',
+  'qr-scanner-code-invalid': '過咗時嘅ＱＲ碼',
 
-    'reaction-$name-added-story-to-issue-tracker': (name) => {
-        return `${name}將呢個帖子放到問題跟踪器上`;
-    },
-    'reaction-$name-cast-a-vote': (name) => {
-        return `${name}投咗一票`;
-    },
-    'reaction-$name-commented-on-branch': (name) => {
-        return `${name}回應咗呢個分支`;
-    },
-    'reaction-$name-commented-on-issue': (name) => {
-        return `${name}回應咗呢個問題`;
-    },
-    'reaction-$name-commented-on-merge': (name) => {
-        return `${name}回應咗呢個合併`;
-    },
-    'reaction-$name-commented-on-merge-request': (name) => {
-        return `${name}回應咗呢個合併請求`;
-    },
-    'reaction-$name-commented-on-push': (name) => {
-        return `${name}回應咗呢個推送`;
-    },
-    'reaction-$name-commented-on-tag': (name) => {
-        return `${name}回應咗呢個標籤`;
-    },
-    'reaction-$name-completed-a-task': (name) => {
-        return `${name}完成咗一個任務`;
-    },
-    'reaction-$name-is-assigned-to-issue': (name) => {
-        return `${name}被分配到呢個問題`;
-    },
-    'reaction-$name-is-assigned-to-merge-request': (name) => {
-        return `${name}被分配到呢個合併請求`;
-    },
-    'reaction-$name-is-editing': (name) => {
-        return `${name}啱啱改緊一個回應⋯⋯`;
-    },
-    'reaction-$name-is-writing': (name) => {
-        return `${name}啱啱寫緊一個回應⋯⋯`;
-    },
-    'reaction-$name-likes-this': (name) => {
-        return `${name}鍾意呢個`;
-    },
+  'reaction-$name-added-story-to-issue-tracker': (name) => {
+    return `${name}將呢個帖子放到問題跟踪器上`;
+  },
+  'reaction-$name-cast-a-vote': (name) => {
+    return `${name}投咗一票`;
+  },
+  'reaction-$name-commented-on-branch': (name) => {
+    return `${name}回應咗呢個分支`;
+  },
+  'reaction-$name-commented-on-issue': (name) => {
+    return `${name}回應咗呢個問題`;
+  },
+  'reaction-$name-commented-on-merge': (name) => {
+    return `${name}回應咗呢個合併`;
+  },
+  'reaction-$name-commented-on-merge-request': (name) => {
+    return `${name}回應咗呢個合併請求`;
+  },
+  'reaction-$name-commented-on-push': (name) => {
+    return `${name}回應咗呢個推送`;
+  },
+  'reaction-$name-commented-on-tag': (name) => {
+    return `${name}回應咗呢個標籤`;
+  },
+  'reaction-$name-completed-a-task': (name) => {
+    return `${name}完成咗一個任務`;
+  },
+  'reaction-$name-is-assigned-to-issue': (name) => {
+    return `${name}被分配到呢個問題`;
+  },
+  'reaction-$name-is-assigned-to-merge-request': (name) => {
+    return `${name}被分配到呢個合併請求`;
+  },
+  'reaction-$name-is-editing': (name) => {
+    return `${name}啱啱改緊一個回應⋯⋯`;
+  },
+  'reaction-$name-is-writing': (name) => {
+    return `${name}啱啱寫緊一個回應⋯⋯`;
+  },
+  'reaction-$name-likes-this': (name) => {
+    return `${name}鍾意呢個`;
+  },
 
-    'role-filter-no-roles': '冇角色',
+  'role-filter-no-roles': '冇角色',
 
-    'settings-device': '流動裝置',
-    'settings-devices': '流動裝置',
-    'settings-mobile-alert': '流動裝置警報',
+  'settings-device': '流動裝置',
+  'settings-devices': '流動裝置',
+  'settings-mobile-alert': '流動裝置警報',
 
-    'start-no-projects': '冇項目',
-    'start-no-servers': '冇OAuth提供者',
+  'start-no-projects': '冇項目',
+  'start-no-servers': '冇OAuth提供者',
 
-    'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
-        return `喺《${repo}》數據庫中創建咗《${branch}》分支`;
-    },
-    'story-$name-created-$milestone': (name, milestone) => {
-        return `建立咗《${milestone}》里程碑`;
-    },
-    'story-$name-created-$page': (name, page) => {
-        return `建立咗wiki頁面《${page}》”`;
-    },
-    'story-$name-created-$repo': (name, repo) => {
-        let text = `建立咗`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `數據庫`;
-        return text;
-    },
-    'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
-        return `喺《${repo}》數據庫中創建咗《${tag}》標籤`;
-    },
-    'story-$name-deleted-$page': (name, page) => {
-        return `刪除咗wiki頁面《${page}》”`;
-    },
-    'story-$name-deleted-$repo': (name, repo) => {
-        let text = `刪除咗`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `數據庫`;
-        return text;
-    },
-    'story-$name-imported-$repo': (name, repo) => {
-        let text = `導入咗`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `數據庫`;
-        return text;
-    },
-    'story-$name-joined-$repo': (name, repo) => {
-        let text = `加入咗`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `數據庫`;
-        return text;
-    },
-    'story-$name-left-$repo': (name, repo) => {
-        let text = `離開咗`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        text += `數據庫`;
-        return text;
-    },
-    'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-        let text = `將`;
-        if (branches?.length > 0) {
-            let sources = branches.map((branch) => {
-                return `《${branch}》`;
-            });
-            text += `${sources.join('、')}分支嘅代碼合併到`;
-        }
-        if (repo) {
-            text += `《${repo}》數據庫嘅`;
-        }
-        text += `《${branch}》分支`;
-        return text;
-    },
-    'story-$name-opened-issue-$number-$title': (name, number, title) => {
-        let text = `開咗問題${number}`;
-        if (title) {
-            text += `： ${title}`;
-        }
-        return text;
-    },
-    'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-        let text = `推咗一啲代碼修改入到`
-        if (repo) {
-            text += `《${repo}》數據庫嘅`;
-        }
-        text += `《${branch}》分支`;
-        return text;
-    },
-    'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
-        return `要求將《${branch1}》分支合併到《${branch2}》分支`;
-    },
-    'story-$name-updated-$page': (name, page) => {
-        return `修正咗wiki頁面《${page}》`;
-    },
-    'story-author-$name1-and-$name2': (name1, name2) => {
-        return [ name1, `同`, name2 ];
-    },
-    'story-cancel-are-you-sure': '你確定要取消呢個帖子？',
-    'story-cancel-edit-are-you-sure': '你確定要取消呢啲改變？',
-    'story-comment': '回應',
-    'story-drop-files-here': '喺呢度放媒體文件',
-    'story-like': '鍾意',
-    'story-paste-image-here': '放喺文本編輯器嘅圖像會係呢度出現',
-    'story-pending': '等緊⋯⋯',
-    'story-push-added-$count-files': (count) => {
-        return `加咗${count}個文件`;
-    },
-    'story-push-added-$count-lines': (count) => {
-        return `加咗${count}行代碼`;
-    },
-    'story-push-components-changed': '更改咗以下部分：',
-    'story-push-deleted-$count-files': (count) => {
-        return `刪除咗${count}個文件`;
-    },
-    'story-push-deleted-$count-lines': (count) => {
-        return `刪除咗${count}行代碼`;
-    },
-    'story-push-modified-$count-files': (count) => {
-        return `修改咗${count}個文件`;
-    },
-    'story-push-modified-$count-lines': (count) => {
-        return `修改咗${count}行代碼`;
-    },
-    'story-push-renamed-$count-files': (count) => {
-        return `改咗${count}個文件嘅名`;
-    },
-    'story-remove-yourself-are-you-sure': '你確定你唔要做呢個帖子嘅合著者？',
-    'story-status-uploading-$progress': (progress) => {
-        return `上載（${progress}%）`;
-    },
+  'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
+    return `喺《${repo}》數據庫中創建咗《${branch}》分支`;
+  },
+  'story-$name-created-$milestone': (name, milestone) => {
+    return `建立咗《${milestone}》里程碑`;
+  },
+  'story-$name-created-$page': (name, page) => {
+    return `建立咗wiki頁面《${page}》”`;
+  },
+  'story-$name-created-$repo': (name, repo) => {
+    let text = `建立咗`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `數據庫`;
+    return text;
+  },
+  'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
+    return `喺《${repo}》數據庫中創建咗《${tag}》標籤`;
+  },
+  'story-$name-deleted-$page': (name, page) => {
+    return `刪除咗wiki頁面《${page}》”`;
+  },
+  'story-$name-deleted-$repo': (name, repo) => {
+    let text = `刪除咗`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `數據庫`;
+    return text;
+  },
+  'story-$name-imported-$repo': (name, repo) => {
+    let text = `導入咗`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `數據庫`;
+    return text;
+  },
+  'story-$name-joined-$repo': (name, repo) => {
+    let text = `加入咗`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `數據庫`;
+    return text;
+  },
+  'story-$name-left-$repo': (name, repo) => {
+    let text = `離開咗`;
+    if (repo) {
+      text += `《${repo}》`;
+    }
+    text += `數據庫`;
+    return text;
+  },
+  'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
+    let text = `將`;
+    if (branches?.length > 0) {
+      let sources = branches.map((branch) => {
+        return `《${branch}》`;
+      });
+      text += `${sources.join('、')}分支嘅代碼合併到`;
+    }
+    if (repo) {
+      text += `《${repo}》數據庫嘅`;
+    }
+    text += `《${branch}》分支`;
+    return text;
+  },
+  'story-$name-opened-issue-$number-$title': (name, number, title) => {
+    let text = `開咗問題${number}`;
+    if (title) {
+      text += `： ${title}`;
+    }
+    return text;
+  },
+  'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
+    let text = `推咗一啲代碼修改入到`
+    if (repo) {
+      text += `《${repo}》數據庫嘅`;
+    }
+    text += `《${branch}》分支`;
+    return text;
+  },
+  'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
+    return `要求將《${branch1}》分支合併到《${branch2}》分支`;
+  },
+  'story-$name-updated-$page': (name, page) => {
+    return `修正咗wiki頁面《${page}》`;
+  },
+  'story-author-$name1-and-$name2': (name1, name2) => {
+    return [ name1, `同`, name2 ];
+  },
+  'story-cancel-are-you-sure': '你確定要取消呢個帖子？',
+  'story-cancel-edit-are-you-sure': '你確定要取消呢啲改變？',
+  'story-comment': '回應',
+  'story-drop-files-here': '喺呢度放媒體文件',
+  'story-like': '鍾意',
+  'story-paste-image-here': '放喺文本編輯器嘅圖像會係呢度出現',
+  'story-pending': '等緊⋯⋯',
+  'story-push-added-$count-files': (count) => {
+    return `加咗${count}個文件`;
+  },
+  'story-push-added-$count-lines': (count) => {
+    return `加咗${count}行代碼`;
+  },
+  'story-push-components-changed': '更改咗以下部分：',
+  'story-push-deleted-$count-files': (count) => {
+    return `刪除咗${count}個文件`;
+  },
+  'story-push-deleted-$count-lines': (count) => {
+    return `刪除咗${count}行代碼`;
+  },
+  'story-push-modified-$count-files': (count) => {
+    return `修改咗${count}個文件`;
+  },
+  'story-push-modified-$count-lines': (count) => {
+    return `修改咗${count}行代碼`;
+  },
+  'story-push-renamed-$count-files': (count) => {
+    return `改咗${count}個文件嘅名`;
+  },
+  'story-remove-yourself-are-you-sure': '你確定你唔要做呢個帖子嘅合著者？',
+  'story-status-uploading-$progress': (progress) => {
+    return `上載（${progress}%）`;
+  },
 
-    'time-$days-ago': (days) => {
-        return cardinalT(days, '一日前');
-    },
-    'time-$hours-ago': (hours) => {
-        return cardinalT(hours, '一個鐘頭前');
-    },
-    'time-$hr-ago': (hr) => {
-        return cardinalT(hr, '一個鐘頭前');
-    },
-    'time-just-now': '啱啱線',
-    'time-yesterday': '尋日',
+  'time-$days-ago': (days) => {
+    return cardinalT(days, '一日前');
+  },
+  'time-$hours-ago': (hours) => {
+    return cardinalT(hours, '一個鐘頭前');
+  },
+  'time-$hr-ago': (hr) => {
+    return cardinalT(hr, '一個鐘頭前');
+  },
+  'time-just-now': '啱啱線',
+  'time-yesterday': '尋日',
 
-    'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        return `上載緊${num}個文件，重有${size}`;
-    },
+  'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
+    return `上載緊${num}個文件，重有${size}`;
+  },
 
-    'user-activity-$name-created-branch': '建立咗一個分支',
-    'user-activity-$name-created-milestone': '建立咗一個里程碑',
-    'user-activity-$name-created-repo': '建立咗一個git數據庫',
-    'user-activity-$name-created-tag': '建立咗一個標籤',
-    'user-activity-$name-deleted-repo': '刪除咗數據庫',
-    'user-activity-$name-edited-wiki-page': '編輯咗一個wiki頁面',
-    'user-activity-$name-imported-repo': '導入咗數據庫',
-    'user-activity-$name-joined-repo': '加入咗數據庫',
-    'user-activity-$name-left-repo': '離開咗數據庫',
-    'user-activity-$name-merged-code': '合併咗一啲代碼',
-    'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        return cardinalT(count, '新增咗一個音頻剪輯');
-    },
-    'user-activity-$name-posted-$count-links': (name, count) => {
-        return cardinalT(count, '新增咗一個網頁鏈接');
-    },
-    'user-activity-$name-posted-$count-pictures': (name, count) => {
-        return cardinalT(count, '新增咗一張相片');
-    },
-    'user-activity-$name-posted-$count-video-clips': (name, count) => {
-        return cardinalT(count, '新增咗一張影片');
-    },
-    'user-activity-$name-reported-issue': '報告咗一個問題',
-    'user-activity-$name-started-survey': '發布咗一個調查',
-    'user-activity-$name-started-task-list': '發布咗一個任務列表',
-    'user-activity-$name-wrote-post': '寫咗一個帖子',
+  'user-activity-$name-created-branch': '建立咗一個分支',
+  'user-activity-$name-created-milestone': '建立咗一個里程碑',
+  'user-activity-$name-created-repo': '建立咗一個git數據庫',
+  'user-activity-$name-created-tag': '建立咗一個標籤',
+  'user-activity-$name-deleted-repo': '刪除咗數據庫',
+  'user-activity-$name-edited-wiki-page': '編輯咗一個wiki頁面',
+  'user-activity-$name-imported-repo': '導入咗數據庫',
+  'user-activity-$name-joined-repo': '加入咗數據庫',
+  'user-activity-$name-left-repo': '離開咗數據庫',
+  'user-activity-$name-merged-code': '合併咗一啲代碼',
+  'user-activity-$name-posted-$count-audio-clips': (name, count) => {
+    return cardinalT(count, '新增咗一個音頻剪輯');
+  },
+  'user-activity-$name-posted-$count-links': (name, count) => {
+    return cardinalT(count, '新增咗一個網頁鏈接');
+  },
+  'user-activity-$name-posted-$count-pictures': (name, count) => {
+    return cardinalT(count, '新增咗一張相片');
+  },
+  'user-activity-$name-posted-$count-video-clips': (name, count) => {
+    return cardinalT(count, '新增咗一張影片');
+  },
+  'user-activity-$name-reported-issue': '報告咗一個問題',
+  'user-activity-$name-started-survey': '發布咗一個調查',
+  'user-activity-$name-started-task-list': '發布咗一個任務列表',
+  'user-activity-$name-wrote-post': '寫咗一個帖子',
 
-    'user-statistics-legend-post': '帖子',
-    'user-statistics-today': '今日',
-    'user-statistics-tooltip-$count-post': (count) => {
-        return `${count}個帖子`;
-    },
+  'user-statistics-legend-post': '帖子',
+  'user-statistics-today': '今日',
+  'user-statistics-tooltip-$count-post': (count) => {
+    return `${count}個帖子`;
+  },
 
-    'warning-no-connection': '唔可以即時更新',
+  'warning-no-connection': '唔可以即時更新',
 };
 
 export {
-    chooseVariant as phrases
+  chooseVariant as phrases
 };

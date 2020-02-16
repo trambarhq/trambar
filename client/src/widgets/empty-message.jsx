@@ -8,19 +8,19 @@ import './empty-message.scss';
  * Internet access, an alternate message will say so to that effect.
  */
 function EmptyMessage(props) {
-    let { env, phrase } = props;
-    let { t } = env.locale;
-    if (!env.online) {
-        phrase = 'empty-currently-offline';
-    }
-    return (
-        <div className="empty-message">
-            <div className="text">{t(phrase)}</div>
-        </div>
-    );
+  let { env, phrase } = props;
+  let { t } = env.locale;
+  if (!env.online) {
+    phrase = 'empty-currently-offline';
+  }
+  return (
+    <div className="empty-message">
+      <div className="text">{t(phrase)}</div>
+    </div>
+  );
 }
 
 export {
-    EmptyMessage as default,
-    EmptyMessage,
+  EmptyMessage as default,
+  EmptyMessage,
 };

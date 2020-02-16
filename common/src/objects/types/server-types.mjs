@@ -1,18 +1,18 @@
 const ServerTypes = [
-    'dropbox',
-    'facebook',
-    'github',
-    'gitlab',
-    'google',
-    'windows',
+  'dropbox',
+  'facebook',
+  'github',
+  'gitlab',
+  'google',
+  'windows',
 ];
 
 const IntegratedServerTypes = [
-    'gitlab',
+  'gitlab',
 ];
 
 export {
-    ServerTypes as default,
-    ServerTypes,
-    IntegratedServerTypes
+  ServerTypes as default,
+  ServerTypes,
+  IntegratedServerTypes
 };

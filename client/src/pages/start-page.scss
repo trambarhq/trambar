@@ -1,421 +1,421 @@
 @import '../colors';
 
 .start-page {
-    position: absolute;
+  position: absolute;
 
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
 
-    .oauth-button {
-        display: table;
-        border: 1px solid $start-page-button-border-color;
-        width: 100%;
-        max-width: 20em;
-        margin-top: 0.5em;
+  .oauth-button {
+    display: table;
+    border: 1px solid $start-page-button-border-color;
+    width: 100%;
+    max-width: 20em;
+    margin-top: 0.5em;
 
-        .icon {
-            width: 2em;
-            display: table-cell;
-            font-size: 2em;
-            padding: 0.26em 0 0.24em 0.25em;
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .label {
-            display: table-cell;
-            font-size: 1.25em;
-            padding-right: 2.5em;
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .error {
-            display: table-cell;
-            padding-left: 1.25em;
-            padding-right: 1.5em;
-            vertical-align: middle;
-        }
-
-        &:link, &:visited {
-            text-decoration: none;
-            color: $start-page-text-color;
-        }
-
-        &.error {
-            border-color: $start-page-button-error-color;
-            color: $start-page-button-error-color;
-        }
-
-        .no-touch & {
-            &:hover {
-                background-color: $start-page-button-hover-background-color;
-                color: $start-page-button-hover-text-color;
-            }
-        }
-
-        &:active {
-            background-color: $start-page-button-hover-background-color;
-            color: $start-page-button-hover-text-color;
-        }
-
-        .single-col & {
-            max-width: none;
-        }
+    .icon {
+      width: 2em;
+      display: table-cell;
+      font-size: 2em;
+      padding: 0.26em 0 0.24em 0.25em;
+      text-align: center;
+      vertical-align: middle;
     }
 
-    .project-button {
-        display: block;
-        border: 1px solid $start-page-button-border-color;
-        max-width: 34em;
-        cursor: pointer;
-        margin-bottom: 0.5em;
-        vertical-align: middle;
-        height: calc(3.5em + 2px);
-
-        .icon {
-            float: left;
-
-            IMG {
-                width: 3.5em;
-                height: 3.5em;
-            }
-
-            .default {
-                text-align: center;
-                width: 3.5em;
-                height: 3.5em;
-
-                &.v1 {
-                    background-color: adjust-hue($start-page-button-hover-background-color, 0);
-                }
-
-                &.v2 {
-                    background-color: adjust-hue($start-page-button-hover-background-color, 45);
-                }
-
-                &.v3 {
-                    background-color: adjust-hue($start-page-button-hover-background-color, 90);
-                }
-
-                &.v4 {
-                    background-color: adjust-hue($start-page-button-hover-background-color, 135);
-                }
-
-                &.v5 {
-                    background-color: adjust-hue($start-page-button-hover-background-color, 180);
-                }
-
-                svg {
-                    margin-top: 0.5em;
-                    height: 2.25em;
-                }
-            }
-        }
-
-        .text {
-            overflow: hidden;
-
-            .title {
-                font-size: 1em;
-                margin: 0.25em 0.25em 0 0.35em;
-                font-weight: bold;
-                font-variant: small-caps;
-            }
-
-            .description {
-                font-size: 0.8em;
-                margin: 0.1em 0.25em 0 0.40em;
-                white-space: pre-line;
-                overflow: hidden;
-                height: calc(2em + 5px);
-
-                .contents {
-                    width: calc(100% - 1.2em);
-                    position: relative;
-                    display: block;
-                    max-height: 3em;
-
-                    .ellipsis {
-                        position: absolute;
-                        right: -1em;
-                        top: calc(4.45em - 100%);
-                        text-align: left;
-                        vertical-align: bottom;
-                    }
-                }
-            }
-
-            .badge {
-                color: $start-page-button-badge-color;
-                margin-top: 0.2em;
-                margin-right: 0.2em;
-                float: right;
-            }
-        }
-
-        &:link, &:visited {
-            text-decoration: none;
-            color: $start-page-text-color;
-        }
-
-        .no-touch & {
-            &:hover {
-                background-color: $start-page-button-hover-background-color;
-                color: $start-page-button-hover-text-color;
-            }
-        }
-
-        .single-col & {
-            max-width: none;
-        }
+    .label {
+      display: table-cell;
+      font-size: 1.25em;
+      padding-right: 2.5em;
+      text-align: center;
+      vertical-align: middle;
     }
 
-    &.browser {
-        display: flex;
+    .error {
+      display: table-cell;
+      padding-left: 1.25em;
+      padding-right: 1.5em;
+      vertical-align: middle;
+    }
 
-        background-color: $start-page-background-color;
-        background-repeat: no-repeat;
-        background-position: center center;
-        background-attachment: fixed;
-        background-size: cover;
-        background-blend-mode: soft-light;
+    &:link, &:visited {
+      text-decoration: none;
+      color: $start-page-text-color;
+    }
 
-        .bar {
-            display: flex;
-            align-self: center;
-            flex-direction: column;
-            flex: 1 0 auto;
-            background-color: rgba($start-page-background-color, .97);
+    &.error {
+      border-color: $start-page-button-error-color;
+      color: $start-page-button-error-color;
+    }
+
+    .no-touch & {
+      &:hover {
+        background-color: $start-page-button-hover-background-color;
+        color: $start-page-button-hover-text-color;
+      }
+    }
+
+    &:active {
+      background-color: $start-page-button-hover-background-color;
+      color: $start-page-button-hover-text-color;
+    }
+
+    .single-col & {
+      max-width: none;
+    }
+  }
+
+  .project-button {
+    display: block;
+    border: 1px solid $start-page-button-border-color;
+    max-width: 34em;
+    cursor: pointer;
+    margin-bottom: 0.5em;
+    vertical-align: middle;
+    height: calc(3.5em + 2px);
+
+    .icon {
+      float: left;
+
+      IMG {
+        width: 3.5em;
+        height: 3.5em;
+      }
+
+      .default {
+        text-align: center;
+        width: 3.5em;
+        height: 3.5em;
+
+        &.v1 {
+          background-color: adjust-hue($start-page-button-hover-background-color, 0);
+        }
+
+        &.v2 {
+          background-color: adjust-hue($start-page-button-hover-background-color, 45);
+        }
+
+        &.v3 {
+          background-color: adjust-hue($start-page-button-hover-background-color, 90);
+        }
+
+        &.v4 {
+          background-color: adjust-hue($start-page-button-hover-background-color, 135);
+        }
+
+        &.v5 {
+          background-color: adjust-hue($start-page-button-hover-background-color, 180);
+        }
+
+        svg {
+          margin-top: 0.5em;
+          height: 2.25em;
+        }
+      }
+    }
+
+    .text {
+      overflow: hidden;
+
+      .title {
+        font-size: 1em;
+        margin: 0.25em 0.25em 0 0.35em;
+        font-weight: bold;
+        font-variant: small-caps;
+      }
+
+      .description {
+        font-size: 0.8em;
+        margin: 0.1em 0.25em 0 0.40em;
+        white-space: pre-line;
+        overflow: hidden;
+        height: calc(2em + 5px);
+
+        .contents {
+          width: calc(100% - 1.2em);
+          position: relative;
+          display: block;
+          max-height: 3em;
+
+          .ellipsis {
+            position: absolute;
+            right: -1em;
+            top: calc(4.45em - 100%);
+            text-align: left;
+            vertical-align: bottom;
+          }
+        }
+      }
+
+      .badge {
+        color: $start-page-button-badge-color;
+        margin-top: 0.2em;
+        margin-right: 0.2em;
+        float: right;
+      }
+    }
+
+    &:link, &:visited {
+      text-decoration: none;
+      color: $start-page-text-color;
+    }
+
+    .no-touch & {
+      &:hover {
+        background-color: $start-page-button-hover-background-color;
+        color: $start-page-button-hover-text-color;
+      }
+    }
+
+    .single-col & {
+      max-width: none;
+    }
+  }
+
+  &.browser {
+    display: flex;
+
+    background-color: $start-page-background-color;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: cover;
+    background-blend-mode: soft-light;
+
+    .bar {
+      display: flex;
+      align-self: center;
+      flex-direction: column;
+      flex: 1 0 auto;
+      background-color: rgba($start-page-background-color, .97);
+      width: 100%;
+      min-height: 25vh;
+      position: relative;
+      color: $start-page-text-color;
+      overflow: hidden;
+
+      .content-area {
+        align-self: center;
+        text-align: center;
+        flex: 1 1 auto;
+        width: 90%;
+        max-width: 80em;
+        padding-bottom: 1.4em;
+        z-index: 1;
+
+        .section {
+          display: inline-block;
+          text-align: left;
+          width: 48%;
+          min-width: 28em;
+          vertical-align: top;
+          padding-left: 1em;
+          padding-right: 1em;
+
+          .scrollable {
+            margin-top: 1em;
+            padding-right: 0.25em;
+            max-height: 60vh;
+
+            .single-col & {
+              max-height: 30vh;
+            }
+          }
+
+          &.description {
+            user-select: text;
+
+            .scrollable {
+              white-space: pre-line;
+            }
+          }
+
+          .single-col & {
+            min-width: auto;
             width: 100%;
-            min-height: 25vh;
-            position: relative;
-            color: $start-page-text-color;
-            overflow: hidden;
-
-            .content-area {
-                align-self: center;
-                text-align: center;
-                flex: 1 1 auto;
-                width: 90%;
-                max-width: 80em;
-                padding-bottom: 1.4em;
-                z-index: 1;
-
-                .section {
-                    display: inline-block;
-                    text-align: left;
-                    width: 48%;
-                    min-width: 28em;
-                    vertical-align: top;
-                    padding-left: 1em;
-                    padding-right: 1em;
-
-                    .scrollable {
-                        margin-top: 1em;
-                        padding-right: 0.25em;
-                        max-height: 60vh;
-
-                        .single-col & {
-                            max-height: 30vh;
-                        }
-                    }
-
-                    &.description {
-                        user-select: text;
-
-                        .scrollable {
-                            white-space: pre-line;
-                        }
-                    }
-
-                    .single-col & {
-                        min-width: auto;
-                        width: 100%;
-                    }
-                }
-
-                .single-col & {
-                    width: 100%;
-                    max-width: none;
-                }
-            }
-
-            .welcome {
-                position: absolute;
-                left: 0px;
-                right: 0px;
-                top: 0px;
-                bottom: 0px;
-                text-align: center;
-                margin: auto;
-                height: 1em;
-                z-index: 0;
-                opacity: 0;
-            }
+          }
         }
 
-        &.transition-out-fast {
-            transition: opacity 0.7s linear 0.55s;
-            opacity: 0;
-
-            .bar {
-                transition: min-height 0.7s;
-                min-height: 100vh;
-
-                .content-area {
-                    opacity: 0;
-                }
-            }
+        .single-col & {
+          width: 100%;
+          max-width: none;
         }
+      }
 
-        &.transition-out-slow {
-            transition: opacity 0.7s linear 3s;
-            opacity: 0;
-
-            .bar {
-                transition: min-height 0.7s, background-color 0.5s;
-                min-height: 100vh;
-                background-color: $start-page-background-color;
-
-                .content-area {
-                    opacity: 0;
-                }
-
-                .welcome {
-                    animation-name: fade-in-out;
-                    animation-duration: 2.5s;
-                    animation-delay: 1s;
-                    opacity: 0;
-
-                    @keyframes fade-in-out {
-                        0%   { opacity: 0 }
-                        35%  { opacity: 1 }
-                        75%  { opacity: 1 }
-                        100% { opacity: 0 }
-                    }
-                }
-            }
-        }
+      .welcome {
+        position: absolute;
+        left: 0px;
+        right: 0px;
+        top: 0px;
+        bottom: 0px;
+        text-align: center;
+        margin: auto;
+        height: 1em;
+        z-index: 0;
+        opacity: 0;
+      }
     }
 
-    &.cordova {
-        padding: 0em 0.5em 0em 0.5em;
-        background-color: $start-page-cordova-background-color;
-        color: $start-page-text-color;
+    &.transition-out-fast {
+      transition: opacity 0.7s linear 0.55s;
+      opacity: 0;
 
-        .title {
+      .bar {
+        transition: min-height 0.7s;
+        min-height: 100vh;
+
+        .content-area {
+          opacity: 0;
+        }
+      }
+    }
+
+    &.transition-out-slow {
+      transition: opacity 0.7s linear 3s;
+      opacity: 0;
+
+      .bar {
+        transition: min-height 0.7s, background-color 0.5s;
+        min-height: 100vh;
+        background-color: $start-page-background-color;
+
+        .content-area {
+          opacity: 0;
         }
 
         .welcome {
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
+          animation-name: fade-in-out;
+          animation-duration: 2.5s;
+          animation-delay: 1s;
+          opacity: 0;
 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-
-            .profile-image, .name {
-                opacity: 0;
-                transition: opacity 0.5s;
-            }
-
-            &.user {
-                .profile-image, .name {
-                    opacity: 1;
-                }
-            }
+          @keyframes fade-in-out {
+            0%   { opacity: 0 }
+            35%  { opacity: 1 }
+            75%  { opacity: 1 }
+            100% { opacity: 0 }
+          }
         }
+      }
+    }
+  }
 
-        .activation-instructions {
-            margin-bottom: 1em;
-            line-height: 125%;
+  &.cordova {
+    padding: 0em 0.5em 0em 0.5em;
+    background-color: $start-page-cordova-background-color;
+    color: $start-page-text-color;
 
-            .ui {
-                display: inline-block;
-                color: $start-page-highlighted-text-color;
-                font-weight: bold;
-                padding-left: 0.1em;
-                padding-right: 0.1em;
-                white-space: nowrap;
-            }
-        }
-
-        .activation-buttons {
-            .left {
-                float: left;
-            }
-
-            .right {
-                float: right;
-            }
-        }
-
-        .projects {
-            margin-bottom: 2em;
-
-            .project-button {
-                background-color: $button-background-color;
-            }
-        }
-
-        &.transition-out-fast {
-            transition: opacity 0.7s linear 0.55s, background-color 0.7s ease-in;
-            opacity: 0;
-            background-color: $viewport-background-color;
-        }
-
-        &.transition-out-slow {
-            transition: opacity 0.7s linear 3s, background-color 1s ease-in;
-            opacity: 0;
-            background-color: $viewport-background-color;
-
-            .welcome {
-                animation-name: fade-in-out;
-                animation-duration: 3s;
-                animation-delay: 0.5s;
-                opacity: 0;
-
-                @keyframes fade-in-out {
-                    0%   { opacity: 0 }
-                    35%  { opacity: 1 }
-                    75%  { opacity: 1 }
-                    100% { opacity: 0 }
-                }
-            }
-        }
+    .title {
     }
 
-    .loading-animation {
-        height: 3.5em;
-    }
+    .welcome {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
 
-    .empty-message {
-        height: 3.5em;
-    }
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
 
-    .other-servers {
-        clear: both;
-        overflow: hidden;
-        margin-top: 2em;
+      .profile-image, .name {
+        opacity: 0;
+        transition: opacity 0.5s;
+      }
 
-        UL {
-            list-style-type: none;
-            padding-left: 1em;
-            font-size: 1.2em;
-
-            A {
-                &:link, &:visited {
-                    text-decoration: none;
-                    color: $start-page-text-color;
-                }
-            }
+      &.user {
+        .profile-image, .name {
+          opacity: 1;
         }
+      }
     }
+
+    .activation-instructions {
+      margin-bottom: 1em;
+      line-height: 125%;
+
+      .ui {
+        display: inline-block;
+        color: $start-page-highlighted-text-color;
+        font-weight: bold;
+        padding-left: 0.1em;
+        padding-right: 0.1em;
+        white-space: nowrap;
+      }
+    }
+
+    .activation-buttons {
+      .left {
+        float: left;
+      }
+
+      .right {
+        float: right;
+      }
+    }
+
+    .projects {
+      margin-bottom: 2em;
+
+      .project-button {
+        background-color: $button-background-color;
+      }
+    }
+
+    &.transition-out-fast {
+      transition: opacity 0.7s linear 0.55s, background-color 0.7s ease-in;
+      opacity: 0;
+      background-color: $viewport-background-color;
+    }
+
+    &.transition-out-slow {
+      transition: opacity 0.7s linear 3s, background-color 1s ease-in;
+      opacity: 0;
+      background-color: $viewport-background-color;
+
+      .welcome {
+        animation-name: fade-in-out;
+        animation-duration: 3s;
+        animation-delay: 0.5s;
+        opacity: 0;
+
+        @keyframes fade-in-out {
+          0%   { opacity: 0 }
+          35%  { opacity: 1 }
+          75%  { opacity: 1 }
+          100% { opacity: 0 }
+        }
+      }
+    }
+  }
+
+  .loading-animation {
+    height: 3.5em;
+  }
+
+  .empty-message {
+    height: 3.5em;
+  }
+
+  .other-servers {
+    clear: both;
+    overflow: hidden;
+    margin-top: 2em;
+
+    UL {
+      list-style-type: none;
+      padding-left: 1em;
+      font-size: 1.2em;
+
+      A {
+        &:link, &:visited {
+          text-decoration: none;
+          color: $start-page-text-color;
+        }
+      }
+    }
+  }
 }

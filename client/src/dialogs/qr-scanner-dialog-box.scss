@@ -1,185 +1,185 @@
 @import '../colors';
 
 .camera-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+
+  .top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: $qr-scanner-overlay-background-color;
+    color: $qr-scanner-overlay-text-color;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+    line-height: 125%;
+    pointer-events: auto;
+
+    .ui {
+      display: inline-block;
+      color: $qr-scanner-overlay-ui-text-color;
+      font-weight: bold;
+      padding-left: 0.1em;
+      padding-right: 0.1em;
+      white-space: nowrap;
+    }
+  }
+
+  .bottom {
+    background-color: $qr-scanner-overlay-background-color;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+    pointer-events: auto;
+
+    .buttons {
+      float: right;
+    }
+
+    .message {
+      padding: 0.5em 0 0 0.25em;
+      float: left;
+
+      .success {
+        color: $qr-scanner-overlay-success-text-color;
+      }
+
+      .error {
+        color: $qr-scanner-overlay-error-text-color;
+      }
+    }
+  }
+
+  .square {
     position: absolute;
     left: 0;
     top: 0;
     right: 0;
     bottom: 0;
-    pointer-events: none;
+    margin: auto;
+    animation-duration: 0.5s;
+    animation-iteration-count: 1;
+    animation-name: expand;
 
-    .top {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        background-color: $qr-scanner-overlay-background-color;
-        color: $qr-scanner-overlay-text-color;
-        padding: 0.5em 0.5em 0.5em 0.5em;
-        line-height: 125%;
-        pointer-events: auto;
+    .corner {
+      position: absolute;
+      border-color: $qr-scanner-overlay-target-color;
+      border-style: none;
 
-        .ui {
-            display: inline-block;
-            color: $qr-scanner-overlay-ui-text-color;
-            font-weight: bold;
-            padding-left: 0.1em;
-            padding-right: 0.1em;
-            white-space: nowrap;
-        }
-    }
-
-    .bottom {
-        background-color: $qr-scanner-overlay-background-color;
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 0.5em 0.5em 0.5em 0.5em;
-        pointer-events: auto;
-
-        .buttons {
-            float: right;
-        }
-
-        .message {
-            padding: 0.5em 0 0 0.25em;
-            float: left;
-
-            .success {
-                color: $qr-scanner-overlay-success-text-color;
-            }
-
-            .error {
-                color: $qr-scanner-overlay-error-text-color;
-            }
-        }
-    }
-
-    .square {
-        position: absolute;
+      &.top-left {
         left: 0;
         top: 0;
+        right: 80%;
+        bottom: 80%;
+        border-top-style: solid;
+        border-left-style: solid;
+        border-bottom-left-radius: 0;
+        border-top-right-radius: 0;
+      }
+
+      &.top-right {
+        left: 80%;
+        top: 0;
         right: 0;
+        bottom: 80%;
+        border-top-style: solid;
+        border-right-style: solid;
+        border-bottom-right-radius: 0;
+        border-top-left-radius: 0;
+      }
+
+      &.bottom-left {
+        left: 0;
+        top: 80%;
+        right: 80%;
         bottom: 0;
-        margin: auto;
-        animation-duration: 0.5s;
-        animation-iteration-count: 1;
-        animation-name: expand;
+        border-bottom-style: solid;
+        border-left-style: solid;
+        border-top-left-radius: 0;
+        border-bottom-right-radius: 0;
+      }
 
-        .corner {
-            position: absolute;
-            border-color: $qr-scanner-overlay-target-color;
-            border-style: none;
-
-            &.top-left {
-                left: 0;
-                top: 0;
-                right: 80%;
-                bottom: 80%;
-                border-top-style: solid;
-                border-left-style: solid;
-                border-bottom-left-radius: 0;
-                border-top-right-radius: 0;
-            }
-
-            &.top-right {
-                left: 80%;
-                top: 0;
-                right: 0;
-                bottom: 80%;
-                border-top-style: solid;
-                border-right-style: solid;
-                border-bottom-right-radius: 0;
-                border-top-left-radius: 0;
-            }
-
-            &.bottom-left {
-                left: 0;
-                top: 80%;
-                right: 80%;
-                bottom: 0;
-                border-bottom-style: solid;
-                border-left-style: solid;
-                border-top-left-radius: 0;
-                border-bottom-right-radius: 0;
-            }
-
-            &.bottom-right {
-                left: 80%;
-                top: 80%;
-                right: 0;
-                bottom:0;
-                border-bottom-style: solid;
-                border-right-style: solid;
-                border-top-right-radius: 0;
-                border-bottom-left-radius: 0;
-            }
-        }
-
-        @media (orientation: landscape) {
-            width: 40vh;
-            height: 40vh;
-
-            .corner {
-                border-width: 3vh;
-                border-radius: 6vh;
-            }
-
-            @keyframes expand {
-                0% {
-                    width: 30vh;
-                    height: 30vh;
-                }
-                100% {
-                    width: 40vh;
-                    height: 40vh;
-                }
-            }
-        }
-
-        @media (orientation: portrait) {
-            width: 80vw;
-            height: 80vw;
-
-            .corner {
-                border-width: 6vw;
-                border-radius: 12vw;
-            }
-
-            @keyframes expand {
-                0% {
-                    width: 70vw;
-                    height: 70vw;
-                }
-                100% {
-                    width: 80vw;
-                    height: 80vw;
-                }
-            }
-        }
+      &.bottom-right {
+        left: 80%;
+        top: 80%;
+        right: 0;
+        bottom:0;
+        border-bottom-style: solid;
+        border-right-style: solid;
+        border-top-right-radius: 0;
+        border-bottom-left-radius: 0;
+      }
     }
+
+    @media (orientation: landscape) {
+      width: 40vh;
+      height: 40vh;
+
+      .corner {
+        border-width: 3vh;
+        border-radius: 6vh;
+      }
+
+      @keyframes expand {
+        0% {
+          width: 30vh;
+          height: 30vh;
+        }
+        100% {
+          width: 40vh;
+          height: 40vh;
+        }
+      }
+    }
+
+    @media (orientation: portrait) {
+      width: 80vw;
+      height: 80vw;
+
+      .corner {
+        border-width: 6vw;
+        border-radius: 12vw;
+      }
+
+      @keyframes expand {
+        0% {
+          width: 70vw;
+          height: 70vw;
+        }
+        100% {
+          width: 80vw;
+          height: 80vw;
+        }
+      }
+    }
+  }
 }
 
 .camera-placeholder {
-    position: absolute;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
 
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-attachment: fixed;
-    background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
+  background-size: cover;
 
-    INPUT[type="text"] {
-        width: 100%;
-        margin-left: 0.5em;
-        margin-right: 0.5em;
-    }
+  INPUT[type="text"] {
+    width: 100%;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+  }
 }

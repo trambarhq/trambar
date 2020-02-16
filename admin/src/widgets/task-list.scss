@@ -1,113 +1,113 @@
 @import '../colors';
 
 .task-list {
-    max-height: 25em;
-    overflow-y: auto;
-    padding: 0 0.5em 0 0.5em;
-    margin-bottom: 1em;
+  max-height: 25em;
+  overflow-y: auto;
+  padding: 0 0.5em 0 0.5em;
+  margin-bottom: 1em;
 
-    .task {
-        clear: both;
-        padding: 0.25em 0.25em 0.2em 0.25em;
-        overflow: hidden;
+  .task {
+    clear: both;
+    padding: 0.25em 0.25em 0.2em 0.25em;
+    overflow: hidden;
 
-        .summary {
-            cursor: pointer;
-        }
-
-        .start-time {
-            float: left;
-            margin-right: 1em;
-        }
-
-        .message {
-            float: left;
-            margin-right: 1em;
-
-            .fa {
-                margin-left: 0.5em;
-            }
-        }
-
-        .duration {
-            display: inline-block;
-            float: right;
-            margin-left: 1em;
-        }
-
-        .progress-bar-frame {
-            display: inline-block;
-            float: right;
-            width: 7em;
-            border: 1px solid $normal-text-color;
-            margin-top: 0.2em;
-            margin-left: 0.5em;
-
-            .bar {
-                background-color: $task-progress-bar-color;
-                height: 0.6em;
-            }
-        }
-
-        &.expanded {
-            background: $task-expanded-background-color;
-        }
-
-        .details {
-            clear: both;
-            margin-top: 0.25em;
-            padding-top: 0.25em;
-
-
-            .item {
-                display: inline-block;
-                color: $normal-text-color;
-                max-width: 8em;
-                padding: 0.15em 0.5em 0.15em 0.5em;
-                margin-right: 0.3em;
-                text-align: center;
-                text-overflow: ellipsis;
-                border: 1px solid $normal-border-color;
-                overflow: hidden;
-                white-space: nowrap;
-
-                &.added {
-                    background-color: $task-item-added-background-color;
-                }
-
-                &.deleted {
-                    background-color: $task-item-deleted-background-color;
-                }
-
-                &.modified {
-                    background-color: $task-item-modified-background-color;
-                }
-            }
-        }
-
-        .error {
-            font-size: 0.8em;
-            clear: both;
-            white-space: pre-wrap;
-            padding-top: 0.35em;
-            padding-bottom: 0.35em;
-            border-top: 1px solid $task-error-border-color;
-        }
-
-        &.failure {
-            color: $task-error-border-color;
-
-            .progress-bar-frame {
-                border-color: $task-error-border-color;
-
-                .bar {
-                    background-color: $task-error-progress-bar;
-                }
-            }
-
-            .details {
-                border-top-color: $task-error-border-color;
-            }
-        }
+    .summary {
+      cursor: pointer;
     }
+
+    .start-time {
+      float: left;
+      margin-right: 1em;
+    }
+
+    .message {
+      float: left;
+      margin-right: 1em;
+
+      .fa {
+        margin-left: 0.5em;
+      }
+    }
+
+    .duration {
+      display: inline-block;
+      float: right;
+      margin-left: 1em;
+    }
+
+    .progress-bar-frame {
+      display: inline-block;
+      float: right;
+      width: 7em;
+      border: 1px solid $normal-text-color;
+      margin-top: 0.2em;
+      margin-left: 0.5em;
+
+      .bar {
+        background-color: $task-progress-bar-color;
+        height: 0.6em;
+      }
+    }
+
+    &.expanded {
+      background: $task-expanded-background-color;
+    }
+
+    .details {
+      clear: both;
+      margin-top: 0.25em;
+      padding-top: 0.25em;
+
+
+      .item {
+        display: inline-block;
+        color: $normal-text-color;
+        max-width: 8em;
+        padding: 0.15em 0.5em 0.15em 0.5em;
+        margin-right: 0.3em;
+        text-align: center;
+        text-overflow: ellipsis;
+        border: 1px solid $normal-border-color;
+        overflow: hidden;
+        white-space: nowrap;
+
+        &.added {
+          background-color: $task-item-added-background-color;
+        }
+
+        &.deleted {
+          background-color: $task-item-deleted-background-color;
+        }
+
+        &.modified {
+          background-color: $task-item-modified-background-color;
+        }
+      }
+    }
+
+    .error {
+      font-size: 0.8em;
+      clear: both;
+      white-space: pre-wrap;
+      padding-top: 0.35em;
+      padding-bottom: 0.35em;
+      border-top: 1px solid $task-error-border-color;
+    }
+
+    &.failure {
+      color: $task-error-border-color;
+
+      .progress-bar-frame {
+        border-color: $task-error-border-color;
+
+        .bar {
+          background-color: $task-error-progress-bar;
+        }
+      }
+
+      .details {
+        border-top-color: $task-error-border-color;
+      }
+    }
+  }
 }

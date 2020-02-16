@@ -11,47 +11,47 @@ import { Tooltip } from '../widgets/tooltip.jsx';
  * Tooltip showing the full timestamp.
  */
 async function ModifiedTimeTooltip(props) {
-    const { env, time, disabled } = props;
-    const { localeCode } = env.locale;
-    const [ show ] = useProgress(0);
-    let relativeTime = null;
-    let absoluteTime = null;
-    if (time) {
-        const m = Moment(time).locale(localeCode);
-        relativeTime = m.fromNow();
-        absoluteTime = m.format('lll');
-    };
+  const { env, time, disabled } = props;
+  const { localeCode } = env.locale;
+  const [ show ] = useProgress(0);
+  let relativeTime = null;
+  let absoluteTime = null;
+  if (time) {
+    const m = Moment(time).locale(localeCode);
+    relativeTime = m.fromNow();
+    absoluteTime = m.format('lll');
+  };
 
-    for (;;) {
-        render();
-        await interval();
-    }
+  for (;;) {
+    render();
+    await interval();
+  }
 
-    function render() {
-        show(
-            <Tooltip disabled={disabled}>
-                <inline>{relativeTime}</inline>
-                <window>{absoluteTime}</window>
-            </Tooltip>
-        );
-    }
+  function render() {
+    show(
+      <Tooltip disabled={disabled}>
+        <inline>{relativeTime}</inline>
+        <window>{absoluteTime}</window>
+      </Tooltip>
+    );
+  }
 }
 
 let intervalPromise = null;
 
 function interval() {
-    if (!intervalPromise) {
-        intervalPromise = delay(30 * 1000);
-        intervalPromise.then(() => {
-            intervalPromise = null;
-        });
-    }
-    return intervalPromise;
+  if (!intervalPromise) {
+    intervalPromise = delay(30 * 1000);
+    intervalPromise.then(() => {
+      intervalPromise = null;
+    });
+  }
+  return intervalPromise;
 }
 
 const component = Relaks.memo(ModifiedTimeTooltip);
 
 export {
-    component as default,
-    component as ModifiedTimeTooltip,
+  component as default,
+  component as ModifiedTimeTooltip,
 };

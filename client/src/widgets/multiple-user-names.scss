@@ -1,87 +1,87 @@
 @import '../colors';
 
 .multiple-user-names {
-    position: relative;
+  position: relative;
 
-    .label {
-        cursor: pointer;
-        touch-action: manipulation;
-    }
+  .label {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
 
-    .popup-container {
-        position: absolute;
-        left: 0.5em;
-        top: 1.5em;
-        width: 100vw;
-        z-index: 500;
-        font-size: 1rem;
+  .popup-container {
+    position: absolute;
+    left: 0.5em;
+    top: 1.5em;
+    width: 100vw;
+    z-index: 500;
+    font-size: 1rem;
 
-        .popup {
-            display: inline-block;
-            border: 1px solid $pop-up-menu-border-color;
-            padding: 0.3em 0.3em 0.1em 0.3em;
-            background-color: $pop-up-menu-background-color;
-            box-shadow: 2px 2px 2px 0px $pop-up-menu-shadow-color;
+    .popup {
+      display: inline-block;
+      border: 1px solid $pop-up-menu-border-color;
+      padding: 0.3em 0.3em 0.1em 0.3em;
+      background-color: $pop-up-menu-background-color;
+      box-shadow: 2px 2px 2px 0px $pop-up-menu-shadow-color;
 
-            .user {
-                display: block;
-                margin-bottom: 0.2em;
+      .user {
+        display: block;
+        margin-bottom: 0.2em;
 
-                .name {
-                    color: #333;
-                    margin-left: 0.2em;
-                    vertical-align: middle;
-                }
-            }
-
-            .more {
-                color: #bbb;
-                font-size: 0.8em;
-                text-align: right;
-                border-top: 1px solid #eee;
-            }
+        .name {
+          color: #333;
+          margin-left: 0.2em;
+          vertical-align: middle;
         }
+      }
+
+      .more {
+        color: #bbb;
+        font-size: 0.8em;
+        text-align: right;
+        border-top: 1px solid #eee;
+      }
     }
+  }
 }
 
 .multiple-user-names-dialog-box {
-    display: flex;
-    flex-direction: column;
-    max-height: 80%;
-    max-width: 100%;
-    background-color: $dialog-box-background-color;
-    box-shadow: 2px 2px 2px $dialog-box-shadow-color;
-    color: $dialog-box-text-color;
-    margin: auto;
-    padding: 0.4em 0.4em 0.4em 0.4em;
+  display: flex;
+  flex-direction: column;
+  max-height: 80%;
+  max-width: 100%;
+  background-color: $dialog-box-background-color;
+  box-shadow: 2px 2px 2px $dialog-box-shadow-color;
+  color: $dialog-box-text-color;
+  margin: auto;
+  padding: 0.4em 0.4em 0.4em 0.4em;
 
-    .scrollable {
-        flex: 1 1 auto;
+  .scrollable {
+    flex: 1 1 auto;
 
-        .list {
-            min-width: 14em;
-            padding-bottom: 0.1em;
+    .list {
+      min-width: 14em;
+      padding-bottom: 0.1em;
 
-            .user {
-                margin-bottom: 0.2em;
+      .user {
+        margin-bottom: 0.2em;
 
-                .profile-image {
-                    float: none;
-                    margin: 0;
-                }
-
-                .name {
-                    margin-left: 0.2em;
-                    vertical-align: middle;
-                }
-            }
+        .profile-image {
+          float: none;
+          margin: 0;
         }
-    }
 
-    .buttons {
-        flex: 0 0 auto;
-        padding: 0.4em 0 0.2em 0.2em;
-        text-align: right;
-        border-top: 1px solid $separator-color;
+        .name {
+          margin-left: 0.2em;
+          vertical-align: middle;
+        }
+      }
     }
+  }
+
+  .buttons {
+    flex: 0 0 auto;
+    padding: 0.4em 0 0.2em 0.2em;
+    text-align: right;
+    border-top: 1px solid $separator-color;
+  }
 }

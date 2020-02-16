@@ -27,7 +27,7 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 // custom hooks
 import {
-    useDraftBuffer,
+  useDraftBuffer,
 } from '../hooks.mjs';
 
 import './settings-page.scss';
@@ -35,190 +35,190 @@ import './settings-page.scss';
 const autosave = 2000;
 
 async function SettingsPage(props) {
-    const { database } = props;
-    const [ show ] = useProgress();
+  const { database } = props;
+  const [ show ] = useProgress();
 
-    render();
-    const currentUserID = await database.start();
-    const currentUser = await UserFinder.findUser(database, currentUserID);
-    const projectLinks = await ProjectLinkFinder.findActiveLinks(database);
-    const currentProject = await ProjectFinder.findCurrentProject(database);
-    render();
-    const devices = await DeviceFinder.findUserDevices(database, currentUser, 1);
-    render();
-    const repos = await RepoFinder.findProjectRepos(database, currentProject);
-    render();
-    const system = await SystemFinder.findSystem(database);
-    render();
+  render();
+  const currentUserID = await database.start();
+  const currentUser = await UserFinder.findUser(database, currentUserID);
+  const projectLinks = await ProjectLinkFinder.findActiveLinks(database);
+  const currentProject = await ProjectFinder.findCurrentProject(database);
+  render();
+  const devices = await DeviceFinder.findUserDevices(database, currentUser, 1);
+  render();
+  const repos = await RepoFinder.findProjectRepos(database, currentProject);
+  render();
+  const system = await SystemFinder.findSystem(database);
+  render();
 
-    function render() {
-        const sprops = {
-            currentUser,
-            currentProject,
-            projectLinks,
-            devices,
-            repos,
-            system,
-            ...props
-        };
-        show(<SettingsPageSync {...sprops} />);
-    }
+  function render() {
+    const sprops = {
+      currentUser,
+      currentProject,
+      projectLinks,
+      devices,
+      repos,
+      system,
+      ...props
+    };
+    show(<SettingsPageSync {...sprops} />);
+  }
 }
 
 function SettingsPageSync(props) {
-    const { database, route, env, payloads } = props;
-    const { currentUser, currentProject, projectLinks, devices, repos, system } = props;
-    const userDraft = useDraftBuffer({
-        original: currentUser || {},
-    });
+  const { database, route, env, payloads } = props;
+  const { currentUser, currentProject, projectLinks, devices, repos, system } = props;
+  const userDraft = useDraftBuffer({
+    original: currentUser || {},
+  });
 
-    useAutoSave(userDraft, autosave, () => {
-        const userAfter = UserSaver.saveUser(database, userDraft.current);
-        payloads.dispatch(userAfter);
-    });
-    useEffect(() => {
-        const handleKonamiCode = (evt) => {
-            userDraft.set('settings.development.show_panel', true);
-        };
-        KonamiCode.addListener(handleKonamiCode);
-        return () => {
-            KonamiCode.removeListener(handleKonamiCode);
-        };
-    }, []);
+  useAutoSave(userDraft, autosave, () => {
+    const userAfter = UserSaver.saveUser(database, userDraft.current);
+    payloads.dispatch(userAfter);
+  });
+  useEffect(() => {
+    const handleKonamiCode = (evt) => {
+      userDraft.set('settings.development.show_panel', true);
+    };
+    KonamiCode.addListener(handleKonamiCode);
+    return () => {
+      KonamiCode.removeListener(handleKonamiCode);
+    };
+  }, []);
 
-    return (
-        <PageContainer className="settings-page">
-            <div className="panels">
-                <ErrorBoundary env={env}>
-                    {renderDevelopmentPanel()}
-                    {renderProjectPanel()}
-                    {renderDevicePanel()}
-                    {renderNotificationPanel()}
-                    {renderWebAlertPanel()}
-                    {renderMobileAlertPanel()}
-                    {renderUserInfoPanel()}
-                    {renderUserImagePanel()}
-                    {renderSocialNetworkPanel()}
-                    {renderLanguagePanel()}
-                </ErrorBoundary>
-            </div>
-        </PageContainer>
-    );
+  return (
+    <PageContainer className="settings-page">
+      <div className="panels">
+        <ErrorBoundary env={env}>
+          {renderDevelopmentPanel()}
+          {renderProjectPanel()}
+          {renderDevicePanel()}
+          {renderNotificationPanel()}
+          {renderWebAlertPanel()}
+          {renderMobileAlertPanel()}
+          {renderUserInfoPanel()}
+          {renderUserImagePanel()}
+          {renderSocialNetworkPanel()}
+          {renderLanguagePanel()}
+        </ErrorBoundary>
+      </div>
+    </PageContainer>
+  );
 
-    function renderDevelopmentPanel() {
-        const enabled = userDraft.get('settings.development.show_panel', false);
-        if (!enabled) {
-            return null;
-        }
-        const props = {
-            userDraft,
-            currentUser,
-            route,
-            env,
-        };
-        return <DevelopmentPanel {...props} />;
+  function renderDevelopmentPanel() {
+    const enabled = userDraft.get('settings.development.show_panel', false);
+    if (!enabled) {
+      return null;
     }
+    const props = {
+      userDraft,
+      currentUser,
+      route,
+      env,
+    };
+    return <DevelopmentPanel {...props} />;
+  }
 
-    function renderProjectPanel() {
-        const props = {
-            userDraft,
-            system,
-            project: currentProject,
-            projectLinks,
-            database,
-            route,
-            env,
-        };
-        return <ProjectPanel {...props} />;
-    }
+  function renderProjectPanel() {
+    const props = {
+      userDraft,
+      system,
+      project: currentProject,
+      projectLinks,
+      database,
+      route,
+      env,
+    };
+    return <ProjectPanel {...props} />;
+  }
 
-    function renderDevicePanel() {
-        if (env.platform === 'cordova' || _.isEmpty(devices)) {
-            return null;
-        }
-        const props = {
-            devices,
-            database,
-            route,
-            env,
-        };
-        return <DevicePanel {...props} />;
+  function renderDevicePanel() {
+    if (env.platform === 'cordova' || _.isEmpty(devices)) {
+      return null;
     }
+    const props = {
+      devices,
+      database,
+      route,
+      env,
+    };
+    return <DevicePanel {...props} />;
+  }
 
-    function renderUserInfoPanel() {
-        const props = {
-            userDraft,
-            currentUser,
-            env,
-        };
-        return <UserInfoPanel {...props} />;
-    }
+  function renderUserInfoPanel() {
+    const props = {
+      userDraft,
+      currentUser,
+      env,
+    };
+    return <UserInfoPanel {...props} />;
+  }
 
-    function renderUserImagePanel() {
-        const props = {
-            userDraft,
-            currentUser,
-            payloads,
-            env,
-        };
-        return <UserImagePanel {...props} />;
-    }
+  function renderUserImagePanel() {
+    const props = {
+      userDraft,
+      currentUser,
+      payloads,
+      env,
+    };
+    return <UserImagePanel {...props} />;
+  }
 
-    function renderSocialNetworkPanel() {
-        const props = {
-            userDraft,
-            currentUser,
-            env,
-        };
-        return <SocialNetworkPanel {...props} />;
-    }
+  function renderSocialNetworkPanel() {
+    const props = {
+      userDraft,
+      currentUser,
+      env,
+    };
+    return <SocialNetworkPanel {...props} />;
+  }
 
-    function renderNotificationPanel() {
-        let props = {
-            userDraft,
-            currentUser,
-            repos,
-            env,
-        };
-        return <NotificationPanel {...props} />;
-    }
+  function renderNotificationPanel() {
+    let props = {
+      userDraft,
+      currentUser,
+      repos,
+      env,
+    };
+    return <NotificationPanel {...props} />;
+  }
 
-    function renderWebAlertPanel() {
-        if (env.platform === 'cordova') {
-            return null;
-        }
-        const props = {
-            userDraft,
-            currentUser,
-            repos,
-            env,
-        };
-        return <WebAlertPanel {...props} />;
+  function renderWebAlertPanel() {
+    if (env.platform === 'cordova') {
+      return null;
     }
+    const props = {
+      userDraft,
+      currentUser,
+      repos,
+      env,
+    };
+    return <WebAlertPanel {...props} />;
+  }
 
-    function renderMobileAlertPanel() {
-        if (_.isEmpty(devices)) {
-            return null;
-        }
-        const props = {
-            userDraft,
-            currentUser,
-            repos,
-            env,
-        };
-        return <MobileAlertPanel {...props} />;
+  function renderMobileAlertPanel() {
+    if (_.isEmpty(devices)) {
+      return null;
     }
+    const props = {
+      userDraft,
+      currentUser,
+      repos,
+      env,
+    };
+    return <MobileAlertPanel {...props} />;
+  }
 
-    function renderLanguagePanel() {
-        const props = { env };
-        return <LanguagePanel {...props} />;
-    }
+  function renderLanguagePanel() {
+    const props = { env };
+    return <LanguagePanel {...props} />;
+  }
 }
 
 const component = Relaks.memo(SettingsPage);
 
 export {
-    component as default,
-    component as SettingsPage,
-    SettingsPageSync,
+  component as default,
+  component as SettingsPage,
+  SettingsPageSync,
 };

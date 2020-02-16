@@ -1,58 +1,58 @@
 @import '../colors';
 
 .user-selection-list {
-    min-width: 14em;
-    padding-bottom: 0.1em;
+  min-width: 14em;
+  padding-bottom: 0.1em;
 
-    .user {
-        position: relative;
-        cursor: pointer;
-        padding: 0.2em 0.2em 0.2em 0.2em;
-        filter: grayscale(50%);
+  .user {
+    position: relative;
+    cursor: pointer;
+    padding: 0.2em 0.2em 0.2em 0.2em;
+    filter: grayscale(50%);
 
-        .name {
-            margin-left: 0.2em;
-            margin-right: 2em;
-            vertical-align: middle;
-        }
-
-        .fa {
-            position: absolute;
-            right: 0.3em;
-            top: 0;
-            bottom: 0;
-            margin: auto;
-            height: 1em;
-            font-size: 1.2em;
-            color: $selection-color;
-            opacity: 0;
-            transition: opacity 0.5s;
-            vertical-align: middle;
-        }
-
-        &.selected {
-            background-color: $selection-background-color;
-            color: $button-hover-text-color;
-            filter: none;
-
-            .fa {
-                opacity: 1;
-            }
-        }
-
-        &.disabled {
-            cursor: default;
-        }
-
-        .no-touch & {
-            &:hover {
-                color: $button-hover-text-color;
-                filter: none;
-            }
-        }
-
-        .single-col & {
-            font-size: 1.2em;
-        }
+    .name {
+      margin-left: 0.2em;
+      margin-right: 2em;
+      vertical-align: middle;
     }
+
+    .fa {
+      position: absolute;
+      right: 0.3em;
+      top: 0;
+      bottom: 0;
+      margin: auto;
+      height: 1em;
+      font-size: 1.2em;
+      color: $selection-color;
+      opacity: 0;
+      transition: opacity 0.5s;
+      vertical-align: middle;
+    }
+
+    &.selected {
+      background-color: $selection-background-color;
+      color: $button-hover-text-color;
+      filter: none;
+
+      .fa {
+        opacity: 1;
+      }
+    }
+
+    &.disabled {
+      cursor: default;
+    }
+
+    .no-touch & {
+      &:hover {
+        color: $button-hover-text-color;
+        filter: none;
+      }
+    }
+
+    .single-col & {
+      font-size: 1.2em;
+    }
+  }
 }

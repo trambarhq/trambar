@@ -1,41 +1,41 @@
 const NotificationTypes = [
-    'like',
-    'comment',
-    'task-completion',
-    'vote',
-    'survey',
-    'coauthor',
-    'bookmark',
-    'mention',
-    'snapshot',
-    'note',
-    'assignment',
-    'issue',
-    'push',
-    'merge',
-    'join-request',
+  'like',
+  'comment',
+  'task-completion',
+  'vote',
+  'survey',
+  'coauthor',
+  'bookmark',
+  'mention',
+  'snapshot',
+  'note',
+  'assignment',
+  'issue',
+  'push',
+  'merge',
+  'join-request',
 ];
 
 const AdminNotificationTypes = [
-    'join-request',
+  'join-request',
 ];
 
 const GitNotificationTypes = [
-    'push',
-    'merge',
-    'note',
-    'assignment',
-    'issue',
+  'push',
+  'merge',
+  'note',
+  'assignment',
+  'issue',
 ];
 
 const MembershipNotificationTypes = [
-    'assignment',
+  'assignment',
 ];
 
 export {
-    NotificationTypes as default,
-    NotificationTypes,
-    AdminNotificationTypes,
-    GitNotificationTypes,
-    MembershipNotificationTypes,
+  NotificationTypes as default,
+  NotificationTypes,
+  AdminNotificationTypes,
+  GitNotificationTypes,
+  MembershipNotificationTypes,
 };

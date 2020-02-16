@@ -13,12 +13,12 @@ const emptyArray = [];
  * @return {Promise<Role>}
  */
 async function findRole(db, id) {
-    return db.findOne({
-        schema,
-        table,
-        criteria: { id },
-        required: true,
-    });
+  return db.findOne({
+    schema,
+    table,
+    criteria: { id },
+    required: true,
+  });
 }
 
 /**
@@ -30,12 +30,12 @@ async function findRole(db, id) {
  * @return {Promise<Array<Role>>}
  */
 async function findAllRoles(db, minimum) {
-    return db.find({
-        schema,
-        table,
-        criteria: {},
-        minimum
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {},
+    minimum
+  });
 }
 
 /**
@@ -47,15 +47,15 @@ async function findAllRoles(db, minimum) {
  * @return {Promise<Array<Role>>}
  */
 async function findActiveRoles(db, minimum) {
-    return db.find({
-        schema,
-        table,
-        criteria: {
-            deleted: false,
-            disabled: false,
-        },
-        minimum
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {
+      deleted: false,
+      disabled: false,
+    },
+    minimum
+  });
 }
 
 /**
@@ -67,25 +67,25 @@ async function findActiveRoles(db, minimum) {
  * @return {Promise<Array<Role>>}
  */
 async function findRolesOfUsers(db, users) {
-    // load roles that members have
-    let roleIDs = _.flatten(_.map(users, 'role_ids'));
-    if (_.isEmpty(roleIDs)) {
-        return emptyArray;
+  // load roles that members have
+  let roleIDs = _.flatten(_.map(users, 'role_ids'));
+  if (_.isEmpty(roleIDs)) {
+    return emptyArray;
+  }
+  roleIDs = _.sortBy(_.uniq(roleIDs));
+  return db.find({
+    schema,
+    table,
+    criteria: {
+      id: roleIDs,
+      disabled: false,
     }
-    roleIDs = _.sortBy(_.uniq(roleIDs));
-    return db.find({
-        schema,
-        table,
-        criteria: {
-            id: roleIDs,
-            disabled: false,
-        }
-    });
+  });
 }
 
 export {
-    findRole,
-    findAllRoles,
-    findActiveRoles,
-    findRolesOfUsers,
+  findRole,
+  findAllRoles,
+  findActiveRoles,
+  findRolesOfUsers,
 };

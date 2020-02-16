@@ -1,106 +1,106 @@
 @import '../colors';
 
 .app-component-dialog-box {
-    display: flex;
-    flex-direction: column;
-    max-height: 80%;
-    width: 80%;
-    max-width: 40em;
-    background-color: $dialog-box-background-color;
-    box-shadow: 2px 2px 2px $dialog-box-shadow-color;
-    color: $dialog-box-text-color;
-    margin: auto;
-    padding: 0.5em 0.5em 0.5em 0.5em;
+  display: flex;
+  flex-direction: column;
+  max-height: 80%;
+  width: 80%;
+  max-width: 40em;
+  background-color: $dialog-box-background-color;
+  box-shadow: 2px 2px 2px $dialog-box-shadow-color;
+  color: $dialog-box-text-color;
+  margin: auto;
+  padding: 0.5em 0.5em 0.5em 0.5em;
 
-    .contents {
-        flex: 1 1 auto;
-        overflow: auto;
-        padding: 0.5em 0.5em 0.25em 0.5em;
-        margin-bottom: 0.25em;
-        user-select: text;
+  .contents {
+    flex: 1 1 auto;
+    overflow: auto;
+    padding: 0.5em 0.5em 0.25em 0.5em;
+    margin-bottom: 0.25em;
+    user-select: text;
 
-        .picture {
-            float: left;
-            margin-right: 1em;
-            margin-bottom: 0.5em;
+    .picture {
+      float: left;
+      margin-right: 1em;
+      margin-bottom: 0.5em;
 
-            .icon {
-                display: inline-block;
-                color: $app-component-icon-color;
-                background-color: $app-component-icon-background-color;
-                height: 8em;
-                width: 8em;
-                padding-top: 2em;
-                text-align: center;
+      .icon {
+        display: inline-block;
+        color: $app-component-icon-color;
+        background-color: $app-component-icon-background-color;
+        height: 8em;
+        width: 8em;
+        padding-top: 2em;
+        text-align: center;
 
-                .fa {
-                    font-size: 4em;
-                }
-            }
-
-            IMG {
-                width: auto;
-                height: 8em;
-            }
+        .fa {
+          font-size: 4em;
         }
+      }
 
-        .text {
-            H1:first-child,
-            H2:first-child,
-            H3:first-child,
-            H4:first-child,
-            H5:first-child,
-            H6:first-child,
-            P:first-child {
-                margin-top: 0.1em;
-            }
-        }
-
-        // use custom color only on desktop
-        @media only screen and (min-device-width : 800px) {
-            &::-webkit-scrollbar-track {
-                -webkit-box-shadow: inset 0 0 6px $scroll-bar-shadow-color;
-                background-color: transparent;
-            }
-
-            &::-webkit-scrollbar {
-                width: 10px;
-                background-color: transparent;
-            }
-
-            &::-webkit-scrollbar-thumb {
-                border-radius: 2px;
-                -webkit-box-shadow: inset 0 0 6px $scroll-bar-shadow-color;
-                background-color: $scroll-bar-background-color;
-            }
-        }
+      IMG {
+        width: auto;
+        height: 8em;
+      }
     }
 
-    .buttons {
-        flex: 0 0 auto;
-        padding: 0.4em 0 0.2em 0.2em;
-        text-align: right;
-        border-top: 1px solid $separator-color;
+    .text {
+      H1:first-child,
+      H2:first-child,
+      H3:first-child,
+      H4:first-child,
+      H5:first-child,
+      H6:first-child,
+      P:first-child {
+        margin-top: 0.1em;
+      }
     }
 
-    .single-col & {
-        width: 100%;
-        max-width: none;
+    // use custom color only on desktop
+    @media only screen and (min-device-width : 800px) {
+      &::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px $scroll-bar-shadow-color;
+        background-color: transparent;
+      }
 
-        .picture {
-            .icon {
-                width: 4em;
-                height: 4em;
-                padding-top: 1em;
+      &::-webkit-scrollbar {
+        width: 10px;
+        background-color: transparent;
+      }
 
-                .fa {
-                    font-size: 2em;
-                }
-            }
+      &::-webkit-scrollbar-thumb {
+        border-radius: 2px;
+        -webkit-box-shadow: inset 0 0 6px $scroll-bar-shadow-color;
+        background-color: $scroll-bar-background-color;
+      }
+    }
+  }
 
-            IMG {
-                height: 4em;
-            }
+  .buttons {
+    flex: 0 0 auto;
+    padding: 0.4em 0 0.2em 0.2em;
+    text-align: right;
+    border-top: 1px solid $separator-color;
+  }
+
+  .single-col & {
+    width: 100%;
+    max-width: none;
+
+    .picture {
+      .icon {
+        width: 4em;
+        height: 4em;
+        padding-top: 1em;
+
+        .fa {
+          font-size: 2em;
         }
+      }
+
+      IMG {
+        height: 4em;
+      }
     }
+  }
 }

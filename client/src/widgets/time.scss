@@ -1,14 +1,14 @@
 @import '../colors';
 
 .time {
-    user-select: text;
-    color: $time-text-color;
+  user-select: text;
+  color: $time-text-color;
 
-    &.today {
-        color: $time-today-text-color;
-    }
+  &.today {
+    color: $time-today-text-color;
+  }
 
-    &.yesterday {
-        color: $time-yesterday-text-color;
-    }
+  &.yesterday {
+    color: $time-yesterday-text-color;
+  }
 }

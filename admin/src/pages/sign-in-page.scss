@@ -1,64 +1,64 @@
 @import '../colors';
 
 .sign-in-page {
-    FORM {
-        max-width: 20em;
+  FORM {
+    max-width: 20em;
 
-        .button-row {
-            margin-top: -0.5em;
-            text-align: right;
-        }
-
-        .error {
-            color: $error-text-color;
-            margin-bottom: 1em;
-        }
+    .button-row {
+      margin-top: -0.5em;
+      text-align: right;
     }
 
-    .oauth-button {
-        display: table;
-        border: 1px solid $normal-border-color;
-        width: 100%;
-        max-width: 20em;
-        margin-top: 0.5em;
-
-        .icon {
-            width: 2em;
-            display: table-cell;
-            font-size: 2em;
-            padding: 0.26em 0 0.24em 0.25em;
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .label {
-            display: table-cell;
-            font-size: 1.25em;
-            padding-right: 2.5em;
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        &:link, &:visited {
-            text-decoration: none;
-            color: $normal-text-color;
-        }
-
-        &:hover, &:active {
-            background-color: $oauth-button-hover-background-color;
-            color: $normal-text-color;
-        }
-
-        &.error {
-            border-color: $error-text-color;
-            color: $error-border-color;
-
-            .label {
-                font-size: 1em;
-                padding-right: 1.5em;
-                text-align: left;
-                vertical-align: middle;
-            }
-        }
+    .error {
+      color: $error-text-color;
+      margin-bottom: 1em;
     }
+  }
+
+  .oauth-button {
+    display: table;
+    border: 1px solid $normal-border-color;
+    width: 100%;
+    max-width: 20em;
+    margin-top: 0.5em;
+
+    .icon {
+      width: 2em;
+      display: table-cell;
+      font-size: 2em;
+      padding: 0.26em 0 0.24em 0.25em;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .label {
+      display: table-cell;
+      font-size: 1.25em;
+      padding-right: 2.5em;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    &:link, &:visited {
+      text-decoration: none;
+      color: $normal-text-color;
+    }
+
+    &:hover, &:active {
+      background-color: $oauth-button-hover-background-color;
+      color: $normal-text-color;
+    }
+
+    &.error {
+      border-color: $error-text-color;
+      color: $error-border-color;
+
+      .label {
+        font-size: 1em;
+        padding-right: 1.5em;
+        text-align: left;
+        vertical-align: middle;
+      }
+    }
+  }
 }

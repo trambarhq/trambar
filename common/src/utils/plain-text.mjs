@@ -14,44 +14,44 @@ import * as ListParser from './list-parser.mjs';
  * @return {Array<String|ReactElement>}
  */
 function renderSurvey(text, answers, onChange) {
-    let listTokens = ListParser.extract(text);
-    return _.map(listTokens, (listToken, index) => {
-        if (listToken instanceof Array) {
-            return _.map(listToken, (item, key) => {
-                let checked = item.checked;
-                if (answers) {
-                    // override radio-button state indicated in text
-                    // with set-but-not-yet-saved value
-                    let answer = answers[item.list];
-                    if (answer !== undefined) {
-                        checked = (item.key == answer);
-                    }
-                }
-                let inputProps = {
-                    type: 'radio',
-                    name: item.list,
-                    value: item.key,
-                    readOnly: !onChange,
-                    checked,
-                    onChange,
-                };
-                return (
-                    <span key={key}>
-                        {item.before}
-                        <label>
-                            <input {...inputProps} />
-                            {item.between}
-                            {renderEmoji(item.label)}
-                        </label>
-                        {item.after}
-                    </span>
-                );
-            });
-        } else {
-            // regular text
-            return listToken;
+  let listTokens = ListParser.extract(text);
+  return _.map(listTokens, (listToken, index) => {
+    if (listToken instanceof Array) {
+      return _.map(listToken, (item, key) => {
+        let checked = item.checked;
+        if (answers) {
+          // override radio-button state indicated in text
+          // with set-but-not-yet-saved value
+          let answer = answers[item.list];
+          if (answer !== undefined) {
+            checked = (item.key == answer);
+          }
         }
-    });
+        let inputProps = {
+          type: 'radio',
+          name: item.list,
+          value: item.key,
+          readOnly: !onChange,
+          checked,
+          onChange,
+        };
+        return (
+          <span key={key}>
+            {item.before}
+            <label>
+              <input {...inputProps} />
+              {item.between}
+              {renderEmoji(item.label)}
+            </label>
+            {item.after}
+          </span>
+        );
+      });
+    } else {
+      // regular text
+      return listToken;
+    }
+  });
 }
 
 /**
@@ -63,39 +63,39 @@ function renderSurvey(text, answers, onChange) {
  * @return {Array<String|ReactElement>}
  */
 function renderSurveyResults(text, voteCounts) {
-    let listTokens = ListParser.extract(text);
-    return _.map(listTokens, (listToken, index) => {
-        if (listToken instanceof Array) {
-            return _.map(listToken, (item, key) => {
-                let tally = voteCounts[item.list];
-                let total = _.get(tally, 'total', 0);
-                let count = _.get(tally, [ 'answers', item.key ], 0);
-                let percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
-                let color = `color-${item.key % 12}`;
-                let className = 'vote-count';
-                if (count === total) {
-                    className += ' unanimous';
-                }
-                return (
-                    <span key={key}>
-                        {item.before}
-                        <span className={className}>
-                            <span className="label">{renderEmoji(item.label)}</span>
-                            <span className="bar">
-                                <span className={`filled ${color}`} style={{ width: percent }} />
-                                <span className="percent">{percent}</span>
-                                <span className="count">{count + '/' + total}</span>
-                            </span>
-                        </span>
-                        {item.after}
-                    </span>
-                );
-            });
-        } else {
-            // regular text
-            return listToken;
+  let listTokens = ListParser.extract(text);
+  return _.map(listTokens, (listToken, index) => {
+    if (listToken instanceof Array) {
+      return _.map(listToken, (item, key) => {
+        let tally = voteCounts[item.list];
+        let total = _.get(tally, 'total', 0);
+        let count = _.get(tally, [ 'answers', item.key ], 0);
+        let percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
+        let color = `color-${item.key % 12}`;
+        let className = 'vote-count';
+        if (count === total) {
+          className += ' unanimous';
         }
-    });
+        return (
+          <span key={key}>
+            {item.before}
+            <span className={className}>
+              <span className="label">{renderEmoji(item.label)}</span>
+              <span className="bar">
+                <span className={`filled ${color}`} style={{ width: percent }} />
+                <span className="percent">{percent}</span>
+                <span className="count">{count + '/' + total}</span>
+              </span>
+            </span>
+            {item.after}
+          </span>
+        );
+      });
+    } else {
+      // regular text
+      return listToken;
+    }
+  });
 }
 
 /**
@@ -108,47 +108,47 @@ function renderSurveyResults(text, voteCounts) {
  * @return {Array<String|ReactElement>}
  */
 function renderTaskList(text, answers, onChange) {
-    let listTokens = ListParser.extract(text);
-    return _.map(listTokens, (listToken, index) => {
-        if (listToken instanceof Array) {
-            return _.map(listToken, (item, key) => {
-                let checked = item.checked;
-                if (answers) {
-                    // override checkbox/radio-button state indicated in text
-                    // with set-but-not-yet-saved value
-                    let answer = answers[item.list];
-                    if (answer !== undefined) {
-                        let selected = answer[item.key];
-                        if (selected !== undefined) {
-                            checked = selected;
-                        }
-                    }
-                }
-                let inputProps = {
-                    type: 'checkbox',
-                    name: item.list,
-                    value: item.key,
-                    readOnly: !onChange,
-                    checked,
-                    onChange,
-                };
-                return (
-                    <span key={key}>
-                        {item.before}
-                        <label>
-                            <input {...inputProps} />
-                            {item.between}
-                            {renderEmoji(item.label)}
-                        </label>
-                        {item.after}
-                    </span>
-                );
-            });
-        } else {
-            // regular text
-            return listToken;
+  let listTokens = ListParser.extract(text);
+  return _.map(listTokens, (listToken, index) => {
+    if (listToken instanceof Array) {
+      return _.map(listToken, (item, key) => {
+        let checked = item.checked;
+        if (answers) {
+          // override checkbox/radio-button state indicated in text
+          // with set-but-not-yet-saved value
+          let answer = answers[item.list];
+          if (answer !== undefined) {
+            let selected = answer[item.key];
+            if (selected !== undefined) {
+              checked = selected;
+            }
+          }
         }
-    });
+        let inputProps = {
+          type: 'checkbox',
+          name: item.list,
+          value: item.key,
+          readOnly: !onChange,
+          checked,
+          onChange,
+        };
+        return (
+          <span key={key}>
+            {item.before}
+            <label>
+              <input {...inputProps} />
+              {item.between}
+              {renderEmoji(item.label)}
+            </label>
+            {item.after}
+          </span>
+        );
+      });
+    } else {
+      // regular text
+      return listToken;
+    }
+  });
 }
 
 let needEmojiHandling = !hasEmojiSupport();
@@ -163,15 +163,15 @@ let needSkinToneStripping = !needEmojiHandling && !hasSkinToneSupport();
  * @return {Array<String|ReactElement>}
  */
 function renderEmoji(text, options) {
-    if (!needEmojiHandling) {
-        if (needSkinToneStripping) {
-            text = stripSkinTone(text);
-        }
-        return [ text ];
+  if (!needEmojiHandling) {
+    if (needSkinToneStripping) {
+      text = stripSkinTone(text);
     }
-    // use custom function so we can add prefix to key
-    let parentKey = _.get(options, 'key');
-    return ReactEasyEmoji(text, renderEmojiImage.bind(null, parentKey));
+    return [ text ];
+  }
+  // use custom function so we can add prefix to key
+  let parentKey = _.get(options, 'key');
+  return ReactEasyEmoji(text, renderEmojiImage.bind(null, parentKey));
 }
 
 let emojiStyle = {
@@ -182,9 +182,9 @@ let emojiStyle = {
 };
 
 function renderEmojiImage(parentKey, code, string, characterKey) {
-    let key = (parentKey !== undefined) ? `${parentKey}.${characterKey}` : characterKey;
-    let src = `https://twemoji.maxcdn.com/2/72x72/${code}.png`;
-    return <img key={key} alt={string} draggable={false} src={src} style={emojiStyle} />;
+  let key = (parentKey !== undefined) ? `${parentKey}.${characterKey}` : characterKey;
+  let src = `https://twemoji.maxcdn.com/2/72x72/${code}.png`;
+  return <img key={key} alt={string} draggable={false} src={src} style={emojiStyle} />;
 }
 
 /**
@@ -193,7 +193,7 @@ function renderEmojiImage(parentKey, code, string, characterKey) {
  * @return {Boolean}
  */
 function hasEmojiSupport() {
-    return canDrawEmoji('\ud83d\ude03');
+  return canDrawEmoji('\ud83d\ude03');
 }
 
 /**
@@ -202,7 +202,7 @@ function hasEmojiSupport() {
  * @return {Boolean}
  */
 function hasSkinToneSupport() {
-    return canDrawEmoji('\ud83c\udffb');
+  return canDrawEmoji('\ud83c\udffb');
 }
 
 /**
@@ -211,19 +211,19 @@ function hasSkinToneSupport() {
  * @return {Boolean}
  */
 function canDrawEmoji(text) {
-    let canvas = document.createElement('canvas');
-    if (!canvas.getContext) {
-        return false;
-    }
-    let context = canvas.getContext('2d');
-    if (!context.fillText) {
-        return false;
-    }
-    context.textBaseline = "top";
-    context.font = "32px Arial";
-    context.fillText(text, 0, 0);
-    let pixels = context.getImageData(16, 16, 1, 1).data;
-    return pixels[0] !== 0;
+  let canvas = document.createElement('canvas');
+  if (!canvas.getContext) {
+    return false;
+  }
+  let context = canvas.getContext('2d');
+  if (!context.fillText) {
+    return false;
+  }
+  context.textBaseline = "top";
+  context.font = "32px Arial";
+  context.fillText(text, 0, 0);
+  let pixels = context.getImageData(16, 16, 1, 1).data;
+  return pixels[0] !== 0;
 }
 
 const skinToneRegExp = /\ud83c\udffb|\ud83c\udffc|\ud83c\udffd|\ud83c\udffe|\ud83c\udfff/g;
@@ -236,50 +236,50 @@ const skinToneRegExp = /\ud83c\udffb|\ud83c\udffc|\ud83c\udffd|\ud83c\udffe|\ud8
  * @return {String}
  */
 function stripSkinTone(s) {
-    return s.replace(skinToneRegExp, '');
+  return s.replace(skinToneRegExp, '');
 }
 
 let emojiRegex;
 
 function findEmoji(string) {
-    if (typeof(string) !== 'string') {
-        return 0;
-    }
-    if (!emojiRegex) {
-        emojiRegex = EmojiRegex();
-    }
-    let m = string.match(emojiRegex);
-    return m;
+  if (typeof(string) !== 'string') {
+    return 0;
+  }
+  if (!emojiRegex) {
+    emojiRegex = EmojiRegex();
+  }
+  let m = string.match(emojiRegex);
+  return m;
 }
 
 let letterCaptureRegExp, rtlCaptureRegExp, rtlDetectionRegExp;
 
 try {
-    letterCaptureRegExp = new RegExp('\\p{Letter}+', 'gu');
-    rtlCaptureRegExp = new RegExp('[\\p{Script=Arabic}\\p{Script=Hebrew}]+', 'gu');
-    rtlDetectionRegExp = new RegExp('[\\p{Script=Arabic}\\p{Script=Hebrew}]', 'u');
+  letterCaptureRegExp = new RegExp('\\p{Letter}+', 'gu');
+  rtlCaptureRegExp = new RegExp('[\\p{Script=Arabic}\\p{Script=Hebrew}]+', 'gu');
+  rtlDetectionRegExp = new RegExp('[\\p{Script=Arabic}\\p{Script=Hebrew}]', 'u');
 } catch (err) {
 }
 
 function detectDirection(text) {
-    if (letterCaptureRegExp && rtlCaptureRegExp && rtlDetectionRegExp) {
-        if (rtlDetectionRegExp.test(text)) {
-            const letters = text.match(letterCaptureRegExp).join('');
-            const rtlLetters = letters.match(rtlCaptureRegExp).join('');
-            if (rtlLetters.length > (letters.length / 2)) {
-                return 'rtl'
-            }
-        }
+  if (letterCaptureRegExp && rtlCaptureRegExp && rtlDetectionRegExp) {
+    if (rtlDetectionRegExp.test(text)) {
+      const letters = text.match(letterCaptureRegExp).join('');
+      const rtlLetters = letters.match(rtlCaptureRegExp).join('');
+      if (rtlLetters.length > (letters.length / 2)) {
+        return 'rtl'
+      }
     }
-    return 'ltr';
+  }
+  return 'ltr';
 }
 
 export {
-    renderSurvey,
-    renderSurveyResults,
-    renderTaskList,
-    renderEmoji,
-    findEmoji,
-    hasEmojiSupport,
-    detectDirection,
+  renderSurvey,
+  renderSurveyResults,
+  renderTaskList,
+  renderEmoji,
+  findEmoji,
+  hasEmojiSupport,
+  detectDirection,
 };

@@ -1,67 +1,67 @@
 @import '../colors';
 
 .snapshot-list {
-    margin-left: 0.5em;
+  margin-left: 0.5em;
 
-    A {
-        display: block;
+  A {
+    display: block;
 
-        &:link, &:visited {
-            color: black;
-        }
+    &:link, &:visited {
+      color: black;
+    }
+  }
+
+  .snapshot {
+    border: 1px solid $normal-border-color;
+    overflow: hidden;
+    margin-bottom: 1em;
+    padding: 0.2em 0.25em 0.2em 0.25em;
+
+    .commit {
+      float: left;
+      margin-left: 0.5em;
+      margin-top: 0.2em;
+      margin-bottom: 0.2em;
+
+      .branch {
+        font-size: 1.75em;
+        vertical-align: middle;
+      }
+
+      .id {
+        vertical-align: middle;
+        margin-left: 0.35em;
+      }
     }
 
-    .snapshot {
-        border: 1px solid $normal-border-color;
-        overflow: hidden;
-        margin-bottom: 1em;
-        padding: 0.2em 0.25em 0.2em 0.25em;
-
-        .commit {
-            float: left;
-            margin-left: 0.5em;
-            margin-top: 0.2em;
-            margin-bottom: 0.2em;
-
-            .branch {
-                font-size: 1.75em;
-                vertical-align: middle;
-            }
-
-            .id {
-                vertical-align: middle;
-                margin-left: 0.35em;
-            }
-        }
-
-        .time {
-            float: right;
-        }
-
-        .name {
-            float: right;
-            clear: right;
-            margin-top: 0.25em;
-        }
-
-        &.head {
-            border-width: 2px;
-
-            .branch {
-                font-weight: bold;
-            }
-
-            &.master {
-                background-color: $table-selected-row-background-color;
-            }
-        }
-
-        &.old {
-            opacity: 0.5;
-
-            &:hover {
-                opacity: 1;
-            }
-        }
+    .time {
+      float: right;
     }
+
+    .name {
+      float: right;
+      clear: right;
+      margin-top: 0.25em;
+    }
+
+    &.head {
+      border-width: 2px;
+
+      .branch {
+        font-weight: bold;
+      }
+
+      &.master {
+        background-color: $table-selected-row-background-color;
+      }
+    }
+
+    &.old {
+      opacity: 0.5;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
 }

@@ -1,56 +1,56 @@
 .reaction-editor {
-    display: flex;
-    flex-direction: row;
-    padding: 0.1em 0.1em 0.1em 0.1em;
+  display: flex;
+  flex-direction: row;
+  padding: 0.1em 0.1em 0.1em 0.1em;
 
-    .profile-image-column {
-        flex: 0 0 auto;
+  .profile-image-column {
+    flex: 0 0 auto;
 
-        .profile-image {
-            margin: 0 0.4em 0 0.2em;
-        }
+    .profile-image {
+      margin: 0 0.4em 0 0.2em;
+    }
+  }
+
+  .editor-column {
+    flex: 1 1 auto;
+
+    .media {
+      padding: 0em 1em 0.25em 1em;
+      max-width: 300px;
+
+      .single-col & {
+        max-width: 220px;
+      }
     }
 
-    .editor-column {
-        flex: 1 1 auto;
+    .controls {
+      .textarea {
+      }
 
-        .media {
-            padding: 0em 1em 0.25em 1em;
-            max-width: 300px;
+      .buttons {
+        display: block;
 
-            .single-col & {
-                max-width: 220px;
-            }
+        .action-buttons {
+          float: right;
         }
 
-        .controls {
-            .textarea {
-            }
-
-            .buttons {
-                display: block;
-
-                .action-buttons {
-                    float: right;
-                }
-
-                &:after {
-                    content: "";
-                    display: table;
-                    clear: both;
-                }
-            }
+        &:after {
+          content: "";
+          display: table;
+          clear: both;
         }
-
-        .autosize-text-area {
-            TEXTAREA {
-                min-height: 2.7em;
-                max-height: 5em;
-
-                .single-col & {
-                    min-height: 1.2em;
-                }
-            }
-        }
+      }
     }
+
+    .autosize-text-area {
+      TEXTAREA {
+        min-height: 2.7em;
+        max-height: 5em;
+
+        .single-col & {
+          min-height: 1.2em;
+        }
+      }
+    }
+  }
 }

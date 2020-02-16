@@ -1,21 +1,21 @@
 @import '../colors';
 
 .duration-indicator {
-    .icon {
-        margin-left: 0.5em;
-        color: $duration-indicator-text-color;
+  .icon {
+    margin-left: 0.5em;
+    color: $duration-indicator-text-color;
 
-        &.blinking {
-            color: $duration-indicator-blinker-color;
-            opacity: 1;
-            animation: blinking 0.5s linear infinite;
-            @keyframes blinking {
-                50% { opacity: 0; }
-            }
-        }
+    &.blinking {
+      color: $duration-indicator-blinker-color;
+      opacity: 1;
+      animation: blinking 0.5s linear infinite;
+      @keyframes blinking {
+        50% { opacity: 0; }
+      }
     }
+  }
 
-    .duration {
-        color: $duration-indicator-text-color;
-    }
+  .duration {
+    color: $duration-indicator-text-color;
+  }
 }

@@ -1,20 +1,20 @@
 .wiki-list-page {
-    .buttons {
-        float: right;
+  .buttons {
+    float: right;
+  }
+
+  .sortable-table {
+    #public {
+      width: 8em;
     }
 
-    .sortable-table {
-        #public {
-            width: 8em;
-        }
-
-        #repo {
-            width: 12em;
-        }
-
-        #mtime {
-            width: 12em;
-        }
-
+    #repo {
+      width: 12em;
     }
+
+    #mtime {
+      width: 12em;
+    }
+
+  }
 }

@@ -1,12 +1,12 @@
 @import '../colors';
 
 .image-editor {
-    .video-duration {
-        position: absolute;
-        top: 0.5em;
-        right: 0.5em;
-        opacity: 0.5;
-        pointer-events: none;
-        color: $media-editor-duration-text-color;
-    }
+  .video-duration {
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+    opacity: 0.5;
+    pointer-events: none;
+    color: $media-editor-duration-text-color;
+  }
 }

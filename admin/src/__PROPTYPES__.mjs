@@ -9,12 +9,12 @@ import Notifier from 'common/transport/notifier.mjs';
 import { FrontEnd } from './front-end.jsx';
 
 FrontEnd.propTypes = {
-    envMonitor: PropTypes.instanceOf(EnvironmentMonitor).isRequired,
-    routeManager: PropTypes.instanceOf(RouteManager).isRequired,
-    dataSource: PropTypes.instanceOf(RemoteDataSource).isRequired,
-    localeManager: PropTypes.instanceOf(LocaleManager).isRequired,
-    payloadManager: PropTypes.instanceOf(PayloadManager).isRequired,
-    notifier: PropTypes.instanceOf(Notifier),
+  envMonitor: PropTypes.instanceOf(EnvironmentMonitor).isRequired,
+  routeManager: PropTypes.instanceOf(RouteManager).isRequired,
+  dataSource: PropTypes.instanceOf(RemoteDataSource).isRequired,
+  localeManager: PropTypes.instanceOf(LocaleManager).isRequired,
+  payloadManager: PropTypes.instanceOf(PayloadManager).isRequired,
+  notifier: PropTypes.instanceOf(Notifier),
 };
 
 import './dialogs/__PROPTYPES__.mjs';

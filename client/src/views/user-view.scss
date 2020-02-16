@@ -1,142 +1,142 @@
 @import '../colors';
 
 .user-view {
-    background-color: $panel-background-color;
-    border: 2px solid $panel-border-color;
-    width: 100%;
+  background-color: $panel-background-color;
+  border: 2px solid $panel-border-color;
+  width: 100%;
+
+  .header {
+    background-color: $panel-border-color;
+
+    .profile-image {
+      position: relative;
+      height: 0.8em;
+      vertical-align: top;
+      margin-top: 0.1em;
+      margin-right: 0.5em;
+      overflow: visible;
+
+      IMG, svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    }
+
+    .roles {
+      color: $user-view-roles-text-color;
+    }
+  }
+
+  .body {
+    .name {
+      margin-left: 4.3em;
+      margin-top: 0.3em;
+      margin-bottom: 0.15em;
+      font-size: 1.5em;
+      user-select: text;
+      color: $user-view-name-text-color;
+
+      A {
+        &:link, &:visited {
+          color: $user-view-name-text-color;
+          text-decoration: none;
+        }
+      }
+    }
+
+    .tag {
+      font-size: 1.1em;
+      margin-left: 5.9em;
+      margin-top: 0.2em;
+      margin-bottom: 0.4em;
+      display: inline-block;
+      user-select: text;
+
+      A {
+        &:link, &:visited {
+          color: $user-view-tag-text-color;
+          text-decoration: none;
+
+          &:hover {
+            color: $user-view-tag-hover-text-color;
+          }
+        }
+      }
+    }
+
+    .user-activity-list {
+      user-select: text;
+    }
+
+    .back-link {
+      float: right;
+      margin-top: 0.5em;
+      font-weight: bold;
+
+      A {
+        &:link, &:visited {
+          color: $user-view-name-text-color;
+          text-decoration: none;
+        }
+      }
+    }
+  }
+
+  .padded {
+    padding: 0.25em 0.25em 0.25em 0.5em;
+  }
+
+  .selectable {
+    user-select: text;
+  }
+
+  .single-col & {
+    .column-2 {
+      &:empty {
+        display :none;
+      }
+    }
+  }
+
+  .double-col &,
+  .triple-col & {
+    display: table;
 
     .header {
-        background-color: $panel-border-color;
-
-        .profile-image {
-            position: relative;
-            height: 0.8em;
-            vertical-align: top;
-            margin-top: 0.1em;
-            margin-right: 0.5em;
-            overflow: visible;
-
-            IMG, svg {
-                position: absolute;
-                top: 0;
-                left: 0;
-            }
-        }
-
-        .roles {
-            color: $user-view-roles-text-color;
-        }
+      display: table-row;
     }
 
     .body {
-        .name {
-            margin-left: 4.3em;
-            margin-top: 0.3em;
-            margin-bottom: 0.15em;
-            font-size: 1.5em;
-            user-select: text;
-            color: $user-view-name-text-color;
-
-            A {
-                &:link, &:visited {
-                    color: $user-view-name-text-color;
-                    text-decoration: none;
-                }
-            }
-        }
-
-        .tag {
-            font-size: 1.1em;
-            margin-left: 5.9em;
-            margin-top: 0.2em;
-            margin-bottom: 0.4em;
-            display: inline-block;
-            user-select: text;
-
-            A {
-                &:link, &:visited {
-                    color: $user-view-tag-text-color;
-                    text-decoration: none;
-
-                    &:hover {
-                        color: $user-view-tag-hover-text-color;
-                    }
-                }
-            }
-        }
-
-        .user-activity-list {
-            user-select: text;
-        }
-
-        .back-link {
-            float: right;
-            margin-top: 0.5em;
-            font-weight: bold;
-
-            A {
-                &:link, &:visited {
-                    color: $user-view-name-text-color;
-                    text-decoration: none;
-                }
-            }
-        }
+      display: table-row;
     }
 
-    .padded {
-        padding: 0.25em 0.25em 0.25em 0.5em;
+    .column-1,
+    .column-2,
+    .column-3 {
+      display: table-cell;
+      vertical-align: top;
     }
+  }
 
-    .selectable {
-        user-select: text;
+  .double-col & {
+    .column-1 {
+      width: 50%;
     }
-
-    .single-col & {
-        .column-2 {
-            &:empty {
-                display :none;
-            }
-        }
+    .column-2 {
+      width: 50%;
     }
+  }
 
-    .double-col &,
-    .triple-col & {
-        display: table;
-
-        .header {
-            display: table-row;
-        }
-
-        .body {
-            display: table-row;
-        }
-
-        .column-1,
-        .column-2,
-        .column-3 {
-            display: table-cell;
-            vertical-align: top;
-        }
+  .triple-col & {
+    .column-1 {
+      width: 40%;
     }
-
-    .double-col & {
-        .column-1 {
-            width: 50%;
-        }
-        .column-2 {
-            width: 50%;
-        }
+    .column-2 {
+      width: 40%;
     }
-
-    .triple-col & {
-        .column-1 {
-            width: 40%;
-        }
-        .column-2 {
-            width: 40%;
-        }
-        .column-3 {
-            width: 20%;
-        }
+    .column-3 {
+      width: 20%;
     }
+  }
 }

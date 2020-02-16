@@ -1,18 +1,18 @@
 .settings-panel.user-info {
 
-    .gender-selector {
-        margin-bottom: 0.35em;
+  .gender-selector {
+    margin-bottom: 0.35em;
 
-        LABEL {
-            display: block;
-            font-size: 0.9em;
-        }
-
-        SELECT {
-            width: 100%;
-            overflow-y: auto;
-            margin-top: 3px;
-            font-size: 1em;
-        }
+    LABEL {
+      display: block;
+      font-size: 0.9em;
     }
+
+    SELECT {
+      width: 100%;
+      overflow-y: auto;
+      margin-top: 3px;
+      font-size: 1em;
+    }
+  }
 }

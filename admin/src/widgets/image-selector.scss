@@ -1,93 +1,93 @@
 @import '../colors';
 
 .image-selector {
-    margin-bottom: 1em;
-    overflow: hidden;
+  margin-bottom: 1em;
+  overflow: hidden;
 
-    label {
+  label {
+    display: block;
+    font-weight: 600;
+  }
+
+  .contents {
+    margin-top: 4px;
+
+    .image {
+      float: left;
+      z-index: 1;
+
+      A {
         display: block;
-        font-weight: 600;
+      }
+
+      IMG, CANVAS, svg {
+        height: 120px;
+        width: auto;
+      }
+
+      .placeholder {
+        display: block;
+        position: relative;
+        background-color: $image-placeholder-background-color;
+
+        .fa {
+          display: block;
+          position: absolute;
+          font-size: 2em;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          margin: auto;
+          height: 1em;
+          width: 1em;
+        }
+      }
     }
 
-    .contents {
-        margin-top: 4px;
+    .options {
+      margin-left: 0.35em;
+      transition: opacity 1s;
+      z-index: 0;
+      overflow: hidden;
+      display: inline-block;
 
-        .image {
-            float: left;
-            z-index: 1;
+      .option {
+        display: block;
+        font-weight: normal;
+        padding: 0.25em 0.4em 0.15em 0.4em;
+        cursor: pointer;
 
-            A {
-                display: block;
-            }
-
-            IMG, CANVAS, svg {
-                height: 120px;
-                width: auto;
-            }
-
-            .placeholder {
-                display: block;
-                position: relative;
-                background-color: $image-placeholder-background-color;
-
-                .fa {
-                    display: block;
-                    position: absolute;
-                    font-size: 2em;
-                    top: 0;
-                    bottom: 0;
-                    left: 0;
-                    right: 0;
-                    margin: auto;
-                    height: 1em;
-                    width: 1em;
-                }
-            }
+        INPUT[type="file"] {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          opacity: 0;
         }
 
-        .options {
-            margin-left: 0.35em;
-            transition: opacity 1s;
-            z-index: 0;
-            overflow: hidden;
-            display: inline-block;
-
-            .option {
-                display: block;
-                font-weight: normal;
-                padding: 0.25em 0.4em 0.15em 0.4em;
-                cursor: pointer;
-
-                INPUT[type="file"] {
-                    position: absolute;
-                    width: 1px;
-                    height: 1px;
-                    opacity: 0;
-                }
-
-                &:hover {
-                    color: $link-hover-color;
-                }
-
-                &.disabled {
-                    cursor: default;
-                    color: $link-disabled-color;
-
-                    &:hover {
-                        background-color: transparent;
-                    }
-                }
-            }
+        &:hover {
+          color: $link-hover-color;
         }
+
+        &.disabled {
+          cursor: default;
+          color: $link-disabled-color;
+
+          &:hover {
+            background-color: transparent;
+          }
+        }
+      }
     }
+  }
 
-    &.readonly {
-        .options {
-            opacity: 0;
+  &.readonly {
+    .options {
+      opacity: 0;
 
-            .option {
-                cursor: default;
-            }
-        }
+      .option {
+        cursor: default;
+      }
     }
+  }
 }

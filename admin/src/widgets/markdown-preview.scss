@@ -1,115 +1,115 @@
 @import '../colors';
 
 .markdown-preview {
-    box-sizing: content-box;
-    border: 1px solid black;
-    margin-left: 0.5em;
-    position: relative;
+  box-sizing: content-box;
+  border: 1px solid black;
+  margin-left: 0.5em;
+  position: relative;
 
-    IMG {
-        cursor: pointer;
-        vertical-align: middle;
+  IMG {
+    cursor: pointer;
+    vertical-align: middle;
+  }
+
+  BLOCKQUOTE {
+    color: $wiki-blockquote-text-color;
+    background-color: $wiki-blockquote-background-color;
+    margin-left: 0;
+    padding: 0.5em 0.5em 0.5em 1.5em;
+    border-left: 4px solid $wiki-blockquote-border-color;
+
+
+    P:first-child {
+      margin-top: 0;
     }
 
-    BLOCKQUOTE {
-        color: $wiki-blockquote-text-color;
-        background-color: $wiki-blockquote-background-color;
-        margin-left: 0;
-        padding: 0.5em 0.5em 0.5em 1.5em;
-        border-left: 4px solid $wiki-blockquote-border-color;
+    P:last-child {
+      margin-bottom: 0;
+    }
+  }
 
+  TABLE {
+    border: 1px solid $wiki-table-border-color;
+    border-collapse: collapse;
 
-        P:first-child {
-            margin-top: 0;
-        }
-
-        P:last-child {
-            margin-bottom: 0;
-        }
+    TH, TD {
+      text-align: left;
+      border: 1px solid $wiki-table-border-color;
+      padding: 0.25em 0.25em 0.25em 0.25em;
     }
 
-    TABLE {
-        border: 1px solid $wiki-table-border-color;
-        border-collapse: collapse;
-
-        TH, TD {
-            text-align: left;
-            border: 1px solid $wiki-table-border-color;
-            padding: 0.25em 0.25em 0.25em 0.25em;
-        }
-
-        TH {
-            border-bottom: 2px double $wiki-table-border-color;
-        }
+    TH {
+      border-bottom: 2px double $wiki-table-border-color;
     }
+  }
+
+  CODE {
+    color: $wiki-code-inline-text-color;
+    background-color: $wiki-code-inline-background-color;
+    padding: 2px 4px 2px 4px;
+  }
+
+  PRE {
+    border: 1px solid $wiki-code-border-color;
+    background-color: $wiki-code-background-color;
+    padding: 0.75em 0.75em 0.75em 0.75em;
+    overflow: hidden;
 
     CODE {
-        color: $wiki-code-inline-text-color;
-        background-color: $wiki-code-inline-background-color;
-        padding: 2px 4px 2px 4px;
+      color: $wiki-code-text-color;
+      background-color: transparent;
+      padding: 0;
+    }
+  }
+
+  .block {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    overflow: hidden;
+
+    &.foreign {
+      background-color: $foreign-text-background;
     }
 
-    PRE {
-        border: 1px solid $wiki-code-border-color;
-        background-color: $wiki-code-background-color;
-        padding: 0.75em 0.75em 0.75em 0.75em;
-        overflow: hidden;
-
-        CODE {
-            color: $wiki-code-text-color;
-            background-color: transparent;
-            padding: 0;
-        }
+    &.rtl {
+      direction: rtl;
     }
 
-    .block {
-        padding-left: 0.5em;
-        padding-right: 0.5em;
-        overflow: hidden;
-
-        &.foreign {
-            background-color: $foreign-text-background;
-        }
-
-        &.rtl {
-            direction: rtl;
-        }
-
-        &.broken {
-            background-color: $broken-json-background;
-        }
-
-        &.language {
-            position: absolute;
-            border-top: 1px dashed black;
-            width: 100%;
-            text-align: right;
-            user-select: none;
-            pointer-events: none;
-
-            H1 {
-                font-size: 1em;
-                margin-top: 0.2em;
-                margin-right: -0.3em;
-            }
-
-            &:first-child {
-                border-top: 0;
-            }
-
-            &.off {
-                H1 {
-                    display: none;
-                }
-            }
-
-            &.rtl {
-                text-align: left;
-
-                H1 {
-                    margin-left: -0.3em;
-                }
-            }
-        }
+    &.broken {
+      background-color: $broken-json-background;
     }
+
+    &.language {
+      position: absolute;
+      border-top: 1px dashed black;
+      width: 100%;
+      text-align: right;
+      user-select: none;
+      pointer-events: none;
+
+      H1 {
+        font-size: 1em;
+        margin-top: 0.2em;
+        margin-right: -0.3em;
+      }
+
+      &:first-child {
+        border-top: 0;
+      }
+
+      &.off {
+        H1 {
+          display: none;
+        }
+      }
+
+      &.rtl {
+        text-align: left;
+
+        H1 {
+          margin-left: -0.3em;
+        }
+      }
+    }
+  }
 }

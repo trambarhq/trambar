@@ -1,82 +1,82 @@
 @import '../colors';
 
 .activity-chart {
+  margin-bottom: 1em;
+
+  h2 {
+    float: left;
+    margin: 0;
+  }
+
+  .legend {
+    text-align: right;
+    font-size: 0.8em;
     margin-bottom: 1em;
+    padding-top: 0.25em;
 
-    h2 {
-        float: left;
-        margin: 0;
+    .item {
+      display: inline-block;
+      white-space: nowrap;
+      margin-left: 0.6em;
+      margin-top: 0.25em;
+
+      .ct-chart-bar {
+        width: 0.8em;
+        height: 0.8em;
+        vertical-align: middle;
+        margin-right: 0.3em;
+      }
+
+      .label {
+        vertical-align: middle;
+      }
     }
+  }
 
-    .legend {
-        text-align: right;
-        font-size: 0.8em;
-        margin-bottom: 1em;
-        padding-top: 0.25em;
+  .scroll-container {
+    width: 100%;
+    display: flex;
+    flex-direction: row-reverse;
+    overflow-y: hidden;
+    overflow-x: auto;
+    clear: both;
 
-        .item {
-            display: inline-block;
-            white-space: nowrap;
-            margin-left: 0.6em;
-            margin-top: 0.25em;
-
-            .ct-chart-bar {
-                width: 0.8em;
-                height: 0.8em;
-                vertical-align: middle;
-                margin-right: 0.3em;
-            }
-
-            .label {
-                vertical-align: middle;
-            }
-        }
+    .contents {
+      flex: 0 0 auto;
     }
+  }
 
-    .scroll-container {
-        width: 100%;
-        display: flex;
-        flex-direction: row-reverse;
-        overflow-y: hidden;
-        overflow-x: auto;
-        clear: both;
+  // overrides
+  .ct-label.ct-horizontal.ct-end {
+    min-width: 10em;
+    justify-content: flex-start;
+    text-align: left;
+  }
 
-        .contents {
-            flex: 0 0 auto;
-        }
+  .ct-label.ct-vertical.ct-start {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .ct-line {
+    stroke-linecap: round;
+    stroke-width: 2px;
+  }
+
+  .ct-grid.ct-horizontal.month-start {
+    stroke: $normal-border-color;
+    stroke-width: 1px;
+    stroke-dasharray: none;
+  }
+
+  .ct-grid.ct-horizontal.today {
+    stroke-width: 1px;
+    stroke-dasharray: none;
+  }
+
+  .ct-chart {
+    svg {
+      margin-bottom: -0.75em;
     }
-
-    // overrides
-    .ct-label.ct-horizontal.ct-end {
-        min-width: 10em;
-        justify-content: flex-start;
-        text-align: left;
-    }
-
-    .ct-label.ct-vertical.ct-start {
-        justify-content: flex-start;
-        text-align: left;
-    }
-
-    .ct-line {
-        stroke-linecap: round;
-        stroke-width: 2px;
-    }
-
-    .ct-grid.ct-horizontal.month-start {
-        stroke: $normal-border-color;
-        stroke-width: 1px;
-        stroke-dasharray: none;
-    }
-
-    .ct-grid.ct-horizontal.today {
-        stroke-width: 1px;
-        stroke-dasharray: none;
-    }
-
-    .ct-chart {
-        svg {
-            margin-bottom: -0.75em;
-        }
-    }
+  }
 }

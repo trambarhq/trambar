@@ -10,12 +10,12 @@ const table = 'spreadsheet';
  * @return {Promise<Spreadsheet>}
  */
 function findSpreadsheet(db, schema, id) {
-    return db.findOne({
-        schema,
-        table,
-        criteria: { id },
-        required: true
-    });
+  return db.findOne({
+    schema,
+    table,
+    criteria: { id },
+    required: true
+  });
 }
 
 /**
@@ -27,14 +27,14 @@ function findSpreadsheet(db, schema, id) {
  * @return {Promise<Array<Spreadsheet>>}
  */
 function findAllSpreadsheets(db, schema) {
-    return db.find({
-        schema,
-        table,
-        criteria: {},
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {},
+  });
 }
 
 export {
-    findSpreadsheet,
-    findAllSpreadsheets,
+  findSpreadsheet,
+  findAllSpreadsheets,
 };

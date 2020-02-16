@@ -1,49 +1,49 @@
 @import '../colors';
 
 .page-container {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    z-index: 0;     // drawn beneath the start page (z-index = 1)
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  z-index: 0;   // drawn beneath the start page (z-index = 1)
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-    &:focus {
-        outline: 0;
+  &:focus {
+    outline: 0;
+  }
+
+  .contents {
+    width: 100%;
+    max-width: 125em;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+
+    .double-col &,
+    .triple-col & {
+      padding: 1em 1em 1em 1em;
+    }
+  }
+
+  // use custom color only on desktop
+  @media only screen and (min-device-width : 800px) {
+    &::-webkit-scrollbar-track {
+      -webkit-box-shadow: inset 0 0 6px $scroll-bar-shadow-color;
+      background-color: transparent;
     }
 
-    .contents {
-        width: 100%;
-        max-width: 125em;
-        padding: 0.5em 0.5em 0.5em 0.5em;
-
-        .double-col &,
-        .triple-col & {
-            padding: 1em 1em 1em 1em;
-        }
+    &::-webkit-scrollbar {
+      width: 14px;
+      background-color: transparent;
     }
 
-    // use custom color only on desktop
-    @media only screen and (min-device-width : 800px) {
-        &::-webkit-scrollbar-track {
-            -webkit-box-shadow: inset 0 0 6px $scroll-bar-shadow-color;
-            background-color: transparent;
-        }
-
-        &::-webkit-scrollbar {
-            width: 14px;
-            background-color: transparent;
-        }
-
-        &::-webkit-scrollbar-thumb {
-            border-radius: 2px;
-            -webkit-box-shadow: inset 0 0 6px $scroll-bar-shadow-color;
-            background-color: $scroll-bar-background-color;
-        }
+    &::-webkit-scrollbar-thumb {
+      border-radius: 2px;
+      -webkit-box-shadow: inset 0 0 6px $scroll-bar-shadow-color;
+      background-color: $scroll-bar-background-color;
     }
+  }
 }

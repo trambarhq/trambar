@@ -1,45 +1,45 @@
 .user-list-page {
-    .buttons {
-        float: right;
+  .buttons {
+    float: right;
+  }
+
+  .sortable-table {
+    #username {
+      width: 12em;
     }
 
-    .sortable-table {
-        #username {
-            width: 12em;
-        }
-
-        #type {
-            width: 10em;
-        }
-
-        #roles {
-            width: 10em;
-        }
-
-        #projects {
-            width: 12em;
-        }
-
-        #email {
-            width: 12em;
-        }
-
-        #mtime {
-            width: 10em;
-        }
-
-        .resource-view {
-            display: inline-block;
-        }
-
-        .action-badge {
-            margin-top: 0.2em;
-        }
-
-        .email {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+    #type {
+      width: 10em;
     }
+
+    #roles {
+      width: 10em;
+    }
+
+    #projects {
+      width: 12em;
+    }
+
+    #email {
+      width: 12em;
+    }
+
+    #mtime {
+      width: 10em;
+    }
+
+    .resource-view {
+      display: inline-block;
+    }
+
+    .action-badge {
+      margin-top: 0.2em;
+    }
+
+    .email {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
 }

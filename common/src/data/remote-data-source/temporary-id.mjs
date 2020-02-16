@@ -4,13 +4,13 @@
  * @return {Number}
  */
 function allocate() {
-    let newTemporaryID = lastTemporaryID + 0.000000001;
-    lastTemporaryID = newTemporaryID;
-    return newTemporaryID;
+  let newTemporaryID = lastTemporaryID + 0.000000001;
+  lastTemporaryID = newTemporaryID;
+  return newTemporaryID;
 }
 
 let lastTemporaryID = 0;
 
 export {
-    allocate,
+  allocate,
 };

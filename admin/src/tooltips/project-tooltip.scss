@@ -1,18 +1,18 @@
 @import '../colors';
 
 .tooltip.project {
-    .item {
-        margin-bottom: 0.2em;
-    }
+  .item {
+    margin-bottom: 0.2em;
+  }
 
-    .bottom {
-        font-size: 0.9em;
-        text-align: center;
-        border-top: 1px solid $tool-tip-separator-color;
-        padding-top: 0.2em;
+  .bottom {
+    font-size: 0.9em;
+    text-align: center;
+    border-top: 1px solid $tool-tip-separator-color;
+    padding-top: 0.2em;
 
-        A {
-            display: block;
-        }
+    A {
+      display: block;
     }
+  }
 }

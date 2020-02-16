@@ -8,20 +8,20 @@ import _ from 'lodash';
  * @return {Object|null}
  */
 function parse(text) {
-    let props = {};
-    let re = /^(\w+)=(.*)/g;
-    let lines = _.split(text, /[\r\n]+/);
-    for (let line of lines) {
-        let match = /^(\w+)\s*=\s*(.*)/.exec(line);
-        if (match) {
-            let name = _.lowerCase(match[1]);
-            let value = _.trim(match[2]);
-            props[name] = value;
-        }
+  let props = {};
+  let re = /^(\w+)=(.*)/g;
+  let lines = _.split(text, /[\r\n]+/);
+  for (let line of lines) {
+    let match = /^(\w+)\s*=\s*(.*)/.exec(line);
+    if (match) {
+      let name = _.lowerCase(match[1]);
+      let value = _.trim(match[2]);
+      props[name] = value;
     }
-    return (props.url) ? props : null;
+  }
+  return (props.url) ? props : null;
 }
 
 export {
-    parse,
+  parse,
 };

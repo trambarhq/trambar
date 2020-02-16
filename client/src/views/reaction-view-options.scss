@@ -1,30 +1,30 @@
 @import '../colors';
 
 .reaction-view-options {
-    .button {
-        color: $reaction-view-option-button-color;
-        opacity: 0.2;
-        padding: 0 8px 0 8px;
-        margin: 0 -8px 0 -4px;
+  .button {
+    color: $reaction-view-option-button-color;
+    opacity: 0.2;
+    padding: 0 8px 0 8px;
+    margin: 0 -8px 0 -4px;
 
-        .single-col & {
-            padding: 4px 12px 4px 12px;
-            margin: -4px -12px -4px -8px;
-        }
-
-        &.active {
-            opacity: 1;
-
-            .no-touch & {
-                &:hover {
-                    color: $reaction-view-option-button-hover-color;
-                }
-            }
-        }
+    .single-col & {
+      padding: 4px 12px 4px 12px;
+      margin: -4px -12px -4px -8px;
     }
 
-    .container {
-        right: 0.5em;
-        top: 1.25em;
+    &.active {
+      opacity: 1;
+
+      .no-touch & {
+        &:hover {
+          color: $reaction-view-option-button-hover-color;
+        }
+      }
     }
+  }
+
+  .container {
+    right: 0.5em;
+    top: 1.25em;
+  }
 }

@@ -1,29 +1,29 @@
 @import '../colors';
 
 .settings-panel.language {
-    .option-button {
-        margin-top: 0.35em;
-        margin-bottom: 0.35em;
+  .option-button {
+    margin-top: 0.35em;
+    margin-bottom: 0.35em;
 
-        SELECT {
-            font-size: 1em;
-            color: $button-text-color;
-            background-color: $button-background-color;
-            border: 0;
-            padding: 2px 10px 2px 6px;
-            margin-left: 0.5em;
-            margin-top: -4px;
-            margin-bottom: -4px;
+    SELECT {
+      font-size: 1em;
+      color: $button-text-color;
+      background-color: $button-background-color;
+      border: 0;
+      padding: 2px 10px 2px 6px;
+      margin-left: 0.5em;
+      margin-top: -4px;
+      margin-bottom: -4px;
 
-            &.sole {
-                visibility: hidden;
-                width: 1px;
-            }
+      &.sole {
+        visibility: hidden;
+        width: 1px;
+      }
 
-            &:hover, &:focus {
-                color: $button-hover-text-color;
-                background-color: $button-hover-background-color;
-            }
-        }
+      &:hover, &:focus {
+        color: $button-hover-text-color;
+        background-color: $button-hover-background-color;
+      }
     }
+  }
 }

@@ -11,134 +11,134 @@ import './tooltip.scss';
  * window element holds the contents that appear in the pop-up window.
  */
 function Tooltip(props) {
-    const { upward, leftward, disabled, className, children } = props;
-    const [ open, setOpen ] = useState(false);
-    const container = useRef();
-    const live = hasContents(children);
-    const active = open && live && !disabled;
+  const { upward, leftward, disabled, className, children } = props;
+  const [ open, setOpen ] = useState(false);
+  const container = useRef();
+  const live = hasContents(children);
+  const active = open && live && !disabled;
 
-    const inline = findElement(children, 'inline');
-    const win = findElement(children, 'window');
+  const inline = findElement(children, 'inline');
+  const win = findElement(children, 'window');
 
-    const handleLabelClick = useListener((evt) => {
-        if (live && !disabled) {
-            setOpen(!open);
-        }
-    });
-    const handleMouseDown = useListener((evt) => {
-        if (!isInside(evt.target, container.current)) {
-            setOpen(false);
-        }
-    });
-    const handleKeyDown = useListener((evt) => {
-        if (evt.keyCode === 27) {
-            setOpen(false);
-        }
-    });
-
-    useEffect(() => {
-        if (active) {
-            document.addEventListener('mousedown', handleMouseDown);
-            document.addEventListener('keydown', handleKeyDown);
-            return () => {
-                document.removeEventListener('mousedown', handleMouseDown);
-                document.removeEventListener('keydown', handleKeyDown);
-            };
-        }
-    }, [ active ]);
-    useEffect(() => {
-        if (disabled && open) {
-            setOpen(false);
-        }
-    }, [ disabled, open ]);
-
-    const classNames = [ 'tooltip' ];
+  const handleLabelClick = useListener((evt) => {
     if (live && !disabled) {
-        classNames.push('live');
+      setOpen(!open);
     }
-    if (upward) {
-        classNames.push('upward');
+  });
+  const handleMouseDown = useListener((evt) => {
+    if (!isInside(evt.target, container.current)) {
+      setOpen(false);
     }
-    if (leftward) {
-        classNames.push('leftward');
+  });
+  const handleKeyDown = useListener((evt) => {
+    if (evt.keyCode === 27) {
+      setOpen(false);
     }
-    if (className) {
-        classNames.push(className);
+  });
+
+  useEffect(() => {
+    if (active) {
+      document.addEventListener('mousedown', handleMouseDown);
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('mousedown', handleMouseDown);
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [ active ]);
+  useEffect(() => {
+    if (disabled && open) {
+      setOpen(false);
+    }
+  }, [ disabled, open ]);
+
+  const classNames = [ 'tooltip' ];
+  if (live && !disabled) {
+    classNames.push('live');
+  }
+  if (upward) {
+    classNames.push('upward');
+  }
+  if (leftward) {
+    classNames.push('leftward');
+  }
+  if (className) {
+    classNames.push(className);
+  }
+  return (
+    <div ref={container} className={classNames.join(' ')}>
+      {renderLabel()}
+      {renderWindow()}
+    </div>
+  );
+
+  /**
+   * Render label
+   *
+   * @return {ReactElement}
+   */
+  function renderLabel() {
+    return (
+      <span className="label" onClick={handleLabelClick}>
+        {inline.props.children}
+      </span>
+    );
+  }
+
+  /**
+   * Render pop-up
+   *
+   * @return {ReactElement|null}
+   */
+  function renderWindow() {
+    if (!active) {
+      return null;
     }
     return (
-        <div ref={container} className={classNames.join(' ')}>
-            {renderLabel()}
-            {renderWindow()}
+      <div className="window-container">
+        <div className="window">
+          {win.props.children}
         </div>
+      </div>
     );
-
-    /**
-     * Render label
-     *
-     * @return {ReactElement}
-     */
-    function renderLabel() {
-        return (
-            <span className="label" onClick={handleLabelClick}>
-                {inline.props.children}
-            </span>
-        );
-    }
-
-    /**
-     * Render pop-up
-     *
-     * @return {ReactElement|null}
-     */
-    function renderWindow() {
-        if (!active) {
-            return null;
-        }
-        return (
-            <div className="window-container">
-                <div className="window">
-                    {win.props.children}
-                </div>
-            </div>
-        );
-    }
+  }
 }
 
 function findElement(children, tagName) {
-    children = React.Children.toArray(children);
-    return _.find(children, { type: tagName });
+  children = React.Children.toArray(children);
+  return _.find(children, { type: tagName });
 }
 
 function hasContents(children, props) {
-    const win = findElement(children, 'window');
-    if (win) {
-        if (React.Children.count(win.props.children) > 0) {
-            return true;
-        }
+  const win = findElement(children, 'window');
+  if (win) {
+    if (React.Children.count(win.props.children) > 0) {
+      return true;
     }
-    return false;
+  }
+  return false;
 }
 
 function isInside(element, container) {
-    for (let n = element; n; n = n.parentNode) {
-        if (n === container) {
-            return true;
-        }
+  for (let n = element; n; n = n.parentNode) {
+    if (n === container) {
+      return true;
     }
-    return false;
+  }
+  return false;
 }
 
 export {
-    Tooltip as default,
-    Tooltip,
+  Tooltip as default,
+  Tooltip,
 };
 
 if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
+  const PropTypes = require('prop-types');
 
-    Tooltip.propTypes = {
-        upward: PropTypes.bool,
-        leftward: PropTypes.bool,
-        disabled: PropTypes.bool,
-    };
+  Tooltip.propTypes = {
+    upward: PropTypes.bool,
+    leftward: PropTypes.bool,
+    disabled: PropTypes.bool,
+  };
 }

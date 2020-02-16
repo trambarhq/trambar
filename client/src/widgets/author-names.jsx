@@ -13,41 +13,41 @@ import './author-names.scss';
  * will appear while the rests are given in a pop-up (MultipleUserNames).
  */
 function AuthorNames(props) {
-    let { env, authors, robot } = props;
-    let { t } = env.locale;
-    let names = _.map(authors, (author) => {
-        return UserUtils.getDisplayName(author, env);
-    });
-    let contents;
-    if (!authors || authors.length === 0) {
-        if (robot) {
-            const name = t(`robot-name-${robot.type}`);
-            contents = <span key={1} className="sole author">{name}</span>
-        } else {
-            contents = '\u00a0';
-        }
-    } else if (authors.length === 1) {
-        contents = <span key={1} className="sole author">{names[0]}</span>;
-    } else if (authors.length === 2) {
-        let name1 = <span key={1} className="lead author">{names[0]}</span>;
-        let name2 = <span key={3} className="co author">{names[1]}</span>
-        contents = t('story-author-$name1-and-$name2', name1, name2);
+  let { env, authors, robot } = props;
+  let { t } = env.locale;
+  let names = _.map(authors, (author) => {
+    return UserUtils.getDisplayName(author, env);
+  });
+  let contents;
+  if (!authors || authors.length === 0) {
+    if (robot) {
+      const name = t(`robot-name-${robot.type}`);
+      contents = <span key={1} className="sole author">{name}</span>
     } else {
-        let name1 = <span key={1} className="lead author">{names[0]}</span>;
-        let coauthors = _.slice(authors, 1);
-        let props = {
-            users: coauthors,
-            label: t('story-author-$count-others', coauthors.length),
-            title: t('story-coauthors'),
-            env,
-        };
-        let others = <MultipleUserNames key={3} {...props} />
-        contents = t('story-author-$name1-and-$name2', name1, others);
+      contents = '\u00a0';
     }
-    return <span className="author-names selectable">{contents}</span>;
+  } else if (authors.length === 1) {
+    contents = <span key={1} className="sole author">{names[0]}</span>;
+  } else if (authors.length === 2) {
+    let name1 = <span key={1} className="lead author">{names[0]}</span>;
+    let name2 = <span key={3} className="co author">{names[1]}</span>
+    contents = t('story-author-$name1-and-$name2', name1, name2);
+  } else {
+    let name1 = <span key={1} className="lead author">{names[0]}</span>;
+    let coauthors = _.slice(authors, 1);
+    let props = {
+      users: coauthors,
+      label: t('story-author-$count-others', coauthors.length),
+      title: t('story-coauthors'),
+      env,
+    };
+    let others = <MultipleUserNames key={3} {...props} />
+    contents = t('story-author-$name1-and-$name2', name1, others);
+  }
+  return <span className="author-names selectable">{contents}</span>;
 }
 
 export {
-    AuthorNames as default,
-    AuthorNames,
+  AuthorNames as default,
+  AuthorNames,
 };

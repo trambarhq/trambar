@@ -1,85 +1,85 @@
 @import '../colors';
 
 .role-filter-button {
-    display: inline-block;
-    margin-right: 0.5em;
-    vertical-align: top;
-    cursor: pointer;
-    touch-action: manipulation;
+  display: inline-block;
+  margin-right: 0.5em;
+  vertical-align: top;
+  cursor: pointer;
+  touch-action: manipulation;
 
+  .contents {
+    position: relative;
+    border: 1px solid $role-filter-border-color;
+    margin: 1px;
+    overflow: hidden;
+
+    .row {
+      width: 12em;
+      height: 3em;
+
+      .profile-image {
+        display: inline-block;
+      }
+    }
+
+    .band {
+      position: absolute;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      left: 0;
+      right: 0;
+      top: 3em;
+      color: $role-filter-band-text-color;
+      background-color: $role-filter-band-background-color;
+      padding: 0.25em 0.25em 0.25em 0.25em;
+      min-height: 3em;
+
+      .title {
+        width: 100%;
+        text-align: center;
+        line-height: 1.25em;
+
+        .user-count {
+          float: right;
+          line-height: 0.5em;
+          padding-top: 0.2em;
+
+          .number {
+            font-size: 0.6em;
+            vertical-align: -2px;
+            margin-left: 2px;
+          }
+        }
+      }
+    }
+  }
+
+  &.selected {
     .contents {
-        position: relative;
-        border: 1px solid $role-filter-border-color;
-        margin: 1px;
-        overflow: hidden;
-
-        .row {
-            width: 12em;
-            height: 3em;
-
-            .profile-image {
-                display: inline-block;
-            }
-        }
-
-        .band {
-            position: absolute;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            left: 0;
-            right: 0;
-            top: 3em;
-            color: $role-filter-band-text-color;
-            background-color: $role-filter-band-background-color;
-            padding: 0.25em 0.25em 0.25em 0.25em;
-            min-height: 3em;
-
-            .title {
-                width: 100%;
-                text-align: center;
-                line-height: 1.25em;
-
-                .user-count {
-                    float: right;
-                    line-height: 0.5em;
-                    padding-top: 0.2em;
-
-                    .number {
-                        font-size: 0.6em;
-                        vertical-align: -2px;
-                        margin-left: 2px;
-                    }
-                }
-            }
-        }
+      border: 2px solid $role-filter-selected-background-color;
+      margin: 0;
     }
 
-    &.selected {
-        .contents {
-            border: 2px solid $role-filter-selected-background-color;
-            margin: 0;
-        }
-
-        .band {
-            background-color: $role-filter-selected-background-color;
-            color: $role-filter-selected-text-color;
-        }
+    .band {
+      background-color: $role-filter-selected-background-color;
+      color: $role-filter-selected-text-color;
     }
+  }
 
-    &.no-roles {
-        .message {
-            color: $role-filter-border-color;
-            position: absolute;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
-        }
-        cursor: default;
+  &.no-roles {
+    .message {
+      color: $role-filter-border-color;
+      position: absolute;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
     }
+    cursor: default;
+  }
 }

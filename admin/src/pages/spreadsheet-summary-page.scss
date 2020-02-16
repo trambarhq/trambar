@@ -1,37 +1,37 @@
 @import '../colors';
 
 .spreadsheet-summary-page{
-    .buttons {
-        float: right;
+  .buttons {
+    float: right;
+  }
+
+  .form {
+    float: left;
+    max-width: 40em;
+    min-width: 20em;
+    width: 50%;
+    padding-left: 0.5em;
+    margin-right: 2em;
+  }
+
+  .instructions {
+    padding-top: 1.2em;
+  }
+
+  .sheet {
+    clear: both;
+    margin-bottom: -0.5em;
+
+    H2 {
+      margin-bottom: 0.25em;
     }
 
-    .form {
-        float: left;
-        max-width: 40em;
-        min-width: 20em;
-        width: 50%;
-        padding-left: 0.5em;
-        margin-right: 2em;
+    .title-toggle {
+      cursor: pointer;
+
+      &:hover {
+        color: $link-hover-color;
+      }
     }
-
-    .instructions {
-        padding-top: 1.2em;
-    }
-
-    .sheet {
-        clear: both;
-        margin-bottom: -0.5em;
-
-        H2 {
-            margin-bottom: 0.25em;
-        }
-
-        .title-toggle {
-            cursor: pointer;
-
-            &:hover {
-                color: $link-hover-color;
-            }
-        }
-    }
+  }
 }

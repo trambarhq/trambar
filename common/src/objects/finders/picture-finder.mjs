@@ -11,17 +11,17 @@ const table = 'picture';
  * @return {Promise<Array<Picture>>}
  */
 async function findPictures(db, purpose, minimum) {
-    return db.find({
-        schema,
-        table,
-        criteria: {
-            purpose: purpose,
-            deleted: false,
-        },
-        minimum
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {
+      purpose: purpose,
+      deleted: false,
+    },
+    minimum
+  });
 }
 
 export {
-    findPictures,
+  findPictures,
 };

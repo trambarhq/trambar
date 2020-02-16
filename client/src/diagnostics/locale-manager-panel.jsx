@@ -11,35 +11,35 @@ import './locale-manager-panel.scss';
  * Diagnostic panel displaying state of LocaleManager
  */
 function LocaleManagerPanel(props) {
-    const { localeManager } = props;
-    const {
-        browserLocaleCode,
-        localeCode,
-        missingPhrases,
-    } = localeManager;
-    return (
-        <SettingsPanel className="locale-manager">
-            <header>
-                <i className="fa fa-gear" /> Locale Manager
-            </header>
-            <body>
-                <DiagnosticsSection label="Locale code">
-                    <div>Current: {localeCode}</div>
-                    <div>Browser: {browserLocaleCode}</div>
-                </DiagnosticsSection>
-                <DiagnosticsSection label="Missing phrases" hidden={_.isEmpty(missingPhrases)}>
-                    {_.map(missingPhrases, renderMissingPhrase)}
-                </DiagnosticsSection>
-            </body>
-        </SettingsPanel>
-    );
+  const { localeManager } = props;
+  const {
+    browserLocaleCode,
+    localeCode,
+    missingPhrases,
+  } = localeManager;
+  return (
+    <SettingsPanel className="locale-manager">
+      <header>
+        <i className="fa fa-gear" /> Locale Manager
+      </header>
+      <body>
+        <DiagnosticsSection label="Locale code">
+          <div>Current: {localeCode}</div>
+          <div>Browser: {browserLocaleCode}</div>
+        </DiagnosticsSection>
+        <DiagnosticsSection label="Missing phrases" hidden={_.isEmpty(missingPhrases)}>
+          {_.map(missingPhrases, renderMissingPhrase)}
+        </DiagnosticsSection>
+      </body>
+    </SettingsPanel>
+  );
 
-    function renderMissingPhrase(phrase) {
-        return <div key={i}>{phrase}</div>;
-    }
+  function renderMissingPhrase(phrase) {
+    return <div key={i}>{phrase}</div>;
+  }
 }
 
 export {
-    LocaleManagerPanel as default,
-    LocaleManagerPanel
+  LocaleManagerPanel as default,
+  LocaleManagerPanel
 };

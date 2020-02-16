@@ -1,83 +1,83 @@
 @import '../colors';
 
 .settings-panel.device {
-    .body {
-        padding-left: 0.5em;
+  .body {
+    padding-left: 0.5em;
+  }
+
+  .device-option-button {
+    display: table;
+    width: 100%;
+    color: $button-hover-text-color;
+    margin-top: 0.35em;
+    margin-bottom: 0.35em;
+
+    .icon {
+      display: table-cell;
+      text-align: left;
+      width: 1em;
+      padding-right: 0.4em;
     }
 
-    .device-option-button {
-        display: table;
-        width: 100%;
-        color: $button-hover-text-color;
-        margin-top: 0.35em;
-        margin-bottom: 0.35em;
+    .text {
+      display: table-cell;
+      vertical-align: top;
 
-        .icon {
-            display: table-cell;
-            text-align: left;
-            width: 1em;
-            padding-right: 0.4em;
+      .name {
+        font-size: 1.3em;
+      }
+
+      .revoke {
+        padding-top: 0.1em;
+        display: block;
+        float: right;
+        color: $button-text-color;
+        cursor: pointer;
+
+        &:hover {
+          color: $button-hover-text-color;
         }
-
-        .text {
-            display: table-cell;
-            vertical-align: top;
-
-            .name {
-                font-size: 1.3em;
-            }
-
-            .revoke {
-                padding-top: 0.1em;
-                display: block;
-                float: right;
-                color: $button-text-color;
-                cursor: pointer;
-
-                &:hover {
-                    color: $button-hover-text-color;
-                }
-            }
-        }
+      }
     }
+  }
 
-    .device-icon {
-        position: relative;
-        font-size: 1.8em;
+  .device-icon {
+    position: relative;
+    font-size: 1.8em;
+    text-align: center;
+
+    .fa {
+      &.background {
+        display: block;
+        color: $mobile-device-icon-color;
+      }
+
+      &.icon-overlay {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0.5em;
+        font-size: 0.4em;
+        height: 1em;
+        width: 1em;
         text-align: center;
+        margin: auto;
 
-        .fa {
-            &.background {
-                display: block;
-                color: $mobile-device-icon-color;
-            }
-
-            &.icon-overlay {
-                position: absolute;
-                left: 0;
-                top: 0;
-                right: 0;
-                bottom: 0.5em;
-                font-size: 0.4em;
-                height: 1em;
-                width: 1em;
-                text-align: center;
-                margin: auto;
-
-                &.fa-android {
-                    color: $mobile-device-android-icon-color;
-                }
-
-                &.fa-windows {
-                    color: $mobile-device-windows-icon-color;
-                    font-size: 0.35em;
-                }
-
-                &.fa-apple {
-                    color: $mobile-device-ios-icon-color;
-                    bottom: 0.4em;
-                }
-            }
+        &.fa-android {
+          color: $mobile-device-android-icon-color;
         }
+
+        &.fa-windows {
+          color: $mobile-device-windows-icon-color;
+          font-size: 0.35em;
+        }
+
+        &.fa-apple {
+          color: $mobile-device-ios-icon-color;
+          bottom: 0.4em;
+        }
+      }
     }
+  }
 }

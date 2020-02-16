@@ -1,37 +1,37 @@
 .media-editor {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+
+  .resource {
     position: relative;
-    width: 100%;
-    max-width: 600px;
+    padding: 0.25em 0.25em 0.25em 0.25em;
+  }
 
-    .resource {
-        position: relative;
-        padding: 0.25em 0.25em 0.25em 0.25em;
+  .navigation {
+    position: absolute;
+    left: 0.25em;
+    right: 0.25em;
+    bottom: 0.25em;
+    background-color: rgba(0, 0, 0, 0.75);
+    opacity: 1;
+    transition: opacity .5s;
+
+    .left {
+      float: left;
     }
 
-    .navigation {
-        position: absolute;
-        left: 0.25em;
-        right: 0.25em;
-        bottom: 0.25em;
-        background-color: rgba(0, 0, 0, 0.75);
-        opacity: 1;
-        transition: opacity .5s;
-
-        .left {
-            float: left;
-        }
-
-        .right {
-            float: right;
-        }
-
-        &.hidden {
-            opacity: 0;
-        }
+    .right {
+      float: right;
     }
 
-    &.empty {
-        position: static;
-        max-width: none;
+    &.hidden {
+      opacity: 0;
     }
+  }
+
+  &.empty {
+    position: static;
+    max-width: none;
+  }
 }

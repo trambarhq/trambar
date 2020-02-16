@@ -12,46 +12,46 @@ import './sign-off-menu.scss';
  * Contents of sign-off pop-up menu
  */
 async function SignOffMenu(props) {
-    const { database, route, env } = props;
-    const { t } = env.locale;
-    const [ show ] = useProgress();
+  const { database, route, env } = props;
+  const { t } = env.locale;
+  const [ show ] = useProgress();
 
-    const handleSignOff = useListener((evt) => {
-        database.endSession();
-    });
+  const handleSignOff = useListener((evt) => {
+    database.endSession();
+  });
 
+  render();
+  let user;
+  if (database.authorized) {
+    const currentUserID = await database.start();
+    user = await UserFinder.findUser(database, currentUserID);
     render();
-    let user;
-    if (database.authorized) {
-        const currentUserID = await database.start();
-        user = await UserFinder.findUser(database, currentUserID);
-        render();
-    }
+  }
 
-    function render() {
-        if (!database.authorized) {
-            show(null);
-        } else {
-            const url = (user) ? route.find('user-summary-page', { userID: user.id }) : undefined;
-            const name = UserUtils.getDisplayName(user, env);
-            show(
-                <div className="sign-off-menu">
-                    <a href={url}>
-                        <ProfileImage user={user} env={env} size="large" />
-                        <div className="name">{name}</div>
-                    </a>
-                    <div className="sign-off" onClick={handleSignOff}>
-                        {t('sign-off-menu-sign-off')}
-                    </div>
-                </div>
-            );
-        }
+  function render() {
+    if (!database.authorized) {
+      show(null);
+    } else {
+      const url = (user) ? route.find('user-summary-page', { userID: user.id }) : undefined;
+      const name = UserUtils.getDisplayName(user, env);
+      show(
+        <div className="sign-off-menu">
+          <a href={url}>
+            <ProfileImage user={user} env={env} size="large" />
+            <div className="name">{name}</div>
+          </a>
+          <div className="sign-off" onClick={handleSignOff}>
+            {t('sign-off-menu-sign-off')}
+          </div>
+        </div>
+      );
     }
+  }
 }
 
 const component = Relaks.memo(SignOffMenu);
 
 export {
-    component as default,
-    component as SignOffMenu,
+  component as default,
+  component as SignOffMenu,
 };

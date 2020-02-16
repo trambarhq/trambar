@@ -1,121 +1,121 @@
 @import '../colors';
 
 .media-view {
-    position: relative;
-    margin-top: 1em;
+  position: relative;
+  margin-top: 1em;
 
-    .container {
-        width: 100%;
+  .container {
+    width: 100%;
 
-        IMG, CANVAS {
-            display: block;
-            width: 100%;
-            height: auto;
-            top: 0;
-            left: 0;
+    IMG, CANVAS {
+      display: block;
+      width: 100%;
+      height: auto;
+      top: 0;
+      left: 0;
+    }
+
+    .image, .video, .audio, .website {
+      cursor: pointer;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 0;
+
+      .icon {
+        font-size: 10em;
+      }
+
+      .duration {
+        padding: 0.25em 0.5em 0.25em 0.5em;
+        font-size: 2em;
+        border-radius: 0.5em;
+      }
+    }
+
+    .website {
+      A {
+        display: block;
+
+        &:link, &:visited {
+          color: $media-view-overlay-color;
         }
+      }
+    }
 
-        .image, .video, .audio, .website {
-            cursor: pointer;
-        }
+    .video, .audio {
+      .overlay {
+        color: $media-view-overlay-color;
+        opacity: 0.5;
 
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 0;
+        .no-touch & {
+          opacity: 0;
 
-            .icon {
-                font-size: 10em;
-            }
+          &:hover {
+            opacity: 0.6;
 
             .duration {
-                padding: 0.25em 0.5em 0.25em 0.5em;
-                font-size: 2em;
-                border-radius: 0.5em;
+              color: $media-view-overlay-hover-color;
+              background-color: $media-view-overlay-hover-background-color;
             }
+          }
         }
+      }
 
-        .website {
-            A {
-                display: block;
+      &.posterless {
+        padding-top: 50%;
+        padding-bottom: 50%;
+        background-color: $media-view-overlay-hover-background-color;
 
-                &:link, &:visited {
-                    color: $media-view-overlay-color;
-                }
+        .overlay {
+          color: $media-view-overlay-hover-color;
+          opacity: 0.5;
+
+          .no-touch & {
+            &:hover {
+              opacity: 1;
+
+              .duration {
+                color: $media-view-overlay-hover-color;
+                background-color: transparent;
+              }
             }
+          }
         }
-
-        .video, .audio {
-            .overlay {
-                color: $media-view-overlay-color;
-                opacity: 0.5;
-
-                .no-touch & {
-                    opacity: 0;
-
-                    &:hover {
-                        opacity: 0.6;
-
-                        .duration {
-                            color: $media-view-overlay-hover-color;
-                            background-color: $media-view-overlay-hover-background-color;
-                        }
-                    }
-                }
-            }
-
-            &.posterless {
-                padding-top: 50%;
-                padding-bottom: 50%;
-                background-color: $media-view-overlay-hover-background-color;
-
-                .overlay {
-                    color: $media-view-overlay-hover-color;
-                    opacity: 0.5;
-
-                    .no-touch & {
-                        &:hover {
-                            opacity: 1;
-
-                            .duration {
-                                color: $media-view-overlay-hover-color;
-                                background-color: transparent;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        .navigation {
-            position: absolute;
-            width: 100%;
-            bottom: 0;
-            background-color: $media-bar-background-color;
-            opacity: 0.5;
-
-            .left {
-                float: left;
-            }
-
-            .right {
-                float: right;
-            }
-        }
-
-        audio {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            margin-top: 0;
-        }
+      }
     }
+
+    .navigation {
+      position: absolute;
+      width: 100%;
+      bottom: 0;
+      background-color: $media-bar-background-color;
+      opacity: 0.5;
+
+      .left {
+        float: left;
+      }
+
+      .right {
+        float: right;
+      }
+    }
+
+    audio {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      margin-top: 0;
+    }
+  }
 }

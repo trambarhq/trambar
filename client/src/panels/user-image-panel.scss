@@ -1,32 +1,32 @@
 @import '../colors';
 
 .settings-panel.user-image {
-    .no-image {
-        position: relative;
-        background-color: $profile-image-placeholder-background-color;
-        width: 100%;
-        padding-top: 50%;
-        padding-bottom: 50%;
+  .no-image {
+    position: relative;
+    background-color: $profile-image-placeholder-background-color;
+    width: 100%;
+    padding-top: 50%;
+    padding-bottom: 50%;
 
-        svg {
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            height: 80%;
-            margin:auto;
-        }
+    svg {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      height: 80%;
+      margin:auto;
     }
+  }
 
-    .image-container {
-        max-width: 500px;
-        margin: auto;
-    }
+  .image-container {
+    max-width: 500px;
+    margin: auto;
+  }
 
-    .buttons {
-        overflow: hidden;
-        padding-bottom: 0.15em;
-        text-align: right;
-    }
+  .buttons {
+    overflow: hidden;
+    padding-bottom: 0.15em;
+    text-align: right;
+  }
 }

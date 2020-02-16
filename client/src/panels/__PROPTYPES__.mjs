@@ -15,55 +15,55 @@ import { UserInfoPanel } from './user-info-panel.jsx';
 import { WebAlertPanel } from './web-alert-panel.jsx';
 
 DevelopmentPanel.propTypes = {
-    userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 DevicePanel.propTypes = {
-    devices: PropTypes.arrayOf(PropTypes.object),
+  devices: PropTypes.arrayOf(PropTypes.object),
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 LanguagePanel.propTypes = {
-    env: PropTypes.instanceOf(Environment).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 MobileAlertPanel.propTypes = {
-    userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
-    repos: PropTypes.arrayOf(PropTypes.object),
-    env: PropTypes.instanceOf(Environment).isRequired,
+  userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
+  repos: PropTypes.arrayOf(PropTypes.object),
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 NotificationPanel.propTypes = {
-    userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
-    repos: PropTypes.arrayOf(PropTypes.object),
-    env: PropTypes.instanceOf(Environment).isRequired,
+  userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
+  repos: PropTypes.arrayOf(PropTypes.object),
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 ProjectPanel.propTypes = {
-    userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
-    system: PropTypes.object,
-    project: PropTypes.object,
-    projectLinks: PropTypes.arrayOf(PropTypes.object),
+  userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
+  system: PropTypes.object,
+  project: PropTypes.object,
+  projectLinks: PropTypes.arrayOf(PropTypes.object),
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 SocialNetworkPanel.propTypes = {
-    userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 UserImagePanel.propTypes = {
-    currentUser: PropTypes.object,
-    payloads: PropTypes.instanceOf(Payloads).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
-    onChange: PropTypes.func,
+  currentUser: PropTypes.object,
+  payloads: PropTypes.instanceOf(Payloads).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
+  onChange: PropTypes.func,
 };
 UserInfoPanel.propTypes = {
-    userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 WebAlertPanel.propTypes = {
-    userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  userDraft: PropTypes.instanceOf(AsyncSaveBuffer).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };

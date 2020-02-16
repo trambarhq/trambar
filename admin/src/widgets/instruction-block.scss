@@ -1,37 +1,37 @@
 @import '../colors';
 
 .instruction-block {
-    transition: opacity 0.5s linear 0.5s;
-    opacity: 1;
+  transition: opacity 0.5s linear 0.5s;
+  opacity: 1;
 
-    .contents {
-        overflow: hidden;
-        padding: 0 1em 0 1em;
-        min-width: 15em;
-        margin-bottom: 1em;
+  .contents {
+    overflow: hidden;
+    padding: 0 1em 0 1em;
+    min-width: 15em;
+    margin-bottom: 1em;
 
-        $corner-width: 0.6em;
-        background:
-            linear-gradient(135deg, transparent $corner-width, $instruction-background-color 0) top left,
-            linear-gradient(225deg, transparent $corner-width, $instruction-background-color 0) top right,
-            linear-gradient(315deg, transparent $corner-width, $instruction-background-color 0) bottom right,
-            linear-gradient(45deg,  transparent $corner-width, $instruction-background-color 0) bottom left;
-        background-size: 51% 51%;
-        background-repeat: no-repeat;
+    $corner-width: 0.6em;
+    background:
+      linear-gradient(135deg, transparent $corner-width, $instruction-background-color 0) top left,
+      linear-gradient(225deg, transparent $corner-width, $instruction-background-color 0) top right,
+      linear-gradient(315deg, transparent $corner-width, $instruction-background-color 0) bottom right,
+      linear-gradient(45deg,  transparent $corner-width, $instruction-background-color 0) bottom left;
+    background-size: 51% 51%;
+    background-repeat: no-repeat;
+  }
+
+  .collapsible-container {
+    transition: height 1s;
+    overflow: visible;
+
+    &.collapsing {
+      transition: height 1s linear 0.5s;
+      pointer-events: none;
     }
+  }
 
-    .collapsible-container {
-        transition: height 1s;
-        overflow: visible;
-
-        &.collapsing {
-            transition: height 1s linear 0.5s;
-            pointer-events: none;
-        }
-    }
-
-    &.hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
+  &.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
 }

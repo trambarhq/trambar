@@ -1,64 +1,64 @@
 @import '../colors';
 
 .settings-panel.project {
-    .body {
-        padding-left: 0.5em;
-        min-height: 9.4em;
+  .body {
+    padding-left: 0.5em;
+    min-height: 9.4em;
+  }
+
+  .project-option-button {
+    display: table;
+    color: $button-text-color;
+    margin-top: 0.35em;
+    margin-bottom: 0.35em;
+    cursor: pointer;
+
+    &.selected, &:hover {
+      color: $button-hover-text-color;
     }
 
-    .project-option-button {
-        display: table;
-        color: $button-text-color;
-        margin-top: 0.35em;
-        margin-bottom: 0.35em;
-        cursor: pointer;
-
-        &.selected, &:hover {
-            color: $button-hover-text-color;
-        }
-
-        &.selected {
-            cursor: default;
-        }
-
-        .icon {
-            display: table-cell;
-            width: 1em;
-            padding-right: 0.25em;
-            font-size: 1.4em;
-        }
-
-        .text {
-            display: table-cell;
-
-            .name {
-                font-size: 1.4em;
-            }
-
-            .supplemental {
-                margin-top: 0.5em;
-                margin-bottom: 0.15em;
-
-                .item {
-                    margin-bottom: 0.35em;
-
-                    .button {
-                        color: $button-supplemental-text-color;
-                        &:hover {
-                            color: $button-hover-text-color;
-                        }
-                        cursor: pointer;
-
-                        .fa {
-                            margin-right: 0.15em;
-                        }
-
-                        .label {
-                            font-size: 0.9em;
-                        }
-                    }
-                }
-            }
-        }
+    &.selected {
+      cursor: default;
     }
+
+    .icon {
+      display: table-cell;
+      width: 1em;
+      padding-right: 0.25em;
+      font-size: 1.4em;
+    }
+
+    .text {
+      display: table-cell;
+
+      .name {
+        font-size: 1.4em;
+      }
+
+      .supplemental {
+        margin-top: 0.5em;
+        margin-bottom: 0.15em;
+
+        .item {
+          margin-bottom: 0.35em;
+
+          .button {
+            color: $button-supplemental-text-color;
+            &:hover {
+              color: $button-hover-text-color;
+            }
+            cursor: pointer;
+
+            .fa {
+              margin-right: 0.15em;
+            }
+
+            .label {
+              font-size: 0.9em;
+            }
+          }
+        }
+      }
+    }
+  }
 }

@@ -1,15 +1,15 @@
 function create() {
-    let resolve, reject;
-    let promise = new Promise((f1, f2) => {
-        resolve = f1;
-        reject = f2;
-    });
-    promise.resolve = resolve;
-    promise.reject = reject;
-    return promise;
+  let resolve, reject;
+  let promise = new Promise((f1, f2) => {
+    resolve = f1;
+    reject = f2;
+  });
+  promise.resolve = resolve;
+  promise.reject = reject;
+  return promise;
 }
 
 export {
-    create as default,
-    create,
+  create as default,
+  create,
 };

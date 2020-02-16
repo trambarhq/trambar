@@ -4,8 +4,8 @@ import * as ListParser from 'common/utils/list-parser.mjs';
 import { mergeObjects } from '../../data/merger.mjs';
 import { mergeLists } from './resource-utils.mjs';
 import {
-    TrackableStoryTypes,
-    EditableStoryTypes
+  TrackableStoryTypes,
+  EditableStoryTypes
 } from '../types/story-types';
 
 /**
@@ -16,13 +16,13 @@ import {
  * @return {Boolean}
  */
 function isSaved(story) {
-    if (!story) {
-        return false;
-    }
-    if (story.id < 1) {
-        return false;
-    }
-    return true;
+  if (!story) {
+    return false;
+  }
+  if (story.id < 1) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -33,13 +33,13 @@ function isSaved(story) {
  * @return {Boolean}
  */
 function isActuallyPublished(story) {
-    if (!story) {
-        return false;
-    }
-    if (!story.ptime) {
-        return false;
-    }
-    return true;
+  if (!story) {
+    return false;
+  }
+  if (!story.ptime) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -50,18 +50,18 @@ function isActuallyPublished(story) {
  * @return {Boolean}
  */
 function isEditable(story) {
-    if (!story) {
-        return false;
-    }
-    if (_.includes(EditableStoryTypes, story.type)) {
-        return true;
-    }
-    if (story.type === 'issue') {
-        if (story.details.exported) {
-            return true;
-        }
-    }
+  if (!story) {
     return false;
+  }
+  if (_.includes(EditableStoryTypes, story.type)) {
+    return true;
+  }
+  if (story.type === 'issue') {
+    if (story.details.exported) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -72,13 +72,13 @@ function isEditable(story) {
  * @return {Boolean}
  */
 function isCancelable(story) {
-    if (!story) {
-        return false;
-    }
-    if (hasContents(story) || story.ptime) {
-        return true;
-    }
+  if (!story) {
     return false;
+  }
+  if (hasContents(story) || story.ptime) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -89,16 +89,16 @@ function isCancelable(story) {
  * @return {Boolean}
  */
 function hasContents(story) {
-    if (!story) {
-        return false;
-    }
-    if (!_.isEmpty(_.get(story, 'details.text'))) {
-        return true;
-    }
-    if (!_.isEmpty(_.get(story, 'details.resources'))) {
-        return true;
-    }
+  if (!story) {
     return false;
+  }
+  if (!_.isEmpty(_.get(story, 'details.text'))) {
+    return true;
+  }
+  if (!_.isEmpty(_.get(story, 'details.resources'))) {
+    return true;
+  }
+  return false;
 }
 
 
@@ -110,15 +110,15 @@ function hasContents(story) {
  * @return {Boolean}
  */
 function isTrackable(story) {
-    if (!story) {
-        return false;
+  if (!story) {
+    return false;
+  }
+  if (story.type === 'issue') {
+    if (story.details.exported) {
+      return true;
     }
-    if (story.type === 'issue') {
-        if (story.details.exported) {
-            return true;
-        }
-    }
-    return _.includes(TrackableStoryTypes, story.type || 'post');
+  }
+  return _.includes(TrackableStoryTypes, story.type || 'post');
 }
 
 /**
@@ -131,17 +131,17 @@ function isTrackable(story) {
  * @return {Boolean}
  */
 function wasPublishedWithin(story, time, unit) {
-    if (!story || !story.published) {
-        return false;
-    }
-    let ptime = story.ptime;
-    if (!ptime) {
-        return true;
-    }
-    if (Moment() < Moment(ptime).add(time, unit)) {
-        return true;
-    }
+  if (!story || !story.published) {
     return false;
+  }
+  let ptime = story.ptime;
+  if (!ptime) {
+    return true;
+  }
+  if (Moment() < Moment(ptime).add(time, unit)) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -154,17 +154,17 @@ function wasPublishedWithin(story, time, unit) {
  * @return {Boolean}
  */
 function wasBumpedWithin(story, time, unit) {
-    if (!story || !story.published) {
-        return false;
-    }
-    let btime = story.btime || story.ptime;
-    if (!btime) {
-        return true;
-    }
-    if (Moment() < Moment(btime).add(time, unit)) {
-        return true;
-    }
+  if (!story || !story.published) {
     return false;
+  }
+  let btime = story.btime || story.ptime;
+  if (!btime) {
+    return true;
+  }
+  if (Moment() < Moment(btime).add(time, unit)) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -176,8 +176,8 @@ function wasBumpedWithin(story, time, unit) {
  * @return {Boolean}
  */
 function hasUncomittedChanges(story) {
-    // a special property set by RemoteDataSource
-    return story.uncommitted;
+  // a special property set by RemoteDataSource
+  return story.uncommitted;
 }
 
 /**
@@ -190,113 +190,113 @@ function hasUncomittedChanges(story) {
  * @return {Boolean}
  */
 function mergeRemoteChanges(local, remote, common) {
-    if (!remote) {
-        // no merging if the object has vanished from remote database
-        return false;
+  if (!remote) {
+    // no merging if the object has vanished from remote database
+    return false;
+  }
+  let resolveFns = {
+    details: {
+      resources: mergeLists
     }
-    let resolveFns = {
-        details: {
-            resources: mergeLists
-        }
-    };
-    let merged = mergeObjects(local, remote, common, resolveFns);
-    _.assign(local, merged);
-    return true;
+  };
+  let merged = mergeObjects(local, remote, common, resolveFns);
+  _.assign(local, merged);
+  return true;
 }
 
 function extractUserAnswers(story, locale) {
-    const { p } = locale;
-    const langText = p(story.details.text);
-    const tokens = ListParser.extract(langText);
-    const answers = {};
-    for (let token of tokens) {
-        for (let item of token) {
-            if (story.type === 'task-list') {
-                _.set(answers, [ item.list, item.key ], item.checked);
-            } else if (story.type === 'survey') {
-                if (item.checked) {
-                    _.set(answers, item.list, item.key);
-                } else {
-                    _.set(answers, item.list, undefined);
-                }
-            }
+  const { p } = locale;
+  const langText = p(story.details.text);
+  const tokens = ListParser.extract(langText);
+  const answers = {};
+  for (let token of tokens) {
+    for (let item of token) {
+      if (story.type === 'task-list') {
+        _.set(answers, [ item.list, item.key ], item.checked);
+      } else if (story.type === 'survey') {
+        if (item.checked) {
+          _.set(answers, item.list, item.key);
+        } else {
+          _.set(answers, item.list, undefined);
         }
+      }
     }
-    return answers;
+  }
+  return answers;
 }
 
 function insertUserAnswers(story, answers) {
-    const storyUpdated = _.cloneDeep(story);
-    const taskCounts = [];
-    storyUpdated.details.text = _.mapValues(story.details.text, (langText) => {
-        const tokens = ListParser.extract(langText);
-        for (let token of tokens) {
-            for (let item of token) {
-                let checked;
-                if (story.type === 'task-list') {
-                    checked = !!_.get(answers, [ item.list, item.key ]);
-                } else if (story.type === 'survey') {
-                    checked = (_.get(answers, item.list) === item.key);
-                }
-                ListParser.update(item, checked);
-            }
-        }
+  const storyUpdated = _.cloneDeep(story);
+  const taskCounts = [];
+  storyUpdated.details.text = _.mapValues(story.details.text, (langText) => {
+    const tokens = ListParser.extract(langText);
+    for (let token of tokens) {
+      for (let item of token) {
+        let checked;
         if (story.type === 'task-list') {
-            const unfinished = ListParser.count(tokens, false);
-            taskCounts.push(unfinished);
+          checked = !!_.get(answers, [ item.list, item.key ]);
+        } else if (story.type === 'survey') {
+          checked = (_.get(answers, item.list) === item.key);
         }
-        return ListParser.join(tokens);
-    });
-    if (story.type === 'task-list') {
-        storyUpdated.unfinished_tasks = _.max(taskCounts);
+        ListParser.update(item, checked);
+      }
     }
-    return storyUpdated;
+    if (story.type === 'task-list') {
+      const unfinished = ListParser.count(tokens, false);
+      taskCounts.push(unfinished);
+    }
+    return ListParser.join(tokens);
+  });
+  if (story.type === 'task-list') {
+    storyUpdated.unfinished_tasks = _.max(taskCounts);
+  }
+  return storyUpdated;
 }
 
 function removeSuperfluousDetails(story) {
-    // remove text object from details if it's empty
-    let text = _.get(story, 'details.text');
-    text = _.pickBy(text);
-    if (_.isEmpty(text)) {
-        story = _.decoupleUnset(story, 'details.text');
-    } else {
-        story = _.decoupleSet(story, 'details.text', text);
-    }
+  // remove text object from details if it's empty
+  let text = _.get(story, 'details.text');
+  text = _.pickBy(text);
+  if (_.isEmpty(text)) {
+    story = _.decoupleUnset(story, 'details.text');
+  } else {
+    story = _.decoupleSet(story, 'details.text', text);
+  }
 
-    // remove empty resources array
-    let resources = _.get(story, 'details.resources');
-    if (_.isEmpty(resources)) {
-        story = _.decoupleUnset(story, 'details.resources');
-    }
-    return story;
+  // remove empty resources array
+  let resources = _.get(story, 'details.resources');
+  if (_.isEmpty(resources)) {
+    story = _.decoupleUnset(story, 'details.resources');
+  }
+  return story;
 }
 
 const trafficRobot = {
-    robot: true,
-    type: 'traffic'
+  robot: true,
+  type: 'traffic'
 };
 
 function findRobot(story) {
-    if (story) {
-        switch (story.type) {
-            case 'website-traffic': return trafficRobot;
-        }
+  if (story) {
+    switch (story.type) {
+      case 'website-traffic': return trafficRobot;
     }
+  }
 }
 
 export {
-    isSaved,
-    isEditable,
-    isTrackable,
-    isCancelable,
-    hasContents,
-    isActuallyPublished,
-    wasPublishedWithin,
-    wasBumpedWithin,
-    hasUncomittedChanges,
-    mergeRemoteChanges,
-    extractUserAnswers,
-    insertUserAnswers,
-    removeSuperfluousDetails,
-    findRobot,
+  isSaved,
+  isEditable,
+  isTrackable,
+  isCancelable,
+  hasContents,
+  isActuallyPublished,
+  wasPublishedWithin,
+  wasBumpedWithin,
+  hasUncomittedChanges,
+  mergeRemoteChanges,
+  extractUserAnswers,
+  insertUserAnswers,
+  removeSuperfluousDetails,
+  findRobot,
 };

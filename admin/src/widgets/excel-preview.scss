@@ -1,63 +1,63 @@
 @import '../colors';
 
 .excel-preview {
-    box-sizing: content-box;
-    border: 1px solid black;
-    overflow-x: auto;
-    overflow-y: auto;
-    max-width: calc(100% - 0.5em - 2px);
-    max-height: 50vh;
+  box-sizing: content-box;
+  border: 1px solid black;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-width: calc(100% - 0.5em - 2px);
+  max-height: 50vh;
+  width: max-content;
+  margin-left: 0.5em;
+
+  IMG {
+    cursor: pointer;    
+  }
+
+  TABLE {
     width: max-content;
-    margin-left: 0.5em;
+    border-collapse: collapse;
 
-    IMG {
-        cursor: pointer;        
+    TD, TH {
+      border: 1px solid black;
+      padding: 2px 2px 2px 2px;
+      text-align: left;
+      max-width: 80vw;
+      vertical-align: top;
+
+      &.foreign {
+        background-color: $foreign-text-background;
+      }
+
+      &.rtl {
+        direction: rtl;
+        text-align: right;
+      }
     }
 
-    TABLE {
-        width: max-content;
-        border-collapse: collapse;
-
-        TD, TH {
-            border: 1px solid black;
-            padding: 2px 2px 2px 2px;
-            text-align: left;
-            max-width: 80vw;
-            vertical-align: top;
-
-            &.foreign {
-                background-color: $foreign-text-background;
-            }
-
-            &.rtl {
-                direction: rtl;
-                text-align: right;
-            }
-        }
-
-        TR:first-child {
-            TH {
-                border-top: 0;
-            }
-        }
-
-        TR:last-child {
-            TD {
-                border-bottom: 0;
-            }
-        }
-
-        TR {
-            TD, TH {
-                &:first-child {
-                    border-left: 0;
-                }
-            }
-            TD, TH {
-                &:last-child {
-                    border-right: 0;
-                }
-            }
-        }
+    TR:first-child {
+      TH {
+        border-top: 0;
+      }
     }
+
+    TR:last-child {
+      TD {
+        border-bottom: 0;
+      }
+    }
+
+    TR {
+      TD, TH {
+        &:first-child {
+          border-left: 0;
+        }
+      }
+      TD, TH {
+        &:last-child {
+          border-right: 0;
+        }
+      }
+    }
+  }
 }

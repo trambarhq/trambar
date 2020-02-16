@@ -1,18 +1,18 @@
 .settings-page {
-    .panels {
-        .double-col &,
-        .triple-col & {
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 0;
-            margin: auto;
+  .panels {
+    .double-col &,
+    .triple-col & {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      margin: auto;
 
-            padding: 1em 1em 1em 1em;
-            column-fill: balance;
-            column-width: 25em;
-            column-gap: 1em;
-            max-width: 110em;
-        }
+      padding: 1em 1em 1em 1em;
+      column-fill: balance;
+      column-width: 25em;
+      column-gap: 1em;
+      max-width: 110em;
     }
+  }
 }

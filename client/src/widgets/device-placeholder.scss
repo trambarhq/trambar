@@ -1,20 +1,20 @@
 @import '../colors';
 
 .device-placeholder {
-    font-size: 8em;
-    color: $device-placeholder-icon-color;
-    width: 100%;
-    text-align: center;
+  font-size: 8em;
+  color: $device-placeholder-icon-color;
+  width: 100%;
+  text-align: center;
 
+  .fa-ban {
+    color: $device-placeholder-stop-sign-color;
+    opacity: 0;
+    transition: opacity 1s;
+  }
+
+  &.blocked {
     .fa-ban {
-        color: $device-placeholder-stop-sign-color;
-        opacity: 0;
-        transition: opacity 1s;
+      opacity: 1;
     }
-
-    &.blocked {
-        .fa-ban {
-            opacity: 1;
-        }
-    }
+  }
 }

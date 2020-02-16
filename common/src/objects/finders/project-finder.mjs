@@ -13,12 +13,12 @@ const emptyArray = [];
  * @return {Promise<Project>}
  */
 async function findProject(db, id) {
-    return db.findOne({
-        schema,
-        table,
-        criteria: { id },
-        required: true
-    });
+  return db.findOne({
+    schema,
+    table,
+    criteria: { id },
+    required: true
+  });
 }
 
 /**
@@ -30,12 +30,12 @@ async function findProject(db, id) {
  * @return {Promise<Project>}
  */
 async function findProjectByName(db, name) {
-    return db.findOne({
-        schema,
-        table,
-        criteria: { name },
-        required: true
-    });
+  return db.findOne({
+    schema,
+    table,
+    criteria: { name },
+    required: true
+  });
 }
 
 /**
@@ -47,12 +47,12 @@ async function findProjectByName(db, name) {
  * @return {Promise<Array<Project>>}
  */
 async function findAllProjects(db, minimum) {
-    return db.find({
-        schema,
-        table,
-        criteria: {},
-        minimum
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {},
+    minimum
+  });
 }
 
 /**
@@ -63,12 +63,12 @@ async function findAllProjects(db, minimum) {
  * @return {Promise<Project>}
  */
 async function findCurrentProject(db) {
-    return db.findOne({
-        schema,
-        table,
-        criteria: { name: db.context.schema + '' },
-        required: true
-    });
+  return db.findOne({
+    schema,
+    table,
+    criteria: { name: db.context.schema + '' },
+    required: true
+  });
 }
 
 /**
@@ -80,15 +80,15 @@ async function findCurrentProject(db) {
  * @return {Promise<Array<Project>>}
  */
 async function findActiveProjects(db, minimum) {
-    return db.find({
-        schema,
-        table,
-        criteria: {
-            archived: false,
-            deleted: false,
-        },
-        minimum
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {
+      archived: false,
+      deleted: false,
+    },
+    minimum
+  });
 }
 
 /**
@@ -101,28 +101,28 @@ async function findActiveProjects(db, minimum) {
  * @return {Promise<Array<Project>>}
  */
 async function findProjectsWithMembers(db, users, minimum) {
-    let ids = _.map(users, 'id');
-    if (_.isEmpty(ids)) {
-        return emptyArray;
-    }
-    ids = _.sortBy(_.uniq(ids));
-    return db.find({
-        schema,
-        table,
-        criteria: {
-            user_ids: ids,
-            archived: false,
-            deleted: false,
-        },
-        minimum
-    });
+  let ids = _.map(users, 'id');
+  if (_.isEmpty(ids)) {
+    return emptyArray;
+  }
+  ids = _.sortBy(_.uniq(ids));
+  return db.find({
+    schema,
+    table,
+    criteria: {
+      user_ids: ids,
+      archived: false,
+      deleted: false,
+    },
+    minimum
+  });
 }
 
 export {
-    findProject,
-    findProjectByName,
-    findAllProjects,
-    findCurrentProject,
-    findActiveProjects,
-    findProjectsWithMembers,
+  findProject,
+  findProjectByName,
+  findAllProjects,
+  findCurrentProject,
+  findActiveProjects,
+  findProjectsWithMembers,
 };

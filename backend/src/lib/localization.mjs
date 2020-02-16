@@ -9,14 +9,14 @@ import _ from 'lodash';
  * @return {Object}
  */
 function name(locale, user) {
-    const lang = getLanguageCode(locale);
-    let name = pick(locale, user.details.name);
-    if (!name) {
-        name = _.capitalize(user.username);
-    }
-    const strObject = new String(name);
-    strObject.gender = user.details.gender;
-    return strObject;
+  const lang = getLanguageCode(locale);
+  let name = pick(locale, user.details.name);
+  if (!name) {
+    name = _.capitalize(user.username);
+  }
+  const strObject = new String(name);
+  strObject.gender = user.details.gender;
+  return strObject;
 }
 
 /**
@@ -29,35 +29,35 @@ function name(locale, user) {
  * @return {String}
  */
 function translate(locale, phrase, ...args) {
-    let table = phraseTables[locale];
-    if (!table) {
-        const lang = getLanguageCode(locale);
-        let module;
-        try {
-            module = require(`locales/${lang}`);
-        } catch(err) {
-            module = require('locales/en');
-        }
-        let phrases = module.phrases;
-        if (phrases instanceof Function) {
-            const country = getCountryCode(locale);
-            phrases = phrases(country);
-        }
-        table = phraseTables[locale] = phrases;
+  let table = phraseTables[locale];
+  if (!table) {
+    const lang = getLanguageCode(locale);
+    let module;
+    try {
+      module = require(`locales/${lang}`);
+    } catch(err) {
+      module = require('locales/en');
     }
-    const f = table[phrase];
-    if (f === undefined) {
-        return phrase;
+    let phrases = module.phrases;
+    if (phrases instanceof Function) {
+      const country = getCountryCode(locale);
+      phrases = phrases(country);
     }
-    if (f instanceof Function) {
-        try {
-            return f.apply(table, args);
-        } catch (err) {
-            return err.message;
-        }
-    } else {
-        return f;
+    table = phraseTables[locale] = phrases;
+  }
+  const f = table[phrase];
+  if (f === undefined) {
+    return phrase;
+  }
+  if (f instanceof Function) {
+    try {
+      return f.apply(table, args);
+    } catch (err) {
+      return err.message;
     }
+  } else {
+    return f;
+  }
 }
 
 const phraseTables = {};
@@ -71,17 +71,17 @@ const phraseTables = {};
  * @return {String}
  */
 function pick(locale, versions) {
-    let s;
-    if (typeof(versions) === 'object') {
-        const lang = getLanguageCode(locale);
-        s = versions[lang];
-        if (!s) {
-            s = _.first(versions);
-        }
-    } else {
-        s = String(versions);
+  let s;
+  if (typeof(versions) === 'object') {
+    const lang = getLanguageCode(locale);
+    s = versions[lang];
+    if (!s) {
+      s = _.first(versions);
     }
-    return s;
+  } else {
+    s = String(versions);
+  }
+  return s;
 }
 
 /**
@@ -92,11 +92,11 @@ function pick(locale, versions) {
  * @return {String}
  */
 function getDefaultLanguageCode(system) {
-    let lang = _.get(system, 'settings.input_languages.0');
-    if (!lang) {
-        lang = serverLanguageCode;
-    }
-    return lang;
+  let lang = _.get(system, 'settings.input_languages.0');
+  if (!lang) {
+    lang = serverLanguageCode;
+  }
+  return lang;
 }
 
 const serverLanguageCode = (process.env.LANG || 'en').substr(0, 2).toLowerCase();
@@ -109,27 +109,27 @@ const serverLanguageCode = (process.env.LANG || 'en').substr(0, 2).toLowerCase()
  * @return {String}
  */
 function getLanguageCode(locale) {
-    let lang;
-    if (typeof(locale) === 'string') {
-        lang = _.toLower(locale.substr(0, 2));
-    }
-    if (!lang) {
-        lang = getDefaultLanguageCode();
-    }
-    return lang;
+  let lang;
+  if (typeof(locale) === 'string') {
+    lang = _.toLower(locale.substr(0, 2));
+  }
+  if (!lang) {
+    lang = getDefaultLanguageCode();
+  }
+  return lang;
 }
 
 function getCountryCode(locale) {
-    let country = '';
-    if (typeof(locale) === 'string') {
-        country = _.toLower(locale.substr(3, 2));
-    }
-    return country;
+  let country = '';
+  if (typeof(locale) === 'string') {
+    country = _.toLower(locale.substr(3, 2));
+  }
+  return country;
 }
 
 export {
-    translate,
-    name,
-    pick,
-    getDefaultLanguageCode,
+  translate,
+  name,
+  pick,
+  getDefaultLanguageCode,
 };

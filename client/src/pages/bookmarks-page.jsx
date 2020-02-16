@@ -18,61 +18,61 @@ import './bookmarks-page.scss';
  * Asynchronous component that retrieves data needed by the Bookmarks page.
  */
 async function BookmarksPage(props) {
-    const { database, route, env, payloads, highlightStoryID, scrollToStoryID } = props;
-    const [ show ] = useProgress();
+  const { database, route, env, payloads, highlightStoryID, scrollToStoryID } = props;
+  const [ show ] = useProgress();
 
-    render();
-    const currentUserID = await database.start();
-    const currentUser = await UserFinder.findUser(database, currentUserID)
-    const project = await ProjectFinder.findCurrentProject(database)
-    const bookmarks = await BookmarkFinder.findBookmarksForUser(database, currentUser)
-    render();
+  render();
+  const currentUserID = await database.start();
+  const currentUser = await UserFinder.findUser(database, currentUserID)
+  const project = await ProjectFinder.findCurrentProject(database)
+  const bookmarks = await BookmarkFinder.findBookmarksForUser(database, currentUser)
+  render();
 
-    function render() {
-        show(
-            <PageContainer className="bookmarks-page">
-                {renderList()}
-                {renderEmptyMessage()}
-            </PageContainer>
-        );
+  function render() {
+    show(
+      <PageContainer className="bookmarks-page">
+        {renderList()}
+        {renderEmptyMessage()}
+      </PageContainer>
+    );
+  }
+
+  function renderList() {
+    const listProps = {
+      access: ProjectUtils.getUserAccessLevel(project, currentUser) || 'read-only',
+      bookmarks,
+      currentUser,
+      project,
+      highlightStoryID,
+      scrollToStoryID,
+      database,
+      payloads,
+      route,
+      env,
+    };
+    return <BookmarkList {...listProps} />
+  }
+
+  function renderEmptyMessage() {
+    if (!_.isEmpty(bookmarks)) {
+      return null;
     }
-
-    function renderList() {
-        const listProps = {
-            access: ProjectUtils.getUserAccessLevel(project, currentUser) || 'read-only',
-            bookmarks,
-            currentUser,
-            project,
-            highlightStoryID,
-            scrollToStoryID,
-            database,
-            payloads,
-            route,
-            env,
-        };
-        return <BookmarkList {...listProps} />
+    if (!bookmarks) {
+      // props.stories is null when they're being loaded
+      return <LoadingAnimation />;
+    } else {
+      const props = {
+        phrase: 'bookmarks-no-bookmarks',
+        env,
+      };
+      return <EmptyMessage {...props} />;
     }
-
-    function renderEmptyMessage() {
-        if (!_.isEmpty(bookmarks)) {
-            return null;
-        }
-        if (!bookmarks) {
-            // props.stories is null when they're being loaded
-            return <LoadingAnimation />;
-        } else {
-            const props = {
-                phrase: 'bookmarks-no-bookmarks',
-                env,
-            };
-            return <EmptyMessage {...props} />;
-        }
-    }
+  }
 }
 
 const component = Relaks.memo(BookmarksPage);
 
 export {
-    component as default,
-    component as BookmarksPage,
+  component as default,
+  component as BookmarksPage,
 };

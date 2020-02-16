@@ -1,39 +1,39 @@
 @import '../colors';
 
 .sign-off-menu {
+  text-align: center;
+  padding-top: 0.25em;
+  min-width: 5em;
+  user-select: none;
+
+  A {
+    display: block;
+    cursor: pointer;
+
+    &:link, &:visited {
+      color: $sign-off-menu-text-color;
+      text-decoration: none;
+    }
+
+    &:hover {
+      color: $link-hover-color;
+    }
+  }
+
+  .name {
+    padding: 0.5em 0.25em 0.25em 0.25em;
     text-align: center;
-    padding-top: 0.25em;
-    min-width: 5em;
-    user-select: none;
+  }
 
-    A {
-        display: block;
-        cursor: pointer;
+  .sign-off {
+    text-align: center;
+    padding: 0.5em 0.25em 0 0.25em;
+    border-top: 1px solid $sign-off-menu-separator-color;
+    color: $sign-off-menu-text-color;
+    cursor: pointer;
 
-        &:link, &:visited {
-            color: $sign-off-menu-text-color;
-            text-decoration: none;
-        }
-
-        &:hover {
-            color: $link-hover-color;
-        }
+    &:hover {
+      color: $link-hover-color;
     }
-
-    .name {
-        padding: 0.5em 0.25em 0.25em 0.25em;
-        text-align: center;
-    }
-
-    .sign-off {
-        text-align: center;
-        padding: 0.5em 0.25em 0 0.25em;
-        border-top: 1px solid $sign-off-menu-separator-color;
-        color: $sign-off-menu-text-color;
-        cursor: pointer;
-
-        &:hover {
-            color: $link-hover-color;
-        }
-    }
+  }
 }

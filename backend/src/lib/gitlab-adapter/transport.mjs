@@ -20,7 +20,7 @@ const PAGE_LIMIT = 5000;
  * @return {Promise<Object>}
  */
 async function fetch(server, uri, query) {
-    return request(server, uri, 'get', query);
+  return request(server, uri, 'get', query);
 }
 
 /**
@@ -33,28 +33,28 @@ async function fetch(server, uri, query) {
  * @return {Promise<Object>}
  */
 async function fetchAll(server, uri, query) {
-    const objectList = [];
-    const pageQuery = _.extend({
-        page: 1,
-        per_page: PAGE_SIZE
-    }, query);
-    let done = false;
-    do {
-        let objects = await fetch(server, uri, pageQuery);
-        if (objects instanceof Array) {
-            for (let object of objects) {
-                objectList.push(object);
-            }
-            if (objects.length === pageQuery.per_page && pageQuery.page < PAGE_LIMIT) {
-                pageQuery.page++;
-            } else {
-                done = true;
-            }
-        } else {
-            done = true;
-        }
-    } while (!done);
-    return objectList;
+  const objectList = [];
+  const pageQuery = _.extend({
+    page: 1,
+    per_page: PAGE_SIZE
+  }, query);
+  let done = false;
+  do {
+    let objects = await fetch(server, uri, pageQuery);
+    if (objects instanceof Array) {
+      for (let object of objects) {
+        objectList.push(object);
+      }
+      if (objects.length === pageQuery.per_page && pageQuery.page < PAGE_LIMIT) {
+        pageQuery.page++;
+      } else {
+        done = true;
+      }
+    } else {
+      done = true;
+    }
+  } while (!done);
+  return objectList;
 }
 
 /**
@@ -70,37 +70,37 @@ async function fetchAll(server, uri, query) {
  * @return {Promise}
  */
 async function fetchEach(server, uri, query, callback) {
-    const pageQuery = _.extend({
-        page: 1,
-        per_page: PAGE_SIZE
-    }, query);
-    let done = false;
-    let total = undefined;
-    let index = 0;
-    do {
-        let objects = await fetch(server, uri, pageQuery);
-        if (objects instanceof Array) {
-            if (objects.length < pageQuery.per_page) {
-                // we know the total at the last page
-                total = index + objects.length;
-            }
-            for (let object of objects) {
-                let cont = await callback(object, index++, total);
-                if (cont === false) {
-                    done = true;
-                }
-            }
-            if (!done) {
-                if (objects.length === pageQuery.per_page && pageQuery.page < PAGE_LIMIT) {
-                    pageQuery.page++;
-                } else {
-                    done = true;
-                }
-            }
-        } else {
-            done = true;
+  const pageQuery = _.extend({
+    page: 1,
+    per_page: PAGE_SIZE
+  }, query);
+  let done = false;
+  let total = undefined;
+  let index = 0;
+  do {
+    let objects = await fetch(server, uri, pageQuery);
+    if (objects instanceof Array) {
+      if (objects.length < pageQuery.per_page) {
+        // we know the total at the last page
+        total = index + objects.length;
+      }
+      for (let object of objects) {
+        let cont = await callback(object, index++, total);
+        if (cont === false) {
+          done = true;
         }
-    } while (!done);
+      }
+      if (!done) {
+        if (objects.length === pageQuery.per_page && pageQuery.page < PAGE_LIMIT) {
+          pageQuery.page++;
+        } else {
+          done = true;
+        }
+      }
+    } else {
+      done = true;
+    }
+  } while (!done);
 }
 
 /**
@@ -115,8 +115,8 @@ async function fetchEach(server, uri, query, callback) {
  * @return {Promise<Object>}
  */
 async function post(server, uri, payload, userID) {
-    const token = await impersonate(server, userID);
-    return request(server, uri, 'post', undefined, payload, token);
+  const token = await impersonate(server, userID);
+  return request(server, uri, 'post', undefined, payload, token);
 }
 
 /**
@@ -131,8 +131,8 @@ async function post(server, uri, payload, userID) {
  * @return {Promise<Object>}
  */
 async function put(server, uri, payload, userID) {
-    const token = await impersonate(server, userID);
-    return request(server, uri, 'put', undefined, payload, token);
+  const token = await impersonate(server, userID);
+  return request(server, uri, 'put', undefined, payload, token);
 }
 
 /**
@@ -145,8 +145,8 @@ async function put(server, uri, payload, userID) {
  * @return {Promise}
  */
 async function remove(server, uri, userID) {
-    const token = await impersonate(server, userID);
-    return request(server, uri, 'delete', undefined, undefined, token);
+  const token = await impersonate(server, userID);
+  return request(server, uri, 'delete', undefined, undefined, token);
 }
 
 let userImpersonations = {};
@@ -160,28 +160,28 @@ let userImpersonations = {};
  * @return {Promise<String|undefined>}
  */
 async function impersonate(server, userID) {
-    if (!userID) {
-        return;
-    }
-    const cachedUI = userImpersonations[userID];
-    if (cachedUI) {
-        return cachedUI;
-    }
+  if (!userID) {
+    return;
+  }
+  const cachedUI = userImpersonations[userID];
+  if (cachedUI) {
+    return cachedUI;
+  }
 
-    // delete old impersonation tokens first
-    const existingUIs = await getImpersonations(server, userID);
-    for (let existingUI of existingUIs) {
-        if (existingUI.name === 'trambar') {
-            await deleteImpersonations(server, userID, existingUI);
-        }
+  // delete old impersonation tokens first
+  const existingUIs = await getImpersonations(server, userID);
+  for (let existingUI of existingUIs) {
+    if (existingUI.name === 'trambar') {
+      await deleteImpersonations(server, userID, existingUI);
     }
-    const impersonationProps = {
-        name: 'trambar',
-        scopes: [ 'api' ],
-    };
-    const newUI = await createImpersonation(server, userID, impersonationProps);
-    userImpersonations[userID] = newUI;
-    return newUI.token;
+  }
+  const impersonationProps = {
+    name: 'trambar',
+    scopes: [ 'api' ],
+  };
+  const newUI = await createImpersonation(server, userID, impersonationProps);
+  userImpersonations[userID] = newUI;
+  return newUI.token;
 }
 
 /**
@@ -193,9 +193,9 @@ async function impersonate(server, userID) {
  * @return {Promise<Array<Object>>}
  */
 async function getImpersonations(server, userID) {
-    const url = `/users/${userID}/impersonation_tokens`;
-    const query = { state: 'active' };
-    return fetch(server, url, query);
+  const url = `/users/${userID}/impersonation_tokens`;
+  const query = { state: 'active' };
+  return fetch(server, url, query);
 }
 
 /**
@@ -208,8 +208,8 @@ async function getImpersonations(server, userID) {
  * @return {Promise}
  */
 async function deleteImpersonations(server, userID, ui) {
-    const url = `/users/${userID}/impersonation_tokens/${ui.id}`;
-    return remove(server, url);
+  const url = `/users/${userID}/impersonation_tokens/${ui.id}`;
+  return remove(server, url);
 }
 
 /**
@@ -222,8 +222,8 @@ async function deleteImpersonations(server, userID, ui) {
  * @return {Promise<Object>}
  */
 async function createImpersonation(server, userID, props) {
-    const url = `/users/${userID}/impersonation_tokens`;
-    return post(server, url, props);
+  const url = `/users/${userID}/impersonation_tokens`;
+  return post(server, url, props);
 }
 
 /**
@@ -234,30 +234,30 @@ async function createImpersonation(server, userID, props) {
  * @return {Promise<Server>}
  */
 async function refresh(server) {
-    const payload = {
-        grant_type: 'refresh_token',
-        refresh_token: server.settings.api.refresh_token,
-        client_id: server.settings.oauth.client_id,
-        client_secret: server.settings.oauth.client_secret,
-    };
-    const baseURL = _.trimEnd(server.settings.oauth.base_url, '/');
-    const url = baseURL + '/oauth/token';
-    const method = 'post';
-    const headers = { 'Content-Type': 'application/json' };
-    const body = JSON.stringify(payload);
-    const response = await CrossFetch(url, { method, headers, body });
-    const { status } = response;
-    if (status !== 200) {
-        throw new HTTPError(status);
-    }
-    const json = await response.json();
-    // modifying given server object so any code reusing the object would
-    // have the updated values
-    server.settings.api.access_token = json.access_token;
-    server.settings.api.refresh_token = json.refresh_token;
-    const db = await Database.open();
-    await Server.updateOne(db, 'global', server);
-    return server;
+  const payload = {
+    grant_type: 'refresh_token',
+    refresh_token: server.settings.api.refresh_token,
+    client_id: server.settings.oauth.client_id,
+    client_secret: server.settings.oauth.client_secret,
+  };
+  const baseURL = _.trimEnd(server.settings.oauth.base_url, '/');
+  const url = baseURL + '/oauth/token';
+  const method = 'post';
+  const headers = { 'Content-Type': 'application/json' };
+  const body = JSON.stringify(payload);
+  const response = await CrossFetch(url, { method, headers, body });
+  const { status } = response;
+  if (status !== 200) {
+    throw new HTTPError(status);
+  }
+  const json = await response.json();
+  // modifying given server object so any code reusing the object would
+  // have the updated values
+  server.settings.api.access_token = json.access_token;
+  server.settings.api.refresh_token = json.refresh_token;
+  const db = await Database.open();
+  await Server.updateOne(db, 'global', server);
+  return server;
 }
 
 const unreachableLocations = [];
@@ -278,82 +278,82 @@ const unreachableLocations = [];
  * @return {Promise<Object>}
  */
 async function request(server, uri, method, query, payload, userToken) {
-    const qs = QueryString.stringify(query);
-    const baseURL = _.trimEnd(server.settings.oauth.base_url, '/') + '/api/v4';
-    const url = baseURL + uri + (qs ? '?' + qs : '');
-    const oauthToken = server.settings.api.access_token;
-    const headers = { 'Content-Type': 'application/json' };
-    if (userToken) {
-        headers['Private-Token'] = userToken;
-    } else if (oauthToken) {
-        headers['Authorization'] = `Bearer ${oauthToken}`;
-    } else {
-        throw new HTTPError(401);
-    }
-    const body = (payload instanceof Object) ? JSON.stringify(payload) : undefined;
+  const qs = QueryString.stringify(query);
+  const baseURL = _.trimEnd(server.settings.oauth.base_url, '/') + '/api/v4';
+  const url = baseURL + uri + (qs ? '?' + qs : '');
+  const oauthToken = server.settings.api.access_token;
+  const headers = { 'Content-Type': 'application/json' };
+  if (userToken) {
+    headers['Private-Token'] = userToken;
+  } else if (oauthToken) {
+    headers['Authorization'] = `Bearer ${oauthToken}`;
+  } else {
+    throw new HTTPError(401);
+  }
+  const body = (payload instanceof Object) ? JSON.stringify(payload) : undefined;
 
-    const maxAttempts = _.includes(unreachableLocations, baseURL) ? 1 : 5;
-    let attempts = 1;
-    let delayInterval = 500;
-    while (attempts <= maxAttempts) {
-        try {
-            const response = await CrossFetch(url, { method, headers, body });
-            const { status } = response;
-            if (status >= 200 && status <= 299) {
-                // remove location if it's listed as unreachable
-                _.pull(unreachableLocations, baseURL);
-                if (status === 204) {
-                    return null;
-                } else {
-                    const json = await response.json();
-                    return json;
-                }
-            } else if (status === 401 && !userToken) {
-                // refresh access token
-                const serverAfter = await refresh(server);
-                // then try the request again
-                return request(serverAfter, uri, method, query, payload);
-            } else if (status === 429) {
-                await Bluebird.delay(5000);
-            } else if ((status >= 400 && status <= 499) || attempts >= maxAttempts) {
-                if (!_.includes(unreachableLocations, baseURL)) {
-                    // remember we've failed with the location after multiple attempts
-                    unreachableLocations.push(baseURL);
-                }
-                throw new HTTPError(status);
-            }
-            await Bluebird.delay(delayInterval);
-            delayInterval *= 2;
-
-            // a 502 bad gateway error probably means GitLab is still starting
-            // give it five minutes before erroring out
-            if (status !== 502 || sinceStartUp(5 * 60)) {
-                attempts++;
-            }
-        } catch (err) {
-            // give Docker Compose a minute to
-            if (sinceStartUp(1 * 60)) {
-                throw err;
-            } else {
-                await Bluebird.delay(delayInterval);
-            }
+  const maxAttempts = _.includes(unreachableLocations, baseURL) ? 1 : 5;
+  let attempts = 1;
+  let delayInterval = 500;
+  while (attempts <= maxAttempts) {
+    try {
+      const response = await CrossFetch(url, { method, headers, body });
+      const { status } = response;
+      if (status >= 200 && status <= 299) {
+        // remove location if it's listed as unreachable
+        _.pull(unreachableLocations, baseURL);
+        if (status === 204) {
+          return null;
+        } else {
+          const json = await response.json();
+          return json;
         }
+      } else if (status === 401 && !userToken) {
+        // refresh access token
+        const serverAfter = await refresh(server);
+        // then try the request again
+        return request(serverAfter, uri, method, query, payload);
+      } else if (status === 429) {
+        await Bluebird.delay(5000);
+      } else if ((status >= 400 && status <= 499) || attempts >= maxAttempts) {
+        if (!_.includes(unreachableLocations, baseURL)) {
+          // remember we've failed with the location after multiple attempts
+          unreachableLocations.push(baseURL);
+        }
+        throw new HTTPError(status);
+      }
+      await Bluebird.delay(delayInterval);
+      delayInterval *= 2;
+
+      // a 502 bad gateway error probably means GitLab is still starting
+      // give it five minutes before erroring out
+      if (status !== 502 || sinceStartUp(5 * 60)) {
+        attempts++;
+      }
+    } catch (err) {
+      // give Docker Compose a minute to
+      if (sinceStartUp(1 * 60)) {
+        throw err;
+      } else {
+        await Bluebird.delay(delayInterval);
+      }
     }
+  }
 }
 
 const startUpTime = new Date;
 
 function sinceStartUp(seconds) {
-    const now = new Date;
-    const elapsed = now - startUpTime;
-    return (elapsed > seconds * 1000);
+  const now = new Date;
+  const elapsed = now - startUpTime;
+  return (elapsed > seconds * 1000);
 }
 
 export {
-    fetch,
-    fetchAll,
-    fetchEach,
-    post,
-    put,
-    remove,
+  fetch,
+  fetchAll,
+  fetchEach,
+  post,
+  put,
+  remove,
 };

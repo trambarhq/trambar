@@ -1,54 +1,54 @@
 @import 'colors';
 
 * {
-    box-sizing: border-box;
-    font-family: sans-serif;
+  box-sizing: border-box;
+  font-family: sans-serif;
 
-    &:focus {
-        outline-color: $focus-outline-color;
-    }
+  &:focus {
+    outline-color: $focus-outline-color;
+  }
 }
 
 body {
-    overflow: hidden;
+  overflow: hidden;
 }
 
 A {
-    &:link, &:visited {
-        color: $link-hover-color;
-    }
+  &:link, &:visited {
+    color: $link-hover-color;
+  }
 }
 
 BUTTON {
-    user-select: none;
+  user-select: none;
 }
 
 .front-end {
-    position: absolute;
-    display: flex;
-    flex-direction: row;
-    top: 0px;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
-    height: 100%;
-    width: 100%;
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  height: 100%;
+  width: 100%;
 }
 
 .page-view-port {
-    flex: 3 1 800px;
-    position: relative;
-    background-color: $page-viewport-background-color;
+  flex: 3 1 800px;
+  position: relative;
+  background-color: $page-viewport-background-color;
 
-    .scroll-box {
-        position: absolute;
-        left: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        overflow-y: auto;
-        overflow-y: overlay;    // Chrome only
-        overflow-x: hidden;
-        padding: 0 2em 1.5em 2em;
-    }
+  .scroll-box {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+    overflow-y: overlay;  // Chrome only
+    overflow-x: hidden;
+    padding: 0 2em 1.5em 2em;
+  }
 }

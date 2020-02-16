@@ -1,92 +1,92 @@
 @import '../colors';
 
 .reaction-view {
-    display: flex;
-    flex-direction: row;
+  display: flex;
+  flex-direction: row;
+  color: $reaction-text-color;
+  padding: 1px 0 1px 0;
+  border: 1px solid rgba(0, 0, 0, 0);
+
+  A:link, A:visited {
     color: $reaction-text-color;
-    padding: 1px 0 1px 0;
-    border: 1px solid rgba(0, 0, 0, 0);
 
-    A:link, A:visited {
-        color: $reaction-text-color;
+    A:hover {
+      color: $reaction-link-hover-color;
+    }
+  }
 
-        A:hover {
+  .profile-image-column {
+    flex: 0 0 auto;
+    user-select: text;
+
+    .profile-image {
+      margin: 0 0.4em 0 0.2em;
+    }
+  }
+
+  .contents-column {
+    flex: 1 1 auto;
+
+    .text {
+      padding: 0.25em 0.25em 0 0;
+      user-select: text;
+
+      .comment {
+        white-space: pre-line;
+
+        &.markdown {
+          IMG, CANVAS {
+            height: 1.5em;
+            vertical-align: middle;
+            cursor: pointer;
+          }
+        }
+      }
+
+      .note, .issue-assignment, .issue-tracking {
+        &:link, &:visited {
+          color: $reaction-text-color;
+          text-decoration: none;
+          cursor: pointer;
+
+          &:hover {
             color: $reaction-link-hover-color;
+          }
         }
+      }
+
+      .in-progress {
+        color: $reaction-status-text-color;
+      }
     }
 
-    .profile-image-column {
-        flex: 0 0 auto;
-        user-select: text;
-
-        .profile-image {
-            margin: 0 0.4em 0 0.2em;
-        }
+    .reaction-view-options {
+      float: right;
     }
 
-    .contents-column {
-        flex: 1 1 auto;
+    .media {
+      padding: 0em 1em 0.25em 1em;
+      max-width: 300px;
 
-        .text {
-            padding: 0.25em 0.25em 0 0;
-            user-select: text;
-
-            .comment {
-                white-space: pre-line;
-
-                &.markdown {
-                    IMG, CANVAS {
-                        height: 1.5em;
-                        vertical-align: middle;
-                        cursor: pointer;
-                    }
-                }
-            }
-
-            .note, .issue-assignment, .issue-tracking {
-                &:link, &:visited {
-                    color: $reaction-text-color;
-                    text-decoration: none;
-                    cursor: pointer;
-
-                    &:hover {
-                        color: $reaction-link-hover-color;
-                    }
-                }
-            }
-
-            .in-progress {
-                color: $reaction-status-text-color;
-            }
-        }
-
-        .reaction-view-options {
-            float: right;
-        }
-
-        .media {
-            padding: 0em 1em 0.25em 1em;
-            max-width: 300px;
-
-            .single-col & {
-                max-width: 220px;
-            }
-        }
-
-        audio {
-            margin-top: 0.25em;
-            width: 100%;
-        }
+      .single-col & {
+        max-width: 220px;
+      }
     }
 
-    &.highlighting {
-        animation: flash normal 5s 1 ease-in-out;
-        animation-delay: 1.5s;
-
-        @keyframes flash {
-            25% {
-                border-color: $selection-color;
-            }
-        }
+    audio {
+      margin-top: 0.25em;
+      width: 100%;
     }
+  }
+
+  &.highlighting {
+    animation: flash normal 5s 1 ease-in-out;
+    animation-delay: 1.5s;
+
+    @keyframes flash {
+      25% {
+        border-color: $selection-color;
+      }
+    }
+  }
 }

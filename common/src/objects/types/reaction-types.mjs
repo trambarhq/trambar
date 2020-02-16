@@ -1,25 +1,25 @@
 const ReactionTypes = [
-    'like',
-    'comment',
-    'vote',
-    'task-completion',
-    'note',
-    'assignment',
-    'tracking',
+  'like',
+  'comment',
+  'vote',
+  'task-completion',
+  'note',
+  'assignment',
+  'tracking',
 ];
 
 const EditableReactionTypes = [
-    'comment',
+  'comment',
 ];
 
 const GitReactionTypes = [
-    'note',
-    'assignment',
+  'note',
+  'assignment',
 ];
 
 export {
-    ReactionTypes as default,
-    ReactionTypes,
-    EditableReactionTypes,
-    GitReactionTypes,
+  ReactionTypes as default,
+  ReactionTypes,
+  EditableReactionTypes,
+  GitReactionTypes,
 };

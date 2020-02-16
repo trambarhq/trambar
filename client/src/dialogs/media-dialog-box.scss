@@ -1,75 +1,75 @@
 @import '../colors';
 
 .media-dialog-box {
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  max-width: 100%;
+
+  background-color: $dialog-box-background-color;
+  box-shadow: 2px 2px 2px $dialog-box-shadow-color;
+  color: $dialog-box-text-color;
+  margin: auto;
+  padding: 0.4em 0.4em 0.4em 0.4em;
+
+  .container {
+    flex: 1 1 auto;
     display: flex;
-    flex-direction: column;
-    max-height: 100%;
-    max-width: 100%;
+    overflow: hidden;
+    padding-bottom: 0.2em;
+    align-items: center;
+    justify-content: center;
 
-    background-color: $dialog-box-background-color;
-    box-shadow: 2px 2px 2px $dialog-box-shadow-color;
-    color: $dialog-box-text-color;
-    margin: auto;
-    padding: 0.4em 0.4em 0.4em 0.4em;
-
-    .container {
-        flex: 1 1 auto;
-        display: flex;
-        overflow: hidden;
-        padding-bottom: 0.2em;
-        align-items: center;
-        justify-content: center;
-
-        IMG, CANVAS, svg {
-            width: 100%;
-            object-fit: contain;
-            display: block;
-        }
-
-        VIDEO {
-            max-width:100%;
-            max-height:100%;
-            display: block;
-        }
+    IMG, CANVAS, svg {
+      width: 100%;
+      object-fit: contain;
+      display: block;
     }
 
-    .controls {
-        display: block;
-        flex: 1 0 auto;
-        padding: 0.4em 0 0.2em 0;
-        border-top: 1px solid $separator-color;
+    VIDEO {
+      max-width:100%;
+      max-height:100%;
+      display: block;
+    }
+  }
 
-        .links {
-            float: left;
-        }
+  .controls {
+    display: block;
+    flex: 1 0 auto;
+    padding: 0.4em 0 0.2em 0;
+    border-top: 1px solid $separator-color;
 
-        .buttons {
-            float: right;
-        }
-
-        &:after {
-            content: "";
-            display: table;
-            clear: both;
-        }
+    .links {
+      float: left;
     }
 
-    .thumbnail {
-        float: left;
-        margin-right: 0.2em;
-        width: 2em;
-        height: 2em;
-        cursor: pointer;
-        border: 2px solid $media-thumbnail-border-color;
-
-        &:hover, &.selected {
-            border: 2px solid $selection-color;
-        }
-
-        IMG, CANVAS, svg {
-            display: block;
-            width: 100%;
-            height: auto;
-        }
+    .buttons {
+      float: right;
     }
+
+    &:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+  }
+
+  .thumbnail {
+    float: left;
+    margin-right: 0.2em;
+    width: 2em;
+    height: 2em;
+    cursor: pointer;
+    border: 2px solid $media-thumbnail-border-color;
+
+    &:hover, &.selected {
+      border: 2px solid $selection-color;
+    }
+
+    IMG, CANVAS, svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+  }
 }

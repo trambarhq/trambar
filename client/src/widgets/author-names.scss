@@ -1,25 +1,25 @@
 @import '../colors';
 
 .author-names {
-    color: $panel-title-text-color;
+  color: $panel-title-text-color;
 
-    .author {
-        display: inline-block;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        vertical-align: bottom;
+  .author {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
 
-        &.sole {
-            max-width: calc(100% - 5em);
-        }
-
-        &.lead {
-            max-width: calc(60% - 4em);
-        }
-
-        &.co {
-            max-width: calc(40% - 4em);
-        }
+    &.sole {
+      max-width: calc(100% - 5em);
     }
+
+    &.lead {
+      max-width: calc(60% - 4em);
+    }
+
+    &.co {
+      max-width: calc(40% - 4em);
+    }
+  }
 }

@@ -11,58 +11,58 @@ import './project-tooltip.scss';
  * Tooltip showing a list of projects.
  */
 function ProjectTooltip(props) {
-    const { route, env, projects, disabled } = props;
-    const { t, p } = env.locale;
-    if (!projects) {
-        return null;
-    }
-    const list = _.map(projects, (project, i) => {
-        const title = ProjectUtils.getDisplayName(project, env);
-        const url = route.find('project-summary-page', {
-            projectID: project.id
-        });
-        return (
-            <div className="item" key={project.id}>
-                <a href={disabled ? undefined : url}>{title}</a>
-            </div>
-        );
+  const { route, env, projects, disabled } = props;
+  const { t, p } = env.locale;
+  if (!projects) {
+    return null;
+  }
+  const list = _.map(projects, (project, i) => {
+    const title = ProjectUtils.getDisplayName(project, env);
+    const url = route.find('project-summary-page', {
+      projectID: project.id
     });
-    let contents = '-';
+    return (
+      <div className="item" key={project.id}>
+        <a href={disabled ? undefined : url}>{title}</a>
+      </div>
+    );
+  });
+  let contents = '-';
+  if (list.length > 0) {
+    const firstElement = list.shift();
+    const first = firstElement.props.children;
     if (list.length > 0) {
-        const firstElement = list.shift();
-        const first = firstElement.props.children;
-        if (list.length > 0) {
-            const label = t('project-tooltip-$count-others', list.length);
-            const max = 10;
-            if (list.length > max) {
-                list.splice(max);
-                list.push(
-                    <div className="ellipsis" key={0}>
-                        <i className="fa fa-ellipsis-v" />
-                    </div>
-                );
-            }
-            const listURL = route.find('project-list-page', {});
-            const tooltip = (
-                <Tooltip className="project" disabled={disabled || list.length === 0} key={1}>
-                    <inline>{label}</inline>
-                    <window>
-                        {list}
-                        <div className="bottom">
-                            <a href={listURL}>{t('tooltip-more')}</a>
-                        </div>
-                    </window>
-                </Tooltip>
-            );
-            contents = t('tooltip-$first-and-$tooltip', first, tooltip);
-        } else {
-            contents = first;
-        }
+      const label = t('project-tooltip-$count-others', list.length);
+      const max = 10;
+      if (list.length > max) {
+        list.splice(max);
+        list.push(
+          <div className="ellipsis" key={0}>
+            <i className="fa fa-ellipsis-v" />
+          </div>
+        );
+      }
+      const listURL = route.find('project-list-page', {});
+      const tooltip = (
+        <Tooltip className="project" disabled={disabled || list.length === 0} key={1}>
+          <inline>{label}</inline>
+          <window>
+            {list}
+            <div className="bottom">
+              <a href={listURL}>{t('tooltip-more')}</a>
+            </div>
+          </window>
+        </Tooltip>
+      );
+      contents = t('tooltip-$first-and-$tooltip', first, tooltip);
+    } else {
+      contents = first;
     }
-    return <span>{contents}</span>;
+  }
+  return <span>{contents}</span>;
 }
 
 export {
-    ProjectTooltip as default,
-    ProjectTooltip,
+  ProjectTooltip as default,
+  ProjectTooltip,
 };

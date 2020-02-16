@@ -1,114 +1,114 @@
 @import '../colors';
 
 .side-navigation {
-    flex: 1 1 auto;
-    position: relative;
-    color: $navigation-text-color;
+  flex: 1 1 auto;
+  position: relative;
+  color: $navigation-text-color;
+  background-color: $navigation-background-color;
+  min-width: 15em;
+  max-width: 20em;
+
+  HEADER {
+    overflow: hidden;
+    margin-bottom: 1em;
+  }
+
+  .logo {
+    float: left;
+    margin: 10px 16px 8px 16px;
+    width: 32px;
+    height: 40px;
+  }
+
+  .app-name {
+    text-transform: uppercase;
+    opacity: 1;
+    transition: opacity 1s ease-out 0.6s;
+  }
+
+  .navigation-tree {
+    opacity: 1;
+    transition: opacity 1s ease-out 1s;
+  }
+
+  .bottom-buttons {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    left: 0;
     background-color: $navigation-background-color;
-    min-width: 15em;
-    max-width: 20em;
+    transition: bottom 1s linear 1s;
+    user-select: none;
 
-    HEADER {
-        overflow: hidden;
-        margin-bottom: 1em;
+    .button {
+      position: relative;
+      float: left;
+
+      &.country {
+        .label {
+          border-left: 1px solid $navigation-background-color;
+        }
+      }
+
+      &.user {
+        float: right;
+        .label {
+          border-left: 1px solid $navigation-background-color;
+        }
+
+        .window-container {
+          left: auto;
+          right: 0.1em;
+        }
+      }
+
+      .tooltip {
+        .label {
+          display: inline-block;
+          color: $navigation-menu-button-text-color;
+          padding: 0.4em 0.5em 0.3em 0.5em;
+        }
+
+        &.live {
+          .label {
+            cursor: pointer;
+
+            &:hover {
+              color: $navigation-menu-button-hover-text-color;
+            }
+          }
+        }
+
+        .item {
+          color: $navigation-menu-text-color;
+          margin-top: 0.25em;
+          margin-right: 0.25em;
+          cursor: pointer;
+
+          .fa {
+            visibility: hidden;
+          }
+
+          &.selected {
+            cursor: default;
+            color: $navigation-menu-button-text-color;
+
+            .fa {
+              visibility: visible;
+            }
+          }
+        }
+      }
     }
+  }
 
-    .logo {
-        float: left;
-        margin: 10px 16px 8px 16px;
-        width: 32px;
-        height: 40px;
-    }
-
-    .app-name {
-        text-transform: uppercase;
-        opacity: 1;
-        transition: opacity 1s ease-out 0.6s;
-    }
-
-    .navigation-tree {
-        opacity: 1;
-        transition: opacity 1s ease-out 1s;
+  &.hidden {
+    .app-name, .navigation-tree {
+      opacity: 0;
     }
 
     .bottom-buttons {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        left: 0;
-        background-color: $navigation-background-color;
-        transition: bottom 1s linear 1s;
-        user-select: none;
-
-        .button {
-            position: relative;
-            float: left;
-
-            &.country {
-                .label {
-                    border-left: 1px solid $navigation-background-color;
-                }
-            }
-
-            &.user {
-                float: right;
-                .label {
-                    border-left: 1px solid $navigation-background-color;
-                }
-
-                .window-container {
-                    left: auto;
-                    right: 0.1em;
-                }
-            }
-
-            .tooltip {
-                .label {
-                    display: inline-block;
-                    color: $navigation-menu-button-text-color;
-                    padding: 0.4em 0.5em 0.3em 0.5em;
-                }
-
-                &.live {
-                    .label {
-                        cursor: pointer;
-
-                        &:hover {
-                            color: $navigation-menu-button-hover-text-color;
-                        }
-                    }
-                }
-
-                .item {
-                    color: $navigation-menu-text-color;
-                    margin-top: 0.25em;
-                    margin-right: 0.25em;
-                    cursor: pointer;
-
-                    .fa {
-                        visibility: hidden;
-                    }
-
-                    &.selected {
-                        cursor: default;
-                        color: $navigation-menu-button-text-color;
-
-                        .fa {
-                            visibility: visible;
-                        }
-                    }
-                }
-            }
-        }
+      bottom: -2em;
     }
-
-    &.hidden {
-        .app-name, .navigation-tree {
-            opacity: 0;
-        }
-
-        .bottom-buttons {
-            bottom: -2em;
-        }
-    }
+  }
 }

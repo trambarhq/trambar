@@ -1,97 +1,97 @@
 @import '../colors';
 
 .top-navigation {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: flex-end;
-    transition: height 0.7s;
-    z-index: 2;     // drawn over the start page (z-index = 1)
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  transition: height 0.7s;
+  z-index: 2;   // drawn over the start page (z-index = 1)
 
-    .container {
-        background-color: $navigation-background-color;
-        border-bottom: 1px solid $navigation-border-color;
-        padding-top: 1px;
-        width: 100%;
+  .container {
+    background-color: $navigation-background-color;
+    border-bottom: 1px solid $navigation-border-color;
+    padding-top: 1px;
+    width: 100%;
 
-        .collapsible-container {
-            clear: both;
-        }
+    .collapsible-container {
+      clear: both;
+    }
+  }
+
+  .button {
+    display: block;
+    font-size: 1.4em;
+    width: 1.8em;
+    text-align: center;
+    padding: 0.25em 0.25em 0.25em 0.25em;
+    cursor: pointer;
+    color: $navigation-text-color;
+    touch-action: manipulation;
+
+    .no-touch & {
+      &:hover {
+        color: $navigation-hover-text-color;
+      }
     }
 
-    .button {
-        display: block;
-        font-size: 1.4em;
-        width: 1.8em;
-        text-align: center;
-        padding: 0.25em 0.25em 0.25em 0.25em;
-        cursor: pointer;
-        color: $navigation-text-color;
-        touch-action: manipulation;
-
-        .no-touch & {
-            &:hover {
-                color: $navigation-hover-text-color;
-            }
-        }
-
-        &.active {
-            color: $navigation-selected-text-color;
-        }
-
-        &.disabled {
-            color: $navigation-disabled-text-color;
-            cursor: not-allowed;
-            &:hover {
-                color: $navigation-disabled-text-color;
-            }
-        }
-
-        &.calendar-btn, &.filter-btn {
-            float: left;
-        }
-        &.search-btn {
-            float: right;
-        }
+    &.active {
+      color: $navigation-selected-text-color;
     }
 
-    .connection {
-        display: block;
-        position: relative;
-        float: right;
-        font-size: 1.4em;
-        width: 1.8em;
-        text-align: center;
-        padding: 0.25em 0.25em 0.25em 0.25em;
-        color: $navigation-text-color;
-
-        .fa-ban {
-            font-size: 0.55em;
-            position: absolute;
-            right: 0.5em;
-            bottom: 0.65em;
-            height: 1em;
-            color: $navigation-danger-text-color;
-        }
-
-        .fa-arrow-up, .fa-caret-up {
-            font-size: 0.5em;
-            position: absolute;
-            left: 0;
-            top: 0;
-            right: 0;
-            bottom: 0.165em;
-            margin: auto;
-            height: 1em;
-        }
-
-        .fa-refresh {
-            color: $navigation-disabled-text-color;
-            transform: translate(0, 0.1em);
-        }
-
-        .fa-warning {
-            color: $navigation-disabled-text-color;
-            transform: translate(0, 0.2em);
-        }
+    &.disabled {
+      color: $navigation-disabled-text-color;
+      cursor: not-allowed;
+      &:hover {
+        color: $navigation-disabled-text-color;
+      }
     }
+
+    &.calendar-btn, &.filter-btn {
+      float: left;
+    }
+    &.search-btn {
+      float: right;
+    }
+  }
+
+  .connection {
+    display: block;
+    position: relative;
+    float: right;
+    font-size: 1.4em;
+    width: 1.8em;
+    text-align: center;
+    padding: 0.25em 0.25em 0.25em 0.25em;
+    color: $navigation-text-color;
+
+    .fa-ban {
+      font-size: 0.55em;
+      position: absolute;
+      right: 0.5em;
+      bottom: 0.65em;
+      height: 1em;
+      color: $navigation-danger-text-color;
+    }
+
+    .fa-arrow-up, .fa-caret-up {
+      font-size: 0.5em;
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0.165em;
+      margin: auto;
+      height: 1em;
+    }
+
+    .fa-refresh {
+      color: $navigation-disabled-text-color;
+      transform: translate(0, 0.1em);
+    }
+
+    .fa-warning {
+      color: $navigation-disabled-text-color;
+      transform: translate(0, 0.2em);
+    }
+  }
 }

@@ -1,66 +1,66 @@
 @import '../colors';
 
 .image-editor {
-    position: relative;
+  position: relative;
+  width: 100%;
+  padding-top: 50%;
+  padding-bottom: 50%;
+
+  .image-cropper, .preview, .placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    padding-top: 50%;
-    padding-bottom: 50%;
+  }
 
-    .image-cropper, .preview, .placeholder {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
+  .preview {
+    cursor: wait;
+
+    IMG {
+      border: 0;
+      display: block;
+      width: 100%;
+      height: auto;
     }
 
-    .preview {
-        cursor: wait;
+    &.disabled {
+      cursor: not-allowed;
+    }
+  }
 
-        IMG {
-            border: 0;
-            display: block;
-            width: 100%;
-            height: auto;
-        }
+  .spinner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    pointer-events: none;
 
-        &.disabled {
-            cursor: not-allowed;
-        }
+    font-size: 8em;
+    width: 1.5em;
+    height: 1.2em;
+    text-align: center;
+    color: $media-editor-spinner-color;
+    opacity: 0.25;
+  }
+
+  .placeholder {
+    display: flex;
+    flex-direction: column;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    color: $media-editor-hint-text-color;
+
+    .icon {
+      font-size: 3em;
     }
 
-    .spinner {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        margin: auto;
-        pointer-events: none;
-
-        font-size: 8em;
-        width: 1.5em;
-        height: 1.2em;
-        text-align: center;
-        color: $media-editor-spinner-color;
-        opacity: 0.25;
+    .message {
+      margin-top: 0.5em;
+      font-size: 0.7em;
+      text-transform: uppercase;
     }
-
-    .placeholder {
-        display: flex;
-        flex-direction: column;
-        bottom: 0;
-        align-items: center;
-        justify-content: center;
-        color: $media-editor-hint-text-color;
-
-        .icon {
-            font-size: 3em;
-        }
-
-        .message {
-            margin-top: 0.5em;
-            font-size: 0.7em;
-            text-transform: uppercase;
-        }
-    }
+  }
 }

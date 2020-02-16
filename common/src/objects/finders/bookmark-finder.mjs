@@ -14,19 +14,19 @@ const emptyArray = [];
  * @return {Promise<Array<Bookmark>>}
  */
 async function findBookmarksByUser(db, user, stories, minimum) {
-    let storyIds = _.map(stories, 'id');
-    storyIds = _.sortBy(_.uniq(storyIds));
-    if (_.isEmpty(storyIds) || !user) {
-        return emptyArray;
-    }
-    return db.find({
-        table,
-        criteria: {
-            user_ids: [ user.id ],
-            story_ids: storyIds,
-        },
-        minimum,
-    });
+  let storyIds = _.map(stories, 'id');
+  storyIds = _.sortBy(_.uniq(storyIds));
+  if (_.isEmpty(storyIds) || !user) {
+    return emptyArray;
+  }
+  return db.find({
+    table,
+    criteria: {
+      user_ids: [ user.id ],
+      story_ids: storyIds,
+    },
+    minimum,
+  });
 }
 
 /**
@@ -39,18 +39,18 @@ async function findBookmarksByUser(db, user, stories, minimum) {
  * @return {Promise<Array<Bookmark>>}
  */
 async function findBookmarksForUser(db, user, minimum) {
-    return db.find({
-        table,
-        criteria: {
-            target_user_id: user.id,
-            hidden: false,
-        },
-        prefetch: true,
-        minimum
-    });
+  return db.find({
+    table,
+    criteria: {
+      target_user_id: user.id,
+      hidden: false,
+    },
+    prefetch: true,
+    minimum
+  });
 }
 
 export {
-    findBookmarksByUser,
-    findBookmarksForUser,
+  findBookmarksByUser,
+  findBookmarksForUser,
 };

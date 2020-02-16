@@ -11,12 +11,12 @@ const emptyArray = [];
  * @return {Promise<Wiki>}
  */
 async function findWiki(db, schema, id) {
-    return db.findOne({
-        schema,
-        table,
-        criteria: { deleted: false, id },
-        required: true
-    });
+  return db.findOne({
+    schema,
+    table,
+    criteria: { deleted: false, id },
+    required: true
+  });
 }
 
 /**
@@ -28,11 +28,11 @@ async function findWiki(db, schema, id) {
  * @return {Promise<Array<Wiki>>}
  */
 async function findAllWikis(db, schema) {
-    return db.find({
-        schema,
-        table,
-        criteria: { deleted: false },
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: { deleted: false },
+  });
 }
 
 /**
@@ -44,18 +44,18 @@ async function findAllWikis(db, schema) {
  * @return {Promise<Array<Wiki>>}
  */
 async function findPublicWikis(db, schema) {
-    return db.find({
-        schema,
-        table,
-        criteria: {
-            public: true,
-            deleted: false,
-        },
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {
+      public: true,
+      deleted: false,
+    },
+  });
 }
 
 export {
-    findWiki,
-    findAllWikis,
-    findPublicWikis,
+  findWiki,
+  findAllWikis,
+  findPublicWikis,
 };

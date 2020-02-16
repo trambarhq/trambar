@@ -12,15 +12,15 @@ const emptyArray = [];
  * @return {Promise<System>}
  */
 async function findSystem(db) {
-    let system = await db.findOne({
-        schema,
-        table,
-        criteria: {},
-        prefetch: true,
-    });
-    return system || {};
+  let system = await db.findOne({
+    schema,
+    table,
+    criteria: {},
+    prefetch: true,
+  });
+  return system || {};
 }
 
 export {
-    findSystem,
+  findSystem,
 };

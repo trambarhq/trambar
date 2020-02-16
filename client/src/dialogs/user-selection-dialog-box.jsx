@@ -9,8 +9,8 @@ import UserSelectionList from '../lists/user-selection-list.jsx';
 
 // custom hooks
 import {
-    useSelectionBuffer,
-} from '../hooks';
+  useSelectionBuffer,
+} from '../hooks.mjs';
 
 import './user-selection-dialog-box.scss';
 
@@ -18,71 +18,71 @@ import './user-selection-dialog-box.scss';
  * Dialog box for selecting users from a list.
  */
 function UserSelectionDialogBox(props) {
-    const { database, route, env, disabled, selection, onSelect, onCancel } = props;
-    const { t } = env.locale;
-    const userSelection = useSelectionBuffer({
-        original: selection,
-    });
+  const { database, route, env, disabled, selection, onSelect, onCancel } = props;
+  const { t } = env.locale;
+  const userSelection = useSelectionBuffer({
+    original: selection,
+  });
 
-    const handleListSelect = useListener((evt) => {
-        userSelection.update(evt.selection);
-    });
-    const handleOKClick = useListener((evt) => {
-        if (onSelect) {
-            onSelect({ selection: userSelection.current });
-        }
-    });
-    const handleCancelClick = useListener((evt) => {
-        if (onCancel) {
-            onCancel({});
-        }
-    });
+  const handleListSelect = useListener((evt) => {
+    userSelection.update(evt.selection);
+  });
+  const handleOKClick = useListener((evt) => {
+    if (onSelect) {
+      onSelect({ selection: userSelection.current });
+    }
+  });
+  const handleCancelClick = useListener((evt) => {
+    if (onCancel) {
+      onCancel({});
+    }
+  });
 
+  return (
+    <div className="user-selection-dialog-box">
+      {renderList()}
+      {renderButtons()}
+    </div>
+  );
+
+  function renderList() {
+    const listProps = {
+      selection: userSelection.current,
+      disabled,
+      database,
+      route,
+      env,
+      onSelect: handleListSelect,
+    };
     return (
-        <div className="user-selection-dialog-box">
-            {renderList()}
-            {renderButtons()}
-        </div>
+      <Scrollable>
+        <UserSelectionList {...listProps} />
+      </Scrollable>
     );
+  }
 
-    function renderList() {
-        const listProps = {
-            selection: userSelection.current,
-            disabled,
-            database,
-            route,
-            env,
-            onSelect: handleListSelect,
-        };
-        return (
-            <Scrollable>
-                <UserSelectionList {...listProps} />
-            </Scrollable>
-        );
-    }
-
-    function renderButtons() {
-        const cancelButtonProps = {
-            label: t('selection-cancel'),
-            onClick: handleCancelClick,
-        };
-        const okButtonProps = {
-            label: t('selection-ok'),
-            onClick: handleOKClick,
-            emphasized: true,
-        };
-        return (
-            <div className="buttons">
-                <PushButton {...cancelButtonProps} />
-                <PushButton {...okButtonProps} />
-            </div>
-        );
-    }
+  function renderButtons() {
+    const cancelButtonProps = {
+      label: t('selection-cancel'),
+      onClick: handleCancelClick,
+    };
+    const okButtonProps = {
+      label: t('selection-ok'),
+      onClick: handleOKClick,
+      emphasized: true,
+    };
+    return (
+      <div className="buttons">
+        <PushButton {...cancelButtonProps} />
+        <PushButton {...okButtonProps} />
+      </div>
+    );
+  }
 }
 
 const component = Overlay.create(UserSelectionDialogBox);
 
 export {
-    component as default,
-    component as UserSelectionDialogBox,
+  component as default,
+  component as UserSelectionDialogBox,
 };

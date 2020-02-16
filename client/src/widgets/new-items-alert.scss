@@ -1,31 +1,31 @@
 @import '../colors';
 
 .new-items-alert {
-    display: block;
-    position: absolute;
-    transition: opacity 0.5s;
-    opacity: 1;
-    right: 3em;
-    top: 2em;
-    padding: 0.75em 0.75em 0.75em 0.75em;
+  display: block;
+  position: absolute;
+  transition: opacity 0.5s;
+  opacity: 1;
+  right: 3em;
+  top: 2em;
+  padding: 0.75em 0.75em 0.75em 0.75em;
+  color: $new-item-alert-text-color;
+  background-color: $new-item-alert-background-color;
+
+  &:link, &:visited {
     color: $new-item-alert-text-color;
-    background-color: $new-item-alert-background-color;
+    text-decoration: none;
+  }
 
-    &:link, &:visited {
-        color: $new-item-alert-text-color;
-        text-decoration: none;
-    }
+  &.hide {
+    opacity: 0;
+  }
 
-    &.hide {
-        opacity: 0;
-    }
+  .fa {
+    margin-right: 0.5em;
+  }
 
-    .fa {
-        margin-right: 0.5em;
-    }
-
-    .single-col & {
-        right: 1em;
-        top: 1em;
-    }
+  .single-col & {
+    right: 1em;
+    top: 1em;
+  }
 }

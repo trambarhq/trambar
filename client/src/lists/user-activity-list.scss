@@ -1,38 +1,38 @@
 @import '../colors';
 
 .user-activity-list {
-    margin-top: 0.5em;
+  margin-top: 0.5em;
 
-    .activity {
-        margin-bottom: 0.15em;
-        overflow: hidden;
+  .activity {
+    margin-bottom: 0.15em;
+    overflow: hidden;
 
-        .label {
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
+    .label {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
 
-            A {
-                &:link, &:visited {
-                    color: $user-activity-text-color;
-                    text-decoration: none;
-                    &:hover {
-                        color: $user-activity-hover-text-color;
-                    }
-                }
-            }
-
-            &.recent {
-                A {
-                    color: $user-activity-recent-text-color;
-                }
-            }
+      A {
+        &:link, &:visited {
+          color: $user-activity-text-color;
+          text-decoration: none;
+          &:hover {
+            color: $user-activity-hover-text-color;
+          }
         }
+      }
 
-        .time {
-            float: right;
-            font-size: 0.9em;
-            user-select: text;
+      &.recent {
+        A {
+          color: $user-activity-recent-text-color;
         }
+      }
     }
+
+    .time {
+      float: right;
+      font-size: 0.9em;
+      user-select: text;
+    }
+  }
 }

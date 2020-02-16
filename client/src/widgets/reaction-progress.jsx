@@ -12,23 +12,23 @@ import './reaction-progress.scss';
  * to attached media.
  */
 function ReactionProgress(props) {
-    const { env, reaction, status } = props;
-    const { t } = env.locale;
-    let contents;
-    if (!ReactionUtils.isActuallyPublished(reaction)) {
-        // not saved yet
-        contents = t('reaction-status-storage-pending');
+  const { env, reaction, status } = props;
+  const { t } = env.locale;
+  let contents;
+  if (!ReactionUtils.isActuallyPublished(reaction)) {
+    // not saved yet
+    contents = t('reaction-status-storage-pending');
+  } else {
+    if (status) {
+      contents = t(`reaction-status-${status.action}`);
     } else {
-        if (status) {
-            contents = t(`reaction-status-${status.action}`);
-        } else {
-            contents = <Time time={reaction.ptime} env={env} compact={true} />;
-        }
+      contents = <Time time={reaction.ptime} env={env} compact={true} />;
     }
-    return <span className="reaction-progress">{contents}</span>;
+  }
+  return <span className="reaction-progress">{contents}</span>;
 }
 
 export {
-    ReactionProgress as default,
-    ReactionProgress,
+  ReactionProgress as default,
+  ReactionProgress,
 };

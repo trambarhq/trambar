@@ -27,38 +27,38 @@ import Notification from '../accessors/notification.mjs';
 import Task from '../accessors/task.mjs';
 
 const globalAccessors = [
-    Commit,
-    Device,
-    Notification,
-    Picture,
-    Project,
-    Repo,
-    Role,
-    Server,
-    Session,
-    Snapshot,
-    Subscription,
-    System,
-    Task,
-    User,
+  Commit,
+  Device,
+  Notification,
+  Picture,
+  Project,
+  Repo,
+  Role,
+  Server,
+  Session,
+  Snapshot,
+  Subscription,
+  System,
+  Task,
+  User,
 ];
 const projectAccessors = [
-    Bookmark,
-    Listing,
-    Notification,
-    Reaction,
-    Rest,
-    Spreadsheet,
-    Statistics,
-    Story,
-    Task,
-    Wiki,
+  Bookmark,
+  Listing,
+  Notification,
+  Reaction,
+  Rest,
+  Spreadsheet,
+  Statistics,
+  Story,
+  Task,
+  Wiki,
 ];
 
 function get(schema) {
-    return (schema === 'global') ? globalAccessors : projectAccessors;
+  return (schema === 'global') ? globalAccessors : projectAccessors;
 }
 
 export {
-    get,
+  get,
 };

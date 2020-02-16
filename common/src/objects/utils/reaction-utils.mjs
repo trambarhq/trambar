@@ -2,10 +2,10 @@ import _ from 'lodash';
 import ReactionTypes, { EditableReactionTypes } from '../types/reaction-types.mjs';
 
 import {
-    mergeRemoteChanges,
-    hasContents,
-    wasPublishedWithin,
-    removeSuperfluousDetails,
+  mergeRemoteChanges,
+  hasContents,
+  wasPublishedWithin,
+  removeSuperfluousDetails,
 } from './story-utils.mjs';
 
 /**
@@ -16,13 +16,13 @@ import {
  * @return {Boolean}
  */
 function isSaved(reaction) {
-    if (!reaction) {
-        return false;
-    }
-    if (reaction.id < 1) {
-        return false;
-    }
-    return true;
+  if (!reaction) {
+    return false;
+  }
+  if (reaction.id < 1) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -33,16 +33,16 @@ function isSaved(reaction) {
  * @return {Boolean}
  */
 function isActuallyPublished(reaction) {
-    if (!reaction) {
-        return false;
-    }
-    if (!reaction.ptime) {
-        return false;
-    }
-    if (reaction.ready === false) {
-        return false;
-    }
-    return true;
+  if (!reaction) {
+    return false;
+  }
+  if (!reaction.ptime) {
+    return false;
+  }
+  if (reaction.ready === false) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -53,10 +53,10 @@ function isActuallyPublished(reaction) {
  * @return {Boolean}
  */
 function isEditable(reaction) {
-    if (!reaction) {
-        return false;
-    }
-    return _.includes(EditableReactionTypes, reaction.type);
+  if (!reaction) {
+    return false;
+  }
+  return _.includes(EditableReactionTypes, reaction.type);
 }
 
 /**
@@ -68,17 +68,17 @@ function isEditable(reaction) {
  * @return {Boolean}
  */
 function hasUncomittedChanges(reaction) {
-    // a special property set by RemoteDataSource
-    return reaction.uncommitted;
+  // a special property set by RemoteDataSource
+  return reaction.uncommitted;
 }
 
 export {
-    isSaved,
-    isActuallyPublished,
-    isEditable,
-    hasContents,
-    wasPublishedWithin,
-    hasUncomittedChanges,
-    mergeRemoteChanges,
-    removeSuperfluousDetails,
+  isSaved,
+  isActuallyPublished,
+  isEditable,
+  hasContents,
+  wasPublishedWithin,
+  hasUncomittedChanges,
+  mergeRemoteChanges,
+  removeSuperfluousDetails,
 };

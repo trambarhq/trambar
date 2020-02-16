@@ -6,7 +6,7 @@ const listeners = [];
  * @param  {Function} callback
  */
 function addListener(callback) {
-    listeners.push(callback);
+  listeners.push(callback);
 }
 
 /**
@@ -15,10 +15,10 @@ function addListener(callback) {
  * @param  {Function} callback
  */
 function removeListener(callback) {
-    const index = listeners.indexOf(callback);
-    if (index !== -1) {
-        listeners.splice(index, 1);
-    }
+  const index = listeners.indexOf(callback);
+  if (index !== -1) {
+    listeners.splice(index, 1);
+  }
 }
 
 /**
@@ -30,38 +30,38 @@ function removeListener(callback) {
  * @return {Promise}
  */
 async function close(server, maxWait) {
-    if (maxWait === undefined) {
-        maxWait = 1000;
-    }
-    if (!server) {
-        return;
-    }
-    await new Promise((resolve, reject) => {
-        let resolved = false;
-        server.on('close', () => {
-            if (!resolved) {
-                resolved = true;
-                resolve();
-            }
-        });
-        server.close();
-        setTimeout(() => {
-            // just in case close isn't firing
-            if (!resolved) {
-                resolved = true;
-                resolve();
-            }
-        }, maxWait);
+  if (maxWait === undefined) {
+    maxWait = 1000;
+  }
+  if (!server) {
+    return;
+  }
+  await new Promise((resolve, reject) => {
+    let resolved = false;
+    server.on('close', () => {
+      if (!resolved) {
+        resolved = true;
+        resolve();
+      }
     });
+    server.close();
+    setTimeout(() => {
+      // just in case close isn't firing
+      if (!resolved) {
+        resolved = true;
+        resolve();
+      }
+    }, maxWait);
+  });
 }
 
 /**
  * Start shutting down system
  */
 async function initiate() {
-    console.log('Shutting down...');
-    await broadcast();
-    process.exit(0);
+  console.log('Shutting down...');
+  await broadcast();
+  process.exit(0);
 }
 
 /**
@@ -71,27 +71,27 @@ async function initiate() {
  * @return {Promise}
  */
 async function broadcast() {
-    while (listeners.length > 0) {
-        const list = listeners.splice(0);
-        for (let callback of list) {
-            try {
-                await callback();
-            } catch (err) {
-                console.error(err);
-            }
-        }
+  while (listeners.length > 0) {
+    const list = listeners.splice(0);
+    for (let callback of list) {
+      try {
+        await callback();
+      } catch (err) {
+        console.error(err);
+      }
     }
+  }
 }
 
 process.on('SIGTERM', initiate);
 process.on('SIGUSR2', initiate);
 process.on('uncaughtException', function(err) {
-    console.error(err);
+  console.error(err);
 });
 
 export {
-    addListener,
-    removeListener,
-    initiate,
-    close,
+  addListener,
+  removeListener,
+  initiate,
+  close,
 };

@@ -1,73 +1,73 @@
 @import '../colors';
 
 .app-component {
-    display: flex;
-    flex-direction: row;
-    border: 1px solid $app-component-border-color;
-    margin-top: 0.3em;
-    margin-right: 0.1em;
-    background-color: $app-component-background-color;
-    cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  border: 1px solid $app-component-border-color;
+  margin-top: 0.3em;
+  margin-right: 0.1em;
+  background-color: $app-component-background-color;
+  cursor: pointer;
 
-    &:first-child {
-        margin-top: 0;
+  &:first-child {
+    margin-top: 0;
+  }
+
+  .picture {
+    flex: 0 0 auto;
+
+    .icon {
+      display: inline-block;
+      color: $app-component-icon-color;
+      background-color: $app-component-icon-background-color;
+      height: 4em;
+      width: 4em;
+      padding-top: 1em;
+      text-align: center;
+
+      .fa {
+        font-size: 2em;
+      }
     }
 
-    .picture {
-        flex: 0 0 auto;
-
-        .icon {
-            display: inline-block;
-            color: $app-component-icon-color;
-            background-color: $app-component-icon-background-color;
-            height: 4em;
-            width: 4em;
-            padding-top: 1em;
-            text-align: center;
-
-            .fa {
-                font-size: 2em;
-            }
-        }
-
-        IMG, CANVAS, svg {
-            display: block;
-            width: auto;
-            height: 4em;
-        }
+    IMG, CANVAS, svg {
+      display: block;
+      width: auto;
+      height: 4em;
     }
+  }
 
-    .description {
-        flex: 1 1 auto;
-        color: $app-component-text-color;
+  .description {
+    flex: 1 1 auto;
+    color: $app-component-text-color;
+    font-size: 1em;
+    margin: 0.25em 0.25em 0 0.40em;
+    overflow: hidden;
+    height: calc(3em + 9px);
+
+    .description-contents {
+      width: calc(100% - 1em);
+      position: relative;
+      display: block;
+      max-height: 4em;
+
+      .ellipsis {
+        position: absolute;
+        right: -1em;
+        top: calc(6.9em - 100%);
+        text-align: left;
+        vertical-align: bottom;
+      }
+
+      H1, H2, H3, H4, H5 {
         font-size: 1em;
-        margin: 0.25em 0.25em 0 0.40em;
-        overflow: hidden;
-        height: calc(3em + 9px);
+        margin-top: 0;
+        margin-bottom: 0.2em;
+      }
 
-        .description-contents {
-            width: calc(100% - 1em);
-            position: relative;
-            display: block;
-            max-height: 4em;
-
-            .ellipsis {
-                position: absolute;
-                right: -1em;
-                top: calc(6.9em - 100%);
-                text-align: left;
-                vertical-align: bottom;
-            }
-
-            H1, H2, H3, H4, H5 {
-                font-size: 1em;
-                margin-top: 0;
-                margin-bottom: 0.2em;
-            }
-
-            P {
-                margin-top: 0;
-            }
-        }
+      P {
+        margin-top: 0;
+      }
     }
+  }
 }

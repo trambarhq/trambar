@@ -17,64 +17,64 @@ import './notifications-page.scss';
  * Asynchronous component that retrieves data needed by the Notifications page.
  */
 async function NotificationsPage(props) {
-    const { database, route, env, date, scrollToNotificationID } = props;
-    const [ show ] = useProgress();
+  const { database, route, env, date, scrollToNotificationID } = props;
+  const [ show ] = useProgress();
 
-    render();
-    const currentUserID = await database.start();
-    const currentUser = await UserFinder.findUser(database, currentUserID);
-    let notifications;
-    if (date) {
-        notifications = await NotificationFinder.findNotificationsForUserOnDate(database, currentUser, date);
+  render();
+  const currentUserID = await database.start();
+  const currentUser = await UserFinder.findUser(database, currentUserID);
+  let notifications;
+  if (date) {
+    notifications = await NotificationFinder.findNotificationsForUserOnDate(database, currentUser, date);
+  } else {
+    notifications = await NotificationFinder.findNotificationsForUser(database, currentUser);
+  }
+  render();
+
+  function render() {
+    show(
+      <PageContainer className="notifications-page">
+        {renderList()}
+        {renderEmptyMessage()}
+      </PageContainer>
+    );
+  }
+
+  function renderList() {
+    const listProps = {
+      notifications,
+      currentUser,
+      database,
+      route,
+      env,
+      scrollToNotificationID,
+    };
+    return <NotificationList {...listProps} />;
+  }
+
+  function renderEmptyMessage() {
+    if (!_.isEmpty(notifications)) {
+      return null;
+    }
+    if (!notifications) {
+      // props.notifications is undefined when they're being loaded
+      return <LoadingAnimation />;
     } else {
-        notifications = await NotificationFinder.findNotificationsForUser(database, currentUser);
+      let phrase;
+      if (date) {
+        phrase = 'notifications-no-notifications-on-date';
+      } else {
+        phrase = 'notifications-no-notifications-yet';
+      }
+      const props = { phrase, env };
+      return <EmptyMessage {...props} />;
     }
-    render();
-
-    function render() {
-        show(
-            <PageContainer className="notifications-page">
-                {renderList()}
-                {renderEmptyMessage()}
-            </PageContainer>
-        );
-    }
-
-    function renderList() {
-        const listProps = {
-            notifications,
-            currentUser,
-            database,
-            route,
-            env,
-            scrollToNotificationID,
-        };
-        return <NotificationList {...listProps} />;
-    }
-
-    function renderEmptyMessage() {
-        if (!_.isEmpty(notifications)) {
-            return null;
-        }
-        if (!notifications) {
-            // props.notifications is undefined when they're being loaded
-            return <LoadingAnimation />;
-        } else {
-            let phrase;
-            if (date) {
-                phrase = 'notifications-no-notifications-on-date';
-            } else {
-                phrase = 'notifications-no-notifications-yet';
-            }
-            const props = { phrase, env };
-            return <EmptyMessage {...props} />;
-        }
-    }
+  }
 }
 
 const component = Relaks.memo(NotificationsPage);
 
 export {
-    component as default,
-    component as NotificationsPage,
+  component as default,
+  component as NotificationsPage,
 };

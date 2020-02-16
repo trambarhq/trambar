@@ -1,57 +1,57 @@
 @import '../colors';
 
 .tooltip {
-    position: relative;
-    display: inline-block;
+  position: relative;
+  display: inline-block;
 
-    &.live {
-        .label {
-            cursor: pointer;
-        }
+  &.live {
+    .label {
+      cursor: pointer;
     }
+  }
 
-    .window-container {
-        position: absolute;
-        top: 100%;
-        left: 0.5em;
-        width: 50vw;
-        z-index: 100;
-        margin-top: 0.2em;
-        pointer-events: none;
-
-        .window {
-            pointer-events: auto;
-        }
-    }
-
-    &.upward {
-        .window-container {
-            top: auto;
-            bottom: 100%;
-            margin-bottom: 0.2em;
-        }
-    }
-
-    &.leftward {
-        .window-container {
-            left: auto;
-            right: 0.3em;
-
-            .window {
-                float: right;
-            }
-        }
-    }
-
-    .ellipsis {
-        text-align: center;
-    }
+  .window-container {
+    position: absolute;
+    top: 100%;
+    left: 0.5em;
+    width: 50vw;
+    z-index: 100;
+    margin-top: 0.2em;
+    pointer-events: none;
 
     .window {
-        display: inline-block;
-        padding: 0.4em 0.5em 0.4em 0.5em;
-        border: 1px solid $tool-tip-border-color;
-        background-color: $tool-tip-background-color;
-        box-shadow: 1px 1px 3px 0px $tool-tip-shadow-color;
+      pointer-events: auto;
     }
+  }
+
+  &.upward {
+    .window-container {
+      top: auto;
+      bottom: 100%;
+      margin-bottom: 0.2em;
+    }
+  }
+
+  &.leftward {
+    .window-container {
+      left: auto;
+      right: 0.3em;
+
+      .window {
+        float: right;
+      }
+    }
+  }
+
+  .ellipsis {
+    text-align: center;
+  }
+
+  .window {
+    display: inline-block;
+    padding: 0.4em 0.5em 0.4em 0.5em;
+    border: 1px solid $tool-tip-border-color;
+    background-color: $tool-tip-background-color;
+    box-shadow: 1px 1px 3px 0px $tool-tip-shadow-color;
+  }
 }

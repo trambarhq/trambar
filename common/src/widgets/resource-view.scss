@@ -1,10 +1,10 @@
 .resource-view {
-    &.loading {
-        position: relative;
-        width: 100%;
+  &.loading {
+    position: relative;
+    width: 100%;
 
-        IMG {
-            position: absolute;
-        }
+    IMG {
+      position: absolute;
     }
+  }
 }

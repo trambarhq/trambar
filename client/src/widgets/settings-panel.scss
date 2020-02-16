@@ -1,66 +1,66 @@
 @import '../colors';
 
 .settings-panel {
-    background-color: $panel-background-color;
-    border: 2px solid $panel-border-color;
-    width: 100%;
-    break-inside: avoid-column;
-    page-break-inside: avoid;
+  background-color: $panel-background-color;
+  border: 2px solid $panel-border-color;
+  width: 100%;
+  break-inside: avoid-column;
+  page-break-inside: avoid;
 
-    .header {
-        font-size: 1.2em;
-        color: $panel-title-text-color;
-        background-color: $panel-border-color;
-        padding: 0.5em 0.5em 0.4em 0.5em;
+  .header {
+    font-size: 1.2em;
+    color: $panel-title-text-color;
+    background-color: $panel-border-color;
+    padding: 0.5em 0.5em 0.4em 0.5em;
 
-        .fa {
-            margin-right: 0.2em;
+    .fa {
+      margin-right: 0.2em;
+    }
+
+    .icon {
+      display: inline-block;
+      position: relative;
+      margin-right: 0.2em;
+
+      .fa {
+        margin-right: 0;
+
+        &.icon-overlay {
+          position: absolute;
+          display: block;
+          font-size: 0.75em;
+          color: $panel-icon-overlay-color;
+          height: 1em;
+          width: 1em;
+          bottom: -0.2em;
+          right: -0.65em;
         }
-
-        .icon {
-            display: inline-block;
-            position: relative;
-            margin-right: 0.2em;
-
-            .fa {
-                margin-right: 0;
-
-                &.icon-overlay {
-                    position: absolute;
-                    display: block;
-                    font-size: 0.75em;
-                    color: $panel-icon-overlay-color;
-                    height: 1em;
-                    width: 1em;
-                    bottom: -0.2em;
-                    right: -0.65em;
-                }
-            }
-        }
+      }
     }
+  }
 
-    .body {
-        color: $panel-text-color;
-        padding: 0.35em 0.35em 0.35em 0.35em;
-        clear: both;
+  .body {
+    color: $panel-text-color;
+    padding: 0.35em 0.35em 0.35em 0.35em;
+    clear: both;
 
-        .option-button {
-            margin: 0.35em 0 0.35em 0.25em;
-        }
+    .option-button {
+      margin: 0.35em 0 0.35em 0.25em;
     }
+  }
 
-    .footer {
-        padding: 0.15em 0.35em 0.25em 0.35em;
-        text-align: right;
-        clear: both;
-    }
+  .footer {
+    padding: 0.15em 0.35em 0.25em 0.35em;
+    text-align: right;
+    clear: both;
+  }
 
-    .single-col & {
-        margin-bottom: 0.5em;
-    }
+  .single-col & {
+    margin-bottom: 0.5em;
+  }
 
-    .double-col &,
-    .triple-col & {
-        margin-bottom: 1em;
-    }
+  .double-col &,
+  .triple-col & {
+    margin-bottom: 1em;
+  }
 }

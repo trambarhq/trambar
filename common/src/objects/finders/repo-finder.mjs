@@ -13,15 +13,15 @@ const emptyArray = [];
  * @return {Promise<Repo>}
  */
 async function findRepo(db, id) {
-    if (!id) {
-        return null;
-    }
-    return db.findOne({
-        schema,
-        table,
-        criteria: { id },
-        required: true
-    });
+  if (!id) {
+    return null;
+  }
+  return db.findOne({
+    schema,
+    table,
+    criteria: { id },
+    required: true
+  });
 }
 
 /**
@@ -33,12 +33,12 @@ async function findRepo(db, id) {
  * @return {Promise<Array<Repo>>}
  */
 async function findAllRepos(db, minimum) {
-    return db.find({
-        schema,
-        table,
-        criteria: {},
-        minimum
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {},
+    minimum
+  });
 }
 
 /**
@@ -50,14 +50,14 @@ async function findAllRepos(db, minimum) {
  * @return {Promise<Array<Repo>>}
  */
 async function findExistingRepos(db, minimum) {
-    return db.find({
-        schema,
-        table,
-        criteria: {
-            deleted: false
-        },
-        minimum
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {
+      deleted: false
+    },
+    minimum
+  });
 }
 
 /**
@@ -69,35 +69,35 @@ async function findExistingRepos(db, minimum) {
  * @return {Promise<Array<Repo>>}
  */
 async function findProjectRepos(db, projects) {
-    if (projects instanceof Array) {
-        let ids = _.flatten(_.map(projects, 'repo_ids'));
-        if (_.isEmpty(ids)) {
-            return emptyArray;
-        }
-        ids = _.sortBy(_.uniq(ids));
-        return db.find({
-            schema,
-            table,
-            criteria: {
-                id: ids,
-                deleted: false
-            },
-        });
-    } else {
-        let project = projects;
-        if (!project) {
-            return emptyArray;
-        }
-        return db.find({
-            schema,
-            table,
-            criteria: {
-                id: project.repo_ids,
-                deleted: false
-            },
-            prefetch: true,
-        });
+  if (projects instanceof Array) {
+    let ids = _.flatten(_.map(projects, 'repo_ids'));
+    if (_.isEmpty(ids)) {
+      return emptyArray;
     }
+    ids = _.sortBy(_.uniq(ids));
+    return db.find({
+      schema,
+      table,
+      criteria: {
+        id: ids,
+        deleted: false
+      },
+    });
+  } else {
+    let project = projects;
+    if (!project) {
+      return emptyArray;
+    }
+    return db.find({
+      schema,
+      table,
+      criteria: {
+        id: project.repo_ids,
+        deleted: false
+      },
+      prefetch: true,
+    });
+  }
 }
 
 /**
@@ -109,20 +109,20 @@ async function findProjectRepos(db, projects) {
  * @return {Promise<Array<Repo>>}
  */
 async function findTemplates(db) {
-    return db.find({
-        schema,
-        table,
-        criteria: {
-            template: true,
-            deleted: false
-        },
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {
+      template: true,
+      deleted: false
+    },
+  });
 }
 
 export {
-    findRepo,
-    findAllRepos,
-    findExistingRepos,
-    findProjectRepos,
-    findTemplates,
+  findRepo,
+  findAllRepos,
+  findExistingRepos,
+  findProjectRepos,
+  findTemplates,
 };

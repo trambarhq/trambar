@@ -37,244 +37,244 @@ import { TopNavigation } from './top-navigation.jsx';
 import { VolumeIndicator } from './volume-indicator.jsx';
 
 AuthorNames.propTypes = {
-    authors: PropTypes.arrayOf(PropTypes.object),
-    env: PropTypes.instanceOf(Environment).isRequired,
+  authors: PropTypes.arrayOf(PropTypes.object),
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 BottomNavigation.propTypes = {
-    settings: PropTypes.object.isRequired,
-    hasAccess: PropTypes.bool,
+  settings: PropTypes.object.isRequired,
+  hasAccess: PropTypes.bool,
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 CalendarBar.propTypes = {
-    settings: PropTypes.object.isRequired,
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  settings: PropTypes.object.isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 ChartToolbar.propTypes = {
-    chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
-    env: PropTypes.instanceOf(Environment).isRequired,
-    onAction: PropTypes.func,
+  chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
+  env: PropTypes.instanceOf(Environment).isRequired,
+  onAction: PropTypes.func,
 };
 CoauthoringButton.propTypes = {
-    authors: PropTypes.arrayOf(PropTypes.object).isRequired,
-    currentUser: PropTypes.object.isRequired,
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  authors: PropTypes.arrayOf(PropTypes.object).isRequired,
+  currentUser: PropTypes.object.isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 
-    onSelect: PropTypes.func,
-    onRemove: PropTypes.func,
+  onSelect: PropTypes.func,
+  onRemove: PropTypes.func,
 };
 CornerPopUp.ropType = {
-    open: PropTYpes.bool,
-    disabled: PropTypes.bool,
-    name: PropTypes.string,
+  open: PropTYpes.bool,
+  disabled: PropTypes.bool,
+  name: PropTypes.string,
 
-    onOpen: PropTypes.func,
-    onClose: PropTypes.func,
+  onOpen: PropTypes.func,
+  onClose: PropTypes.func,
 };
 DevicePlaceholder.propTypes = {
-    blocked: PropTypes.bool,
-    icon: PropTypes.oneOf([ 'camera', 'video-camera', 'microphone' ]).isRequired,
+  blocked: PropTypes.bool,
+  icon: PropTypes.oneOf([ 'camera', 'video-camera', 'microphone' ]).isRequired,
 };
 DiagnosticsSection.propTypes = {
-    label: PropTypes.string,
-    hidden: PropTypes.bool,
+  label: PropTypes.string,
+  hidden: PropTypes.bool,
 };
 DropZone.propTypes = {
-    onDrop: PropTypes.func,
+  onDrop: PropTypes.func,
 };
 DurationIndicator.propTypes = {
-    duration: PropTypes.number,
-    recording: PropTypes.bool,
+  duration: PropTypes.number,
+  recording: PropTypes.bool,
 };
 EmptyMessage.propTypes = {
-    phrase: PropTypes.string.isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  phrase: PropTypes.string.isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 HeaderButton.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    highlighted: PropTypes.bool,
-    disabled: PropTypes.bool,
-    onClick: PropTypes.func,
+  label: PropTypes.string,
+  icon: PropTypes.string,
+  hidden: PropTypes.bool,
+  highlighted: PropTypes.bool,
+  disabled: PropTypes.bool,
+  onClick: PropTypes.func,
 };
 HeaderButton.File.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    highlighted: PropTypes.bool,
-    disabled: PropTypes.bool,
-    multiple: PropTypes.bool,
-    onChange: PropTypes.func,
+  label: PropTypes.string,
+  icon: PropTypes.string,
+  hidden: PropTypes.bool,
+  highlighted: PropTypes.bool,
+  disabled: PropTypes.bool,
+  multiple: PropTypes.bool,
+  onChange: PropTypes.func,
 };
 Link.propTypes = {
-    url: PropTypes.string,
-    alwaysAsLink: PropTypes.bool,
+  url: PropTypes.string,
+  alwaysAsLink: PropTypes.bool,
 };
 MediaButton.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    highlighted: PropTypes.bool,
-    disabled: PropTypes.bool,
-    onChange: PropTypes.func,
+  label: PropTypes.string,
+  icon: PropTypes.string,
+  hidden: PropTypes.bool,
+  highlighted: PropTypes.bool,
+  disabled: PropTypes.bool,
+  onChange: PropTypes.func,
 };
 Direction.propTypes = {
-    index: PropTypes.number,
-    count: PropTypes.number,
-    hidden: PropTypes.bool,
-    onBackwardClick: PropTypes.func,
-    onForwardClick: PropTypes.func,
+  index: PropTypes.number,
+  count: PropTypes.number,
+  hidden: PropTypes.bool,
+  onBackwardClick: PropTypes.func,
+  onForwardClick: PropTypes.func,
 };
 MediaPlaceholder.propTypes = {
-    showHints: PropTypes.bool,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  showHints: PropTypes.bool,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 
 MediaToolbar.propTypes = {
-    story: PropTypes.object.isRequired,
-    capturing: PropTypes.oneOf([ 'image', 'video', 'audio' ]),
-    env: PropTypes.instanceOf(Environment).isRequired,
-    onAction: PropTypes.func,
+  story: PropTypes.object.isRequired,
+  capturing: PropTypes.oneOf([ 'image', 'video', 'audio' ]),
+  env: PropTypes.instanceOf(Environment).isRequired,
+  onAction: PropTypes.func,
 };
 MultipleUserNames.propTypes = {
-    label: PropTypes.string,
-    title: PropTypes.string,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
-    popupLimit: PropTypes.number,
+  label: PropTypes.string,
+  title: PropTypes.string,
+  users: PropTypes.arrayOf(PropTypes.object).isRequired,
+  popupLimit: PropTypes.number,
 
-    env: PropTypes.instanceOf(Environment).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 NewItemsAlert.propTypes = {
-    url: PropTypes.string,
-    onClick: PropTypes.func,
+  url: PropTypes.string,
+  onClick: PropTypes.func,
 };
 OptionButton.propTypes = {
-    label: PropTypes.node,
-    id: PropTypes.string,
-    icon: PropTypes.string,
-    iconOn: PropTypes.string,
-    iconOff: PropTypes.string,
-    url: PropTypes.string,
-    target: PropTypes.string,
-    hidden: PropTypes.bool,
-    selected: PropTypes.bool,
-    disabled: PropTypes.bool,
-    onClick: PropTypes.func,
+  label: PropTypes.node,
+  id: PropTypes.string,
+  icon: PropTypes.string,
+  iconOn: PropTypes.string,
+  iconOff: PropTypes.string,
+  url: PropTypes.string,
+  target: PropTypes.string,
+  hidden: PropTypes.bool,
+  selected: PropTypes.bool,
+  disabled: PropTypes.bool,
+  onClick: PropTypes.func,
 };
 PopUpMenu.propTypes = {
-    open: PropTYpes.bool,
-    disabled: PropTypes.bool,
-    name: PropTypes.string,
-    popOut: PropTypes.bool,
+  open: PropTYpes.bool,
+  disabled: PropTypes.bool,
+  name: PropTypes.string,
+  popOut: PropTypes.bool,
 
-    onOpen: PropTypes.func,
-    onClose: PropTypes.func,
+  onOpen: PropTypes.func,
+  onClose: PropTypes.func,
 };
 ProfileImage.propTypes = {
-    user: PropTypes.object,
-    size: PropTypes.oneOf([ 'small', 'medium', 'large' ]),
+  user: PropTypes.object,
+  size: PropTypes.oneOf([ 'small', 'medium', 'large' ]),
 };
 PushButton.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    disabled: PropTypes.bool,
-    emphasized: PropTypes.bool,
-    onClick: PropTypes.func,
+  label: PropTypes.string,
+  icon: PropTypes.string,
+  hidden: PropTypes.bool,
+  disabled: PropTypes.bool,
+  emphasized: PropTypes.bool,
+  onClick: PropTypes.func,
 };
 PushButton.File.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    disabled: PropTypes.bool,
-    emphasized: PropTypes.bool,
-    multiple: PropTypes.bool,
-    onChange: PropTypes.func,
+  label: PropTypes.string,
+  icon: PropTypes.string,
+  hidden: PropTypes.bool,
+  disabled: PropTypes.bool,
+  emphasized: PropTypes.bool,
+  multiple: PropTypes.bool,
+  onChange: PropTypes.func,
 };
 QRCode.propTypes = {
-    text: PropTypes.string,
-    scale: PropTypes.number,
+  text: PropTypes.string,
+  scale: PropTypes.number,
 };
 ReactionMediaToolbar.propTypes = {
-    reaction: PropTypes.object.isRequired,
-    capturing: PropTypes.oneOf([ 'image', 'video', 'audio' ]),
-    env: PropTypes.instanceOf(Environment).isRequired,
-    onAction: PropTypes.func,
+  reaction: PropTypes.object.isRequired,
+  capturing: PropTypes.oneOf([ 'image', 'video', 'audio' ]),
+  env: PropTypes.instanceOf(Environment).isRequired,
+  onAction: PropTypes.func,
 };
 ReactionProgress.propTypes = {
-    status: PropTypes.object,
-    reaction: PropTypes.object.isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  status: PropTypes.object,
+  reaction: PropTypes.object.isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 ReactionToolbar.propTypes = {
-    access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]),
-    currentUser: PropTypes.object,
-    reactions: PropTypes.arrayOf(PropTypes.object),
-    respondents: PropTypes.arrayOf(PropTypes.object),
-    addingComment: PropTypes.bool,
-    disabled: PropTypes.bool,
-    env: PropTypes.instanceOf(Environment).isRequired,
-    onAction: PropTypes.func,
+  access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]),
+  currentUser: PropTypes.object,
+  reactions: PropTypes.arrayOf(PropTypes.object),
+  respondents: PropTypes.arrayOf(PropTypes.object),
+  addingComment: PropTypes.bool,
+  disabled: PropTypes.bool,
+  env: PropTypes.instanceOf(Environment).isRequired,
+  onAction: PropTypes.func,
 }
 RoleFilterBar.propTypes = {
-    settings: PropTypes.object.isRequired,
+  settings: PropTypes.object.isRequired,
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 RoleFilterButton.propTypes = {
-    role: PropTypes.object,
-    users: PropTypes.arrayOf(PropTypes.object),
-    selected: PropTypes.bool,
-    url: PropTypes.string,
+  role: PropTypes.object,
+  users: PropTypes.arrayOf(PropTypes.object),
+  selected: PropTypes.bool,
+  url: PropTypes.string,
 
-    env: PropTypes.instanceOf(Environment).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 SearchBar.propTypes = {
-    settings: PropTypes.object.isRequired,
-    database: PropTypes.instanceOf(Database),
-    route: PropTypes.instanceOf(Route),
-    env: PropTypes.instanceOf(Environment).isRequired,
+  settings: PropTypes.object.isRequired,
+  database: PropTypes.instanceOf(Database),
+  route: PropTypes.instanceOf(Route),
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 StoryEmblem.propTypes = {
-    story: PropTypes.object.isRequired,
+  story: PropTypes.object.isRequired,
 };
 StoryProgress.propTypes = {
-    status: PropTypes.object,
-    story: PropTypes.object.isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  status: PropTypes.object,
+  story: PropTypes.object.isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 TextField.propTypes = {
-    env: PropTypes.instanceOf(Environment).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 TextToolbar.propTypes = {
-    story: PropTypes.object.isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
-    onAction: PropTypes.func,
+  story: PropTypes.object.isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
+  onAction: PropTypes.func,
 };
 Time.propTypes = {
-    time: PropTypes.string,
-    compact: PropTypes.bool,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  time: PropTypes.string,
+  compact: PropTypes.bool,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 TopNavigation.propTypes = {
-    settings: PropTypes.object.isRequired,
+  settings: PropTypes.object.isRequired,
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    payloads: PropTypes.instanceOf(Payloads).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  payloads: PropTypes.instanceOf(Payloads).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 VolumeIndicator.propTypes = {
-    type: PropTypes.oneOf([ 'bar', 'gauge' ]),
-    volume: PropTypes.number,
-    recording: PropTypes.bool,
+  type: PropTypes.oneOf([ 'bar', 'gauge' ]),
+  volume: PropTypes.number,
+  recording: PropTypes.bool,
 };

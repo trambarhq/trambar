@@ -1,25 +1,25 @@
 .start-page {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation-name: fade-in-out;
-    animation-delay: 0.5s;
-    animation-duration: 2s;
-    opacity: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation-name: fade-in-out;
+  animation-delay: 0.5s;
+  animation-duration: 2s;
+  opacity: 0;
 
-    @keyframes fade-in-out {
-        0%   { opacity: 0; }
-        75%  { opacity: 1; }
-        100% { opacity: 0; }
-    }
+  @keyframes fade-in-out {
+    0%   { opacity: 0; }
+    75%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
 
-    h2 {
-        font-size: 3em;
-        text-transform: uppercase;
-    }
+  h2 {
+    font-size: 3em;
+    text-transform: uppercase;
+  }
 }

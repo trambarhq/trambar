@@ -1,9 +1,9 @@
 const RestTypes = [
-    'wordpress',
-    'generic',
+  'wordpress',
+  'generic',
 ];
 
 export {
-    RestTypes as default,
-    RestTypes,
+  RestTypes as default,
+  RestTypes,
 };

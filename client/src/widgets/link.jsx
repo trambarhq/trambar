@@ -10,53 +10,53 @@ import { useListener } from 'relaks';
  * has keyboard focus, a true hyperlink is always rendered.
  */
 function Link(props) {
-    const { url, alwaysAsLink, blurDelay, children, ...otherProps } = props;
-    const [ hasFocus, setHasFocus ] = useState(false);
+  const { url, alwaysAsLink, blurDelay, children, ...otherProps } = props;
+  const [ hasFocus, setHasFocus ] = useState(false);
 
-    const handleFocus = useListener((evt) => {
-        setHasFocus(true);
-    });
-    const handleBlur = useListener((evt) => {
-        setHasFocus(true);
-    });
-    const handleClick = useListener((evt) => {
-        const link = evt.currentTarget;
-        if (blurDelay) {
-            setTimeout(() => {
-                link.blur();
-            }, blurDelay);
-        }
-    });
-
-    const aprops = { ...otherProps };
-    if (url) {
-        if (alwaysAsLink) {
-            // always set href
-            aprops.href = url;
-        } else {
-            // set href only when link has focus on we're in the middle of a click
-            if (hasFocus) {
-                aprops.href = url;
-            }
-            aprops.onFocus = handleFocus;
-            aprops.onBlur = handleBlur;
-        }
-        if (aprops.tabIndex === undefined) {
-            aprops.tabIndex = 0;
-        }
-        aprops.onClick = handleClick;
+  const handleFocus = useListener((evt) => {
+    setHasFocus(true);
+  });
+  const handleBlur = useListener((evt) => {
+    setHasFocus(true);
+  });
+  const handleClick = useListener((evt) => {
+    const link = evt.currentTarget;
+    if (blurDelay) {
+      setTimeout(() => {
+        link.blur();
+      }, blurDelay);
     }
-    return (
-        <a {...aprops}>{children}</a>
-    );
+  });
+
+  const aprops = { ...otherProps };
+  if (url) {
+    if (alwaysAsLink) {
+      // always set href
+      aprops.href = url;
+    } else {
+      // set href only when link has focus on we're in the middle of a click
+      if (hasFocus) {
+        aprops.href = url;
+      }
+      aprops.onFocus = handleFocus;
+      aprops.onBlur = handleBlur;
+    }
+    if (aprops.tabIndex === undefined) {
+      aprops.tabIndex = 0;
+    }
+    aprops.onClick = handleClick;
+  }
+  return (
+    <a {...aprops}>{children}</a>
+  );
 }
 
 Link.defaultProps = {
-    alwaysAsLink: false,
-    blurDelay: 200,
+  alwaysAsLink: false,
+  blurDelay: 200,
 };
 
 export {
-    Link as default,
-    Link,
+  Link as default,
+  Link,
 };

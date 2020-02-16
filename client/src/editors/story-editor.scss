@@ -1,116 +1,116 @@
 @import '../colors';
 
 .story-editor {
-    background-color: $panel-background-color;
-    border: 2px solid $panel-border-color;
-    width: 100%;
+  background-color: $panel-background-color;
+  border: 2px solid $panel-border-color;
+  width: 100%;
+
+  .header {
+    background-color: $panel-border-color;
+
+    .column-1 > .profile-image {
+      position: relative;
+      height: 0.8em;
+      vertical-align: top;
+      margin-top: 0.1em;
+      margin-right: 0.5em;
+      overflow: visible;
+
+      IMG, .placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    }
+  }
+
+  .body {
+    .autosize-text-area {
+      margin-top: 0.7em;
+      margin-bottom: 0.1em;
+      margin-left: -1px;
+      margin-right: -1px;
+
+      TEXTAREA {
+        font-size: 1em;
+        min-height: 5em;
+        max-height: 50vh;
+
+        .single-col & {
+          min-height: 1.2em;
+        }
+      }
+    }
+
+    .story-contents {
+      margin-top: 0.25em;
+      padding: 0.25em 0.25em 0.25em 0.5em;
+    }
+
+    .buttons {
+      text-align: right;
+    }
+  }
+
+  .padded {
+    padding: 0.25em 0.25em 0.25em 0.5em;
+  }
+
+  .selectable {
+    user-select: text;
+  }
+
+  .double-col &,
+  .triple-col & {
+    display: table;
+
+    .column-1,
+    .column-2,
+    .column-3 {
+      display: table-cell;
+      vertical-align: top;
+    }
 
     .header {
-        background-color: $panel-border-color;
-
-        .column-1 > .profile-image {
-            position: relative;
-            height: 0.8em;
-            vertical-align: top;
-            margin-top: 0.1em;
-            margin-right: 0.5em;
-            overflow: visible;
-
-            IMG, .placeholder {
-                position: absolute;
-                top: 0;
-                left: 0;
-            }
-        }
+      display: table-row;
     }
 
     .body {
-        .autosize-text-area {
-            margin-top: 0.7em;
-            margin-bottom: 0.1em;
-            margin-left: -1px;
-            margin-right: -1px;
+      display: table-row;
 
-            TEXTAREA {
-                font-size: 1em;
-                min-height: 5em;
-                max-height: 50vh;
-
-                .single-col & {
-                    min-height: 1.2em;
-                }
-            }
-        }
-
-        .story-contents {
-            margin-top: 0.25em;
-            padding: 0.25em 0.25em 0.25em 0.5em;
-        }
-
-        .buttons {
-            text-align: right;
-        }
+      .autosize-text-area {
+        min-height: 3em;
+      }
+      .column-2 {
+        position: relative;
+      }
     }
+  }
 
-    .padded {
-        padding: 0.25em 0.25em 0.25em 0.5em;
+  .double-col & {
+    .column-1,
+    .column-2 {
+      width: 50%;
     }
+  }
 
-    .selectable {
-        user-select: text;
+  .triple-col & {
+    .column-1,
+    .column-2 {
+      width: 40%;
     }
-
-    .double-col &,
-    .triple-col & {
-        display: table;
-
-        .column-1,
-        .column-2,
-        .column-3 {
-            display: table-cell;
-            vertical-align: top;
-        }
-
-        .header {
-            display: table-row;
-        }
-
-        .body {
-            display: table-row;
-
-            .autosize-text-area {
-                min-height: 3em;
-            }
-            .column-2 {
-                position: relative;
-            }
-        }
+    .column-3 {
+      width: 20%;
     }
+  }
 
-    .double-col & {
-        .column-1,
-        .column-2 {
-            width: 50%;
-        }
+  &.highlighting {
+    animation: flash normal 5s 1 ease-in-out;
+
+    @keyframes flash {
+      25% {
+        border-color: $panel-highlighted-border-color;
+      }
     }
-
-    .triple-col & {
-        .column-1,
-        .column-2 {
-            width: 40%;
-        }
-        .column-3 {
-            width: 20%;
-        }
-    }
-
-    &.highlighting {
-        animation: flash normal 5s 1 ease-in-out;
-
-        @keyframes flash {
-            25% {
-                border-color: $panel-highlighted-border-color;
-            }
-        }
-    }
+  }
 }

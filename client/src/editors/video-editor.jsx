@@ -11,17 +11,17 @@ import './video-editor.scss';
  * preview image. The duration of the video is overlayed over the image.
  */
 function VideoEditor(props) {
-    const { duration } = props;
-    return (
-        <ImageEditor {...props}>
-            <div className="video-duration">
-                {formatDuration(duration)}
-            </div>
-        </ImageEditor>
-    );
+  const { duration } = props;
+  return (
+    <ImageEditor {...props}>
+      <div className="video-duration">
+        {formatDuration(duration)}
+      </div>
+    </ImageEditor>
+  );
 }
 
 export {
-    VideoEditor as default,
-    VideoEditor,
+  VideoEditor as default,
+  VideoEditor,
 };

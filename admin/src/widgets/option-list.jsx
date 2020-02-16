@@ -12,79 +12,79 @@ import './option-list.scss';
  * options when switching into read-write mode.
  */
 function OptionList(props) {
-    const { readOnly, children, onOptionClick } = props;
+  const { readOnly, children, onOptionClick } = props;
 
-    const handleClick = useListener((evt) => {
-        const name = evt.currentTarget.getAttribute('data-name');
-        if (onOptionClick) {
-            onOptionClick({
-                type: 'optionclick',
-                target: this,
-                name,
-            });
-        }
-    });
-
-    const array = React.Children.toArray(children);
-    const options = _.filter(array, { type: 'option' });
-    const label = _.find(array, { type: 'label' });
-    const classNames = [ 'option-list' ];
-    if (readOnly) {
-        classNames.push('readonly');
+  const handleClick = useListener((evt) => {
+    const name = evt.currentTarget.getAttribute('data-name');
+    if (onOptionClick) {
+      onOptionClick({
+        type: 'optionclick',
+        target: this,
+        name,
+      });
     }
-    const tableProps = {
-        expandable: true,
-        selectable: !readOnly,
-        expanded: !readOnly,
-        sortColumns: [],
+  });
+
+  const array = React.Children.toArray(children);
+  const options = _.filter(array, { type: 'option' });
+  const label = _.find(array, { type: 'label' });
+  const classNames = [ 'option-list' ];
+  if (readOnly) {
+    classNames.push('readonly');
+  }
+  const tableProps = {
+    expandable: true,
+    selectable: !readOnly,
+    expanded: !readOnly,
+    sortColumns: [],
+  };
+  return (
+    <div className={classNames.join(' ')}>
+      <label>
+        {label ? label.props.children : null}
+      </label>
+      <div className="container">
+        <SortableTable {...tableProps}>
+          <tbody>{_.map(options, renderRow)}</tbody>
+        </SortableTable>
+      </div>
+    </div>
+  );
+
+  function renderRow(option, i) {
+    const { name, hidden, selected, previous, children } = option.props;
+    if (hidden) {
+      return null;
+    }
+    const classNames = [ 'option' ];
+    if (selected) {
+      classNames.push(readOnly ? 'fixed' : 'selected');
+    }
+    let badge;
+    if (!readOnly) {
+      if (selected && !previous) {
+        badge = <i className="fa fa-check-circle-o badge add" />;
+      } else if (!selected && previous) {
+        badge = <i className="fa fa-times-circle-o badge remove" />;
+      }
+    }
+    const props = {
+      className: classNames.join(' '),
+      'data-name': name,
+      onClick: (!readOnly) ? handleClick : undefined,
     };
     return (
-        <div className={classNames.join(' ')}>
-            <label>
-                {label ? label.props.children : null}
-            </label>
-            <div className="container">
-                <SortableTable {...tableProps}>
-                    <tbody>{_.map(options, renderRow)}</tbody>
-                </SortableTable>
-            </div>
-        </div>
+      <tr key={i} {...props}>
+        <td>
+          {children}
+          {badge}
+        </td>
+      </tr>
     );
-
-    function renderRow(option, i) {
-        const { name, hidden, selected, previous, children } = option.props;
-        if (hidden) {
-            return null;
-        }
-        const classNames = [ 'option' ];
-        if (selected) {
-            classNames.push(readOnly ? 'fixed' : 'selected');
-        }
-        let badge;
-        if (!readOnly) {
-            if (selected && !previous) {
-                badge = <i className="fa fa-check-circle-o badge add" />;
-            } else if (!selected && previous) {
-                badge = <i className="fa fa-times-circle-o badge remove" />;
-            }
-        }
-        const props = {
-            className: classNames.join(' '),
-            'data-name': name,
-            onClick: (!readOnly) ? handleClick : undefined,
-        };
-        return (
-            <tr key={i} {...props}>
-                <td>
-                    {children}
-                    {badge}
-                </td>
-            </tr>
-        );
-    }
+  }
 }
 
 export {
-    OptionList as default,
-    OptionList,
+  OptionList as default,
+  OptionList,
 };

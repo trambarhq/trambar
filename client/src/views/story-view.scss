@@ -1,125 +1,125 @@
 @import '../colors';
 
 .story-view {
-    background-color: $panel-background-color;
-    border: 2px solid $panel-border-color;
-    width: 100%;
+  background-color: $panel-background-color;
+  border: 2px solid $panel-border-color;
+  width: 100%;
+
+  .header {
+    background-color: $panel-border-color;
+
+    .column-1 > .profile-image {
+      position: relative;
+      height: 0.8em;
+      vertical-align: top;
+      margin-top: 0.1em;
+      margin-right: 0.5em;
+      overflow: visible;
+
+      IMG, svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    }
+
+    .reaction-link {
+      float: right;
+      cursor: pointer;
+      color: $story-reaction-link-text-color;
+      margin-top: 0.10em;
+
+      &:hover {
+        color: $story-reaction-link-hover-text-color;
+      }
+    }
+  }
+
+  .body {
+    .column-1 {
+      .media-view {
+        max-width: 512px;
+      }
+    }
+
+    .column-2 {
+      position: relative;
+
+      .scrollable {
+        max-height: 24em;
+
+        .single-col & {
+          max-height: 14em;
+        }
+
+        &.abs {
+          position: absolute;
+          left: 0;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          max-height: none;
+        }
+      }
+    }
+  }
+
+  .padded {
+    padding: 0.25em 0.25em 0.25em 0.5em;
+  }
+
+  .selectable {
+    user-select: text;
+  }
+
+  .single-col & {
+    margin-bottom: 0.5em;
+  }
+
+  .double-col &,
+  .triple-col & {
+    display: table;
 
     .header {
-        background-color: $panel-border-color;
-
-        .column-1 > .profile-image {
-            position: relative;
-            height: 0.8em;
-            vertical-align: top;
-            margin-top: 0.1em;
-            margin-right: 0.5em;
-            overflow: visible;
-
-            IMG, svg {
-                position: absolute;
-                top: 0;
-                left: 0;
-            }
-        }
-
-        .reaction-link {
-            float: right;
-            cursor: pointer;
-            color: $story-reaction-link-text-color;
-            margin-top: 0.10em;
-
-            &:hover {
-                color: $story-reaction-link-hover-text-color;
-            }
-        }
+      display: table-row;
     }
 
     .body {
-        .column-1 {
-            .media-view {
-                max-width: 512px;
-            }
-        }
-
-        .column-2 {
-            position: relative;
-
-            .scrollable {
-                max-height: 24em;
-
-                .single-col & {
-                    max-height: 14em;
-                }
-
-                &.abs {
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    right: 0;
-                    bottom: 0;
-                    max-height: none;
-                }
-            }
-        }
+      display: table-row;
     }
 
-    .padded {
-        padding: 0.25em 0.25em 0.25em 0.5em;
+    .column-1,
+    .column-2,
+    .column-3 {
+      display: table-cell;
+      vertical-align: top;
     }
+  }
 
-    .selectable {
-        user-select: text;
+  .double-col & {
+    .column-1,
+    .column-2 {
+      width: 50%;
     }
+  }
 
-    .single-col & {
-        margin-bottom: 0.5em;
+  .triple-col & {
+    .column-1,
+    .column-2 {
+      width: 40%;
     }
-
-    .double-col &,
-    .triple-col & {
-        display: table;
-
-        .header {
-            display: table-row;
-        }
-
-        .body {
-            display: table-row;
-        }
-
-        .column-1,
-        .column-2,
-        .column-3 {
-            display: table-cell;
-            vertical-align: top;
-        }
+    .column-3 {
+      width: 20%;
     }
+  }
 
-    .double-col & {
-        .column-1,
-        .column-2 {
-            width: 50%;
-        }
+  &.highlighting {
+    animation: flash normal 5s 1 ease-in-out;
+
+    @keyframes flash {
+      25% {
+        border-color: $panel-highlighted-border-color;
+      }
     }
-
-    .triple-col & {
-        .column-1,
-        .column-2 {
-            width: 40%;
-        }
-        .column-3 {
-            width: 20%;
-        }
-    }
-
-    &.highlighting {
-        animation: flash normal 5s 1 ease-in-out;
-
-        @keyframes flash {
-            25% {
-                border-color: $panel-highlighted-border-color;
-            }
-        }
-    }
+  }
 }

@@ -1,63 +1,63 @@
 @import '../colors';
 
 .task-alert-bar {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: $navigation-background-color;
-    padding: 0.4em 0.5em 0.3em 0.5em;
-    border-left: 1px solid $navigation-background-color;
-    text-align: right;
-    transition: bottom 0.4s 0.5s;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: $navigation-background-color;
+  padding: 0.4em 0.5em 0.3em 0.5em;
+  border-left: 1px solid $navigation-background-color;
+  text-align: right;
+  transition: bottom 0.4s 0.5s;
+
+  .progress-bar-frame {
+    display: inline-block;
+    width: 10em;
+    border: 1px solid $alert-bar-text-color;
+    margin-left: 0.5em;
+
+    .bar {
+      background-color: $alert-bar-text-color;
+      height: 0.6em;
+    }
+  }
+
+  A {
+    color: $alert-bar-text-color;
+
+    &:link, &:visited {
+      text-decoration: none;
+    }
+
+    &:hover {
+      color: $alert-bar-hover-text-color;
+    }
+  }
+
+  &.hidden {
+    bottom: -1.8em;
+  }
+
+  &.initial {
+    transition-delay: 2s;
+  }
+
+  &.failure {
+    A {
+      color: $alert-bar-failure-text-color;
+
+      &:hover {
+        color: $alert-bar-failure-hover-text-color;
+      }
+    }
 
     .progress-bar-frame {
-        display: inline-block;
-        width: 10em;
-        border: 1px solid $alert-bar-text-color;
-        margin-left: 0.5em;
+      border-color: $alert-bar-failure-text-color;
 
-        .bar {
-            background-color: $alert-bar-text-color;
-            height: 0.6em;
-        }
+      .bar {
+        background-color: $alert-bar-failure-text-color;
+      }
     }
-
-    A {
-        color: $alert-bar-text-color;
-
-        &:link, &:visited {
-            text-decoration: none;
-        }
-
-        &:hover {
-            color: $alert-bar-hover-text-color;
-        }
-    }
-
-    &.hidden {
-        bottom: -1.8em;
-    }
-
-    &.initial {
-        transition-delay: 2s;
-    }
-
-    &.failure {
-        A {
-            color: $alert-bar-failure-text-color;
-
-            &:hover {
-                color: $alert-bar-failure-hover-text-color;
-            }
-        }
-
-        .progress-bar-frame {
-            border-color: $alert-bar-failure-text-color;
-
-            .bar {
-                background-color: $alert-bar-failure-text-color;
-            }
-        }
-    }
+  }
 }

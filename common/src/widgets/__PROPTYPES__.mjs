@@ -14,77 +14,77 @@ import { UploadProgress } from './upload-progress.jsx';
 import { VectorView } from './vector-view.jsx';
 
 BitmapView.propTypes = {
-    url: PropTypes.string,
-    clippingRect: PropTypes.object,
-    onLoad: PropTypes.func,
-    onError: PropTypes.func,
+  url: PropTypes.string,
+  clippingRect: PropTypes.object,
+  onLoad: PropTypes.func,
+  onError: PropTypes.func,
 };
 Chartist.propTypes = {
-    type: PropTypes.oneOf(['line', 'bar', 'pie']).isRequired,
-    data: PropTypes.object.isRequired,
-    className: PropTypes.string,
-    options: PropTypes.object,
-    responsiveOptions: PropTypes.array,
-    style: PropTypes.object,
-    onDraw: PropTypes.func,
-    onClick: PropTypes.func,
+  type: PropTypes.oneOf(['line', 'bar', 'pie']).isRequired,
+  data: PropTypes.object.isRequired,
+  className: PropTypes.string,
+  options: PropTypes.object,
+  responsiveOptions: PropTypes.array,
+  style: PropTypes.object,
+  onDraw: PropTypes.func,
+  onClick: PropTypes.func,
 };
 CollapsibleContainer.propTypes = {
-    open: PropTypes.bool,
+  open: PropTypes.bool,
 };
 Diagnostics.propTypes = {
-    type: PropTypes.string.isRequired,
+  type: PropTypes.string.isRequired,
 };
 ErrorBoundary.propTypes = {
-    env: PropTypes.instanceOf(Environment).isRequired,
-    showError: PropTypes.bool,
+  env: PropTypes.instanceOf(Environment).isRequired,
+  showError: PropTypes.bool,
 };
 ImageCropper.propTypes = {
-    url: PropTypes.string.isRequired,
-    clippingRect: PropTypes.object,
-    vector: PropTypes.bool,
-    disabled: PropTypes.bool,
-    onChange: PropTypes.func,
-    onLoad: PropTypes.func,
+  url: PropTypes.string.isRequired,
+  clippingRect: PropTypes.object,
+  vector: PropTypes.bool,
+  disabled: PropTypes.bool,
+  onChange: PropTypes.func,
+  onLoad: PropTypes.func,
 };
 Overlay.propTypes = {
-    className: PropTypes.string,
-    show: PropTypes.bool,
-    onBackgroundClick: PropTypes.func,
+  className: PropTypes.string,
+  show: PropTypes.bool,
+  onBackgroundClick: PropTypes.func,
 };
 ResourceView.propTypes = {
-    resource: PropTypes.object.isRequired,
-    width: PropTypes.number,
-    height: PropTypes.number,
-    clip: PropTypes.bool,
-    showAnimation: PropTypes.bool,
-    showMosaic: PropTypes.bool,
-    env: PropTypes.instanceOf(Environment),
+  resource: PropTypes.object.isRequired,
+  width: PropTypes.number,
+  height: PropTypes.number,
+  clip: PropTypes.bool,
+  showAnimation: PropTypes.bool,
+  showMosaic: PropTypes.bool,
+  env: PropTypes.instanceOf(Environment),
 };
 SmartList.propTypes = {
-    items: PropTypes.arrayOf(PropTypes.object),
-    behind: PropTypes.number,
-    ahead: PropTypes.number,
-    anchor: PropTypes.string,
-    offset: PropTypes.number,
-    inverted: PropTypes.bool,
-    transitioning: PropTypes.number,
-    noReset: PropTypes.bool,
+  items: PropTypes.arrayOf(PropTypes.object),
+  behind: PropTypes.number,
+  ahead: PropTypes.number,
+  anchor: PropTypes.string,
+  offset: PropTypes.number,
+  inverted: PropTypes.bool,
+  transitioning: PropTypes.number,
+  noReset: PropTypes.bool,
 
-    onIdentity: PropTypes.func.isRequired,
-    onTransition: PropTypes.func,
-    onRender: PropTypes.func.isRequired,
-    onAnchorChange: PropTypes.func,
-    onBeforeAnchor: PropTypes.func,
+  onIdentity: PropTypes.func.isRequired,
+  onTransition: PropTypes.func,
+  onRender: PropTypes.func.isRequired,
+  onAnchorChange: PropTypes.func,
+  onBeforeAnchor: PropTypes.func,
 };
 UploadProgress.propTypes = {
-    payloads: PropTypes.instanceOf(Payloads).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  payloads: PropTypes.instanceOf(Payloads).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 VectorView.propTypes = {
-    url: PropTypes.string,
-    clippingRect: PropTypes.object,
-    title: PropTypes.string,
-    onLoad: PropTypes.func,
-    onError: PropTypes.func,
+  url: PropTypes.string,
+  clippingRect: PropTypes.object,
+  title: PropTypes.string,
+  onLoad: PropTypes.func,
+  onError: PropTypes.func,
 };

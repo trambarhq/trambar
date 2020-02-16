@@ -1,52 +1,52 @@
 .overlay {
-    position: fixed;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 5000;
+  overscroll-behavior: contain;
+  -ms-scroll-chaining: none;
+
+  .background {
+    position: absolute;
     left: 0;
     right: 0;
     top: 0;
     bottom: 0;
-    overflow: hidden;
-    z-index: 5000;
-    overscroll-behavior: contain;
-    -ms-scroll-chaining: none;
+    background-color: #000;
+    transition: opacity 0.5s;
+  }
 
+  .foreground {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 90%;
+    transition: opacity 0.25s, top 0.25s;
+  }
+
+  &.show {
     .background {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        background-color: #000;
-        transition: opacity 0.5s;
+      opacity: 0.75;
     }
-
     .foreground {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 90%;
-        transition: opacity 0.25s, top 0.25s;
+      opacity: 1;
     }
+  }
 
-    &.show {
-        .background {
-            opacity: 0.75;
-        }
-        .foreground {
-            opacity: 1;
-        }
+  &.hide {
+    .background {
+      opacity: 0;
     }
-
-    &.hide {
-        .background {
-            opacity: 0;
-        }
-        .foreground {
-            top: -30px;
-            opacity: 0;
-        }
+    .foreground {
+      top: -30px;
+      opacity: 0;
     }
+  }
 }

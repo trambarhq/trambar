@@ -1,57 +1,57 @@
 @import '../colors';
 
 .media-button {
-    display: inline-block;
-    color: $media-bar-icon-color;
-    padding: 0.45em 0.1em 0.3em 0.5em;
-    margin-left: 0.2em;
-    margin-right: 0.1em;
-    cursor: pointer;
-    touch-action: manipulation;
+  display: inline-block;
+  color: $media-bar-icon-color;
+  padding: 0.45em 0.1em 0.3em 0.5em;
+  margin-left: 0.2em;
+  margin-right: 0.1em;
+  cursor: pointer;
+  touch-action: manipulation;
 
-    .no-touch & {
-        &:hover {
-            color: $media-bar-hover-text-color;
-        }
+  .no-touch & {
+    &:hover {
+      color: $media-bar-hover-text-color;
     }
+  }
 
-    &.disabled {
-        cursor: default;
-        &:hover {
-            color: $media-bar-icon-color;
-        }
-        opacity: 0.25;
+  &.disabled {
+    cursor: default;
+    &:hover {
+      color: $media-bar-icon-color;
     }
+    opacity: 0.25;
+  }
 
-    .label {
-        font-size: 0.9em;
-        margin-left: 0.3em;
-    }
+  .label {
+    font-size: 0.9em;
+    margin-left: 0.3em;
+  }
 }
 
 .media-direction {
-    padding: 0.2em 0.3em 0.1em 0.3em;
+  padding: 0.2em 0.3em 0.1em 0.3em;
 
+  .backward-button, .forward-button {
+    display: inline-block;
+    font-size: 1.2em;
+    color: $media-bar-icon-color;
+    padding: 0.1em 0.5em 0.1em 0.5em;
+    cursor: pointer;
+    vertical-align: middle;
+    touch-action: manipulation;
+  }
+
+  .position {
+    display: inline-block;
+    font-size: 0.9em;
+    vertical-align: middle;
+    color: $media-bar-text-color;
+  }
+
+  &:hover {
     .backward-button, .forward-button {
-        display: inline-block;
-        font-size: 1.2em;
-        color: $media-bar-icon-color;
-        padding: 0.1em 0.5em 0.1em 0.5em;
-        cursor: pointer;
-        vertical-align: middle;
-        touch-action: manipulation;
+      color: $media-bar-hover-text-color;
     }
-
-    .position {
-        display: inline-block;
-        font-size: 0.9em;
-        vertical-align: middle;
-        color: $media-bar-text-color;
-    }
-
-    &:hover {
-        .backward-button, .forward-button {
-            color: $media-bar-hover-text-color;
-        }
-    }
+  }
 }

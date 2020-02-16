@@ -10,10 +10,10 @@ import CodePush from 'common/transport/code-push.mjs';
 import { FrontEnd } from './front-end.jsx';
 
 FrontEnd.propTypes = {
-    envMonitor: PropTypes.instanceOf(EnvironmentMonitor).isRequired,
-    dataSource: PropTypes.instanceOf(RemoteDataSource).isRequired,
-    localeManager: PropTypes.instanceOf(LocaleManager).isRequired,
-    payloadManager: PropTypes.instanceOf(PayloadManager).isRequired,
-    notifier: PropTypes.instanceOf(Notifier),
-    codePush: PropTypes.instanceOf(CodePush),
+  envMonitor: PropTypes.instanceOf(EnvironmentMonitor).isRequired,
+  dataSource: PropTypes.instanceOf(RemoteDataSource).isRequired,
+  localeManager: PropTypes.instanceOf(LocaleManager).isRequired,
+  payloadManager: PropTypes.instanceOf(PayloadManager).isRequired,
+  notifier: PropTypes.instanceOf(Notifier),
+  codePush: PropTypes.instanceOf(CodePush),
 };

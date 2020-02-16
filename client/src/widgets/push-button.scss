@@ -1,49 +1,49 @@
 @import '../colors';
 
 .push-button {
-    min-width: 5em;
-    margin-left: 0.4em;
-    margin-bottom: 0.1em;
-    padding: 0.4em 1em 0.4em 1em;
-    color: $button-text-color;
-    font-size: 0.9em;
-    background-color: $button-background-color;
-    border: 2px solid $button-background-color;
-    touch-action: manipulation;
+  min-width: 5em;
+  margin-left: 0.4em;
+  margin-bottom: 0.1em;
+  padding: 0.4em 1em 0.4em 1em;
+  color: $button-text-color;
+  font-size: 0.9em;
+  background-color: $button-background-color;
+  border: 2px solid $button-background-color;
+  touch-action: manipulation;
 
-    &:not(:disabled) {
-        &.emphasized, &:active {
-            color: $button-hover-text-color;
-            background-color: $button-hover-background-color;
-            border: 2px solid $button-hover-background-color;
-        }
-
-        .no-touch & {
-            &:hover {
-                color: $button-hover-text-color;
-                background-color: $button-hover-background-color;
-                border: 2px solid $button-hover-background-color;
-            }
-        }
-
-        &:active {
-            border: 2px inset $button-active-border-color;
-        }
+  &:not(:disabled) {
+    &.emphasized, &:active {
+      color: $button-hover-text-color;
+      background-color: $button-hover-background-color;
+      border: 2px solid $button-hover-background-color;
     }
 
-    &:first-child {
-        margin-left: 0;
+    .no-touch & {
+      &:hover {
+        color: $button-hover-text-color;
+        background-color: $button-hover-background-color;
+        border: 2px solid $button-hover-background-color;
+      }
     }
+
+    &:active {
+      border: 2px inset $button-active-border-color;
+    }
+  }
+
+  &:first-child {
+    margin-left: 0;
+  }
 }
 
 LABEL.push-button {
-    display: inline-block;
-    position: relative;
+  display: inline-block;
+  position: relative;
 
-    INPUT[type="file"] {
-        position: absolute;
-        visibility: hidden;
-        width: 1px;
-        height: 1px;
-    }
+  INPUT[type="file"] {
+    position: absolute;
+    visibility: hidden;
+    width: 1px;
+    height: 1px;
+  }
 }

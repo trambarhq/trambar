@@ -23,75 +23,75 @@ import './diagnostics-page.scss';
  * Synchronous component that actually renders the Diagnostics page.
  */
 function DiagnosticsPage(props) {
-    const { env, envMonitor, dataSource, localeManager, notifier, payloadManager, codePush } = props;
+  const { env, envMonitor, dataSource, localeManager, notifier, payloadManager, codePush } = props;
 
-    return (
-        <PageContainer className="diagnostics-page">
-            <div className="panels">
-                <ErrorBoundary env={env}>
-                    {renderEnvironmentMonitorPanel()}
-                    {renderRemoteDataSourcePanel()}
-                    {renderCachePanel()}
-                    {renderLocaleManagerPanel()}
-                    {renderNotifierPanel()}
-                    {renderPayloadManagerPanel()}
-                    {renderCodePushPanel()}
-                </ErrorBoundary>
-            </div>
-            <div className="version">Version {process.env.VERSION}</div>
-        </PageContainer>
-    );
+  return (
+    <PageContainer className="diagnostics-page">
+      <div className="panels">
+        <ErrorBoundary env={env}>
+          {renderEnvironmentMonitorPanel()}
+          {renderRemoteDataSourcePanel()}
+          {renderCachePanel()}
+          {renderLocaleManagerPanel()}
+          {renderNotifierPanel()}
+          {renderPayloadManagerPanel()}
+          {renderCodePushPanel()}
+        </ErrorBoundary>
+      </div>
+      <div className="version">Version {process.env.VERSION}</div>
+    </PageContainer>
+  );
 
-    function renderEnvironmentMonitorPanel() {
-        const panelProps = { envMonitor };
-        return <EnvironmentMonitorPanel {...panelProps} />;
+  function renderEnvironmentMonitorPanel() {
+    const panelProps = { envMonitor };
+    return <EnvironmentMonitorPanel {...panelProps} />;
+  }
+
+  function renderRemoteDataSourcePanel() {
+    const panelProps = { dataSource };
+    return <RemoteDataSourcePanel {...panelProps} />;
+  }
+
+  function renderCachePanel() {
+    const panelProps = { cache: dataSource.cache };
+    if (panelProps.cache instanceof IndexedDBCache) {
+      return <IndexedDBCachePanel {...panelProps} />;
+    } else if (panelProps.cache instanceof SQLiteCache) {
+      return <SQLiteCachePanel {...panelProps} />;
     }
+  }
 
-    function renderRemoteDataSourcePanel() {
-        const panelProps = { dataSource };
-        return <RemoteDataSourcePanel {...panelProps} />;
-    }
+  function renderLocaleManagerPanel() {
+    const panelProps = { localeManager };
+    return <LocaleManagerPanel {...panelProps} />;
+  }
 
-    function renderCachePanel() {
-        const panelProps = { cache: dataSource.cache };
-        if (panelProps.cache instanceof IndexedDBCache) {
-            return <IndexedDBCachePanel {...panelProps} />;
-        } else if (panelProps.cache instanceof SQLiteCache) {
-            return <SQLiteCachePanel {...panelProps} />;
-        }
+  function renderNotifierPanel() {
+    const panelProps = { notifier };
+    if (panelProps.notifier instanceof WebsocketNotifier) {
+      return <WebsocketNotifierPanel {...panelProps} />;
+    } else if (panelProps.notifier instanceof PushNotifier) {
+      return <PushNotifierPanel {...panelProps} />;
     }
+  }
 
-    function renderLocaleManagerPanel() {
-        const panelProps = { localeManager };
-        return <LocaleManagerPanel {...panelProps} />;
-    }
+  function renderPayloadManagerPanel() {
+    const panelProps = { payloadManager };
+    return <PayloadManagerPanel {...panelProps} />;
+  }
 
-    function renderNotifierPanel() {
-        const panelProps = { notifier };
-        if (panelProps.notifier instanceof WebsocketNotifier) {
-            return <WebsocketNotifierPanel {...panelProps} />;
-        } else if (panelProps.notifier instanceof PushNotifier) {
-            return <PushNotifierPanel {...panelProps} />;
-        }
+  function renderCodePushPanel() {
+    if (!codePush) {
+      return null;
     }
-
-    function renderPayloadManagerPanel() {
-        const panelProps = { payloadManager };
-        return <PayloadManagerPanel {...panelProps} />;
-    }
-
-    function renderCodePushPanel() {
-        if (!codePush) {
-            return null;
-        }
-        const panelProps = { codePush };
-        return <CodePushPanel {...panelProps} />;
-    }
+    const panelProps = { codePush };
+    return <CodePushPanel {...panelProps} />;
+  }
 }
 
 DiagnosticsPage.diagnostics = true;
 
 export {
-    DiagnosticsPage as default,
-    DiagnosticsPage,
+  DiagnosticsPage as default,
+  DiagnosticsPage,
 };

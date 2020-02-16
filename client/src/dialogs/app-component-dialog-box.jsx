@@ -12,68 +12,68 @@ import './app-component-dialog-box.scss';
  * Dialog box for displaying the description of an app component in full.
  */
 function AppComponentDialogBox(props) {
-    const { env, component, onClose } = props;
-    const { t, p } = env.locale;
-    if (!component) {
-        return null;
-    }
-    return (
-        <div className="app-component-dialog-box">
-            <div className="contents">
-                {renderPicture()}
-                {renderText()}
-            </div>
-            {renderButtons()}
+  const { env, component, onClose } = props;
+  const { t, p } = env.locale;
+  if (!component) {
+    return null;
+  }
+  return (
+    <div className="app-component-dialog-box">
+      <div className="contents">
+        {renderPicture()}
+        {renderText()}
+      </div>
+      {renderButtons()}
+    </div>
+  );
+
+  function renderPicture() {
+    if (component.image) {
+      return (
+        <div className="picture">
+          <ResourceView resource={component.image} height={128} env={env} />
         </div>
+      );
+    } else {
+      const icon = component.icon || {};
+      const iconClassName = icon.class || 'fa-cubes';
+      const style = {
+        color: icon.color,
+        backgroundColor: icon.backgroundColor,
+      };
+      return (
+        <div className="picture">
+          <div className="icon" style={style}>
+            <i className={`fa fa-fw ${iconClassName}`} />
+          </div>
+        </div>
+      );
+    }
+  }
+
+  function renderText() {
+    const text = p(component.text);
+    const elements = MarkGor.parse(text);
+    return <div className="text">{elements}</div>;
+  }
+
+  function renderButtons() {
+    const closeButtonProps = {
+      label: t('app-component-close'),
+      emphasized: true,
+      onClick: onClose,
+    };
+    return (
+      <div className="buttons">
+        <PushButton {...closeButtonProps} />
+      </div>
     );
-
-    function renderPicture() {
-        if (component.image) {
-            return (
-                <div className="picture">
-                    <ResourceView resource={component.image} height={128} env={env} />
-                </div>
-            );
-        } else {
-            const icon = component.icon || {};
-            const iconClassName = icon.class || 'fa-cubes';
-            const style = {
-                color: icon.color,
-                backgroundColor: icon.backgroundColor,
-            };
-            return (
-                <div className="picture">
-                    <div className="icon" style={style}>
-                        <i className={`fa fa-fw ${iconClassName}`} />
-                    </div>
-                </div>
-            );
-        }
-    }
-
-    function renderText() {
-        const text = p(component.text);
-        const elements = MarkGor.parse(text);
-        return <div className="text">{elements}</div>;
-    }
-
-    function renderButtons() {
-        const closeButtonProps = {
-            label: t('app-component-close'),
-            emphasized: true,
-            onClick: onClose,
-        };
-        return (
-            <div className="buttons">
-                <PushButton {...closeButtonProps} />
-            </div>
-        );
-    }
+  }
 }
 
 const component = Overlay.create(AppComponentDialogBox);
 
 export {
-    component as default,
-    component as AppComponentDialogBox,
+  component as default,
+  component as AppComponentDialogBox,
 };

@@ -1,121 +1,121 @@
 @import '../colors';
 
 .sortable-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    $expansion-time: 0.5s;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  $expansion-time: 0.5s;
 
-    TH {
-        text-align: left;
-        cursor: pointer;
-        border-bottom: 1px solid $normal-border-color;
-        border-top: 1px solid $normal-border-color;
-        padding: 0.2em 0.4em 0.1em 0.4em;
-        user-select: none;
+  TH {
+    text-align: left;
+    cursor: pointer;
+    border-bottom: 1px solid $normal-border-color;
+    border-top: 1px solid $normal-border-color;
+    padding: 0.2em 0.4em 0.1em 0.4em;
+    user-select: none;
 
-        .arrow {
-            display: none;
-            margin-left: 0.5em;
-        }
+    .arrow {
+      display: none;
+      margin-left: 0.5em;
+    }
+  }
+
+  TH.asc {
+    .arrow {
+      &.down {
+        display: inline;
+      }
+    }
+  }
+
+  TH.desc {
+    .arrow {
+      &.up {
+        display: inline;
+      }
+    }
+  }
+
+  TBODY {
+    TD {
+      padding: 0.3em 0.4em 0.2em 0.4em;
+      word-wrap: break-word;
+      transition: padding-top $expansion-time, padding-bottom $expansion-time;
     }
 
-    TH.asc {
-        .arrow {
-            &.down {
-                display: inline;
-            }
-        }
+    TR {
+      background-color: $normal-background-color;
+      transition: background-color $expansion-time, opacity $expansion-time;
+
+      &.pending {
+        opacity: 0.5 !important;
+      }
+
+      &.disabled {
+        opacity: 0.3 !important;
+      }
+
+      &.deleted {
+        opacity: 0.15 !important;
+      }
     }
 
-    TH.desc {
-        .arrow {
-            &.up {
-                display: inline;
-            }
-        }
+    TR:nth-child(even) {
+      background-color: $table-alternate-background-color;
     }
+  }
 
+  .collapsible-container {
+    transition: height $expansion-time;
+  }
+
+  A {
+    &:link, &:visited {
+      color: $normal-text-color;
+      text-decoration: none;
+
+      &:hover {
+        color: $link-hover-color;
+      }
+    }
+  }
+
+  &.expandable {
     TBODY {
-        TD {
-            padding: 0.3em 0.4em 0.2em 0.4em;
-            word-wrap: break-word;
-            transition: padding-top $expansion-time, padding-bottom $expansion-time;
+      TR {
+        background-color: $normal-background-color;
+
+        &.collapsed {
+          opacity: 0;
+
+          TD {
+            padding-top: 0;
+            padding-bottom: 0;
+          }
         }
 
-        TR {
-            background-color: $normal-background-color;
-            transition: background-color $expansion-time, opacity $expansion-time;
+        &.expanded {
+          opacity: 1;
 
-            &.pending {
-                opacity: 0.5 !important;
-            }
-
-            &.disabled {
-                opacity: 0.3 !important;
-            }
-
-            &.deleted {
-                opacity: 0.15 !important;
-            }
+          TD {
+            padding-top: 0.3em;
+            padding-bottom: 0.2em;
+          }
         }
-
-        TR:nth-child(even) {
-            background-color: $table-alternate-background-color;
-        }
+      }
     }
+  }
 
-    .collapsible-container {
-        transition: height $expansion-time;
-    }
+  &.selectable {
+    TBODY {
+      TR {
+        cursor: pointer;
 
-    A {
-        &:link, &:visited {
-            color: $normal-text-color;
-            text-decoration: none;
-
-            &:hover {
-                color: $link-hover-color;
-            }
+        &.selected {
+          background-color: $table-selected-row-background-color;
+          opacity: 1 !important;
         }
+      }
     }
-
-    &.expandable {
-        TBODY {
-            TR {
-                background-color: $normal-background-color;
-
-                &.collapsed {
-                    opacity: 0;
-
-                    TD {
-                        padding-top: 0;
-                        padding-bottom: 0;
-                    }
-                }
-
-                &.expanded {
-                    opacity: 1;
-
-                    TD {
-                        padding-top: 0.3em;
-                        padding-bottom: 0.2em;
-                    }
-                }
-            }
-        }
-    }
-
-    &.selectable {
-        TBODY {
-            TR {
-                cursor: pointer;
-
-                &.selected {
-                    background-color: $table-selected-row-background-color;
-                    opacity: 1 !important;
-                }
-            }
-        }
-    }
+  }
 }

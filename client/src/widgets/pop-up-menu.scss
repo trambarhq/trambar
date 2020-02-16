@@ -1,37 +1,37 @@
 @import '../colors';
 
 .pop-up-menu {
-    position: relative;
+  position: relative;
 
-    .button {
-        user-select: none;
-        
-        &.active {
-            cursor: pointer;
-        }
+  .button {
+    user-select: none;
+    
+    &.active {
+      cursor: pointer;
+    }
+  }
+
+  .container {
+    position: absolute;
+    width: 80vw;
+    right: 0;
+    top: 1em;
+    z-index: 1000;
+    text-align: right;
+
+    .menu {
+      display: inline-block;
+      border: 1px solid $pop-up-menu-border-color;
+      padding: 0.5em 0.5em 0.5em 0.5em;
+      background-color: $pop-up-menu-background-color;
+      box-shadow: 3px 3px 3px 0px $pop-up-menu-shadow-color;
+      text-align: left;
+      max-width: 20em;
     }
 
-    .container {
-        position: absolute;
-        width: 80vw;
-        right: 0;
-        top: 1em;
-        z-index: 1000;
-        text-align: right;
-
-        .menu {
-            display: inline-block;
-            border: 1px solid $pop-up-menu-border-color;
-            padding: 0.5em 0.5em 0.5em 0.5em;
-            background-color: $pop-up-menu-background-color;
-            box-shadow: 3px 3px 3px 0px $pop-up-menu-shadow-color;
-            text-align: left;
-            max-width: 20em;
-        }
-
-        .single-col & {
-            width: 90vw;
-            font-size: 1.2em;
-        }
+    .single-col & {
+      width: 90vw;
+      font-size: 1.2em;
     }
+  }
 }

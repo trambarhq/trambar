@@ -1,37 +1,37 @@
 @import '../colors';
 
 .calendar-bar {
-    padding: 4px 4px 4px 4px;
-    overflow-x: auto;
-    white-space: nowrap;
-    width: 100%;
-    direction: rtl;
+  padding: 4px 4px 4px 4px;
+  overflow-x: auto;
+  white-space: nowrap;
+  width: 100%;
+  direction: rtl;
 
-    // use custom color only on desktop
-    @media only screen and (min-device-width : 800px) {
-        &::-webkit-scrollbar-track {
-            -webkit-box-shadow: inset 0 0 3px $scroll-bar-light-shadow-color;
-            background-color: transparent;
-        }
-
-        &::-webkit-scrollbar {
-            height: 8px;
-            background-color: transparent;
-        }
-
-        &::-webkit-scrollbar-thumb {
-            -webkit-box-shadow: inset 0 0 3px $scroll-bar-light-shadow-color;
-            background-color: $scroll-bar-light-background-color;
-        }
+  // use custom color only on desktop
+  @media only screen and (min-device-width : 800px) {
+    &::-webkit-scrollbar-track {
+      -webkit-box-shadow: inset 0 0 3px $scroll-bar-light-shadow-color;
+      background-color: transparent;
     }
+
+    &::-webkit-scrollbar {
+      height: 8px;
+      background-color: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      -webkit-box-shadow: inset 0 0 3px $scroll-bar-light-shadow-color;
+      background-color: $scroll-bar-light-background-color;
+    }
+  }
 
 /* the following only works on Chrome */
 /*
-    display: flex;
-    flex-direction: row-reverse;
+  display: flex;
+  flex-direction: row-reverse;
 
-    .calendar {
-        flex: 0 0 auto;
-    }
+  .calendar {
+    flex: 0 0 auto;
+  }
 */
 }

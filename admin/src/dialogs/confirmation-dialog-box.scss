@@ -1,20 +1,20 @@
 @import '../colors';
 
 .confirmation-dialog-box {
-    background-color: $dialog-box-background-color;
-    color: $dialog-box-text-color;
-    max-width: 50vw;
-    padding: 1em 1em 1em 1em;
-    box-shadow: 5px 5px 4px $dialog-box-shadow-color;
+  background-color: $dialog-box-background-color;
+  color: $dialog-box-text-color;
+  max-width: 50vw;
+  padding: 1em 1em 1em 1em;
+  box-shadow: 5px 5px 4px $dialog-box-shadow-color;
 
-    .message {
-        font-size: 1.6em;
-        margin-bottom: 0.5em;
-    }
+  .message {
+    font-size: 1.6em;
+    margin-bottom: 0.5em;
+  }
 
-    .buttons {
-        border-top: 1px solid $dialog-box-separator-color;
-        text-align: right;
-        padding-top: 1em;
-    }
+  .buttons {
+    border-top: 1px solid $dialog-box-separator-color;
+    text-align: right;
+    padding-top: 1em;
+  }
 }

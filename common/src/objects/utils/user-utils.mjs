@@ -4,9 +4,9 @@ import * as ReactionUtils from './reaction-utils.mjs';
 import * as StoryUtils from './story-utils.mjs';
 import { mergeRemoteChanges } from './story-utils.mjs';
 import {
-    GitNotificationTypes,
-    AdminNotificationTypes,
-    MembershipNotificationTypes
+  GitNotificationTypes,
+  AdminNotificationTypes,
+  MembershipNotificationTypes
 } from '../types/notification-types.mjs';
 
 /**
@@ -18,10 +18,10 @@ import {
  * @return {Boolean}
  */
 function isMember(user, project) {
-    if (!user || !project) {
-        return false;
-    }
-    return _.includes(project.user_ids, user.id);
+  if (!user || !project) {
+    return false;
+  }
+  return _.includes(project.user_ids, user.id);
 }
 
 /**
@@ -33,10 +33,10 @@ function isMember(user, project) {
  * @return {Boolean}
  */
 function isPendingMember(user, project) {
-    if (!user || !project) {
-        return false;
-    }
-    return _.includes(user.requested_project_ids, project.id);
+  if (!user || !project) {
+    return false;
+  }
+  return _.includes(user.requested_project_ids, project.id);
 }
 
 /**
@@ -48,19 +48,19 @@ function isPendingMember(user, project) {
  * @return {Boolean}
  */
 function canViewProject(user, project) {
-    if (isMember(user, project)) {
-        return true;
-    } else {
-        if (!user || !project) {
-            return false;
-        }
-        if (user.type === 'admin') {
-            return true;
-        } else {
-            return _.get(project, 'settings.access_control.grant_view_access', false);
-        }
+  if (isMember(user, project)) {
+    return true;
+  } else {
+    if (!user || !project) {
+      return false;
     }
-    return false;
+    if (user.type === 'admin') {
+      return true;
+    } else {
+      return _.get(project, 'settings.access_control.grant_view_access', false);
+    }
+  }
+  return false;
 }
 
 /**
@@ -72,14 +72,14 @@ function canViewProject(user, project) {
  * @return {Boolean}
  */
 function canJoinProject(user, project) {
-    if (!user || !project) {
-        return false;
-    }
-    if (user.type === 'guest') {
-        return _.get(project, 'settings.membership.allow_guest_request', false);
-    } else {
-        return _.get(project, 'settings.membership.allow_user_request', false);
-    }
+  if (!user || !project) {
+    return false;
+  }
+  if (user.type === 'guest') {
+    return _.get(project, 'settings.membership.allow_guest_request', false);
+  } else {
+    return _.get(project, 'settings.membership.allow_user_request', false);
+  }
 }
 
 /**
@@ -91,13 +91,13 @@ function canJoinProject(user, project) {
  * @return {Boolean}
  */
 function isAuthor(user, story) {
-    if (!user || !story) {
-        return false;
-    }
-    if (_.includes(story.user_ids, user.id)) {
-        return true;
-    }
+  if (!user || !story) {
     return false;
+  }
+  if (_.includes(story.user_ids, user.id)) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -109,10 +109,10 @@ function isAuthor(user, story) {
  * @return {Boolean}
  */
 function isLeadAuthor(authors, user) {
-    if (!authors || !user) {
-        return false;
-    }
-    return _.findIndex(authors, { id: user.id }) === 0;
+  if (!authors || !user) {
+    return false;
+  }
+  return _.findIndex(authors, { id: user.id }) === 0;
 }
 
 /**
@@ -124,10 +124,10 @@ function isLeadAuthor(authors, user) {
  * @return {Boolean}
  */
 function isCoauthor(authors, user) {
-    if (!authors || !user) {
-        return false;
-    }
-    return _.findIndex(authors, { id: user.id }) >= 1;
+  if (!authors || !user) {
+    return false;
+  }
+  return _.findIndex(authors, { id: user.id }) >= 1;
 }
 
 /**
@@ -138,13 +138,13 @@ function isCoauthor(authors, user) {
  * @return {Boolean}
  */
 function canModerate(user) {
-    if (!user) {
-        return false;
-    }
-    if (user.type === 'admin' || user.type === 'moderator') {
-        return true;
-    }
+  if (!user) {
     return false;
+  }
+  if (user.type === 'admin' || user.type === 'moderator') {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -157,24 +157,24 @@ function canModerate(user) {
  * @return {Boolean}
  */
 function canEditStory(user, story, access) {
-    if (access !== 'read-write') {
-        return false;
-    }
-    if (StoryUtils.isEditable(story)) {
-        if (canModerate(story)) {
-            // allow editing for two weeks
-            if (StoryUtils.wasPublishedWithin(story, 14, 'day')) {
-                return true;
-            }
-        }
-        if (isAuthor(user, story)) {
-            // allow editing for 3 days
-            if (StoryUtils.wasPublishedWithin(story, 3, 'day')) {
-                return true;
-            }
-        }
-    }
+  if (access !== 'read-write') {
     return false;
+  }
+  if (StoryUtils.isEditable(story)) {
+    if (canModerate(story)) {
+      // allow editing for two weeks
+      if (StoryUtils.wasPublishedWithin(story, 14, 'day')) {
+        return true;
+      }
+    }
+    if (isAuthor(user, story)) {
+      // allow editing for 3 days
+      if (StoryUtils.wasPublishedWithin(story, 3, 'day')) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -187,18 +187,18 @@ function canEditStory(user, story, access) {
  * @return {Boolean}
  */
 function canHideStory(user, story, access) {
-    if (access !== 'read-write') {
-        return false;
-    }
-    if (canModerate(user)) {
-        return true;
-    } else if (isAuthor(user, story)) {
-        // guest cannot post private stories
-        if (user.type !== 'guest') {
-            return true;
-        }
-    }
+  if (access !== 'read-write') {
     return false;
+  }
+  if (canModerate(user)) {
+    return true;
+  } else if (isAuthor(user, story)) {
+    // guest cannot post private stories
+    if (user.type !== 'guest') {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -211,21 +211,21 @@ function canHideStory(user, story, access) {
  * @return {Boolean}
  */
 function canRemoveStory(user, story, access) {
-    if (access !== 'read-write') {
-        return false;
-    }
-    if (canModerate(user)) {
-        // allow removal for ttwo weeks
-        if (StoryUtils.wasPublishedWithin(story, 14, 'day')) {
-            return true;
-        }
-    } else if (isAuthor(user, story)) {
-        // allow removal for 3 days
-        if (StoryUtils.wasPublishedWithin(story, 3, 'day')) {
-            return true;
-        }
-    }
+  if (access !== 'read-write') {
     return false;
+  }
+  if (canModerate(user)) {
+    // allow removal for ttwo weeks
+    if (StoryUtils.wasPublishedWithin(story, 14, 'day')) {
+      return true;
+    }
+  } else if (isAuthor(user, story)) {
+    // allow removal for 3 days
+    if (StoryUtils.wasPublishedWithin(story, 3, 'day')) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -238,16 +238,16 @@ function canRemoveStory(user, story, access) {
  * @return {Boolean}
  */
 function canBumpStory(user, story, access) {
-    if (access !== 'read-write') {
-        return false;
-    }
-    if (canModerate(user) || isAuthor(user, story)) {
-        // allow bumping after a day
-        if (!StoryUtils.wasBumpedWithin(story, 1, 'day')) {
-            return true;
-        }
-    }
+  if (access !== 'read-write') {
     return false;
+  }
+  if (canModerate(user) || isAuthor(user, story)) {
+    // allow bumping after a day
+    if (!StoryUtils.wasBumpedWithin(story, 1, 'day')) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -261,28 +261,28 @@ function canBumpStory(user, story, access) {
  * @return {Boolean}
  */
 function canAddIssue(user, story, repo, access) {
-    if (repo instanceof Array) {
-        return _.some(repo, (repo) => {
-            return canAddIssue(user, story, repo, access);
-        });
-    } else if (!repo) {
-        return false;
-    }
-    if (!user) {
-        return false;
-    }
-    if (access !== 'read-write') {
-        return false;
-    }
-    if (StoryUtils.isTrackable(story)) {
-        // see if user is a member of one of the repos
-        if (_.includes(repo.user_ids, user.id)) {
-            if (repo.details.issues_enabled) {
-                return true;
-            }
-        }
-    }
+  if (repo instanceof Array) {
+    return _.some(repo, (repo) => {
+      return canAddIssue(user, story, repo, access);
+    });
+  } else if (!repo) {
     return false;
+  }
+  if (!user) {
+    return false;
+  }
+  if (access !== 'read-write') {
+    return false;
+  }
+  if (StoryUtils.isTrackable(story)) {
+    // see if user is a member of one of the repos
+    if (_.includes(repo.user_ids, user.id)) {
+      if (repo.details.issues_enabled) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -294,15 +294,15 @@ function canAddIssue(user, story, repo, access) {
  * @return {Boolean}
  */
 function canAccessRepo(user, repo) {
-    if (!user || !repo) {
-        return false;
-    }
-    if (_.includes(repo.user_ids, user.id)) {
-        if (repo.details.web_url) {
-            return true;
-        }
-    }
+  if (!user || !repo) {
     return false;
+  }
+  if (_.includes(repo.user_ids, user.id)) {
+    if (repo.details.web_url) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -315,10 +315,10 @@ function canAccessRepo(user, repo) {
  * @return {Boolean}
  */
 function canCreateBookmark(user, story, access) {
-    if (!user) {
-        return false;
-    }
-    return true;
+  if (!user) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -331,13 +331,13 @@ function canCreateBookmark(user, story, access) {
  * @return {Boolean}
  */
 function canSendBookmarks(user, story, access) {
-    if (user.type === 'guest') {
-        return false;
-    }
-    if (access !== 'read-write') {
-        return false;
-    }
-    return canCreateBookmark(user, story, access);
+  if (user.type === 'guest') {
+    return false;
+  }
+  if (access !== 'read-write') {
+    return false;
+  }
+  return canCreateBookmark(user, story, access);
 }
 
 /**
@@ -349,13 +349,13 @@ function canSendBookmarks(user, story, access) {
  * @return {Boolean}
  */
 function isRespondent(user, reaction) {
-    if (!user || !reaction) {
-        return false;
-    }
-    if (reaction.user_id === user.id) {
-        return true;
-    }
+  if (!user || !reaction) {
     return false;
+  }
+  if (reaction.user_id === user.id) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -369,20 +369,20 @@ function isRespondent(user, reaction) {
  * @return {Boolean}
  */
 function canEditReaction(user, story, reaction, access) {
-    if (!user) {
-        return false;
-    }
-    if (ReactionUtils.isEditable(reaction)) {
-        if (isRespondent(user, reaction)) {
-            if (access === 'read-write' || access === 'read-comment') {
-                // allow editing for 3 days
-                if (ReactionUtils.wasPublishedWithin(reaction, 3, 'day')) {
-                    return true;
-                }
-            }
-        }
-    }
+  if (!user) {
     return false;
+  }
+  if (ReactionUtils.isEditable(reaction)) {
+    if (isRespondent(user, reaction)) {
+      if (access === 'read-write' || access === 'read-comment') {
+        // allow editing for 3 days
+        if (ReactionUtils.wasPublishedWithin(reaction, 3, 'day')) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -396,28 +396,28 @@ function canEditReaction(user, story, reaction, access) {
  * @return {Boolean}
  */
 function canRemoveReaction(user, story, reaction, access) {
-    if (canModerate(user)) {
-        if (access === 'read-write') {
-            return true;
-        }
+  if (canModerate(user)) {
+    if (access === 'read-write') {
+      return true;
     }
-    if (isRespondent(user, reaction)) {
-        if (access === 'read-write' || access === 'read-comment') {
-            // allow hide for 3 days
-            if (ReactionUtils.wasPublishedWithin(reaction, 3, 'day')) {
-                return true;
-            }
-        }
+  }
+  if (isRespondent(user, reaction)) {
+    if (access === 'read-write' || access === 'read-comment') {
+      // allow hide for 3 days
+      if (ReactionUtils.wasPublishedWithin(reaction, 3, 'day')) {
+        return true;
+      }
     }
-    if (isAuthor(user, story)) {
-        if (access === 'read-write') {
-            // allow hidding by authors for 7 days
-            if (ReactionUtils.wasPublishedWithin(reaction, 7, 'day')) {
-                return true;
-            }
-        }
+  }
+  if (isAuthor(user, story)) {
+    if (access === 'read-write') {
+      // allow hidding by authors for 7 days
+      if (ReactionUtils.wasPublishedWithin(reaction, 7, 'day')) {
+        return true;
+      }
     }
-    return false;
+  }
+  return false;
 }
 
 /**
@@ -431,23 +431,23 @@ function canRemoveReaction(user, story, reaction, access) {
  * @return {Boolean}
  */
 function canHideReaction(user, story, reaction, access) {
-    if (reaction.type === 'vote') {
-        // votes can't be hidden since it affects the count
-        return false;
-    }
-    if (canModerate(user)) {
-        if (access === 'read-write') {
-            return true;
-        }
-    }
-    if (isAuthor(user, story)) {
-        if (user.type !== 'guest') {
-            if (access === 'read-write') {
-                return true;
-            }
-        }
-    }
+  if (reaction.type === 'vote') {
+    // votes can't be hidden since it affects the count
     return false;
+  }
+  if (canModerate(user)) {
+    if (access === 'read-write') {
+      return true;
+    }
+  }
+  if (isAuthor(user, story)) {
+    if (user.type !== 'guest') {
+      if (access === 'read-write') {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -460,29 +460,29 @@ function canHideReaction(user, story, reaction, access) {
  * @return {Boolean}
  */
 function canReceiveNotification(user, repos, type) {
-    if (_.includes(GitNotificationTypes, type)) {
-        // assume user can receive notification if loading isn't done
-        if (repos) {
-            if (_.isEmpty(repos)) {
-                return false;
-            }
-            if (_.includes(GitNotificationTypes.membership, type)) {
-                if (user) {
-                    let hasAccess = _.some(repos, (repo) => {
-                        return canAccessRepo(user, repo)
-                    });
-                    if (!hasAccess) {
-                        return false;
-                    }
-                }
-            }
-        }
-    } else if (_.includes(AdminNotificationTypes, type)) {
-        if (user && user.type !== 'admin') {
+  if (_.includes(GitNotificationTypes, type)) {
+    // assume user can receive notification if loading isn't done
+    if (repos) {
+      if (_.isEmpty(repos)) {
+        return false;
+      }
+      if (_.includes(GitNotificationTypes.membership, type)) {
+        if (user) {
+          let hasAccess = _.some(repos, (repo) => {
+            return canAccessRepo(user, repo)
+          });
+          if (!hasAccess) {
             return false;
+          }
         }
+      }
     }
-    return true;
+  } else if (_.includes(AdminNotificationTypes, type)) {
+    if (user && user.type !== 'admin') {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
@@ -494,8 +494,8 @@ function canReceiveNotification(user, repos, type) {
  * @return {String}
  */
 function getDisplayName(user, env) {
-    let { p } = env.locale;
-    return p(_.get(user, 'details.name')) || _.capitalize(_.get(user, 'username')) || '';
+  let { p } = env.locale;
+  return p(_.get(user, 'details.name')) || _.capitalize(_.get(user, 'username')) || '';
 }
 
 /**
@@ -504,35 +504,35 @@ function getDisplayName(user, env) {
  * @param  {User} user
  */
 function getGender(user) {
-    if (!user || user.details) {
-        return undefined;
-    }
-    return user.details.gender;
+  if (!user || user.details) {
+    return undefined;
+  }
+  return user.details.gender;
 }
 
 export {
-    isMember,
-    isPendingMember,
-    isAuthor,
-    isLeadAuthor,
-    isCoauthor,
-    isRespondent,
-    canJoinProject,
-    canViewProject,
-    canModerate,
-    canEditStory,
-    canHideStory,
-    canRemoveStory,
-    canBumpStory,
-    canAddIssue,
-    canAccessRepo,
-    canCreateBookmark,
-    canSendBookmarks,
-    canEditReaction,
-    canHideReaction,
-    canRemoveReaction,
-    canReceiveNotification,
-    getDisplayName,
-    getGender,
-    mergeRemoteChanges,
+  isMember,
+  isPendingMember,
+  isAuthor,
+  isLeadAuthor,
+  isCoauthor,
+  isRespondent,
+  canJoinProject,
+  canViewProject,
+  canModerate,
+  canEditStory,
+  canHideStory,
+  canRemoveStory,
+  canBumpStory,
+  canAddIssue,
+  canAccessRepo,
+  canCreateBookmark,
+  canSendBookmarks,
+  canEditReaction,
+  canHideReaction,
+  canRemoveReaction,
+  canReceiveNotification,
+  getDisplayName,
+  getGender,
+  mergeRemoteChanges,
 };

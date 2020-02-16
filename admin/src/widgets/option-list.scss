@@ -1,45 +1,45 @@
 @import '../colors';
 
 .option-list {
-    margin-bottom: 1em;
+  margin-bottom: 1em;
 
-    label {
-        display: block;
-        font-weight: 600;
+  label {
+    display: block;
+    font-weight: 600;
+  }
+
+  .container {
+    margin-top: 3px;
+    border: 1px solid $normal-border-color;
+    transition: border-color 1s ease-out;
+    max-height: 30em;
+    min-height: 1em;
+    overflow: auto;
+    clear: both;
+  }
+
+  .sortable-table {
+    TD {
+      padding-left: 4px;
+    }
+  }
+
+  .badge {
+    float: right;
+    margin-top: 0.1em;
+
+    &.add {
+      color: $badge-add-background-color;
     }
 
+    &.remove {
+      color: $badge-remove-background-color;
+    }
+  }
+
+  &.readonly {
     .container {
-        margin-top: 3px;
-        border: 1px solid $normal-border-color;
-        transition: border-color 1s ease-out;
-        max-height: 30em;
-        min-height: 1em;
-        overflow: auto;
-        clear: both;
+      border-color: $normal-background-color;
     }
-
-    .sortable-table {
-        TD {
-            padding-left: 4px;
-        }
-    }
-
-    .badge {
-        float: right;
-        margin-top: 0.1em;
-
-        &.add {
-            color: $badge-add-background-color;
-        }
-
-        &.remove {
-            color: $badge-remove-background-color;
-        }
-    }
-
-    &.readonly {
-        .container {
-            border-color: $normal-background-color;
-        }
-    }
+  }
 }

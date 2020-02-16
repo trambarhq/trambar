@@ -2,57 +2,57 @@
 
 .search-bar {
 
-    .text-input {
-        padding: 0.1em 0.25em 0.25em 0.25em;
+  .text-input {
+    padding: 0.1em 0.25em 0.25em 0.25em;
 
-        input[type=text] {
-            font-size: 1em;
-            width: 100%;
-            color: $search-box-text-color;
-            background-color: $search-box-background-color;
-            border: 0;
-            padding: 3px 3px 3px 3px;
+    input[type=text] {
+      font-size: 1em;
+      width: 100%;
+      color: $search-box-text-color;
+      background-color: $search-box-background-color;
+      border: 0;
+      padding: 3px 3px 3px 3px;
 
-            &::placeholder {
-                color: $search-box-placeholder-text-color;
-                text-align: center;
-            }
+      &::placeholder {
+        color: $search-box-placeholder-text-color;
+        text-align: center;
+      }
 
-        }
-
-        .single-col & {
-            padding-bottom: 0.1em;
-        }
-
-        .double-col &,
-        .triple-col & {
-            float: right;
-            width: 40em;
-        }
     }
 
-    .tags {
-        overflow: hidden;
-        padding: 0.25em 0.25em 0.25em 0.25em;
-        text-align: right;
-        height: 2em;
-
-        .tag {
-            display: inline-block;
-            margin: 0.25em 0.25em 0.25em 0.25em;
-            color: $search-tag-text-color;
-
-            &:link, &:visited {
-                text-decoration: none;
-            }
-
-            &:hover {
-                color: $search-tag-hover-text-color;
-            }
-
-            &.selected {
-                border-bottom: 1px solid $search-tag-selected-border-color;
-            }
-        }
+    .single-col & {
+      padding-bottom: 0.1em;
     }
+
+    .double-col &,
+    .triple-col & {
+      float: right;
+      width: 40em;
+    }
+  }
+
+  .tags {
+    overflow: hidden;
+    padding: 0.25em 0.25em 0.25em 0.25em;
+    text-align: right;
+    height: 2em;
+
+    .tag {
+      display: inline-block;
+      margin: 0.25em 0.25em 0.25em 0.25em;
+      color: $search-tag-text-color;
+
+      &:link, &:visited {
+        text-decoration: none;
+      }
+
+      &:hover {
+        color: $search-tag-hover-text-color;
+      }
+
+      &.selected {
+        border-bottom: 1px solid $search-tag-selected-border-color;
+      }
+    }
+  }
 }

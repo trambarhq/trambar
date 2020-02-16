@@ -1,27 +1,27 @@
 .server-list-page {
-    .buttons {
-        float: right;
+  .buttons {
+    float: right;
+  }
+
+  .sortable-table {
+    #type {
+      width: 10em;
     }
 
-    .sortable-table {
-        #type {
-            width: 10em;
-        }
-
-        #oauth {
-            width: 14em;
-        }
-
-        #api {
-            width: 12em;
-        }
-
-        #users {
-            width: 10em;
-        }
-
-        #mtime {
-            width: 10em;
-        }
+    #oauth {
+      width: 14em;
     }
+
+    #api {
+      width: 12em;
+    }
+
+    #users {
+      width: 10em;
+    }
+
+    #mtime {
+      width: 10em;
+    }
+  }
 }

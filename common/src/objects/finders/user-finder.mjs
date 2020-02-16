@@ -13,12 +13,12 @@ const emptyArray = [];
  * @return {Promise<User>}
  */
 async function findUser(db, id) {
-    return db.findOne({
-        schema,
-        table,
-        criteria: { id },
-        required: true
-    });
+  return db.findOne({
+    schema,
+    table,
+    criteria: { id },
+    required: true
+  });
 }
 
 /**
@@ -30,15 +30,15 @@ async function findUser(db, id) {
  * @return {Promise<User>}
  */
 async function findUsers(db, ids) {
-    if (_.isEmpty(ids)) {
-        return emptyArray;
-    }
-    ids = _.sortBy(_.uniq(ids));
-    return db.find({
-        schema,
-        table,
-        criteria: { id: ids },
-    });
+  if (_.isEmpty(ids)) {
+    return emptyArray;
+  }
+  ids = _.sortBy(_.uniq(ids));
+  return db.find({
+    schema,
+    table,
+    criteria: { id: ids },
+  });
 }
 
 /**
@@ -50,12 +50,12 @@ async function findUsers(db, ids) {
  * @return {Promise<User>}
  */
 async function findAllUsers(db, minimum) {
-    return db.find({
-        schema,
-        table,
-        criteria: {},
-        minimum
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {},
+    minimum
+  });
 }
 
 /**
@@ -67,14 +67,14 @@ async function findAllUsers(db, minimum) {
  * @return {Promise<User>}
  */
 async function findProjectMembers(db, projects) {
-    let userIDs;
-    if (projects instanceof Array) {
-        userIDs = _.flatten(_.map(projects, 'user_ids'));
-    } else {
-        let project = projects;
-        userIDs = _.get(project, 'user_ids');
-    }
-    return findUsers(db, userIDs);
+  let userIDs;
+  if (projects instanceof Array) {
+    userIDs = _.flatten(_.map(projects, 'user_ids'));
+  } else {
+    let project = projects;
+    userIDs = _.get(project, 'user_ids');
+  }
+  return findUsers(db, userIDs);
 }
 
 /**
@@ -86,12 +86,12 @@ async function findProjectMembers(db, projects) {
  * @return {Promise<User>}
  */
 async function findExistingUsers(db, minimum) {
-    return db.find({
-        schema,
-        table,
-        criteria: { deleted: false },
-        minimum
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: { deleted: false },
+    minimum
+  });
 }
 
 /**
@@ -103,15 +103,15 @@ async function findExistingUsers(db, minimum) {
  * @return {Promise<User>}
  */
 async function findActiveUsers(db, minimum) {
-    return db.find({
-        schema,
-        table,
-        criteria: {
-            deleted: false,
-            disabled: false,
-        },
-        minimum
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {
+      deleted: false,
+      disabled: false,
+    },
+    minimum
+  });
 }
 
 /**
@@ -124,14 +124,14 @@ async function findActiveUsers(db, minimum) {
  * @return {Promise<User>}
  */
 async function findUsersWithRoles(db, roles, minimum) {
-    let ids = _.map(roles, 'id');
-    ids = _.sortBy(_.uniq(ids));
-    return db.find({
-        schema,
-        table,
-        criteria: { role_ids: ids },
-        minimum
-    });
+  let ids = _.map(roles, 'id');
+  ids = _.sortBy(_.uniq(ids));
+  return db.find({
+    schema,
+    table,
+    criteria: { role_ids: ids },
+    minimum
+  });
 }
 
 /**
@@ -143,8 +143,8 @@ async function findUsersWithRoles(db, roles, minimum) {
  * @return {Promise<User>}
  */
 async function findStoryAuthors(db, stories) {
-    const userIDs = _.flatten(_.map(stories, 'user_ids'));
-    return findUsers(db, userIDs);
+  const userIDs = _.flatten(_.map(stories, 'user_ids'));
+  return findUsers(db, userIDs);
 }
 
 /**
@@ -156,8 +156,8 @@ async function findStoryAuthors(db, stories) {
  * @return {Promise<User>}
  */
 async function findReactionAuthors(db, reactions) {
-    const userIDs = _.map(reactions, 'user_id');
-    return findUsers(db, userIDs);
+  const userIDs = _.map(reactions, 'user_id');
+  return findUsers(db, userIDs);
 }
 
 /**
@@ -169,8 +169,8 @@ async function findReactionAuthors(db, reactions) {
  * @return {Promise<User>}
  */
 async function findBookmarkRecipients(db, bookmarks) {
-    const userIDs = _.map(bookmarks, 'target_user_id');
-    return findUsers(db, userIDs);
+  const userIDs = _.map(bookmarks, 'target_user_id');
+  return findUsers(db, userIDs);
 }
 
 /**
@@ -182,8 +182,8 @@ async function findBookmarkRecipients(db, bookmarks) {
  * @return {Promise<User>}
  */
 async function findBookmarkSenders(db, bookmarks) {
-    const userIDs = _.flatten(_.map(bookmarks, 'user_ids'));
-    return findUsers(db, userIDs);
+  const userIDs = _.flatten(_.map(bookmarks, 'user_ids'));
+  return findUsers(db, userIDs);
 }
 
 /**
@@ -195,27 +195,27 @@ async function findBookmarkSenders(db, bookmarks) {
  * @return {Promise<User>}
  */
 async function findNotificationTriggerers(db, notifications) {
-    const userIDs = _.map(notifications, 'user_id');
-    return findUsers(db, userIDs);
+  const userIDs = _.map(notifications, 'user_id');
+  return findUsers(db, userIDs);
 }
 
 async function findSnapshotAuthors(db, snapshots) {
-    const userIDs = _.map(snapshots, 'user_id');
-    return findUsers(db, userIDs);
+  const userIDs = _.map(snapshots, 'user_id');
+  return findUsers(db, userIDs);
 }
 
 export {
-    findUser,
-    findUsers,
-    findAllUsers,
-    findUsersWithRoles,
-    findProjectMembers,
-    findExistingUsers,
-    findActiveUsers,
-    findStoryAuthors,
-    findReactionAuthors,
-    findBookmarkRecipients,
-    findBookmarkSenders,
-    findNotificationTriggerers,
-    findSnapshotAuthors,
+  findUser,
+  findUsers,
+  findAllUsers,
+  findUsersWithRoles,
+  findProjectMembers,
+  findExistingUsers,
+  findActiveUsers,
+  findStoryAuthors,
+  findReactionAuthors,
+  findBookmarkRecipients,
+  findBookmarkSenders,
+  findNotificationTriggerers,
+  findSnapshotAuthors,
 };

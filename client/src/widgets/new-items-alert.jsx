@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom';
 
 // custom hooks
 import {
-    useAfterglow,
+  useAfterglow,
 } from '../hooks.mjs';
 
 import './new-items-alert.scss';
@@ -16,50 +16,50 @@ import './new-items-alert.scss';
  * otherwise wouldn't notice due to scrolling.
  */
 function NewItemsAlert(props) {
-    const { url, children, onClick } = props;
-    const [ container, setContainer ] = useState(null);
-    const show = useAfterglow(!!url, 500);
-    const contents = useLastAcceptable(children, !(show && !url));
+  const { url, children, onClick } = props;
+  const [ container, setContainer ] = useState(null);
+  const show = useAfterglow(!!url, 500);
+  const contents = useLastAcceptable(children, !(show && !url));
 
-    useEffect(() => {
-        if (show) {
-            const viewport = document.getElementsByClassName('page-view-port')[0];
-            const node = document.createElement('DIV');
-            viewport.appendChild(node);
-            setContainer(node);
-            return () => {
-                viewport.removeChild(node);
-            };
-        } else {
-            setContainer(null);
-        }
-    }, [ show ]);
-
-    if (container) {
-        const classNames = [ 'new-items-alert' ];
-        if (url) {
-            classNames.push('show');
-        } else {
-            classNames.push('hide');
-        }
-        const anchorProps = {
-            className: classNames.join(' '),
-            href: url,
-            onClick,
-        };
-        const element = (
-            <a {...anchorProps}>
-                <i className="fa fa-arrow-up" />
-                {contents}
-            </a>
-        );
-        return ReactDOM.createPortal(element, container);
+  useEffect(() => {
+    if (show) {
+      const viewport = document.getElementsByClassName('page-view-port')[0];
+      const node = document.createElement('DIV');
+      viewport.appendChild(node);
+      setContainer(node);
+      return () => {
+        viewport.removeChild(node);
+      };
     } else {
-        return null;
+      setContainer(null);
     }
+  }, [ show ]);
+
+  if (container) {
+    const classNames = [ 'new-items-alert' ];
+    if (url) {
+      classNames.push('show');
+    } else {
+      classNames.push('hide');
+    }
+    const anchorProps = {
+      className: classNames.join(' '),
+      href: url,
+      onClick,
+    };
+    const element = (
+      <a {...anchorProps}>
+        <i className="fa fa-arrow-up" />
+        {contents}
+      </a>
+    );
+    return ReactDOM.createPortal(element, container);
+  } else {
+    return null;
+  }
 }
 
 export {
-    NewItemsAlert as default,
-    NewItemsAlert,
+  NewItemsAlert as default,
+  NewItemsAlert,
 };

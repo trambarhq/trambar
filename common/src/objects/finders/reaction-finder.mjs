@@ -14,22 +14,22 @@ const emptyArray = [];
  * @return {Promise<Array<Reaction>>}
  */
 async function findReactionsToStories(db, stories, currentUser, minimum) {
-    let storyIDs = _.filter(_.uniq(_.map(stories, 'id')), (id) => {
-        return (id >= 1);
-    });
-    if (_.isEmpty(storyIDs) || !currentUser) {
-        return emptyArray;
-    }
-    return db.find({
-        table,
-        criteria: {
-            story_id: storyIDs,
-            public: (currentUser.type === 'guest') ? true : undefined
-        },
-        minimum
-    });
+  let storyIDs = _.filter(_.uniq(_.map(stories, 'id')), (id) => {
+    return (id >= 1);
+  });
+  if (_.isEmpty(storyIDs) || !currentUser) {
+    return emptyArray;
+  }
+  return db.find({
+    table,
+    criteria: {
+      story_id: storyIDs,
+      public: (currentUser.type === 'guest') ? true : undefined
+    },
+    minimum
+  });
 }
 
 export {
-    findReactionsToStories,
+  findReactionsToStories,
 };

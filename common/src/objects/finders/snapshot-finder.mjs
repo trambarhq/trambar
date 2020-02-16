@@ -12,20 +12,20 @@ const emptyArray = [];
  * @return {Promise<Snapshot>}
  */
 function findSnapshots(db, repo, limit) {
-    if (!repo) {
-        return emptyArray;
-    }
-    return db.find({
-        schema,
-        table,
-        criteria: {
-            repo_id: repo.id,
-            deleted: false,
-            limit,
-        },
-    });
+  if (!repo) {
+    return emptyArray;
+  }
+  return db.find({
+    schema,
+    table,
+    criteria: {
+      repo_id: repo.id,
+      deleted: false,
+      limit,
+    },
+  });
 }
 
 export {
-    findSnapshots,
+  findSnapshots,
 };

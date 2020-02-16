@@ -7,5 +7,5 @@ let requireTest = require.context('./src', true, /test\.mjs$/);
 let files = requireTest.keys();
 // run each of them
 files.forEach((file) => {
-    return requireTest(file);
+  return requireTest(file);
 });

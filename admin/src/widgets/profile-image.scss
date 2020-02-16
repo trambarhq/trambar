@@ -1,19 +1,19 @@
 @import '../colors';
 
 .profile-image {
-    &.small {
-        width: 1.5em;
-        height: 1.5em;
-        vertical-align: middle;
-    }
+  &.small {
+    width: 1.5em;
+    height: 1.5em;
+    vertical-align: middle;
+  }
 
-    &.large {
-        width: 6em;
-        height: 6em;
-        vertical-align: middle;
-    }
+  &.large {
+    width: 6em;
+    height: 6em;
+    vertical-align: middle;
+  }
 }
 
 svg.profile-image {
-    background-color: $profile-placeholder-background-color;
+  background-color: $profile-placeholder-background-color;
 }

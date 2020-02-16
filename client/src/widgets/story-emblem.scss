@@ -1,26 +1,26 @@
 @import '../colors';
 
 .story-emblem {
-    float: right;
+  float: right;
 
-    svg {
-        fill: $story-emblem-color;
-        margin-right: 0.25em;
-        margin-top: 0.2em;
-        height: 3em;
+  svg {
+    fill: $story-emblem-color;
+    margin-right: 0.25em;
+    margin-top: 0.2em;
+    height: 3em;
+  }
+
+  &.die-hard {
+    position: relative;
+    pointer-events: none;
+
+    IMG {
+      position: absolute;
+      top: 0;
+      right: 0;
+
+      width: 70px;
+      height: auto;
     }
-
-    &.die-hard {
-        position: relative;
-        pointer-events: none;
-
-        IMG {
-            position: absolute;
-            top: 0;
-            right: 0;
-
-            width: 70px;
-            height: auto;
-        }
-    }
+  }
 }

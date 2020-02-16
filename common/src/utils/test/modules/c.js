@@ -1,5 +1,5 @@
 const name = 'c';
 
 export {
-    name
+  name
 };

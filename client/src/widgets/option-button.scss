@@ -1,60 +1,60 @@
 @import '../colors';
 
 .option-button {
-    display: table;
-    max-width: 100%;
+  display: table;
+  max-width: 100%;
+  color: $option-button-text-color;
+  margin-bottom: 0.35em;
+  touch-action: manipulation;
+  cursor: pointer;
+
+  &:link, &:visited {
+    text-decoration: none;
     color: $option-button-text-color;
-    margin-bottom: 0.35em;
-    touch-action: manipulation;
-    cursor: pointer;
+  }
 
-    &:link, &:visited {
-        text-decoration: none;
-        color: $option-button-text-color;
-    }
-
-    &.selected {
-        color: $option-button-selected-text-color;
-
-        .pop-up-menu & {
-            color: $option-button-menu-text-color;
-        }
-    }
-
-    .no-touch & {
-        &:hover {
-            color: $option-button-selected-text-color;
-        }
-    }
-
-    &.disabled {
-        opacity: 0.25;
-
-        &:hover {
-            color: $option-button-text-color;
-            cursor: default;
-        }
-    }
-
-    &:last-child {
-        margin-bottom: 0;
-    }
-
-    .icon {
-        display: table-cell;
-        width: 1em;
-        padding-right: 0.25em;
-    }
-
-    .label {
-        display: table-cell;
-    }
+  &.selected {
+    color: $option-button-selected-text-color;
 
     .pop-up-menu & {
-        .no-touch & {
-            &:hover {
-                color: $option-button-menu-text-color;
-            }
-        }
+      color: $option-button-menu-text-color;
     }
+  }
+
+  .no-touch & {
+    &:hover {
+      color: $option-button-selected-text-color;
+    }
+  }
+
+  &.disabled {
+    opacity: 0.25;
+
+    &:hover {
+      color: $option-button-text-color;
+      cursor: default;
+    }
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .icon {
+    display: table-cell;
+    width: 1em;
+    padding-right: 0.25em;
+  }
+
+  .label {
+    display: table-cell;
+  }
+
+  .pop-up-menu & {
+    .no-touch & {
+      &:hover {
+        color: $option-button-menu-text-color;
+      }
+    }
+  }
 }

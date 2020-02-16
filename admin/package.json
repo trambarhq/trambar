@@ -14,8 +14,8 @@
   "devDependencies": {
     "moment-timezone": "^0.5.27",
     "trambar-www": "git+https://github.com/chung-leong/trambar-www.git",
-    "webpack": "^4.41.4",
-    "webpack-cli": "^3.3.10",
-    "webpack-dev-server": "^3.10.1"
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
   }
 }

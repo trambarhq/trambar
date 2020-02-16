@@ -12,86 +12,86 @@ import ProfileImage from '../widgets/profile-image.jsx';
 import './user-selection-list.scss';
 
 async function UserSelectionList(props) {
-    const { database, route, env, selection, disabled, onSelect } = props;
-    const [ show ] = useProgress();
+  const { database, route, env, selection, disabled, onSelect } = props;
+  const [ show ] = useProgress();
 
-    const handleUserClick = useListener((evt) => {
-        const userID = parseInt(evt.currentTarget.getAttribute('data-id'));
-        const user = _.find(users, { id: userID });
-        const userSelected = _.find(selection, { id: userID });
-        let newSelection;
-        if (userSelected) {
-            newSelection = _.without(selection, userSelected);
-        } else {
-            newSelection = _.concat(selection, user);
-        }
-        if (onSelect) {
-            onSelect({ selection: newSelection });
-        }
-    });
-
-    render();
-    const project = await ProjectFinder.findCurrentProject(database);
-    const users = await UserFinder.findProjectMembers(database, project);
-    render();
-
-    function render() {
-        const sorted = sortUsers(users, env);
-        show(
-            <div className="user-selection-list">
-                {_.map(sorted, renderUser)}
-            </div>
-        );
+  const handleUserClick = useListener((evt) => {
+    const userID = parseInt(evt.currentTarget.getAttribute('data-id'));
+    const user = _.find(users, { id: userID });
+    const userSelected = _.find(selection, { id: userID });
+    let newSelection;
+    if (userSelected) {
+      newSelection = _.without(selection, userSelected);
+    } else {
+      newSelection = _.concat(selection, user);
     }
-
-    function renderUser(user) {
-        const props = {
-            user,
-            selected: _.some(selection, { id: user.id }),
-            disabled: _.some(disabled, { id: user.id }),
-            env,
-            onClick: handleUserClick,
-        };
-        return <User key={user.id} {...props} />
+    if (onSelect) {
+      onSelect({ selection: newSelection });
     }
+  });
+
+  render();
+  const project = await ProjectFinder.findCurrentProject(database);
+  const users = await UserFinder.findProjectMembers(database, project);
+  render();
+
+  function render() {
+    const sorted = sortUsers(users, env);
+    show(
+      <div className="user-selection-list">
+        {_.map(sorted, renderUser)}
+      </div>
+    );
+  }
+
+  function renderUser(user) {
+    const props = {
+      user,
+      selected: _.some(selection, { id: user.id }),
+      disabled: _.some(disabled, { id: user.id }),
+      env,
+      onClick: handleUserClick,
+    };
+    return <User key={user.id} {...props} />
+  }
 }
 
 function User(props) {
-    const { user, env, disabled, onClick } = props;
-    const classNames = [ 'user' ];
-    if (props.selected) {
-        classNames.push('selected');
-    }
-    if (props.disabled) {
-        classNames.push('disabled');
-    }
-    const name = UserUtils.getDisplayName(user, env);
-    let containerProps = {
-        className: classNames.join(' '),
-        'data-id': user.id,
-        onClick: !disabled ? onClick : null,
-    };
-    const imageProps = { user, env, size: 'small' };
-    return (
-        <div {...containerProps}>
-            <ProfileImage {...imageProps} />
-            <span className="name">{name}</span>
-            <i className="fa fa-check-circle" />
-        </div>
-    );
+  const { user, env, disabled, onClick } = props;
+  const classNames = [ 'user' ];
+  if (props.selected) {
+    classNames.push('selected');
+  }
+  if (props.disabled) {
+    classNames.push('disabled');
+  }
+  const name = UserUtils.getDisplayName(user, env);
+  let containerProps = {
+    className: classNames.join(' '),
+    'data-id': user.id,
+    onClick: !disabled ? onClick : null,
+  };
+  const imageProps = { user, env, size: 'small' };
+  return (
+    <div {...containerProps}>
+      <ProfileImage {...imageProps} />
+      <span className="name">{name}</span>
+      <i className="fa fa-check-circle" />
+    </div>
+  );
 }
 
 const sortUsers = memoizeWeak(null, function(users, env) {
-    let { p } = env.locale;
-    let name = (user) => {
-        return p(user.details.name);
-    };
-    return _.orderBy(users, [ name ], [ 'asc' ]);
+  let { p } = env.locale;
+  let name = (user) => {
+    return p(user.details.name);
+  };
+  return _.orderBy(users, [ name ], [ 'asc' ]);
 });
 
 const component = Relaks.memo(UserSelectionList);
 
 export {
-    component as default,
-    component as UserSelectionList,
+  component as default,
+  component as UserSelectionList,
 };

@@ -1,14 +1,14 @@
 .story-list {
-    > .smart-list {
-        > .slot {
-            .single-col & {
-                margin-bottom: 0.5em;
-            }
+  > .smart-list {
+    > .slot {
+      .single-col & {
+        margin-bottom: 0.5em;
+      }
 
-            .double-col &,
-            .triple-col & {
-                margin-bottom: 1em;
-            }
-        }
+      .double-col &,
+      .triple-col & {
+        margin-bottom: 1em;
+      }
     }
+  }
 }

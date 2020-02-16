@@ -11,21 +11,21 @@ const audio = `${root}/audios`;
  * Create cache folders if they don't exist yet
  */
 async function create() {
-    const folders = [ root, image, video, audio ];
-    for (let folder of folders) {
-        try {
-            await FS.statAsync(folder);
-        } catch (err) {
-            await FS.mkdirAsync(folder);
-        }
+  const folders = [ root, image, video, audio ];
+  for (let folder of folders) {
+    try {
+      await FS.statAsync(folder);
+    } catch (err) {
+      await FS.mkdirAsync(folder);
     }
+  }
 }
 
 export {
-    root,
-    image,
-    video,
-    audio,
+  root,
+  image,
+  video,
+  audio,
 
-    create,
+  create,
 };

@@ -1,46 +1,46 @@
 @import '../colors';
 
 .profile-image {
-    display: inline-block;
-    vertical-align: middle;
+  display: inline-block;
+  vertical-align: middle;
+  overflow: hidden;
+
+  IMG, CANVAS, svg, .placeholder {
+    width: 100%;
+    height: auto;
+  }
+
+  .placeholder {
+    position: relative;
+    padding-top: 50%;
+    padding-bottom: 50%;
+    background-color: $profile-image-placeholder-background-color;
     overflow: hidden;
 
-    IMG, CANVAS, svg, .placeholder {
-        width: 100%;
-        height: auto;
+    svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: auto;
+      height: 100%;
+      margin: auto;
     }
+  }
 
-    .placeholder {
-        position: relative;
-        padding-top: 50%;
-        padding-bottom: 50%;
-        background-color: $profile-image-placeholder-background-color;
-        overflow: hidden;
+  &.small {
+    width: 1.5em;
+    height: 1.5em;
+  }
 
-        svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: auto;
-            height: 100%;
-            margin: auto;
-        }
-    }
+  &.medium {
+    width: 3em;
+    height: 3em;
+  }
 
-    &.small {
-        width: 1.5em;
-        height: 1.5em;
-    }
-
-    &.medium {
-        width: 3em;
-        height: 3em;
-    }
-
-    &.large {
-        width: 6em;
-        height: 6em;
-    }
+  &.large {
+    width: 6em;
+    height: 6em;
+  }
 }

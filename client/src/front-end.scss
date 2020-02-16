@@ -1,69 +1,69 @@
 @import 'colors';
 
 * {
-    box-sizing: border-box;
-    font-family: sans-serif;
+  box-sizing: border-box;
+  font-family: sans-serif;
 
-    &:focus {
-        outline-color: $focus-outline-color;
-    }
+  &:focus {
+    outline-color: $focus-outline-color;
+  }
 }
 
 html, body {
-    position: fixed;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    margin: 0;
-    -webkit-text-size-adjust: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  margin: 0;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-    user-select: none;
-    touch-action: pan-y;
+  user-select: none;
+  touch-action: pan-y;
 }
 
 .front-end {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    top: 0px;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
-    height: 100%;
-    width: 100%;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  height: 100%;
+  width: 100%;
 }
 
 .page-view-port {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    background-color: $viewport-background-color;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  background-color: $viewport-background-color;
 }
 
 .single-col {
-    .overlay {
-        .foreground {
-            height: 100%;
-        }
+  .overlay {
+    .foreground {
+      height: 100%;
     }
+  }
 }
 
 SELECT {
-    border-radius: 0;
-    background-color: $text-field-background-color;
-    border: 1px solid $text-field-border-color;
-    user-select: auto;
-    -webkit-appearance: none;
+  border-radius: 0;
+  background-color: $text-field-background-color;
+  border: 1px solid $text-field-border-color;
+  user-select: auto;
+  -webkit-appearance: none;
 
-    OPTION {
-        padding: 2px 2px 2px 4px;
-    }
+  OPTION {
+    padding: 2px 2px 2px 4px;
+  }
 }
 
 TEXTAREA,
@@ -73,10 +73,10 @@ INPUT[type=email],
 INPUT[type=password],
 INPUT[type=number]
  {
-    border-radius: 0;
-    background-color: $text-field-background-color;
-    border: 1px solid $text-field-border-color;
-    padding: 2px 2px 2px 4px;
-    font-size: 1em;
-    user-select: text;
+  border-radius: 0;
+  background-color: $text-field-background-color;
+  border: 1px solid $text-field-border-color;
+  padding: 2px 2px 2px 4px;
+  font-size: 1em;
+  user-select: text;
 }

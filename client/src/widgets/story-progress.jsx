@@ -13,54 +13,54 @@ import './story-progress.scss';
  * to attached media.
  */
 function StoryProgress(props) {
-    const { env, story, status, pending } = props;
-    const { t } = env.locale;
-    let contents;
+  const { env, story, status, pending } = props;
+  const { t } = env.locale;
+  let contents;
 
-    if (!StoryUtils.isActuallyPublished(story)) {
-        // not saved yet
-        contents = t('story-status-storage-pending');
+  if (!StoryUtils.isActuallyPublished(story)) {
+    // not saved yet
+    contents = t('story-status-storage-pending');
+  } else {
+    if (status) {
+      if (status.action !== 'unknown') {
+        contents = t(`story-status-${status.action}-$progress`, status.progress);
+      } else {
+        contents = (
+          <span>
+            {t('story-status-storage-pending')}
+            {' '}
+            <i className="fa fa-warning" />
+          </span>
+        );
+      }
     } else {
-        if (status) {
-            if (status.action !== 'unknown') {
-                contents = t(`story-status-${status.action}-$progress`, status.progress);
-            } else {
-                contents = (
-                    <span>
-                        {t('story-status-storage-pending')}
-                        {' '}
-                        <i className="fa fa-warning" />
-                    </span>
-                );
-            }
-        } else {
-            contents = <Time time={story.ptime} env={env} />;
-            if (pending) {
-                // story has not made it into listings yet
-                const spinnerStyle = {};
-                const now = Moment();
-                const rtime = Moment(story.rtime);
-                // give story ten seconds to show up before we show the spinner
-                const delay = 10000 - (now - rtime);
-                if (delay > 0) {
-                    spinnerStyle.animationDelay = (delay / 1000) + 's';
-                }
-                contents = (
-                    <span>
-                        {contents}
-                        {' '}
-                        <span className="spinner" style={spinnerStyle}>
-                            <i className="fa fa-spinner fa-pulse" />
-                        </span>
-                    </span>
-                );
-            }
+      contents = <Time time={story.ptime} env={env} />;
+      if (pending) {
+        // story has not made it into listings yet
+        const spinnerStyle = {};
+        const now = Moment();
+        const rtime = Moment(story.rtime);
+        // give story ten seconds to show up before we show the spinner
+        const delay = 10000 - (now - rtime);
+        if (delay > 0) {
+          spinnerStyle.animationDelay = (delay / 1000) + 's';
         }
+        contents = (
+          <span>
+            {contents}
+            {' '}
+            <span className="spinner" style={spinnerStyle}>
+              <i className="fa fa-spinner fa-pulse" />
+            </span>
+          </span>
+        );
+      }
     }
-    return <span className="story-progress">{contents}</span>;
+  }
+  return <span className="story-progress">{contents}</span>;
 }
 
 export {
-    StoryProgress as default,
-    StoryProgress,
+  StoryProgress as default,
+  StoryProgress,
 };

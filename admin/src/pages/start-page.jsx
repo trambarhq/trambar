@@ -6,39 +6,39 @@ import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 import './start-page.scss';
 
 async function StartPage(props) {
-    const { database, route, env } = props;
-    const { t } = env.locale;
-    const [ show ] = useProgress();
+  const { database, route, env } = props;
+  const { t } = env.locale;
+  const [ show ] = useProgress();
 
-    const handleAnimationEnd = useListener((evt) => {
-        route.replace('settings-page', { editing: true });
-    });
+  const handleAnimationEnd = useListener((evt) => {
+    route.replace('settings-page', { editing: true });
+  });
 
-    render();
-    const currentUserID = await database.start();
-    const system = await SystemFinder.findSystem(database);
-    if (!_.isEmpty(system)) {
-        await route.replace('project-list-page');
-        return null;
+  render();
+  const currentUserID = await database.start();
+  const system = await SystemFinder.findSystem(database);
+  if (!_.isEmpty(system)) {
+    await route.replace('project-list-page');
+    return null;
+  }
+  render();
+
+  function render() {
+    if (!system) {
+      show(null);
+    } else {
+      show(
+        <div className="start-page" onAnimationEnd={handleAnimationEnd}>
+          <h2>{t('welcome')}</h2>
+        </div>
+      );
     }
-    render();
-
-    function render() {
-        if (!system) {
-            show(null);
-        } else {
-            show(
-                <div className="start-page" onAnimationEnd={handleAnimationEnd}>
-                    <h2>{t('welcome')}</h2>
-                </div>
-            );
-        }
-    }
+  }
 }
 
 const component = Relaks.memo(StartPage);
 
 export {
-    component as default,
-    component as StartPage,
+  component as default,
+  component as StartPage,
 };

@@ -14,12 +14,12 @@ const emptyArray = [];
  * @return {Promise<Server>}
  */
 async function findServer(db, id) {
-    return db.findOne({
-        schema,
-        table,
-        criteria: { id },
-        required: true
-    });
+  return db.findOne({
+    schema,
+    table,
+    criteria: { id },
+    required: true
+  });
 }
 
 /**
@@ -31,12 +31,12 @@ async function findServer(db, id) {
  * @return {Promise<Array<Server>>}
  */
 async function findAllServers(db, minimum) {
-    return db.find({
-        schema,
-        table,
-        criteria: {},
-        minimum
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {},
+    minimum
+  });
 }
 
 /**
@@ -47,25 +47,25 @@ async function findAllServers(db, minimum) {
  * @return {Promise<Array<Server>>}
  */
 async function findRepoServers(db, repos) {
-    let ids = _.filter(_.map(repos, (repo) => {
-        let link = ExternalDataUtils.findLinkByServerType(repo, repo.type);
-        if (link) {
-            return link.server_id;
-        }
-    }));
-    if (_.isEmpty(ids)) {
-        return emptyArray;
+  let ids = _.filter(_.map(repos, (repo) => {
+    let link = ExternalDataUtils.findLinkByServerType(repo, repo.type);
+    if (link) {
+      return link.server_id;
     }
-    ids = _.sortBy(_.uniq(ids));
-    return db.find({
-        schema,
-        table,
-        criteria: { id: ids }
-    });
+  }));
+  if (_.isEmpty(ids)) {
+    return emptyArray;
+  }
+  ids = _.sortBy(_.uniq(ids));
+  return db.find({
+    schema,
+    table,
+    criteria: { id: ids }
+  });
 }
 
 export {
-    findServer,
-    findAllServers,
-    findRepoServers,
+  findServer,
+  findAllServers,
+  findRepoServers,
 };

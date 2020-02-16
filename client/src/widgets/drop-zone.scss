@@ -1,13 +1,13 @@
 @import '../colors';
 
 .drop-zone {
-    .overlay {
-        position: absolute;
-        left: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
+  .overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
 
-        border: 3px solid $focus-outline-color;
-    }
+    border: 3px solid $focus-outline-color;
+  }
 }

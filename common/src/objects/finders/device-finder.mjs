@@ -14,20 +14,20 @@ const emptyArray = [];
  * @return {Promise<Array<Object>>}
  */
 async function findUserDevices(db, user, minimum) {
-    if (!user) {
-        return emptyArray;
-    }
-    return db.find({
-        schema,
-        table,
-        criteria: {
-            user_id: user.id
-        },
-        prefetch: true,
-        minimum
-    });
+  if (!user) {
+    return emptyArray;
+  }
+  return db.find({
+    schema,
+    table,
+    criteria: {
+      user_id: user.id
+    },
+    prefetch: true,
+    minimum
+  });
 }
 
 export {
-    findUserDevices,
+  findUserDevices,
 };

@@ -1,11 +1,11 @@
 @import '../colors';
 
 .input-error {
-    font-weight: normal;
-    float: right;
-    color: $error-text-color;
+  font-weight: normal;
+  float: right;
+  color: $error-text-color;
 
-    &.warning {
-        color: $warning-text-color;
-    }
+  &.warning {
+    color: $warning-text-color;
+  }
 }

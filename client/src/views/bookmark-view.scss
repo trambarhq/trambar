@@ -1,36 +1,36 @@
 @import '../colors';
 
 .bookmark-view {
-    border: 2px solid $bookmark-border-color;
-    background-color: $bookmark-border-color;
+  border: 2px solid $bookmark-border-color;
+  background-color: $bookmark-border-color;
 
-    .title {
-        color: $panel-title-text-color;
-        user-select: text;
+  .title {
+    color: $panel-title-text-color;
+    user-select: text;
 
-        .name {
-            display: inline-block;
-            padding: 0.2em 0.1em 0.4em 0.4em;
-            font-size: 0.9em;
-        }
+    .name {
+      display: inline-block;
+      padding: 0.2em 0.1em 0.4em 0.4em;
+      font-size: 0.9em;
     }
+  }
 
-    .story {
-        clear: both;
+  .story {
+    clear: both;
 
-        .story-view {
-            border: 0;
-            margin: 0;
-        }
+    .story-view {
+      border: 0;
+      margin: 0;
     }
+  }
 
-    &.highlighting {
-        animation: flash normal 5s 1 ease-in-out;
+  &.highlighting {
+    animation: flash normal 5s 1 ease-in-out;
 
-        @keyframes flash {
-            25% {
-                border-color: $panel-highlighted-border-color;
-            }
-        }
+    @keyframes flash {
+      25% {
+        border-color: $panel-highlighted-border-color;
+      }
     }
+  }
 }

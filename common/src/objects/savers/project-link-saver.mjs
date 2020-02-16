@@ -5,39 +5,39 @@ const schema = 'local';
 const table = 'project_link';
 
 async function removeLinks(db, links) {
-    const linksAfter = await db.remove({ schema, table }, links);
-    return linksAfter;
+  const linksAfter = await db.remove({ schema, table }, links);
+  return linksAfter;
 }
 
 async function removeLink(db, link) {
-    const [ linkAfter ] = await removeLinks(db, [ link ]);
-    return linkAfter;
+  const [ linkAfter ] = await removeLinks(db, [ link ]);
+  return linkAfter;
 }
 
 async function createLink(db, address, projectName) {
-    const project = await ProjectFinder.findProjectByName(db, projectName);
-    const name = project.details.title;
-    const atime = (new Date).toISOString();
-    const key = `${address}/${schema}`;
-    const link = { key, address, schema, name, atime };
-    const linkAfter = await db.saveOne({ schema, table }, link);
-    return linkAfter;
+  const project = await ProjectFinder.findProjectByName(db, projectName);
+  const name = project.details.title;
+  const atime = (new Date).toISOString();
+  const key = `${address}/${schema}`;
+  const link = { key, address, schema, name, atime };
+  const linkAfter = await db.saveOne({ schema, table }, link);
+  return linkAfter;
 }
 
 async function removeLinksToServer(db, address) {
-    const links = await ProjectLinkFinder.findLinksToServer(db, address);
-    return removeLinks(db, links);
+  const links = await ProjectLinkFinder.findLinksToServer(db, address);
+  return removeLinks(db, links);
 }
 
 async function removeDefunctLinks(db, address) {
-    const links = await ProjectLinkFinder.findDefunctLinks(db, address);
-    return removeLinks(db, links);
+  const links = await ProjectLinkFinder.findDefunctLinks(db, address);
+  return removeLinks(db, links);
 }
 
 export {
-    createLink,
-    removeLink,
-    removeLinks,
-    removeLinksToServer,
-    removeDefunctLinks,
+  createLink,
+  removeLink,
+  removeLinks,
+  removeLinksToServer,
+  removeDefunctLinks,
 };

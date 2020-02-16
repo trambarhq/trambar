@@ -1,123 +1,123 @@
 @import '../colors';
 
 .multilingual-text-field {
-    margin-bottom: 1em;
+  margin-bottom: 1em;
 
-    label {
-        display: block;
-        font-weight: 600;
-    }
+  label {
+    display: block;
+    font-weight: 600;
+  }
 
+  input[type=text],
+  textarea {
+    display: block;
+    width: 100%;
+    transition: border-color 1s ease-out;
+    border: 1px solid $text-field-border-color;
+    font-size: 1em;
+    margin-top: 2px;
+    margin-bottom: 0;
+    padding: 2px 2px 1px 4px;
+  }
+
+  textarea {
+    resize: none;
+  }
+
+  &.multiple-languages {
     input[type=text],
     textarea {
-        display: block;
-        width: 100%;
-        transition: border-color 1s ease-out;
-        border: 1px solid $text-field-border-color;
-        font-size: 1em;
-        margin-top: 2px;
-        margin-bottom: 0;
-        padding: 2px 2px 1px 4px;
+      border-bottom: 0;
+      padding-bottom: 2px;
+    }
+  }
+
+  .tabs {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    background-color: $text-field-language-tab-background-color;
+    border: 1px solid $text-field-border-color;
+    border-top: 0;
+    transition: border-color 1s ease-out;
+  }
+
+  .tab {
+    flex: 1 1 auto;
+    text-align: center;
+    font-variant: small-caps;
+    color: $text-field-language-tab-text-color;
+    font-size: 0.8em;
+    padding: 0.25em 0 0.25em 0;
+    transition: font-size 0.25s;
+    cursor: pointer;
+
+    &.selected {
+      color: $text-field-language-tab-background-color;
+      background: linear-gradient(45deg, transparent 1.2em, $normal-background-color 0) no-repeat bottom left;
+      cursor: default;
+
+      &:first-child {
+        background: linear-gradient(315deg, transparent 1.2em, $normal-background-color 0) no-repeat bottom right;
+      }
+    }
+  }
+
+  .bubble {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 3em;
+    z-index: 100;
+
+    .arrow {
+      position: absolute;
+      top: 0;
+      left: 8px;
+      width: 0;
+      height: 0;
+      border: 8px solid transparent;
+      border-bottom-color: $text-field-language-bubble-background-color;
+      border-top: 0;
+      margin-left: -8px;
+      margin-top: -8px;
     }
 
+    .box {
+      background: $text-field-language-bubble-background-color;
+      box-shadow: 3px 3px 3px 0px $text-field-language-bubble-shadow-color;
+      padding: 6px 4px 4px 4px;
+      margin-left: 1em;
+      margin-right: 1em;
+      white-space: pre-line;
+    }
+  }
+
+  &.readonly {
+    input[type=text],
     textarea {
-        resize: none;
-    }
-
-    &.multiple-languages {
-        input[type=text],
-        textarea {
-            border-bottom: 0;
-            padding-bottom: 2px;
-        }
+      border-color: $text-field-read-only-border-color;
+      cursor: text;
+      outline: none;
     }
 
     .tabs {
-        display: flex;
-        flex-direction: row;
-        position: relative;
-        background-color: $text-field-language-tab-background-color;
-        border: 1px solid $text-field-border-color;
-        border-top: 0;
-        transition: border-color 1s ease-out;
+    	background-color: $normal-background-color;
+      border-color: $normal-background-color;
     }
 
     .tab {
-        flex: 1 1 auto;
-        text-align: center;
-        font-variant: small-caps;
-        color: $text-field-language-tab-text-color;
-        font-size: 0.8em;
-        padding: 0.25em 0 0.25em 0;
-        transition: font-size 0.25s;
-        cursor: pointer;
+    	color: $text-field-language-tab-disabled-text-color;
 
-        &.selected {
-            color: $text-field-language-tab-background-color;
-            background: linear-gradient(45deg, transparent 1.2em, $normal-background-color 0) no-repeat bottom left;
-            cursor: default;
-
-            &:first-child {
-                background: linear-gradient(315deg, transparent 1.2em, $normal-background-color 0) no-repeat bottom right;
-            }
-        }
+      .selected {
+      	color: $normal-text-color;
+      }
     }
+  }
 
-    .bubble {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 3em;
-        z-index: 100;
-
-        .arrow {
-            position: absolute;
-            top: 0;
-            left: 8px;
-            width: 0;
-            height: 0;
-            border: 8px solid transparent;
-            border-bottom-color: $text-field-language-bubble-background-color;
-            border-top: 0;
-            margin-left: -8px;
-            margin-top: -8px;
-        }
-
-        .box {
-            background: $text-field-language-bubble-background-color;
-            box-shadow: 3px 3px 3px 0px $text-field-language-bubble-shadow-color;
-            padding: 6px 4px 4px 4px;
-            margin-left: 1em;
-            margin-right: 1em;
-            white-space: pre-line;
-        }
+  &.collapsed {
+    .tab {
+      font-size: 0;
     }
-
-    &.readonly {
-        input[type=text],
-        textarea {
-            border-color: $text-field-read-only-border-color;
-            cursor: text;
-            outline: none;
-        }
-
-        .tabs {
-        	background-color: $normal-background-color;
-            border-color: $normal-background-color;
-        }
-
-        .tab {
-        	color: $text-field-language-tab-disabled-text-color;
-
-            .selected {
-            	color: $normal-text-color;
-            }
-        }
-    }
-
-    &.collapsed {
-        .tab {
-            font-size: 0;
-        }
-    }
+  }
 }

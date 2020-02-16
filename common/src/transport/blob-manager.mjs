@@ -11,21 +11,21 @@ let list = [];
  * @param  {Blob} blob
  */
 function manage(blob) {
-    let atime = new Date;
-    let entry = _.find(list, { blob });
-    if (entry) {
-        entry.atime = atime;
-        return entry.localURL;
-    }
-    let localURL;
-    if (blob instanceof Blob) {
-        localURL = URL.createObjectURL(blob);
-    } else if (blob instanceof CordovaFile) {
-        localURL = blob.fullPath;
-    }
-    let urls = [ localURL ];
-    list.push({ blob, localURL, urls, atime });
-    return localURL;
+  let atime = new Date;
+  let entry = _.find(list, { blob });
+  if (entry) {
+    entry.atime = atime;
+    return entry.localURL;
+  }
+  let localURL;
+  if (blob instanceof Blob) {
+    localURL = URL.createObjectURL(blob);
+  } else if (blob instanceof CordovaFile) {
+    localURL = blob.fullPath;
+  }
+  let urls = [ localURL ];
+  list.push({ blob, localURL, urls, atime });
+  return localURL;
 }
 
 /**
@@ -36,17 +36,17 @@ function manage(blob) {
  * @return {Blob|CordovaFile|null}
  */
 function find(url) {
-    if (!url) {
-        return null;
-    }
-    let entry = _.find(list, (entry) => {
-        return _.includes(entry.urls, url);
-    });
-    if (!entry) {
-        return null;
-    }
-    entry.atime = new Date;
-    return entry.blob;
+  if (!url) {
+    return null;
+  }
+  let entry = _.find(list, (entry) => {
+    return _.includes(entry.urls, url);
+  });
+  if (!entry) {
+    return null;
+  }
+  entry.atime = new Date;
+  return entry.blob;
 }
 
 /**
@@ -56,15 +56,15 @@ function find(url) {
  * @param  {String} url
  */
 function associate(target, url) {
-    if (!target || !url) {
-        return;
-    }
-    let entry = _.find(list, { blob: target });
-    if (!entry) {
-        manage(target);
-        entry = _.find(list, { blob: target });
-    }
-    entry.urls.push(url);
+  if (!target || !url) {
+    return;
+  }
+  let entry = _.find(list, { blob: target });
+  if (!entry) {
+    manage(target);
+    entry = _.find(list, { blob: target });
+  }
+  entry.urls.push(url);
 }
 
 /**
@@ -75,17 +75,17 @@ function associate(target, url) {
  * @return {Promise<Blob>}
  */
 async function fetch(remoteURL) {
-    if (!remoteURL) {
-        throw new Error('Invalid argument');
-    }
-    let blob = find(remoteURL);
-    if (!blob) {
-        let options = { responseType: 'blob' };
-        blob = await HTTPRequest.fetch('GET', remoteURL, null, options);
-        let localURL = manage(blob);
-        associate(blob, remoteURL);
-    }
-    return blob;
+  if (!remoteURL) {
+    throw new Error('Invalid argument');
+  }
+  let blob = find(remoteURL);
+  if (!blob) {
+    let options = { responseType: 'blob' };
+    blob = await HTTPRequest.fetch('GET', remoteURL, null, options);
+    let localURL = manage(blob);
+    associate(blob, remoteURL);
+  }
+  return blob;
 }
 
 /**
@@ -94,52 +94,52 @@ async function fetch(remoteURL) {
  * @param  {Blob|CordovaFile} blob
  */
 function release(blob) {
-    let index = _.findIndex(list, { blob });
-    if (index !== -1) {
-        let entry = list[index];
-        list.splice(index, 1);
-        releaseEntry(entry);
-    }
+  let index = _.findIndex(list, { blob });
+  if (index !== -1) {
+    let entry = list[index];
+    list.splice(index, 1);
+    releaseEntry(entry);
+  }
 }
 
 function releaseEntry(entry) {
-    if (entry.blob instanceof Blob) {
-        URL.revokeObjectURL(entry.localURL);
-    } else if (entry.blob instanceof CordovaFile) {
-        entry.blob.remove();
-    }
+  if (entry.blob instanceof Blob) {
+    URL.revokeObjectURL(entry.localURL);
+  } else if (entry.blob instanceof CordovaFile) {
+    entry.blob.remove();
+  }
 };
 
 /**
  * Clearing blob that have not been touched for some time
  */
 function clearBlobs() {
-    let now = new Date;
-    let removed = _.remove(list, (entry) => {
-        // see if we can retrieve the file from the server if need arises
-        let hasRemote = _.some(entry.urls, (url) => {
-            return /https?:/.test(url);
-        });
-        if (hasRemote) {
-            let elapsed = now - entry.atime;
-            if (elapsed > 3 * 60 * 1000) {
-                // after five minutes, the blob probably won't be used again
-                return true;
-            }
-        }
+  let now = new Date;
+  let removed = _.remove(list, (entry) => {
+    // see if we can retrieve the file from the server if need arises
+    let hasRemote = _.some(entry.urls, (url) => {
+      return /https?:/.test(url);
     });
-    for (let entry of removed) {
-        releaseEntry(entry);
+    if (hasRemote) {
+      let elapsed = now - entry.atime;
+      if (elapsed > 3 * 60 * 1000) {
+        // after five minutes, the blob probably won't be used again
+        return true;
+      }
     }
+  });
+  for (let entry of removed) {
+    releaseEntry(entry);
+  }
 }
 
 setInterval(clearBlobs, 60 * 1000);
 
 export {
-    manage,
-    manage as url,
-    find,
-    associate,
-    fetch,
-    release,
+  manage,
+  manage as url,
+  find,
+  associate,
+  fetch,
+  release,
 };

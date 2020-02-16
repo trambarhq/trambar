@@ -1,12 +1,12 @@
 @import '../colors';
 
 .unexpected-error {
-    text-align: right;
-    font-size: 1.25em;
-    color: $error-text-color;
-    margin-bottom: 0.5em;
+  text-align: right;
+  font-size: 1.25em;
+  color: $error-text-color;
+  margin-bottom: 0.5em;
 
-    &.warning {
-        color: $warning-text-color;
-    }
+  &.warning {
+    color: $warning-text-color;
+  }
 }

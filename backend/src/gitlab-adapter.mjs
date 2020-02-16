@@ -16,35 +16,35 @@ import * as SnapshotManager from './lib/gitlab-adapter/snapshot-manager.mjs';
 
 import TaskQueue from './lib/task-queue.mjs';
 import {
-    TaskImportRepos,
-    TaskImportRepoEvents,
-    TaskImportSnapshots,
-    TaskDetectTemplate,
-    TaskImportUsers,
-    TaskInstallHooks,
-    TaskRemoveHooks,
-    TaskInstallServerHooks,
-    TaskRemoveServerHooks,
-    TaskInstallProjectHook,
-    TaskRemoveProjectHook,
-    TaskProcessProjectHookEvent,
-    TaskProcessSystemHookEvent,
-    TaskImportWikis,
-    TaskReimportWiki,
-    TaskRemoveWikis,
-    TaskUpdateMilestones,
-    TaskExportStory,
-    TaskReexportStory,
+  TaskImportRepos,
+  TaskImportRepoEvents,
+  TaskImportSnapshots,
+  TaskDetectTemplate,
+  TaskImportUsers,
+  TaskInstallHooks,
+  TaskRemoveHooks,
+  TaskInstallServerHooks,
+  TaskRemoveServerHooks,
+  TaskInstallProjectHook,
+  TaskRemoveProjectHook,
+  TaskProcessProjectHookEvent,
+  TaskProcessSystemHookEvent,
+  TaskImportWikis,
+  TaskReimportWiki,
+  TaskRemoveWikis,
+  TaskUpdateMilestones,
+  TaskExportStory,
+  TaskReexportStory,
 
-    PeriodicTaskMaintainHooks,
-    PeriodicTaskImportRepos,
-    PeriodicTaskImportUsers,
-    PeriodicTaskImportWikis,
-    PeriodicTaskImportRepoEvents,
-    PeriodicTaskImportSnapshots,
-    PeriodicTaskDetectTemplate,
-    PeriodicTaskUpdateMilestones,
-    PeriodicTaskRetryFailedExports,
+  PeriodicTaskMaintainHooks,
+  PeriodicTaskImportRepos,
+  PeriodicTaskImportUsers,
+  PeriodicTaskImportWikis,
+  PeriodicTaskImportRepoEvents,
+  PeriodicTaskImportSnapshots,
+  PeriodicTaskDetectTemplate,
+  PeriodicTaskUpdateMilestones,
+  PeriodicTaskRetryFailedExports,
 } from './lib/gitlab-adapter/tasks.mjs';
 
 let server;
@@ -54,57 +54,57 @@ let taskQueue;
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
 async function start() {
-    const db = database = await Database.open(true);
-    await db.need('global');
+  const db = database = await Database.open(true);
+  await db.need('global');
 
-    // listen for Webhook invocation
-    const app = Express();
-    app.use(BodyParser.json());
-    app.set('json spaces', 2);
-    app.post('/srv/gitlab/hook/:serverID', handleSystemHookCallback);
-    app.post('/srv/gitlab/hook/:serverID/:repoID/:projectID', handleProjectHookCallback);
-    app.get('/internal/retrieve/:schema/:commit/:type/*', handleFileRequest);
-    app.use(handleError);
+  // listen for Webhook invocation
+  const app = Express();
+  app.use(BodyParser.json());
+  app.set('json spaces', 2);
+  app.post('/srv/gitlab/hook/:serverID', handleSystemHookCallback);
+  app.post('/srv/gitlab/hook/:serverID/:repoID/:projectID', handleProjectHookCallback);
+  app.get('/internal/retrieve/:schema/:commit/:type/*', handleFileRequest);
+  app.use(handleError);
 
-    server = app.listen(80);
+  server = app.listen(80);
 
-    // listen for database change events
-    const tables = [
-        'project',
-        'repo',
-        'server',
-        'story',
-        'system',
-        'task',
-        'wiki',
-    ];
-    await db.listen(tables, 'change', handleDatabaseChanges, 100);
+  // listen for database change events
+  const tables = [
+    'project',
+    'repo',
+    'server',
+    'story',
+    'system',
+    'task',
+    'wiki',
+  ];
+  await db.listen(tables, 'change', handleDatabaseChanges, 100);
 
-    taskQueue = new TaskQueue;
-    taskQueue.schedule(new PeriodicTaskMaintainHooks);
-    taskQueue.schedule(new PeriodicTaskImportRepos);
-    taskQueue.schedule(new PeriodicTaskImportUsers);
-    taskQueue.schedule(new PeriodicTaskImportWikis);
-    taskQueue.schedule(new PeriodicTaskImportRepoEvents);
-    taskQueue.schedule(new PeriodicTaskImportSnapshots);
-    taskQueue.schedule(new PeriodicTaskDetectTemplate);
-    taskQueue.schedule(new PeriodicTaskUpdateMilestones);
-    taskQueue.schedule(new PeriodicTaskRetryFailedExports);
-    await taskQueue.start();
+  taskQueue = new TaskQueue;
+  taskQueue.schedule(new PeriodicTaskMaintainHooks);
+  taskQueue.schedule(new PeriodicTaskImportRepos);
+  taskQueue.schedule(new PeriodicTaskImportUsers);
+  taskQueue.schedule(new PeriodicTaskImportWikis);
+  taskQueue.schedule(new PeriodicTaskImportRepoEvents);
+  taskQueue.schedule(new PeriodicTaskImportSnapshots);
+  taskQueue.schedule(new PeriodicTaskDetectTemplate);
+  taskQueue.schedule(new PeriodicTaskUpdateMilestones);
+  taskQueue.schedule(new PeriodicTaskRetryFailedExports);
+  await taskQueue.start();
 }
 
 async function stop() {
-    await Shutdown.close(server);
+  await Shutdown.close(server);
 
-    if (taskQueue) {
-        await taskQueue.stop();
-        taskQueue = undefined;
-    }
+  if (taskQueue) {
+    await taskQueue.stop();
+    taskQueue = undefined;
+  }
 
-    if (database) {
-        database.close();
-        database = undefined;
-    }
+  if (database) {
+    database.close();
+    database = undefined;
+  }
 }
 
 /**
@@ -113,34 +113,34 @@ async function stop() {
  * @param  {Array<Object>} events
  */
 function handleDatabaseChanges(events) {
-    for (let event of events) {
-        if (event.op === 'DELETE') {
-            continue;
-        }
-        switch (event.table) {
-            case 'server':
-                handleServerChangeEvent(event);
-                break;
-            case 'project':
-                handleProjectChangeEvent(event);
-                break;
-            case 'repo':
-                handleRepoChangeEvent(event);
-                break;
-            case 'story':
-                handleStoryChangeEvent(event);
-                break;
-            case 'system':
-                handleSystemChangeEvent(event);
-                break;
-            case 'task':
-                handleTaskChangeEvent(event);
-                break;
-            case 'wiki':
-                handleWikiChangeEvent(event);
-                break;
-        }
+  for (let event of events) {
+    if (event.op === 'DELETE') {
+      continue;
     }
+    switch (event.table) {
+      case 'server':
+        handleServerChangeEvent(event);
+        break;
+      case 'project':
+        handleProjectChangeEvent(event);
+        break;
+      case 'repo':
+        handleRepoChangeEvent(event);
+        break;
+      case 'story':
+        handleStoryChangeEvent(event);
+        break;
+      case 'system':
+        handleSystemChangeEvent(event);
+        break;
+      case 'task':
+        handleTaskChangeEvent(event);
+        break;
+      case 'wiki':
+        handleWikiChangeEvent(event);
+        break;
+    }
+  }
 }
 
 /**
@@ -149,21 +149,21 @@ function handleDatabaseChanges(events) {
  * @param  {Object} event
  */
 function handleServerChangeEvent(event) {
-    const serverID = event.id;
-    const disabled = event.current.deleted || event.current.disabled;
-    if (event.diff.settings) {
-        if (!disabled) {
-            taskQueue.add(new TaskImportRepos(serverID));
-            taskQueue.add(new TaskImportUsers(serverID));
-        }
+  const serverID = event.id;
+  const disabled = event.current.deleted || event.current.disabled;
+  if (event.diff.settings) {
+    if (!disabled) {
+      taskQueue.add(new TaskImportRepos(serverID));
+      taskQueue.add(new TaskImportUsers(serverID));
     }
-    if (event.diff.deleted || event.diff.disabled) {
-        if (!disabled) {
-            taskQueue.add(new TaskInstallServerHooks(serverID));
-        } else {
-            taskQueue.add(new TaskRemoveServerHooks(serverID));
-        }
+  }
+  if (event.diff.deleted || event.diff.disabled) {
+    if (!disabled) {
+      taskQueue.add(new TaskInstallServerHooks(serverID));
+    } else {
+      taskQueue.add(new TaskRemoveServerHooks(serverID));
     }
+  }
 }
 
 /**
@@ -173,28 +173,28 @@ function handleServerChangeEvent(event) {
  * @param  {Object} event
  */
 function handleProjectChangeEvent(event) {
-    if (event.diff.archived || event.diff.deleted || event.diff.repo_ids) {
-        const projectID = event.id;
-        const archivedAfter = event.current.archived;
-        const archivedBefore = (event.diff.archived) ? event.previous.archived : archivedAfter;
-        const deletedAfter = event.current.deleted;
-        const deletedBefore = (event.diff.deleted) ? event.previous.deleted : deletedAfter;
-        const repoIDsAfter = event.current.repo_ids;
-        const repoIDsBefore = (event.diff.repo_ids) ? event.previous.repo_ids : repoIDsAfter;
-        for (let repoID of _.union(repoIDsAfter, repoIDsBefore)) {
-            const connectedBefore = !archivedBefore && !deletedBefore && _.includes(repoIDsBefore, repoID);
-            const connectedAfter = !archivedAfter && !deletedAfter && _.includes(repoIDsAfter, repoID);
-            // remove or restore hooks
-            if (connectedBefore && !connectedAfter) {
-                taskQueue.add(new TaskRemoveProjectHook(repoID, projectID));
-                taskQueue.add(new TaskRemoveWikis(repoID, projectID));
-            } else if (!connectedBefore && connectedAfter) {
-                taskQueue.add(new TaskImportRepoEvents(repoID, projectID));
-                taskQueue.add(new TaskImportWikis(repoID, projectID));
-                taskQueue.add(new TaskInstallProjectHook(repoID, projectID));
-            }
-        }
+  if (event.diff.archived || event.diff.deleted || event.diff.repo_ids) {
+    const projectID = event.id;
+    const archivedAfter = event.current.archived;
+    const archivedBefore = (event.diff.archived) ? event.previous.archived : archivedAfter;
+    const deletedAfter = event.current.deleted;
+    const deletedBefore = (event.diff.deleted) ? event.previous.deleted : deletedAfter;
+    const repoIDsAfter = event.current.repo_ids;
+    const repoIDsBefore = (event.diff.repo_ids) ? event.previous.repo_ids : repoIDsAfter;
+    for (let repoID of _.union(repoIDsAfter, repoIDsBefore)) {
+      const connectedBefore = !archivedBefore && !deletedBefore && _.includes(repoIDsBefore, repoID);
+      const connectedAfter = !archivedAfter && !deletedAfter && _.includes(repoIDsAfter, repoID);
+      // remove or restore hooks
+      if (connectedBefore && !connectedAfter) {
+        taskQueue.add(new TaskRemoveProjectHook(repoID, projectID));
+        taskQueue.add(new TaskRemoveWikis(repoID, projectID));
+      } else if (!connectedBefore && connectedAfter) {
+        taskQueue.add(new TaskImportRepoEvents(repoID, projectID));
+        taskQueue.add(new TaskImportWikis(repoID, projectID));
+        taskQueue.add(new TaskInstallProjectHook(repoID, projectID));
+      }
     }
+  }
 }
 
 /**
@@ -204,14 +204,14 @@ function handleProjectChangeEvent(event) {
  * @param  {Object} event
  */
 function handleRepoChangeEvent(event) {
-    if (event.diff.template) {
-        const repoID = event.id;
-        if (event.current.template) {
-            taskQueue.add(new TaskImportSnapshots(repoID));
-        } else if (event.current.template === null) {
-            taskQueue.add(new TaskDetectTemplate(repoID));
-        }
+  if (event.diff.template) {
+    const repoID = event.id;
+    if (event.current.template) {
+      taskQueue.add(new TaskImportSnapshots(repoID));
+    } else if (event.current.template === null) {
+      taskQueue.add(new TaskDetectTemplate(repoID));
     }
+  }
 }
 
 /**
@@ -220,21 +220,21 @@ function handleRepoChangeEvent(event) {
  * @param  {Object} event
  */
 function handleStoryChangeEvent(event) {
-    if (event.current.mtime === event.current.etime) {
-        // change is caused by a prior export
-        return;
-    } else if (event.current.mtime === event.current.itime) {
-        // change is caused by an import
-        return;
-    } else if (event.current.deleted) {
-        return;
-    } else if (event.current.type !== 'issue') {
-        return;
-    } else if (!event.diff.details) {
-        return;
-    }
-    const storyID = event.id;
-    taskQueue.add(new TaskReexportStory(storyID));
+  if (event.current.mtime === event.current.etime) {
+    // change is caused by a prior export
+    return;
+  } else if (event.current.mtime === event.current.itime) {
+    // change is caused by an import
+    return;
+  } else if (event.current.deleted) {
+    return;
+  } else if (event.current.type !== 'issue') {
+    return;
+  } else if (!event.diff.details) {
+    return;
+  }
+  const storyID = event.id;
+  taskQueue.add(new TaskReexportStory(storyID));
 }
 
 /**
@@ -243,21 +243,21 @@ function handleStoryChangeEvent(event) {
  * @param  {Object} event
  */
 function handleTaskChangeEvent(event) {
-    if (event.current.action !== 'export-issue') {
-        return;
-    }
-    if (!event.diff.options) {
-        return;
-    }
-    if (event.schema === 'global') {
-        return;
-    }
-    if (event.current.deleted) {
-        return;
-    }
-    const schema = event.schema;
-    const taskID = event.id;
-    taskQueue.add(new TaskExportStory(schema, taskID));
+  if (event.current.action !== 'export-issue') {
+    return;
+  }
+  if (!event.diff.options) {
+    return;
+  }
+  if (event.schema === 'global') {
+    return;
+  }
+  if (event.current.deleted) {
+    return;
+  }
+  const schema = event.schema;
+  const taskID = event.id;
+  taskQueue.add(new TaskExportStory(schema, taskID));
 }
 
 /**
@@ -266,12 +266,12 @@ function handleTaskChangeEvent(event) {
  * @param  {Object} event
  */
 function handleWikiChangeEvent(event) {
-    if (event.op !== 'UPDATE' || !event.diff.chosen) {
-        return;
-    }
-    const schema = event.schema;
-    const wikiID = event.id;
-    taskQueue.add(new TaskReimportWiki(schema, wikiID));
+  if (event.op !== 'UPDATE' || !event.diff.chosen) {
+    return;
+  }
+  const schema = event.schema;
+  const wikiID = event.id;
+  taskQueue.add(new TaskReimportWiki(schema, wikiID));
 }
 
 /**
@@ -280,18 +280,18 @@ function handleWikiChangeEvent(event) {
  * @param  {Object} event
  */
 function handleSystemChangeEvent(event) {
-    if (event.diff.settings) {
-        const hostBefore = _.trimEnd((event.previous.settings) ? event.previous.settings.address : '', ' /');
-        const hostAfter = _.trimEnd(event.current.settings.address, ' /');
-        if (hostBefore !== hostAfter) {
-            if (hostBefore) {
-                taskQueue.add(new TaskRemoveHooks(hostBefore));
-            }
-            if (hostAfter) {
-                taskQueue.add(new TaskInstallHooks(hostAfter));
-            }
-        }
+  if (event.diff.settings) {
+    const hostBefore = _.trimEnd((event.previous.settings) ? event.previous.settings.address : '', ' /');
+    const hostAfter = _.trimEnd(event.current.settings.address, ' /');
+    if (hostBefore !== hostAfter) {
+      if (hostBefore) {
+        taskQueue.add(new TaskRemoveHooks(hostBefore));
+      }
+      if (hostAfter) {
+        taskQueue.add(new TaskInstallHooks(hostAfter));
+      }
     }
+  }
 }
 
 /**
@@ -304,15 +304,15 @@ function handleSystemChangeEvent(event) {
  * @return {Promise}
  */
 async function handleSystemHookCallback(req, res, next) {
-    try {
-        const glHookEvent = req.body;
-        const serverID = parseInt(req.params.serverID);
-        HookManager.verifyHookRequest(req);
-        taskQueue.add(new TaskProcessSystemHookEvent(serverID, glHookEvent));
-        res.end();
-    } catch (err) {
-        next(err);
-    }
+  try {
+    const glHookEvent = req.body;
+    const serverID = parseInt(req.params.serverID);
+    HookManager.verifyHookRequest(req);
+    taskQueue.add(new TaskProcessSystemHookEvent(serverID, glHookEvent));
+    res.end();
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
@@ -325,43 +325,43 @@ async function handleSystemHookCallback(req, res, next) {
  * @return {Promise}
  */
 async function handleProjectHookCallback(req, res, next) {
-    try {
-        const glHookEvent = req.body;
-        const serverID = parseInt(req.params.serverID);
-        const repoID = parseInt(req.params.repoID);
-        const projectID = parseInt(req.params.projectID);
-        HookManager.verifyHookRequest(req);
-        taskQueue.add(new TaskProcessProjectHookEvent(repoID, projectID, glHookEvent));
-        res.end();
-    } catch (err) {
-        next(err);
-    }
+  try {
+    const glHookEvent = req.body;
+    const serverID = parseInt(req.params.serverID);
+    const repoID = parseInt(req.params.repoID);
+    const projectID = parseInt(req.params.projectID);
+    HookManager.verifyHookRequest(req);
+    taskQueue.add(new TaskProcessProjectHookEvent(repoID, projectID, glHookEvent));
+    res.end();
+  } catch (err) {
+    next(err);
+  }
 }
 
 async function handleFileRequest(req, res, next) {
-    try {
-        const { schema, commit, type } = req.params;
-        const path = req.params[0];
-        const buffer = await SnapshotManager.retrieveFile(schema, commit, type, path);
-        res.send(buffer);
-    } catch (err) {
-        next(err);
-    }
+  try {
+    const { schema, commit, type } = req.params;
+    const path = req.params[0];
+    const buffer = await SnapshotManager.retrieveFile(schema, commit, type, path);
+    res.send(buffer);
+  } catch (err) {
+    next(err);
+  }
 }
 
 function handleError(err, req, res, next) {
-    if (!res.headersSent) {
-        const status = err.status || err.statusCode || 400;
-        res.type('text').status(status).send(err.message);
-    }
+  if (!res.headersSent) {
+    const status = err.status || err.statusCode || 400;
+    res.type('text').status(status).send(err.message);
+  }
 }
 
 if ('file://' + process.argv[1] === import.meta.url) {
-    start();
-    Shutdown.addListener(stop);
+  start();
+  Shutdown.addListener(stop);
 }
 
 export {
-    start,
-    stop,
+  start,
+  stop,
 };

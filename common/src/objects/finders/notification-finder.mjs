@@ -14,18 +14,18 @@ const emptyArray = [];
  * @return {Promise<Array<Notification>>}
  */
 async function findNotificationsForUser(db, user, minimum) {
-    if (!user) {
-        return emptyArray;
-    }
-    return db.find({
-        table,
-        criteria: {
-            target_user_id: user.id,
-            limit: 500,
-        },
-        prefetch: true,
-        minimum
-    });
+  if (!user) {
+    return emptyArray;
+  }
+  return db.find({
+    table,
+    criteria: {
+      target_user_id: user.id,
+      limit: 500,
+    },
+    prefetch: true,
+    minimum
+  });
 }
 
 /**
@@ -39,17 +39,17 @@ async function findNotificationsForUser(db, user, minimum) {
  * @return {Promise<Array<Notification>>}
  */
 async function findNotificationsForUserOnDate(db, user, date, minimum) {
-    if (!user) {
-        return emptyArray;
-    }
-    return db.find({
-        table,
-        criteria: {
-            target_user_id: user.id,
-            time_range: DateUtils.getDayRange(date),
-        },
-        minimum,
-    });
+  if (!user) {
+    return emptyArray;
+  }
+  return db.find({
+    table,
+    criteria: {
+      target_user_id: user.id,
+      time_range: DateUtils.getDayRange(date),
+    },
+    minimum,
+  });
 }
 
 /**
@@ -62,23 +62,23 @@ async function findNotificationsForUserOnDate(db, user, date, minimum) {
  * @return {Promise<Array<Notification>>}
  */
 async function findNotificationsUnseenByUser(db, user, minimum) {
-    if (!user) {
-        return emptyArray;
-    }
-    return db.find({
-        table,
-        criteria: {
-            target_user_id: user.id,
-            seen: false,
-            limit: 100,
-        },
-        prefetch: true,
-        minimum
-    });
+  if (!user) {
+    return emptyArray;
+  }
+  return db.find({
+    table,
+    criteria: {
+      target_user_id: user.id,
+      seen: false,
+      limit: 100,
+    },
+    prefetch: true,
+    minimum
+  });
 }
 
 export {
-    findNotificationsForUser,
-    findNotificationsForUserOnDate,
-    findNotificationsUnseenByUser
+  findNotificationsForUser,
+  findNotificationsForUserOnDate,
+  findNotificationsUnseenByUser
 };

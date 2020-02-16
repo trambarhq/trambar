@@ -1,31 +1,31 @@
 .repo-list-page {
-    .buttons {
-        float: right;
+  .buttons {
+    float: right;
+  }
+
+  .sortable-table {
+    #type {
+      width: 12em;
     }
 
-    .sortable-table {
-        #type {
-            width: 12em;
-        }
-
-        #server {
-            width: 12em;
-        }
-
-        #issue_tracker {
-            width: 14em;
-        }
-
-        #range {
-            width: 16em;
-        }
-
-        #to_date, #last_month, #this_month {
-            width: 12em;
-        }
-
-        #mtime {
-            width: 10em;
-        }
+    #server {
+      width: 12em;
     }
+
+    #issue_tracker {
+      width: 14em;
+    }
+
+    #range {
+      width: 16em;
+    }
+
+    #to_date, #last_month, #this_month {
+      width: 12em;
+    }
+
+    #mtime {
+      width: 10em;
+    }
+  }
 }

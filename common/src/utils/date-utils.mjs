@@ -8,12 +8,12 @@ import Moment from 'moment';
  * @return {Array<String>}
  */
 function getDayRange(date) {
-    let s = (date instanceof Moment) ? date : Moment(date);
-    let e = s.clone().endOf('day');
-    let rangeStart = s.toISOString();
-    let rangeEnd = e.toISOString();
-    let range = `[${rangeStart},${rangeEnd}]`;
-    return range;
+  let s = (date instanceof Moment) ? date : Moment(date);
+  let e = s.clone().endOf('day');
+  let rangeStart = s.toISOString();
+  let rangeEnd = e.toISOString();
+  let range = `[${rangeStart},${rangeEnd}]`;
+  return range;
 }
 
 /**
@@ -25,18 +25,18 @@ function getDayRange(date) {
  * @return {Array<String>}
  */
 function getMonthRanges(startTime, endTime) {
-    let ms = (startTime instanceof Moment) ? startTime : Moment(startTime);
-    let me = (endTime instanceof Moment) ? endTime : Moment(endTime);
-    let s = ms.startOf('month');
-    let e = me.endOf('month');
-    let ranges = [];
-    for (let m = s.clone(); m <= e; m.add(1, 'month')) {
-        let start = m.toISOString();
-        let end = m.clone().endOf('month').toISOString();
-        let range = `[${start},${end}]`;
-        ranges.push(range);
-    }
-    return ranges;
+  let ms = (startTime instanceof Moment) ? startTime : Moment(startTime);
+  let me = (endTime instanceof Moment) ? endTime : Moment(endTime);
+  let s = ms.startOf('month');
+  let e = me.endOf('month');
+  let ranges = [];
+  for (let m = s.clone(); m <= e; m.add(1, 'month')) {
+    let start = m.toISOString();
+    let end = m.clone().endOf('month').toISOString();
+    let range = `[${start},${end}]`;
+    ranges.push(range);
+  }
+  return ranges;
 }
 
 /**
@@ -48,16 +48,16 @@ function getMonthRanges(startTime, endTime) {
  * @return {Array<String>}
  */
 function getDates(startTIme, endTime) {
-    let ms = (startTime instanceof Moment) ? startTime : Moment(startTime);
-    let me = (endTime instanceof Moment) ? endTime : Moment(endTime);
-    let s = ms.startOf('day');
-    let e = me.endOf('day');
-    let dates = [];
-    for (let m = s.clone(); m <= e; m.add(1, 'day')) {
-        let date = m.format('YYYY-MM-DD');
-        dates.push(date);
-    }
-    return dates;
+  let ms = (startTime instanceof Moment) ? startTime : Moment(startTime);
+  let me = (endTime instanceof Moment) ? endTime : Moment(endTime);
+  let s = ms.startOf('day');
+  let e = me.endOf('day');
+  let dates = [];
+  for (let m = s.clone(); m <= e; m.add(1, 'day')) {
+    let date = m.format('YYYY-MM-DD');
+    dates.push(date);
+  }
+  return dates;
 }
 
 /**
@@ -66,12 +66,12 @@ function getDates(startTIme, endTime) {
  * @return {Number}
  */
 function getTimeZoneOffset() {
-    return Moment().utcOffset();
+  return Moment().utcOffset();
 }
 
 export {
-    getDayRange,
-    getMonthRanges,
-    getTimeZoneOffset,
-    getDates,
+  getDayRange,
+  getMonthRanges,
+  getTimeZoneOffset,
+  getDates,
 };

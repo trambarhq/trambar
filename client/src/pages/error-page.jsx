@@ -10,18 +10,18 @@ import './error-page.scss';
  * Component for the Error page.
  */
 function ErrorPage(props) {
-    return (
-        <PageContainer className="error-page">
-            <div className="graphic"><Unicorn /></div>
-            <div className="text">
-                <h1 className="title">404 Not Found</h1>
-                <p>The page you're trying to reach doesn't exist. But then again, who does?</p>
-            </div>
-        </PageContainer>
-    );
+  return (
+    <PageContainer className="error-page">
+      <div className="graphic"><Unicorn /></div>
+      <div className="text">
+        <h1 className="title">404 Not Found</h1>
+        <p>The page you're trying to reach doesn't exist. But then again, who does?</p>
+      </div>
+    </PageContainer>
+  );
 }
 
 export {
-    ErrorPage as default,
-    ErrorPage,
+  ErrorPage as default,
+  ErrorPage,
 };

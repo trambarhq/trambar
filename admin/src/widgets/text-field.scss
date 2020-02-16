@@ -1,13 +1,40 @@
 @import '../colors';
 
 .text-field {
-    margin-bottom: 1em;
+  margin-bottom: 1em;
 
-    label {
-        display: block;
-        font-weight: 600;
-    }
+  label {
+    display: block;
+    font-weight: 600;
+  }
 
+  input[type=text],
+  input[type=password],
+  input[type=email],
+  input[type=url],
+  input[type=tel],
+  input[type=time],
+  input[type=number],
+  textarea {
+    display: block;
+    width: 100%;
+    transition: border-color 1s ease-out;
+    border: 1px solid $text-field-border-color;
+    font-size: 1em;
+    margin-top: 2px;
+    padding: 2px 2px 1px 4px;
+  }
+
+  input[type=time],
+  input[type=number] {
+    width: inherit;
+  }
+
+  textarea {
+    resize: none;
+  }
+
+  &.readonly {
     input[type=text],
     input[type=password],
     input[type=email],
@@ -16,36 +43,9 @@
     input[type=time],
     input[type=number],
     textarea {
-        display: block;
-        width: 100%;
-        transition: border-color 1s ease-out;
-        border: 1px solid $text-field-border-color;
-        font-size: 1em;
-        margin-top: 2px;
-        padding: 2px 2px 1px 4px;
+      border-color: $text-field-read-only-border-color;
+      cursor: text;
+      outline: none;
     }
-
-    input[type=time],
-    input[type=number] {
-        width: inherit;
-    }
-
-    textarea {
-        resize: none;
-    }
-
-    &.readonly {
-        input[type=text],
-        input[type=password],
-        input[type=email],
-        input[type=url],
-        input[type=tel],
-        input[type=time],
-        input[type=number],
-        textarea {
-            border-color: $text-field-read-only-border-color;
-            cursor: text;
-            outline: none;
-        }
-    }
+  }
 }

@@ -21,123 +21,123 @@ import { UserListPage } from './user-list-page.jsx';
 import { UserSummaryPage } from './user-summary-page.jsx';
 
 ErrorPage.propTypes = {
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 MemberListPage.propTypes = {
-    editing: PropTypes.bool,
-    projectID: PropTypes.number.isRequired,
+  editing: PropTypes.bool,
+  projectID: PropTypes.number.isRequired,
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 ProjectListPage.propTypes = {
-    editing: PropTypes.bool,
+  editing: PropTypes.bool,
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 ProjectSummaryPage.propTypes = {
-    editing: PropTypes.bool,
-    projectID: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.oneOf([ 'new' ]),
-    ]).isRequired,
+  editing: PropTypes.bool,
+  projectID: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.oneOf([ 'new' ]),
+  ]).isRequired,
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
-    payloads: PropTypes.instanceOf(Payloads).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
+  payloads: PropTypes.instanceOf(Payloads).isRequired,
 };
 RepoListPage.propTypes = {
-    editing: PropTypes.bool,
-    projectID: PropTypes.number.isRequired,
+  editing: PropTypes.bool,
+  projectID: PropTypes.number.isRequired,
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 RepoSummaryPage.propTypes = {
-    editing: PropTypes.bool,
-    projectID: PropTypes.number.isRequired,
-    repoID: PropTypes.number.isRequired,
+  editing: PropTypes.bool,
+  projectID: PropTypes.number.isRequired,
+  repoID: PropTypes.number.isRequired,
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 RoleListPage.propTypes = {
-    editing: PropTypes.bool,
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  editing: PropTypes.bool,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 RoleSummaryPage.propTypes = {
-    editing: PropTypes.bool,
-    roleID: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.oneOf([ 'new' ]),
-    ]).isRequired,
+  editing: PropTypes.bool,
+  roleID: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.oneOf([ 'new' ]),
+  ]).isRequired,
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 ServerListPage.propTypes = {
-    editing: PropTypes.bool,
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  editing: PropTypes.bool,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 ServerSummaryPage.propTypes = {
-    editing: PropTypes.bool,
-    serverID: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.oneOf([ 'new' ]),
-    ]).isRequired,
-    scrollToTaskID: PropTypes.number,
+  editing: PropTypes.bool,
+  serverID: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.oneOf([ 'new' ]),
+  ]).isRequired,
+  scrollToTaskID: PropTypes.number,
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 SettingsPage.propTypes = {
-    editing: PropTypes.bool,
+  editing: PropTypes.bool,
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
-    payloads: PropTypes.instanceOf(Payloads).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
+  payloads: PropTypes.instanceOf(Payloads).isRequired,
 };
 SignInPage.propTypes = {
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 StartPage.propTypes = {
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 UserListPage.propTypes = {
-    editing: PropTypes.bool,
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
+  editing: PropTypes.bool,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
 };
 UserSummaryPage.propTypes = {
-    editing: PropTypes.bool,
-    projectID: PropTypes.number,
-    userID: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.oneOf([ 'new' ]),
-    ]).isRequired,
+  editing: PropTypes.bool,
+  projectID: PropTypes.number,
+  userID: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.oneOf([ 'new' ]),
+  ]).isRequired,
 
-    database: PropTypes.instanceOf(Database).isRequired,
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
-    payloads: PropTypes.instanceOf(Payloads).isRequired,
+  database: PropTypes.instanceOf(Database).isRequired,
+  route: PropTypes.instanceOf(Route).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
+  payloads: PropTypes.instanceOf(Payloads).isRequired,
 };

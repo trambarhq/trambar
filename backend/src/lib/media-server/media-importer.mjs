@@ -10,20 +10,20 @@ import HTTPError from '../common/errors/http-error.mjs';
  * @return {Promise<Object>}
  */
 async function importFile(url, retrievalHeaders) {
-    const importURL = 'http://media_server/internal/import';
-    const method = 'post';
-    const headers = { 'Content-Type': 'application/json' };
-    const body = JSON.stringify({ url, headers: retrievalHeaders });
-    const response = await CrossFetch(importURL, { method, headers, body, timeout: 5000 });
-    const { status } = response;
-    const info = await response.json();
-    if (status === 200) {
-        return info;
-    } else {
-        throw new HTTPError(status, info.message);
-    }
+  const importURL = 'http://media_server/internal/import';
+  const method = 'post';
+  const headers = { 'Content-Type': 'application/json' };
+  const body = JSON.stringify({ url, headers: retrievalHeaders });
+  const response = await CrossFetch(importURL, { method, headers, body, timeout: 5000 });
+  const { status } = response;
+  const info = await response.json();
+  if (status === 200) {
+    return info;
+  } else {
+    throw new HTTPError(status, info.message);
+  }
 }
 
 export {
-    importFile,
+  importFile,
 };

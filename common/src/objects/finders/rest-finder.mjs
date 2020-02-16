@@ -10,12 +10,12 @@ const table = 'rest';
  * @return {Promise<Rest>}
  */
 function findRest(db, schema, id) {
-    return db.findOne({
-        schema,
-        table,
-        criteria: { id },
-        required: true
-    });
+  return db.findOne({
+    schema,
+    table,
+    criteria: { id },
+    required: true
+  });
 }
 
 /**
@@ -27,14 +27,14 @@ function findRest(db, schema, id) {
  * @return {Promise<Array<Rest>>}
  */
 function findAllRests(db, schema) {
-    return db.find({
-        schema,
-        table,
-        criteria: {},
-    });
+  return db.find({
+    schema,
+    table,
+    criteria: {},
+  });
 }
 
 export {
-    findRest,
-    findAllRests,
+  findRest,
+  findAllRests,
 };

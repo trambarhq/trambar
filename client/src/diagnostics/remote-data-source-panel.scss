@@ -1,103 +1,103 @@
 @import '../colors';
 
 .settings-panel.remote-data-source {
-    .recent-search-table {
-        border-collapse: collapse;
-        border-style: hidden;
-        table-layout: fixed;
-        width: 50em;
-        margin: -0.25em -0.25em -0.25em -0.25em;
+  .recent-search-table {
+    border-collapse: collapse;
+    border-style: hidden;
+    table-layout: fixed;
+    width: 50em;
+    margin: -0.25em -0.25em -0.25em -0.25em;
 
-        TR {
-            .updating {
-                background-color: $diagnostics-progress-text-color;
-            }
+    TR {
+      .updating {
+        background-color: $diagnostics-progress-text-color;
+      }
 
-            .dirty {
-                background-color: $diagnostics-error-text-color;
-            }
-        }
-
-        TH, TD {
-            border: 1px solid $diagnostics-table-border-color;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            font-size: 0.8em;
-            padding: 0.2em 0.2em 0.2em 0.2em;
-
-            &.time {
-                width: 8%;
-            }
-
-            &.schema {
-                width: 10%;
-            }
-
-            &.table {
-                width: 15%;
-            }
-
-            &.criteria {
-                width: 30%;
-            }
-
-            &.objects {
-                width: 15%;
-            }
-
-            &.by {
-                width: 22%;
-            }
-        }
-
-        TD {
-            &.time, &.objects {
-                text-align: right;
-            }
-        }
+      .dirty {
+        background-color: $diagnostics-error-text-color;
+      }
     }
 
-    .recent-storage-table {
-        border-collapse: collapse;
-        border-style: hidden;
-        table-layout: fixed;
-        width: 50em;
-        margin: -0.25em -0.25em -0.25em -0.25em;
+    TH, TD {
+      border: 1px solid $diagnostics-table-border-color;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 0.8em;
+      padding: 0.2em 0.2em 0.2em 0.2em;
 
-        TH, TD {
-            border: 1px solid $diagnostics-table-border-color;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            font-size: 0.8em;
-            padding: 0.2em 0.2em 0.2em 0.2em;
+      &.time {
+        width: 8%;
+      }
 
-            &.time {
-                width: 8%;
-            }
+      &.schema {
+        width: 10%;
+      }
 
-            &.schema {
-                width: 10%;
-            }
+      &.table {
+        width: 15%;
+      }
 
-            &.table {
-                width: 15%;
-            }
+      &.criteria {
+        width: 30%;
+      }
 
-            &.objects {
-                width: 45%;
-            }
+      &.objects {
+        width: 15%;
+      }
 
-            &.by {
-                width: 22%;
-            }
-        }
-
-        TD {
-            &.time {
-                text-align: right;
-            }
-        }
+      &.by {
+        width: 22%;
+      }
     }
+
+    TD {
+      &.time, &.objects {
+        text-align: right;
+      }
+    }
+  }
+
+  .recent-storage-table {
+    border-collapse: collapse;
+    border-style: hidden;
+    table-layout: fixed;
+    width: 50em;
+    margin: -0.25em -0.25em -0.25em -0.25em;
+
+    TH, TD {
+      border: 1px solid $diagnostics-table-border-color;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 0.8em;
+      padding: 0.2em 0.2em 0.2em 0.2em;
+
+      &.time {
+        width: 8%;
+      }
+
+      &.schema {
+        width: 10%;
+      }
+
+      &.table {
+        width: 15%;
+      }
+
+      &.objects {
+        width: 45%;
+      }
+
+      &.by {
+        width: 22%;
+      }
+    }
+
+    TD {
+      &.time {
+        text-align: right;
+      }
+    }
+  }
 }

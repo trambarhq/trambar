@@ -10,21 +10,21 @@ import './corner-pop-up.scss';
  * component will be the menu's contents.
  */
 function CornerPopUp(props) {
-    const { open, children } = props;
-    const dir = (open) ? 'left' : 'down';
-    return (
-        <PopUpMenu className="corner-pop-up" {...props} >
-            <button>
-                <i className={`fa fa-chevron-circle-${dir}`} />
-            </button>
-            <menu>
-                {children}
-            </menu>
-        </PopUpMenu>
-    );
+  const { open, children } = props;
+  const dir = (open) ? 'left' : 'down';
+  return (
+    <PopUpMenu className="corner-pop-up" {...props} >
+      <button>
+        <i className={`fa fa-chevron-circle-${dir}`} />
+      </button>
+      <menu>
+        {children}
+      </menu>
+    </PopUpMenu>
+  );
 }
 
 export {
-    CornerPopUp as default,
-    CornerPopUp,
+  CornerPopUp as default,
+  CornerPopUp,
 };

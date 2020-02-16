@@ -11,53 +11,53 @@ const regExp = /^([ \t]*)\*\s+\[([ xхχ])\]([ \t]*)(.*?)([ \t]*?)$/mig;
  * @return {Array}
  */
 function extract(text) {
-    text = (text) ? text : '';
+  text = (text) ? text : '';
 
-    let tokens = [];
-    let si = 0;
-    let m;
-    let currentList = null;
-    let key = 1;
-    let list = 1;
-    while (m = regExp.exec(text)) {
-        let textBefore = text.substring(si, m.index);
-        if (textBefore) {
-            // if there's text before the item, then close out then current list
-            if (currentList) {
-                if (_.trim(textBefore)) {
-                    currentList = null;
-                    list++;
-                    tokens.push(textBefore);
-                } else {
-                    // append the whitespaces onto the last time
-                    let lastItem = _.last(currentList);
-                    lastItem.after += textBefore;
-                }
-            } else {
-                tokens.push(textBefore);
-            }
-        }
-        let before = m[1];
-        let answer = m[2];
-        let checked = !!_.trim(answer);
-        let between = m[3]
-        let label = m[4];
-        let after = m[5];
-        let item = { label, checked, answer, before, between, after, list, key };
-        if (currentList) {
-            currentList.push(item);
+  let tokens = [];
+  let si = 0;
+  let m;
+  let currentList = null;
+  let key = 1;
+  let list = 1;
+  while (m = regExp.exec(text)) {
+    let textBefore = text.substring(si, m.index);
+    if (textBefore) {
+      // if there's text before the item, then close out then current list
+      if (currentList) {
+        if (_.trim(textBefore)) {
+          currentList = null;
+          list++;
+          tokens.push(textBefore);
         } else {
-            currentList = [ item ];
-            tokens.push(currentList);
+          // append the whitespaces onto the last time
+          let lastItem = _.last(currentList);
+          lastItem.after += textBefore;
         }
-        si = m.index + m[0].length;
-        key++;
+      } else {
+        tokens.push(textBefore);
+      }
     }
-    let textAfter = text.substring(si);
-    if (textAfter) {
-        tokens.push(textAfter);
+    let before = m[1];
+    let answer = m[2];
+    let checked = !!_.trim(answer);
+    let between = m[3]
+    let label = m[4];
+    let after = m[5];
+    let item = { label, checked, answer, before, between, after, list, key };
+    if (currentList) {
+      currentList.push(item);
+    } else {
+      currentList = [ item ];
+      tokens.push(currentList);
     }
-    return tokens;
+    si = m.index + m[0].length;
+    key++;
+  }
+  let textAfter = text.substring(si);
+  if (textAfter) {
+    tokens.push(textAfter);
+  }
+  return tokens;
 }
 
 /**
@@ -68,14 +68,14 @@ function extract(text) {
  * @return {Boolean}
  */
 function detect(text) {
-    if (typeof(text) === 'object') {
-        return _.some(text, detect);
-    }
-    let tokens = extract(text);
-    return _.some(tokens, (token) => {
-        // lists are arrays
-        return token instanceof Array;
-    });
+  if (typeof(text) === 'object') {
+    return _.some(text, detect);
+  }
+  let tokens = extract(text);
+  return _.some(tokens, (token) => {
+    // lists are arrays
+    return token instanceof Array;
+  });
 }
 
 /**
@@ -88,39 +88,39 @@ function detect(text) {
  * @param  {Boolean} clearOthers
  */
 function set(tokens, list, key, checked, clearOthers) {
-    for (let token of tokens) {
-        if (token instanceof Array) {
-            for (let item of token) {
-                if (item.list == list) {
-                    // update .checked then .answer of item
-                    if (item.key == key) {
-                        update(item, checked);
-                    } else {
-                        if (checked && clearOthers) {
-                            update(item, false);
-                        }
-                    }
-                }
+  for (let token of tokens) {
+    if (token instanceof Array) {
+      for (let item of token) {
+        if (item.list == list) {
+          // update .checked then .answer of item
+          if (item.key == key) {
+            update(item, checked);
+          } else {
+            if (checked && clearOthers) {
+              update(item, false);
             }
+          }
         }
+      }
     }
+  }
 }
 
 function update(item, checked) {
-    item.checked = checked;
-    if (checked) {
-        let x;
-        if (/[\u0x0400-\u0x04ff]/.test(item.label)) {
-            x = 'х';
-        } else if (/[\u0x0370-\u0x03ff]/.test(item.label)) {
-            x = 'χ';
-        } else {
-            x = 'x';
-        }
-        item.answer = x;
+  item.checked = checked;
+  if (checked) {
+    let x;
+    if (/[\u0x0400-\u0x04ff]/.test(item.label)) {
+      x = 'х';
+    } else if (/[\u0x0370-\u0x03ff]/.test(item.label)) {
+      x = 'χ';
     } else {
-        item.answer = ' ';
+      x = 'x';
     }
+    item.answer = x;
+  } else {
+    item.answer = ' ';
+  }
 }
 
 /**
@@ -133,19 +133,19 @@ function update(item, checked) {
  * @return {Object|null}
  */
 function find(tokens, list, key) {
-    for (let token of tokens) {
-        if (token instanceof Array) {
-            let result = _.find(token, (item) => {
-                if (item.list == list && item.key == key) {
-                    return true;
-                }
-            });
-            if (result) {
-                return result;
-            }
+  for (let token of tokens) {
+    if (token instanceof Array) {
+      let result = _.find(token, (item) => {
+        if (item.list == list && item.key == key) {
+          return true;
         }
+      });
+      if (result) {
+        return result;
+      }
     }
-    return null;
+  }
+  return null;
 }
 
 /**
@@ -157,17 +157,17 @@ function find(tokens, list, key) {
  * @return {Number}
  */
 function count(tokens, checked) {
-    let total = 0;
-    for (let token of tokens) {
-        if (token instanceof Array) {
-            for (let item of token) {
-                if (checked === undefined || item.checked === checked) {
-                    total++;
-                }
-            }
+  let total = 0;
+  for (let token of tokens) {
+    if (token instanceof Array) {
+      for (let item of token) {
+        if (checked === undefined || item.checked === checked) {
+          total++;
         }
+      }
     }
-    return total;
+  }
+  return total;
 }
 
 /**
@@ -178,25 +178,25 @@ function count(tokens, checked) {
  * @return {String}
  */
 function join(tokens) {
-    // concatenate tokens into a string again
-    tokens = _.flattenDeep(tokens);
-    let lines = [];
-    for (let token of tokens) {
-        if (token instanceof Object) {
-            lines.push(token.before + '* [' + token.answer + ']' + token.between + token.label + token.after);
-        } else {
-            lines.push(token);
-        }
+  // concatenate tokens into a string again
+  tokens = _.flattenDeep(tokens);
+  let lines = [];
+  for (let token of tokens) {
+    if (token instanceof Object) {
+      lines.push(token.before + '* [' + token.answer + ']' + token.between + token.label + token.after);
+    } else {
+      lines.push(token);
     }
-    return lines.join('');
+  }
+  return lines.join('');
 }
 
 export {
-    extract,
-    detect,
-    set,
-    update,
-    find,
-    count,
-    join,
+  extract,
+  detect,
+  set,
+  update,
+  find,
+  count,
+  join,
 };

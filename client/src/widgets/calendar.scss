@@ -1,104 +1,104 @@
 @import '../colors';
 
 .calendar {
-    display: inline-block;
-    border-collapse: collapse;
-    border-spacing: 0;
-    direction: ltr;
-    margin-left: 0.2em;
-    margin-right: 0.2em;
+  display: inline-block;
+  border-collapse: collapse;
+  border-spacing: 0;
+  direction: ltr;
+  margin-left: 0.2em;
+  margin-right: 0.2em;
 
-    .title {
-        TH {
-            font-size: 0.8em;
-            font-weight: bold;
-            color: $calendar-text-color;
-            border: 1px solid $calendar-border-color;
-            padding: 0.25em 0.1em 0.2em 0.1em;
+  .title {
+    TH {
+      font-size: 0.8em;
+      font-weight: bold;
+      color: $calendar-text-color;
+      border: 1px solid $calendar-border-color;
+      padding: 0.25em 0.1em 0.2em 0.1em;
 
-            A {
-                display: block;
-                touch-action: manipulation;
+      A {
+        display: block;
+        touch-action: manipulation;
 
-                &:link, &:visited {
-                    text-decoration: none;
-                    color: $calendar-text-color;
-                }
-
-                &:hover {
-                    color: $calendar-hover-text-color;
-                }
-            }
-
-            &.selected {
-                A {
-                    &:link, &:visited {
-                        color: $calendar-hover-text-color;
-                    }
-                }
-            }
+        &:link, &:visited {
+          text-decoration: none;
+          color: $calendar-text-color;
         }
-    }
 
-    .headings {
-        TH {
-            font-size: 0.6em;
-            font-weight: normal;
-            color: $calendar-text-color;
-            border: 1px solid $calendar-border-color;
-            padding: 0.2em 0 0.2em 0;
-
-            &.weekend {
-                background-color: $calendar-weekend-background-color;
-            }
+        &:hover {
+          color: $calendar-hover-text-color;
         }
-    }
+      }
 
-    .dates {
-        TD {
-            width: 1.6em;
-            height: 1.4em;
-            font-size: 0.8em;
-            color: $calendar-inactive-text-color;
-            text-align: center;
-            border: 1px solid $calendar-border-color;
-            cursor: default;
-
-            A {
-                display: block;
-                touch-action: manipulation;
-
-                &:link, &:visited {
-                    text-decoration: none;
-                    color: $calendar-active-text-color;
-                }
-            }
-
-            &.weekend {
-                background-color: $calendar-weekend-background-color;
-            }
-
-            &.today {
-                color: $calendar-today-text-color;
-                background-color: $calendar-today-background-color;
-
-                A {
-                    &:link, &:visited {
-                        color: $calendar-today-text-color;
-                    }
-                }
-            }
-
-            &.selected {
-                color: $calendar-selected-text-color;
-                background-color: $calendar-selected-background-color;
-
-                A {
-                    &:link, &:visited {
-                        color: $calendar-selected-text-color;
-                    }
-                }
-            }
+      &.selected {
+        A {
+          &:link, &:visited {
+            color: $calendar-hover-text-color;
+          }
         }
+      }
     }
+  }
+
+  .headings {
+    TH {
+      font-size: 0.6em;
+      font-weight: normal;
+      color: $calendar-text-color;
+      border: 1px solid $calendar-border-color;
+      padding: 0.2em 0 0.2em 0;
+
+      &.weekend {
+        background-color: $calendar-weekend-background-color;
+      }
+    }
+  }
+
+  .dates {
+    TD {
+      width: 1.6em;
+      height: 1.4em;
+      font-size: 0.8em;
+      color: $calendar-inactive-text-color;
+      text-align: center;
+      border: 1px solid $calendar-border-color;
+      cursor: default;
+
+      A {
+        display: block;
+        touch-action: manipulation;
+
+        &:link, &:visited {
+          text-decoration: none;
+          color: $calendar-active-text-color;
+        }
+      }
+
+      &.weekend {
+        background-color: $calendar-weekend-background-color;
+      }
+
+      &.today {
+        color: $calendar-today-text-color;
+        background-color: $calendar-today-background-color;
+
+        A {
+          &:link, &:visited {
+            color: $calendar-today-text-color;
+          }
+        }
+      }
+
+      &.selected {
+        color: $calendar-selected-text-color;
+        background-color: $calendar-selected-background-color;
+
+        A {
+          &:link, &:visited {
+            color: $calendar-selected-text-color;
+          }
+        }
+      }
+    }
+  }
 }

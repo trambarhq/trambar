@@ -1,37 +1,37 @@
 .member-list-page {
-    .buttons {
-        float: right;
-        margin-left: 0.4em;
+  .buttons {
+    float: right;
+    margin-left: 0.4em;
+  }
+
+  .sortable-table {
+
+    #type {
+      width: 10em;
     }
 
-    .sortable-table {
-
-        #type {
-            width: 10em;
-        }
-
-        #roles {
-            width: 10em;
-        }
-
-        #range {
-            width: 16em;
-        }
-
-        #to_date, #last_month, #this_month {
-            width: 12em;
-        }
-
-        #mtime {
-            width: 10em;
-        }
-
-        .resource-view {
-            display: inline-block;
-        }
-
-        .action-badge {
-            margin-top: 0.35em;
-        }
+    #roles {
+      width: 10em;
     }
+
+    #range {
+      width: 16em;
+    }
+
+    #to_date, #last_month, #this_month {
+      width: 12em;
+    }
+
+    #mtime {
+      width: 10em;
+    }
+
+    .resource-view {
+      display: inline-block;
+    }
+
+    .action-badge {
+      margin-top: 0.35em;
+    }
+  }
 }

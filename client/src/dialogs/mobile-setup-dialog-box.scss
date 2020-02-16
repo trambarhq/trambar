@@ -1,52 +1,52 @@
 @import '../colors';
 
 .mobile-setup-dialog-box {
-    display: flex;
-    flex-direction: column;
-    background-color: $dialog-box-background-color;
-    box-shadow: 2px 2px 2px $dialog-box-shadow-color;
-    color: $dialog-box-text-color;
-    margin: auto;
-    padding: 0.4em 0.5em 0.4em 0.5em;
+  display: flex;
+  flex-direction: column;
+  background-color: $dialog-box-background-color;
+  box-shadow: 2px 2px 2px $dialog-box-shadow-color;
+  color: $dialog-box-text-color;
+  margin: auto;
+  padding: 0.4em 0.5em 0.4em 0.5em;
 
-    .contents {
-        flex: 1 1 auto;
-        padding-bottom: 0.5em;
+  .contents {
+    flex: 1 1 auto;
+    padding-bottom: 0.5em;
 
-        .qr-code {
-            float: left;
-            width: 198px;
-            height: 198px;
-            cursor: none;
-            margin-right: 1em;
-        }
-
-        .info {
-            float: left;
-            overflow: hidden;
-            padding: 0.5em 0.5em 0 0;
-
-            .label {
-                white-space: nowrap;
-                font-size: 0.9em;
-                color: $dialog-box-text-color;
-            }
-
-            .value {
-                white-space: nowrap;
-                font-size: 1.5em;
-                color: $dialog-box-critical-text-color;
-                margin-top: 0.25em;
-                margin-bottom: 0.5em;
-                user-select: text;
-            }
-        }
+    .qr-code {
+      float: left;
+      width: 198px;
+      height: 198px;
+      cursor: none;
+      margin-right: 1em;
     }
 
-    .buttons {
-        flex: 0 0 auto;
-        padding: 0.5em 0 0.2em 0.2em;
-        border-top: 1px solid $separator-color;
-        text-align: right;
+    .info {
+      float: left;
+      overflow: hidden;
+      padding: 0.5em 0.5em 0 0;
+
+      .label {
+        white-space: nowrap;
+        font-size: 0.9em;
+        color: $dialog-box-text-color;
+      }
+
+      .value {
+        white-space: nowrap;
+        font-size: 1.5em;
+        color: $dialog-box-critical-text-color;
+        margin-top: 0.25em;
+        margin-bottom: 0.5em;
+        user-select: text;
+      }
     }
+  }
+
+  .buttons {
+    flex: 0 0 auto;
+    padding: 0.5em 0 0.2em 0.2em;
+    border-top: 1px solid $separator-color;
+    text-align: right;
+  }
 }

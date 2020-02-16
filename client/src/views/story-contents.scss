@@ -1,302 +1,302 @@
 @import '../colors';
 
 .story-contents {
-    margin-top: 1em;
-    margin-bottom: 0.25em;
+  margin-top: 1em;
+  margin-bottom: 0.25em;
 
-    .text {
+  .text {
+    color: $story-text-color;
+    user-select: text;
+
+    A {
+      &:link, &:visited {
+        text-decoration: none;
         color: $story-text-color;
-        user-select: text;
 
-        A {
-            &:link, &:visited {
-                text-decoration: none;
-                color: $story-text-color;
-
-                &:hover {
-                    color: $story-link-hover-text-color;
-                }
-            }
+        &:hover {
+          color: $story-link-hover-text-color;
         }
-
-        P {
-            &:first-child {
-                margin-top: 0;
-            }
-
-            &:last-child {
-                margin-bottom: 0;
-            }
-        }
-
-        .status-opened, .status-reopened {
-            color: $story-issue-open-color;
-        }
-
-        .status-closed {
-            color: $story-issue-closed-color;
-        }
-
-        .status-merged {
-            color: $story-issue-merged-color;
-        }
-
-        .tags {
-            line-height: 1.6em;
-        }
-
-        .tag {
-            font-size: 0.9em;
-            color: $issue-label-default-text-color;
-            background-color: $issue-label-default-background-color;
-            padding: 0.2em 0.4em 0.2em 0.4em;
-            border-radius: 0.25em;
-        }
-
-        &.plain-text {
-            white-space: pre-wrap;
-
-            .list-item {
-                &.vote-count {
-                    width: 100%;
-                }
-            }
-
-            &.emoji-1, &.emoji-2, &.emoji-3 {
-                font-size: 3em;
-            }
-
-            &.emoji-4, &.emoji-5, &.emoji-6 {
-                font-size: 2em;
-            }
-        }
-
-        &.markdown {
-            IMG, CANVAS, svg {
-                vertical-align: top;
-                height: 1.5em;
-                width: auto;
-                cursor: pointer;
-                vertical-align: middle;
-            }
-
-            svg {
-                width: 1.5em;
-            }
-
-            A {
-                &:link, &:visited {
-                    text-decoration: underline;
-                }
-            }
-        }
-
-        &.survey, &.task-list {
-            .list-item, .vote-count {
-                margin-bottom: 0.2em;
-
-                // take out margin when it's in a list-item
-                H1, H2, H3, H4, H5, H6 {
-                    display: inline-block;
-                    margin-top: 0;
-                    margin-bottom: 0;
-                }
-
-                &:last-child {
-                    margin-bottom: 0;
-                }
-            }
-        }
-
-        &.survey {
-            .vote-count {
-                .label {
-                    display: block;
-                    margin-bottom: 0.1em;
-                }
-
-                .bar {
-                    display: block;
-                    position: relative;
-                    border: 1px solid $story-survey-bar-border-color;
-                    font-size: 0.8em;
-                    height: 1.5em;
-                    margin-bottom: 0.4em;
-
-                    .percent {
-                        position: absolute;
-                        display: block;
-                        left: 0.2em;
-                        top: 0.1em;
-                        color: $story-survey-bar-text-color;
-                    }
-
-                    .count {
-                        position: absolute;
-                        display: block;
-                        right: 0.2em;
-                        top: 0.1em;
-                        color: $story-survey-count-text-color;
-                    }
-
-                    .filled {
-                        display: block;
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        bottom: 0;
-                        $series-colors: (
-                            hsl(30, 100%, 65%),
-                            hsl(60, 80%, 55%),
-                            hsl(90, 100%, 65%),
-                            hsl(120, 80%, 45%),
-                            hsl(150, 100%, 65%),
-                            hsl(180, 80%, 55%),
-                            hsl(210, 100%, 65%),
-                            hsl(240, 80%, 45%),
-                            hsl(270, 100%, 65%),
-                            hsl(300, 80%, 55%),
-                            hsl(330, 100%, 65%),
-                            hsl(360, 80%, 45%),
-                        );
-
-                        @for $i from 0 to length($series-colors) {
-                            &.color-#{$i + 1} {
-                                background-color: nth($series-colors, $i + 1);
-                            }
-                        }
-                    }
-                }
-
-                &.unanimous {
-                    .count {
-                        // use darker color when bar extends all the way to the end
-                        color: $story-survey-bar-text-color;
-                    }
-                }
-            }
-        }
-
-        &.milestone {
-            .start-date {
-                color: $story-milestone-start-date-text-color;
-            }
-            .due-date {
-                color: $story-milestone-due-date-text-color;
-            }
-        }
-
-        &.push {
-            .files, .lines {
-                display: inline-block;
-                list-style-type: none;
-                vertical-align: top;
-                margin: 0;
-                padding: 0;
-
-                .added {
-                    color: $story-push-added-text-color;
-                }
-
-                .deleted {
-                    color: $story-push-deleted-text-color;
-                }
-
-                .modified {
-                    color: $story-push-modified-text-color;
-                }
-
-                .renamed {
-                    color: $story-push-renamed-text-color;
-                }
-            }
-
-            .files {
-                margin-right: 2em;
-            }
-        }
-
-        &.website-traffic {
-            .by-country {
-                .label {
-                    display: block;
-                    margin-bottom: 0.1em;
-                }
-
-                .bar {
-                    display: block;
-                    position: relative;
-                    border: 1px solid $story-survey-bar-border-color;
-                    font-size: 0.8em;
-                    height: 1.5em;
-                    margin-bottom: 0.4em;
-
-                    .percent {
-                        position: absolute;
-                        display: block;
-                        left: 0.2em;
-                        top: 0.1em;
-                        color: $story-survey-bar-text-color;
-                    }
-
-                    .count {
-                        position: absolute;
-                        display: block;
-                        right: 0.2em;
-                        top: 0.1em;
-                        color: $story-survey-count-text-color;
-                    }
-
-                    .filled {
-                        display: block;
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        bottom: 0;
-                        $series-colors: (
-                            hsl(30, 100%, 65%),
-                            hsl(60, 80%, 55%),
-                            hsl(90, 100%, 65%),
-                            hsl(120, 80%, 45%),
-                            hsl(150, 100%, 65%),
-                        );
-
-                        @for $i from 0 to length($series-colors) {
-                            &.color-#{$i + 1} {
-                                background-color: nth($series-colors, $i + 1);
-                            }
-                        }
-                    }
-                }
-
-                &.vast-majority {
-                    .count {
-                        // use darker color when bar extends all the way to the end
-                        color: $story-survey-bar-text-color;
-                    }
-                }
-            }
-        }
+      }
     }
 
-    .impact {
-        .message {
-            color: $story-text-color;
-            user-select: text;
+    P {
+      &:first-child {
+        margin-top: 0;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    .status-opened, .status-reopened {
+      color: $story-issue-open-color;
+    }
+
+    .status-closed {
+      color: $story-issue-closed-color;
+    }
+
+    .status-merged {
+      color: $story-issue-merged-color;
+    }
+
+    .tags {
+      line-height: 1.6em;
+    }
+
+    .tag {
+      font-size: 0.9em;
+      color: $issue-label-default-text-color;
+      background-color: $issue-label-default-background-color;
+      padding: 0.2em 0.4em 0.2em 0.4em;
+      border-radius: 0.25em;
+    }
+
+    &.plain-text {
+      white-space: pre-wrap;
+
+      .list-item {
+        &.vote-count {
+          width: 100%;
+        }
+      }
+
+      &.emoji-1, &.emoji-2, &.emoji-3 {
+        font-size: 3em;
+      }
+
+      &.emoji-4, &.emoji-5, &.emoji-6 {
+        font-size: 2em;
+      }
+    }
+
+    &.markdown {
+      IMG, CANVAS, svg {
+        vertical-align: top;
+        height: 1.5em;
+        width: auto;
+        cursor: pointer;
+        vertical-align: middle;
+      }
+
+      svg {
+        width: 1.5em;
+      }
+
+      A {
+        &:link, &:visited {
+          text-decoration: underline;
+        }
+      }
+    }
+
+    &.survey, &.task-list {
+      .list-item, .vote-count {
+        margin-bottom: 0.2em;
+
+        // take out margin when it's in a list-item
+        H1, H2, H3, H4, H5, H6 {
+          display: inline-block;
+          margin-top: 0;
+          margin-bottom: 0;
         }
 
-        .scrollable {
-            margin: -0.5em 0 0.3em 0;
-            max-height: 15em;
+        &:last-child {
+          margin-bottom: 0;
         }
+      }
     }
 
-    .buttons {
-        text-align: right
+    &.survey {
+      .vote-count {
+        .label {
+          display: block;
+          margin-bottom: 0.1em;
+        }
+
+        .bar {
+          display: block;
+          position: relative;
+          border: 1px solid $story-survey-bar-border-color;
+          font-size: 0.8em;
+          height: 1.5em;
+          margin-bottom: 0.4em;
+
+          .percent {
+            position: absolute;
+            display: block;
+            left: 0.2em;
+            top: 0.1em;
+            color: $story-survey-bar-text-color;
+          }
+
+          .count {
+            position: absolute;
+            display: block;
+            right: 0.2em;
+            top: 0.1em;
+            color: $story-survey-count-text-color;
+          }
+
+          .filled {
+            display: block;
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            $series-colors: (
+              hsl(30, 100%, 65%),
+              hsl(60, 80%, 55%),
+              hsl(90, 100%, 65%),
+              hsl(120, 80%, 45%),
+              hsl(150, 100%, 65%),
+              hsl(180, 80%, 55%),
+              hsl(210, 100%, 65%),
+              hsl(240, 80%, 45%),
+              hsl(270, 100%, 65%),
+              hsl(300, 80%, 55%),
+              hsl(330, 100%, 65%),
+              hsl(360, 80%, 45%),
+            );
+
+            @for $i from 0 to length($series-colors) {
+              &.color-#{$i + 1} {
+                background-color: nth($series-colors, $i + 1);
+              }
+            }
+          }
+        }
+
+        &.unanimous {
+          .count {
+            // use darker color when bar extends all the way to the end
+            color: $story-survey-bar-text-color;
+          }
+        }
+      }
     }
 
-    audio {
-        margin-top: 0.25em;
-        width: 100%;
+    &.milestone {
+      .start-date {
+        color: $story-milestone-start-date-text-color;
+      }
+      .due-date {
+        color: $story-milestone-due-date-text-color;
+      }
     }
+
+    &.push {
+      .files, .lines {
+        display: inline-block;
+        list-style-type: none;
+        vertical-align: top;
+        margin: 0;
+        padding: 0;
+
+        .added {
+          color: $story-push-added-text-color;
+        }
+
+        .deleted {
+          color: $story-push-deleted-text-color;
+        }
+
+        .modified {
+          color: $story-push-modified-text-color;
+        }
+
+        .renamed {
+          color: $story-push-renamed-text-color;
+        }
+      }
+
+      .files {
+        margin-right: 2em;
+      }
+    }
+
+    &.website-traffic {
+      .by-country {
+        .label {
+          display: block;
+          margin-bottom: 0.1em;
+        }
+
+        .bar {
+          display: block;
+          position: relative;
+          border: 1px solid $story-survey-bar-border-color;
+          font-size: 0.8em;
+          height: 1.5em;
+          margin-bottom: 0.4em;
+
+          .percent {
+            position: absolute;
+            display: block;
+            left: 0.2em;
+            top: 0.1em;
+            color: $story-survey-bar-text-color;
+          }
+
+          .count {
+            position: absolute;
+            display: block;
+            right: 0.2em;
+            top: 0.1em;
+            color: $story-survey-count-text-color;
+          }
+
+          .filled {
+            display: block;
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            $series-colors: (
+              hsl(30, 100%, 65%),
+              hsl(60, 80%, 55%),
+              hsl(90, 100%, 65%),
+              hsl(120, 80%, 45%),
+              hsl(150, 100%, 65%),
+            );
+
+            @for $i from 0 to length($series-colors) {
+              &.color-#{$i + 1} {
+                background-color: nth($series-colors, $i + 1);
+              }
+            }
+          }
+        }
+
+        &.vast-majority {
+          .count {
+            // use darker color when bar extends all the way to the end
+            color: $story-survey-bar-text-color;
+          }
+        }
+      }
+    }
+  }
+
+  .impact {
+    .message {
+      color: $story-text-color;
+      user-select: text;
+    }
+
+    .scrollable {
+      margin: -0.5em 0 0.3em 0;
+      max-height: 15em;
+    }
+  }
+
+  .buttons {
+    text-align: right
+  }
+
+  audio {
+    margin-top: 0.25em;
+    width: 100%;
+  }
 }

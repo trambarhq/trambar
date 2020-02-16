@@ -1,31 +1,31 @@
 function getOrientationMatrix(orientation, width, height) {
-    switch (orientation) {
-        case 1:
-            // normal
-            return [1, 0, 0, 1, 0, 0];
-        case 2:
-            // flip horizontally
-            return [-1, 0, 0, 1, width, 0];
-        case 3:
-            // rotate 180
-            return [-1, 0, 0, -1, width, height];
-        case 4:
-            // flip vertically
-            return [1, 0, 0, -1, 0, height];
-        case 5:
-            // transpose
-            return [0, 1, 1, 0, 0, 0];
-        case 6:
-            // rotate 90
-            return [0, 1, -1, 0, height, 0];
-        case 7:
-            // transverse
-            return [0, -1, -1, 0, height, width];
-        case 8:
-            return [0, -1, 1, 0, 0, width];
-        default:
-            return [1, 0, 0, 1, 0, 0];
-    }
+  switch (orientation) {
+    case 1:
+      // normal
+      return [1, 0, 0, 1, 0, 0];
+    case 2:
+      // flip horizontally
+      return [-1, 0, 0, 1, width, 0];
+    case 3:
+      // rotate 180
+      return [-1, 0, 0, -1, width, height];
+    case 4:
+      // flip vertically
+      return [1, 0, 0, -1, 0, height];
+    case 5:
+      // transpose
+      return [0, 1, 1, 0, 0, 0];
+    case 6:
+      // rotate 90
+      return [0, 1, -1, 0, height, 0];
+    case 7:
+      // transverse
+      return [0, -1, -1, 0, height, width];
+    case 8:
+      return [0, -1, 1, 0, 0, width];
+    default:
+      return [1, 0, 0, 1, 0, 0];
+  }
 }
 
 /**
@@ -87,7 +87,7 @@ function transformRect(m, r) {
 }
 
 export {
-    getOrientationMatrix,
-    invertMatrix,
-    transformRect,
+  getOrientationMatrix,
+  invertMatrix,
+  transformRect,
 };
