@@ -314,12 +314,13 @@ async function handleSnapshotPageRequest(req, res, next) {
 
 async function handleMetadataRequest(req, res, next) {
   try {
-    const { project } = req;
+    const { name, details, archived } = req.project;
+    const { title, description } = details;
     const meta = {
-      name: project.name,
-      title: project.details.title,
-      description: project.details.description,
-      archived: project.archived,
+      identifier: name,
+      title: convertMultilingualText(title),
+      description: convertMultilingualText(description),
+      archived,
     };
     controlCache(res);
     res.json(meta);
@@ -592,6 +593,22 @@ async function getDefaultLanguage() {
   const criteria = { deleted: false };
   const system = await System.findOne(db, 'global', criteria, '*');
   return Localization.getDefaultLanguageCode(system);
+}
+
+function convertMultilingualText(langText) {
+  const json = [];
+  if (langText instanceof Object) {
+    const entries = Object.entries(langText);
+    for (let [ lang, text ] of entries) {
+      // add heading when there're multiple languages
+      if (entries.length > 1) {
+        const heading = `(${lang})`;
+        json.push({ type: 'h1', children: [ heading ] });
+      }
+      json.push(text);
+    }
+  }
+  return { json };
 }
 
 if ('file://' + process.argv[1] === import.meta.url) {

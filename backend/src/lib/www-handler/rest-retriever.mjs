@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import CrossFetch from 'cross-fetch';
-import MarkdownParser from 'mark-gor/src/async-parser.mjs';
-import JsonRenderer from 'mark-gor/src/json-renderer.mjs';
+import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
 import Database from '../database.mjs';
 import HTTPError from '../common/errors/http-error.mjs';
 import * as TaskLog from '../task-log.mjs';
@@ -156,39 +155,48 @@ async function transformData(data, url, rest) {
   return filtered;
 }
 
+const wpProps = {
+  _links: { omit: true },
+  authentication: { omit: true },
+  date: { omit: true },
+  description: { html: true },
+  comment_status: { omit: true },
+  guid: { omit: true },
+  modified: { omit: true },
+  name: { html: true },
+  namespaces: { omit: true },
+  routes: { omit: true },
+  ping_status: { omit: true },
+  template: { omit: true },
+};
+
 async function transformWPData(data, url) {
   if (data instanceof Array) {
     return _.map(data, 'id');
   } else {
-    const omissions = [
-      '_links',
-      'namespaces',
-      'routes',
-      'authentication',
-      'guid',
-      'date',
-      'modified',
-      'comment_status',
-      'ping_status',
-      'template',
-    ];
     const res = {};
     for (let [ key, value ] of Object.entries(data)) {
-      if (omissions.indexOf(key) !== -1) {
-        continue;
-      }
-      if (value instanceof Object) {
-        const { rendered, ...others } = value;
-        if (typeof(rendered) === 'string') {
-          // parse the HTML
-          const parser = new MarkdownParser({ htmlOnly: true });
-          const tokens = await parser.parse(rendered);
-          const renderer = new JsonRenderer;
-          const json = renderer.render(tokens);
-          value = { json, ...others };
+      const prop = wpProps[key] || {};
+      if (!prop.omit) {
+        let html, additional;
+        if (value instanceof Object) {
+          const { rendered, ...others } = value;
+          if (typeof(rendered) === 'string') {
+            html = rendered;
+            additional = others;
+          }
+        } else if (prop.html) {
+          html = value;
+          additional = {};
         }
+        if (html !== undefined) {
+          // parse the HTML
+          const json = await parseHTML(html);
+          const resources = await importImages(json);
+          value = { json, resources, ...additional };
+        }
+        res[key] = value;
       }
-      res[key] = value;
     }
     return res;
   }
@@ -237,6 +245,19 @@ function transformWPPurge(purge, rest) {
     }
   }
   return [];
+}
+
+async function parseHTML(html) {
+  const parser = new AsyncParser({ htmlOnly: true });
+  const renderer = new JSONRenderer;
+  const tokens = await parser.parse(html);
+  const json = renderer.render(tokens);
+  return json;
+}
+
+async function importImages(json) {
+  const list = [];
+  return (list.length > 0) ? list : undefined;
 }
 
 export {

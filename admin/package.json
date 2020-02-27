@@ -12,8 +12,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
-    "moment-timezone": "^0.5.27",
-    "trambar-www": "git+https://github.com/chung-leong/trambar-www.git",
+    "moment-timezone": "^0.5.28",
+    "trambar-www": "^0.0.4",
     "webpack": "^4.41.6",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.10.3"

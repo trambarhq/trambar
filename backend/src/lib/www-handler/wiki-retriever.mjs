@@ -102,11 +102,16 @@ async function retrieve(project, identifier, slug) {
       }
     });
 
+    const title = createTitle(wiki.details.title || '');
     const contents = {
       slug: wiki.slug,
-      title: wiki.details.title || '',
-      json: wiki.details.json || {},
-      resources: wiki.details.resources || [],
+      title: {
+        json: [ title ],
+      },
+      content: {
+        json: wiki.details.json || [],
+        resources: wiki.details.resources,
+      }
     };
     // expires frequently when wiki links to external images
     const hasExternal = _.some(contents.resources, (res) => {
@@ -134,6 +139,12 @@ async function addRepoCheck(db, repoName, criteria) {
     criteria.external_object = repoLink;
   }
   return criteria;
+}
+
+function createTitle(slug) {
+  let title = slug.replace(/-/g, ' ');
+  title = title.substr(0, 1).toUpperCase() + title.substr(1);
+  return title;
 }
 
 export {

@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import JsDAV from 'jsDAV';
-import JsDAVLocksBackendFS from 'jsDAV/lib/DAV/plugins/locks/fs.js';
+import JsDAV from '@pylonide/jsdav';
+import JsDAVLocksBackendFS from '@pylonide/jsdav/lib/DAV/plugins/locks/fs.js';
 import JsDAVPromise from 'jsdav-promise/es6.js'; const { File, Collection, Conflict } = JsDAVPromise;
 import Database from './lib/database.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
