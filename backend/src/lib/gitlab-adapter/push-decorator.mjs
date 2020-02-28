@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Path from 'path';
 import Ignore from 'ignore';
-import MarkdownParser from 'mark-gor/src/async-parser.mjs';
+import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
 import HTTPError from '../common/errors/http-error.mjs';
 import * as TaskLog from '../task-log.mjs';
 import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
@@ -284,7 +284,7 @@ async function loadDescriptors(cxt, folderPath) {
 async function parseDescriptorFile(cxt, path) {
   const file = await retrieveFile(cxt, path);
   const text = getFileContents(file, 'utf-8');
-  const parser = new MarkdownParser;
+  const parser = new AsyncParser;
   const tokens = await parser.parse(text);
 
   const languageTokens = {};

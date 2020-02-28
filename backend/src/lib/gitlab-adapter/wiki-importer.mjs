@@ -2,8 +2,7 @@ import _ from 'lodash';
 import CrossFetch from 'cross-fetch';
 import Moment from 'moment';
 import AsciiDoctor from 'asciidoctor';
-import MarkdownParser from 'mark-gor/src/async-parser.mjs';
-import JsonRenderer from 'mark-gor/src/json-renderer.mjs';
+import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
 import * as TaskLog from '../task-log.mjs';
 import * as Localization from '../localization.mjs';
 import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
@@ -198,7 +197,7 @@ function copyWikiProperties(wiki, system, server, repo, glWikiParsed) {
     overwrite: 'always',
   });
   ExternalDataUtils.importProperty(wikiChanges, server, 'details.title', {
-    value: glWikiParsed.title,
+    value: _.capitalize(glWikiParsed.title),
     overwrite: 'always',
   });
   ExternalDataUtils.importProperty(wikiChanges, server, 'details.content', {
@@ -229,17 +228,17 @@ async function parseGitlabWiki(glWiki, baseURL) {
   // parse content and convert to JSON
   let tokens;
   if (format === 'markdown') {
-    const parser = new MarkdownParser;
+    const parser = new AsyncParser;
     tokens = await parser.parse(content);
   } else if (format === 'asciidoc') {
     const asciiDoctor = AsciiDoctor();
     const html = asciiDoctor.convert(content);
-    const parser = new MarkdownParser;
+    const parser = new AsyncParser;
     tokens = await parser.parse(html, { htmlOnly: true });
   } else {
     tokens = [];
   }
-  const renderer = new JsonRenderer;
+  const renderer = new JSONRenderer;
   const json = renderer.render(tokens);
 
   // look for references and import images
