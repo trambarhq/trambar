@@ -6,6 +6,7 @@ import HTTPError from '../common/errors/http-error.mjs';
 import * as TaskLog from '../task-log.mjs';
 
 import * as ProjectSettings from './project-settings.mjs';
+import * as MediaImporter from '../media-server/media-importer.mjs';
 import Rest from '../accessors/rest.mjs';
 
 async function discover(project, type) {
@@ -59,12 +60,35 @@ async function retrieve(project, identifier, path, query) {
     }
     const url = getExternalURL(path, query, rest);
     const unfiltered = await fetchJSON(url, rest);
-    const contents = await transformData(unfiltered, url, rest);
+    const contents = await transformData(unfiltered, rest);
+
+    // import images used in public pages
+    for (let field of Object.values(contents)) {
+      if (field && field.json && field.resources) {
+        for (let resource of field.resources) {
+          const { src } = resource;
+          let url;
+          if (/^\w+:/.test(src)) {
+            url = src;
+          } else {
+            url = new URL(src, rest.url).toString();
+          }
+          taskLog.describe(`importing ${url}`);
+          try {
+            const info = await MediaImporter.importFile(url);
+            _.assign(resource, info);
+          } catch (err) {
+            resource.error = err.message;
+          }
+        }
+      }
+    }
+
+    taskLog.set('objects', (contents instanceof Array) ? contents.length : 1);
+    await taskLog.finish();
+
     const maxAge = _.get(rest, 'settings.max_age', 30);
     const cacheControl = { 's-maxage': maxAge };
-
-    taskLog.set('objects', _.size(contents));
-    await taskLog.finish();
     return { contents, cacheControl };
   } catch (err) {
     await taskLog.abort(err);
@@ -141,10 +165,10 @@ function getExternalURL(path, query, rest) {
   return url.href;
 }
 
-async function transformData(data, url, rest) {
+async function transformData(data, rest) {
   let filtered;
   if (rest.type === 'wordpress') {
-    filtered = transformWPData(data, url);
+    filtered = transformWPData(data);
   } else {
     return data;
   }
@@ -170,7 +194,7 @@ const wpProps = {
   template: { omit: true },
 };
 
-async function transformWPData(data, url) {
+async function transformWPData(data) {
   if (data instanceof Array) {
     return _.map(data, 'id');
   } else {
@@ -192,7 +216,27 @@ async function transformWPData(data, url) {
         if (html !== undefined) {
           // parse the HTML
           const json = await parseHTML(html);
-          const resources = await importImages(json);
+          let resources;
+          const scanElements = (elements) => {
+            if (elements instanceof Array) {
+              for (let element of elements) {
+                if (typeof(element) === 'object') {
+                  const { type, props, children } = element;
+                  if (type === 'img') {
+                    if (props.src) {
+                      if (!resources) {
+                        resources = [];
+                      }
+                      resources.push({ src: props.src });
+                    }
+                  }
+                  scanElements(children);
+                }
+              }
+            }
+          };
+          scanElements(json);
+
           value = { json, resources, ...additional };
         }
         res[key] = value;
@@ -253,11 +297,6 @@ async function parseHTML(html) {
   const tokens = await parser.parse(html);
   const json = renderer.render(tokens);
   return json;
-}
-
-async function importImages(json) {
-  const list = [];
-  return (list.length > 0) ? list : undefined;
 }
 
 export {
