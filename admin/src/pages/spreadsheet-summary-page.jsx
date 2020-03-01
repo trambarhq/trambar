@@ -375,7 +375,7 @@ function SpreadsheetSummaryPageSync(props) {
   function renderInstructions() {
     const instructionProps = {
       folder: 'spreadsheet',
-      topic: 'spreadsheet-summary',
+      topic: 'spreadsheet-summary' + (creating ? '-new' : ''),
       hidden: readOnly,
       env,
     };
