@@ -262,6 +262,7 @@ try {
 }
 
 function detectDirection(text) {
+  text = text + '';
   if (letterCaptureRegExp && rtlCaptureRegExp && rtlDetectionRegExp) {
     if (rtlDetectionRegExp.test(text)) {
       const letters = text.match(letterCaptureRegExp).join('');

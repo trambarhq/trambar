@@ -240,6 +240,7 @@ async function parseGitlabWiki(glWiki, baseURL) {
   }
   const highlight = (code, language) => {
     if (language) {
+      language = language.toLowerCase();
       loadLanguages([ language ]);
       const plugin = PrismJs.languages[language];
       if (plugin) {

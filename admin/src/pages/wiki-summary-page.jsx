@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { MarkdownPage } from 'trambar-www';
+import { GitlabWiki } from 'trambar-www';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
@@ -325,18 +325,17 @@ function WikiContents(props) {
     if (shown.current) {
       const data = {
         slug: wiki.slug,
-        title: wiki.details.title,
-        markdown: wiki.details.content,
-        resources: wiki.details.resources,
+        title: {
+          json: [ wiki.details.title ],
+        },
+        content: {
+          json: wiki.details.json || [],
+          resources: wiki.details.resources,
+        },
       };
-      return MarkdownPage.create(data)
+      return new GitlabWiki([], data)
     }
   }, [ wiki, shown.current ]);
-  const pageLocalized = useMemo(() => {
-    if (page) {
-      return page.filter(env.locale.localeCode, true);
-    }
-  }, [ page, env.locale ]);
 
   const handleToggleClick = useListener((evt) => {
     setOpen(!open);
@@ -390,7 +389,6 @@ function WikiContents(props) {
   function renderContents() {
     const props = {
       page,
-      localized: pageLocalized,
       env,
       onReference: handleReference,
     };

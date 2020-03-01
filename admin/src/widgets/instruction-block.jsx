@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import Relaks, { useProgress } from 'relaks';
-import MarkGor from 'mark-gor/react';
+import { parseAsync } from 'mark-gor';
 
 // widgets
 import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
@@ -47,7 +47,7 @@ async function InstructionBlock(props) {
  */
 async function loadMarkdown(folder, topic, lang) {
   const text = await loadText(folder, topic, lang);
-  const contents = MarkGor.parse(text);
+  const contents = await parseAsync(text);
   return loadImages(contents, folder);
 }
 

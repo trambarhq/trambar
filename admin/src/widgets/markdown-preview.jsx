@@ -1,14 +1,28 @@
 import _ from 'lodash';
 import React, { useState, useEffect, useMemo } from 'react';
 import { usePlainText, useRichText } from 'trambar-www';
-import * as PlainText from 'common/utils/plain-text.mjs';
+import { chooseLanguageVersion } from 'trambar-www/src/text.mjs';
+import { detectDirection } from 'common/utils/plain-text.mjs';
 
+import 'prismjs/themes/prism.css';
 import './markdown-preview.scss';
 
 function MarkdownPreview(props) {
-  const { page, localized, env, onReference } = props;
-  const [ limit, setLimit ] = useState(50);
-  const pt = usePlainText();
+  const { page, env, onReference } = props;
+  const { localeCode } = env.locale;
+  const adjustFunc = (node) => {
+    let { type, props, children } = node;
+    if (type === 'a' && props.href) {
+      if (/^[\w\-]+$/.test(href)) {
+        if (onReference) {
+          props = { ...props, href: onReference(props) };
+        }
+      } else {
+        props = { ...props, target: '_blank' };
+      }
+      return { type, props, children };
+    }
+  };
   const rt = useRichText({
     devicePixelRatio: env.devicePixelRatio,
     imageHeight: 24,
@@ -16,84 +30,38 @@ function MarkdownPreview(props) {
       sharpen: true
     },
     imageBaseURL: env.address,
-    richTextAdjust: (type, props, children) => {
-      if (type === 'a') {
-        if (/^[\w\-]+$/.test(props.href)) {
-          if (onReference) {
-            props.href = onReference({ href: props.href })
-          }
-        } else {
-          props.target = '_blank';
-        }
-      }
-      return { type, props, children };
-    },
+    adjustFunc,
   });
-  const directions = useMemo(() => {
-    return _.map(page.blocks, (block) => {
-      return PlainText.detectDirection(pt(block));
-    });
-  }, [ page ]);
 
-  useEffect(() => {
-    if (page?.blocks.length > limit) {
-      setTimeout(() => {
-        setLimit(Infinity);
-      }, 50);
-    }
-  }, [ page, limit ]);
-
+  const sections = page.content.getLanguageSpecificSections(localeCode);
   return (
     <div className="markdown-preview">
-      {renderBlocks()}
+      {_.map(sections, renderSection)}
     </div>
   );
 
-  function renderBlocks() {
-    let blocks;
-    if (page) {
-      if (page.blocks.length > limit) {
-        blocks = _.slice(page.blocks, 0, limit);
-      } else {
-        blocks = page.blocks;
-      }
+  function renderSection(section, i) {
+    const { content, languages, match } = section;
+    let classNames = [ 'section' ];
+    if (!match) {
+      classNames.push('foreign');
     }
-    return _.map(blocks, renderBlock);
-  }
-
-  function renderBlock(block, i) {
-    let classNames = [ 'block' ];
-    if (!localized.includes(block)) {
-      const language = block.language();
-      if (language) {
-        // it's a language indicator
-        classNames.push('language');
-        if (language === 'zz') {
-          classNames.push('off');
-        }
-        if (directions[i + 1] === 'rtl') {
-          classNames.push('rtl');
-        }
-      } else {
-        classNames.push('foreign');
-      }
-    }
-    if (directions[i] === 'rtl') {
+    const direction = detectDirection(content);
+    if (direction === 'rtl') {
       classNames.push('rtl');
-    }
-    const code = block.code();
-    if (code?.language === 'json') {
-      try {
-        JSON.parse(code.text);
-      } catch (err) {
-        classNames.push('broken');
-      }
     }
     return (
       <div key={i} className={classNames.join(' ')}>
-        {rt(block)}
+        <div className="languages">
+          {_.map(languages, renderLanguageTag)}
+        </div>
+        {rt(section.content)}
       </div>
-    )
+    );
+  }
+
+  function renderLanguageTag(lang, i) {
+    return <span className="language">{lang}</span>;
   }
 }
 

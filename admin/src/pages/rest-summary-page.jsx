@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useMemo } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { ExcelFile } from 'trambar-www';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
 import * as RestFinder from 'common/objects/finders/rest-finder.mjs';

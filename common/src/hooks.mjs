@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { useSaveBuffer, AsyncSaveBuffer } from 'relaks';
-import * as Markdown from './utils/markdown.mjs';
 import Cancellation from './errors/cancellation.mjs';
 
 function useLatest(propValue) {

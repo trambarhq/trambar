@@ -4,6 +4,7 @@
   box-sizing: content-box;
   border: 1px solid black;
   margin-left: 0.5em;
+  margin-bottom: 1em;
   position: relative;
 
   IMG {
@@ -62,10 +63,29 @@
     }
   }
 
-  .block {
+  .section {
     padding-left: 0.5em;
     padding-right: 0.5em;
     overflow: hidden;
+
+    .languages {
+      position: absolute;
+      border-top: 1px dashed black;
+      user-select: none;
+      pointer-events: none;
+      left: 0;
+      right: 0;
+      text-align: right;
+      padding-top: 0.2em;
+      font-size: 0.8em;
+
+      .language {
+        text-transform: uppercase;
+        font-weight: bold;
+        margin-right: 0.2em;
+        margin-left: 0.2em;
+      }
+    }
 
     &.foreign {
       background-color: $foreign-text-background;
@@ -73,42 +93,19 @@
 
     &.rtl {
       direction: rtl;
+
+      .languages {
+        text-align: left;
+      }
     }
 
     &.broken {
       background-color: $broken-json-background;
     }
 
-    &.language {
-      position: absolute;
-      border-top: 1px dashed black;
-      width: 100%;
-      text-align: right;
-      user-select: none;
-      pointer-events: none;
-
-      H1 {
-        font-size: 1em;
-        margin-top: 0.2em;
-        margin-right: -0.3em;
-      }
-
-      &:first-child {
+    &:first-child {
+      .languages {
         border-top: 0;
-      }
-
-      &.off {
-        H1 {
-          display: none;
-        }
-      }
-
-      &.rtl {
-        text-align: left;
-
-        H1 {
-          margin-left: -0.3em;
-        }
       }
     }
   }

@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { MarkdownPage, ExcelFile, ExcelSheet } from 'trambar-www';
+import { GitlabWiki, ExcelFile, ExcelSheet } from 'trambar-www';
 import { Database } from 'common/data/database.mjs';
 import { Route } from 'common/routing/route.mjs';
 import { Environment } from 'common/env/environment.mjs';
@@ -67,8 +67,7 @@ InstructionBlock.propTypes = {
   env: PropTypes.instanceOf(Environment).isRequired,
 };
 MarkdownPreview.propTypes = {
-  page: PropTypes.instanceOf(MarkdownPage),
-  localized: PropTypes.instanceOf(MarkdownPage),
+  page: PropTypes.instanceOf(GitlabWiki),
   env: PropTypes.instanceOf(Environment).isRequired,
   onReference: PropTypes.func,
 };
