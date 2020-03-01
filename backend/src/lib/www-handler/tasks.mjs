@@ -26,7 +26,8 @@ class TaskImportSpreadsheet extends BasicTask {
 
   async run() {
     const { schema, name } = this;
-    await ExcelRetriever.retrieve(schema, name, false);
+    const project = ProjectSettings.find({ name: schema });
+    await ExcelRetriever.retrieve(project, name, false);
   }
 }
 

@@ -11,7 +11,7 @@
   margin-left: 0.5em;
 
   IMG {
-    cursor: pointer;    
+    cursor: pointer;
   }
 
   TABLE {
@@ -32,6 +32,14 @@
       &.rtl {
         direction: rtl;
         text-align: right;
+      }
+    }
+
+    TH {
+      .flags {
+        font-size: 0.8em;
+        text-transform: uppercase;
+        vertical-align: text-bottom;
       }
     }
 

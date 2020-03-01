@@ -74,7 +74,7 @@ async function SpreadsheetSummaryPage(props) {
 function SpreadsheetSummaryPageSync(props) {
   const { schema, project, spreadsheet, users, creating } = props;
   const { database, route, env, editing } = props;
-  const { t, p } = env.locale;
+  const { t, p, localeCode } = env.locale;
   const readOnly = !editing && !creating;
   const [ adding, setAdding ] = useState(false);
   const draft = useDraftBuffer({
@@ -88,15 +88,11 @@ function SpreadsheetSummaryPageSync(props) {
   const excel = useMemo(() => {
     if (spreadsheet) {
       if (!spreadsheet.disabled && !spreadsheet.deleted) {
-        return ExcelFile.create(spreadsheet.details);
+        const file = new ExcelFile([], spreadsheet.details);
+        return file.getLanguageSpecificSections(localeCode);
       }
     }
-  }, [ spreadsheet ]);
-  const excelLocalized = useMemo(() => {
-    if (excel) {
-      return excel.filter(env.locale.localeCode, true);
-    }
-  }, [ excel, env.locale ]);
+  }, [ spreadsheet, localeCode ]);
 
   const handleEditClick = useListener((evt) => {
     route.replace({ editing: true });
@@ -411,7 +407,6 @@ function SpreadsheetSummaryPageSync(props) {
     const props = {
       sheet,
       number: i + 1,
-      localized: excelLocalized,
       route,
       env,
     };
@@ -495,9 +490,10 @@ function Sheet(props) {
 }
 
 async function requestUpdate(project, spreadsheet, env) {
-  if (spreadsheet.url) {
+  if (spreadsheet.url && spreadsheet.name) {
     const baseURL = ProjectUtils.getWebsiteAddress(project);
-    const url = `${baseURL}/data/excel/${spreadsheet.name}`;
+    const relativeURL = ExcelFile.getObjectURL([ spreadsheet.name ]);
+    const url = `${baseURL}${relativeURL}`;
     try {
       await HTTPRequest.fetch('HEAD', url);
     } catch (err) {
