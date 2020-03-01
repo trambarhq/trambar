@@ -331,10 +331,12 @@ async function request(server, uri, method, query, payload, userToken) {
         attempts++;
       }
     } catch (err) {
-      // give Docker Compose a minute to
-      if (sinceStartUp(1 * 60)) {
+      if (err instanceof HTTPError) {
+        throw err;
+      } else if (sinceStartUp(1 * 60)) {
         throw err;
       } else {
+        // give Docker Compose a minute to start up Gitlab
         await Bluebird.delay(delayInterval);
       }
     }

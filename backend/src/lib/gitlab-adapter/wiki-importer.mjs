@@ -2,6 +2,8 @@ import _ from 'lodash';
 import CrossFetch from 'cross-fetch';
 import Moment from 'moment';
 import AsciiDoctor from 'asciidoctor';
+import PrismJs from 'prismjs';
+import loadLanguages from 'prismjs/components/index.js';
 import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
 import * as TaskLog from '../task-log.mjs';
 import * as Localization from '../localization.mjs';
@@ -226,18 +228,27 @@ async function parseGitlabWiki(glWiki, baseURL) {
   const { slug, format, title, content } = glWiki;
 
   // parse content and convert to JSON
-  let tokens;
+  let text, htmlOnly = false;
   if (format === 'markdown') {
-    const parser = new AsyncParser;
-    tokens = await parser.parse(content);
+    text = content;
   } else if (format === 'asciidoc') {
     const asciiDoctor = AsciiDoctor();
-    const html = asciiDoctor.convert(content);
-    const parser = new AsyncParser;
-    tokens = await parser.parse(html, { htmlOnly: true });
+    text = asciiDoctor.convert(content);
+    htmlOnly = true;
   } else {
-    tokens = [];
+    text = '';
   }
+  const highlight = (code, language) => {
+    if (language) {
+      loadLanguages([ language ]);
+      const plugin = PrismJs.languages[language];
+      if (plugin) {
+        return PrismJs.highlight(code, plugin, language);
+      }
+    }
+  };
+  const parser = new AsyncParser({ htmlOnly, highlight });
+  const tokens = await parser.parse(text);
   const renderer = new JSONRenderer;
   const json = renderer.render(tokens);
 
