@@ -133,7 +133,7 @@ function MultilingualTextField(props, ref) {
     inputProps.type = type;
   }
   if (readOnly) {
-    classNames.push('readonly');
+    classNames.push('readonly', 'collapsed');
     inputProps.placeholder = t('text-field-placeholder-none');
     inputProps.spellCheck = false;
     inputProps.readOnly = true;
