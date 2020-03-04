@@ -1,26 +1,26 @@
 import _ from 'lodash';
 import FS from 'fs';
-import Database from './lib/database.mjs';
-import * as TaskLog from './lib/task-log.mjs';
+import { Database } from './lib/database.mjs';
+import { TaskLog } from './lib/task-log.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
 
 // accessors
-import Statistics from './lib/accessors/statistics.mjs';
-import Listing from './lib/accessors/listing.mjs';
-import Story from './lib/accessors/story.mjs';
+import { Statistics } from './lib/accessors/statistics.mjs';
+import { Listing } from './lib/accessors/listing.mjs';
+import { Story } from './lib/accessors/story.mjs';
 
 //  analysers
-import DailyActivities from './lib/analysers/daily-activities.mjs';
-import DailyNotifications from './lib/analysers/daily-notifications.mjs';
-import NotificationDateRange from './lib/analysers/notification-date-range.mjs';
-import StoryDateRange from './lib/analysers/story-date-range.mjs';
-import StoryPopularity from './lib/analysers/story-popularity.mjs';
+import { DailyActivities } from './lib/analysers/daily-activities.mjs';
+import { DailyNotifications } from './lib/analysers/daily-notifications.mjs';
+import { NotificationDateRange } from './lib/analysers/notification-date-range.mjs';
+import { StoryDateRange } from './lib/analysers/story-date-range.mjs';
+import { StoryPopularity } from './lib/analysers/story-popularity.mjs';
 
 // story raters
-import ByDiversity from './lib/story-raters/by-diversity.mjs';
-import ByPopularity from './lib/story-raters/by-popularity.mjs';
-import ByRole from './lib/story-raters/by-role.mjs';
-import ByType from './lib/story-raters/by-type.mjs';
+import { ByDiversity } from './lib/story-raters/by-diversity.mjs';
+import { ByPopularity } from './lib/story-raters/by-popularity.mjs';
+import { ByRole } from './lib/story-raters/by-role.mjs';
+import { ByType } from './lib/story-raters/by-type.mjs';
 
 const Analysers = [
   DailyActivities,

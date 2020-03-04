@@ -1,47 +1,44 @@
 import { Data } from './data.mjs';
-import HTTPError from '../common/errors/http-error.mjs';
+import { HTTPError } from '../errors.mjs';
 
-class Task extends Data {
-  constructor() {
-    super();
-    this.schema = 'both';
-    this.table = 'task';
-    this.columns = {
-      ...this.columns,
-      action: String,
-      token: String,
-      options: Object,
-      details: Object,
-      completion: Number,
-      failed: Boolean,
-      user_id: Number,
-      etime: String,
-      seen: Boolean,
-    };
-    this.criteria = {
-      ...this.criteria,
-      action: String,
-      token: String,
-      completion: Number,
-      failed: Boolean,
-      seen: Boolean,
-      user_id: Number,
-      options: Object,
-      etime: String,
+export class Task extends Data {
+  static schema = 'both';
+  static table = 'task';
+  static columns = {
+    ...Data.columns,
+    action: String,
+    token: String,
+    options: Object,
+    details: Object,
+    completion: Number,
+    failed: Boolean,
+    user_id: Number,
+    etime: String,
+    seen: Boolean,
+  };
+  static criteria = {
+    ...Data.criteria,
+    action: String,
+    token: String,
+    completion: Number,
+    failed: Boolean,
+    seen: Boolean,
+    user_id: Number,
+    options: Object,
+    etime: String,
 
-      newer_than: String,
-      older_than: String,
-      complete: Boolean,
-      noop: Boolean,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      action: String,
-      failed: Boolean,
-      user_id: Number,
-    };
-    this.version = 3;
-  }
+    newer_than: String,
+    older_than: String,
+    complete: Boolean,
+    noop: Boolean,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    action: String,
+    failed: Boolean,
+    user_id: Number,
+  };
+  static version = 3;
 
   /**
    * Create table in schema
@@ -51,7 +48,7 @@ class Task extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -85,7 +82,7 @@ class Task extends Data {
    *
    * @return {Promise<Boolean>}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     if (version === 3) {
       // adding: seen
       const table = this.getTableName(schema);
@@ -109,7 +106,7 @@ class Task extends Data {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -120,7 +117,7 @@ class Task extends Data {
    * @param  {Object} criteria
    * @param  {Object} query
    */
-  apply(criteria, query) {
+  static apply(criteria, query) {
     const { options, newer_than, older_than, complete, noop, ...basic } = criteria;
     super.apply(basic, query);
 
@@ -163,7 +160,7 @@ class Task extends Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       // TODO: access control
@@ -194,7 +191,7 @@ class Task extends Data {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     if (super.isRelevantTo(event, user, subscription)) {
       if (event.current.user_id) {
         if (event.current.user_id === user.id) {
@@ -216,7 +213,7 @@ class Task extends Data {
    * @param  {Object} taskBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(taskReceived, taskBefore, credentials) {
+  static checkWritePermission(taskReceived, taskBefore, credentials) {
     if (!credentials.unrestricted) {
       if (taskBefore) {
         // task cannot be modified
@@ -239,7 +236,7 @@ class Task extends Data {
    *
    * @return {Promise}
    */
-  async createUpdateTrigger(db, schema, triggerName, method, args) {
+  static async createUpdateTrigger(db, schema, triggerName, method, args) {
     const table = this.getTableName(schema);
     const sql = `
       DROP TRIGGER IF EXISTS "${triggerName}" ON ${table};
@@ -251,10 +248,3 @@ class Task extends Data {
     await db.execute(sql);
   }
 }
-
-const instance = new Task;
-
-export {
-  instance as default,
-  Task
-};

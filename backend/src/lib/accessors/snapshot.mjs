@@ -1,36 +1,33 @@
 import { Data } from './data.mjs';
 
-class Snapshot extends Data {
-  constructor() {
-    super();
-    this.schema = 'global';
-    this.table = 'snapshot';
-    this.columns = {
-      ...this.columns,
-      user_id: Number,
-      repo_id: Number,
-      branch_name: String,
-      commit_id: String,
-      head: Boolean,
-      ptime: String,
-    };
-    this.criteria = {
-      ...this.criteria,
-      user_id: Number,
-      repo_id: Number,
-      branch_name: String,
-      commit_id: String,
-      head: Boolean,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      repo_id: Number,
-      branch_name: String,
-      commit_id: String,
-      head: Boolean,
-    };
-    this.version = 3;
-  }
+export class Snapshot extends Data {
+  static schema = 'global';
+  static table = 'snapshot';
+  static columns = {
+    ...Data.columns,
+    user_id: Number,
+    repo_id: Number,
+    branch_name: String,
+    commit_id: String,
+    head: Boolean,
+    ptime: String,
+  };
+  static criteria = {
+    ...Data.criteria,
+    user_id: Number,
+    repo_id: Number,
+    branch_name: String,
+    commit_id: String,
+    head: Boolean,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    repo_id: Number,
+    branch_name: String,
+    commit_id: String,
+    head: Boolean,
+  };
+  static version = 3;
 
   /**
    * Create table in schema
@@ -40,7 +37,7 @@ class Snapshot extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -73,7 +70,7 @@ class Snapshot extends Data {
    *
    * @return {Promise<Boolean>}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     if (version === 3) {
       await this.create(db, schema);
       await this.grant(db, schema);
@@ -90,7 +87,7 @@ class Snapshot extends Data {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
@@ -107,7 +104,7 @@ class Snapshot extends Data {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -121,7 +118,7 @@ class Snapshot extends Data {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     return (subscription.area === 'admin');
   }
 
@@ -137,7 +134,7 @@ class Snapshot extends Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -151,10 +148,3 @@ class Snapshot extends Data {
     return objects;
   }
 }
-
-const instance = new Snapshot;
-
-export {
-  instance as default,
-  Snapshot,
-};

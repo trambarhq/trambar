@@ -1,14 +1,14 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import * as Localization from '../localization.mjs';
-import * as TagScanner from '../common/utils/tag-scanner.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import { getDefaultLanguageCode } from '../localization.mjs';
+import { findTags } from '../tag-scanner.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 import * as AssignmentImporter from './assignment-importer.mjs';
 
 // accessors
-import Story from '../accessors/story.mjs';
+import { Story } from '../accessors/story.mjs';
 
 /**
  * Import an activity log entry about an issue
@@ -136,12 +136,12 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
  * @return {Story}
  */
 function copyIssueProperties(story, system, server, repo, opener, assignments, glIssue) {
-  const descriptionTags = TagScanner.findTags(glIssue.description);
+  const descriptionTags = findTags(glIssue.description, true);
   const labelTags = _.map(glIssue.labels, (label) => {
     return `#${_.replace(label, /\s+/g, '-')}`;
   });
   const tags = _.union(descriptionTags, labelTags);
-  const defLangCode = Localization.getDefaultLanguageCode(system);
+  const defLangCode = getDefaultLanguageCode(system);
 
   const state = glIssue.state;
   if (state === 'opened') {

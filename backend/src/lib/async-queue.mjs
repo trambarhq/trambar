@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-class AsyncQueue {
+export class AsyncQueue {
   constructor(iteratees, orders) {
     this.active = true;
     this.iteratees = iteratees;
@@ -70,8 +70,3 @@ class AsyncQueue {
     }
   }
 }
-
-export {
-  AsyncQueue as default,
-  AsyncQueue,
-};

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import * as TaskLog from '../task-log.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import { TaskLog } from '../task-log.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 import * as IssueImporter from './issue-importer.mjs';
@@ -14,7 +14,7 @@ import * as UserImporter from './user-importer.mjs';
 import * as NoteImporter from './note-importer.mjs';
 
 // accessors
-import Story from '../accessors/story.mjs';
+import { Story } from '../accessors/story.mjs';
 
 /**
  * Retrieve activity log entries from Gitlab server and turn them into stories

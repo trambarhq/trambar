@@ -2,30 +2,27 @@ import _ from 'lodash';
 import Crypto from 'crypto'
 import { LiveData } from './live-data.mjs';
 
-class Statistics extends LiveData {
-  constructor() {
-    super();
-    this.schema = 'project';
-    this.table = 'statistics';
-    this.columns = {
-      ...this.columns,
-      type: String,
-      filters: Object,
-      filters_hash: String,
-      sample_count: Number,
-    };
-    this.criteria = {
-      ...this.criteria,
-      type: String,
-      filters_hash: String,
-      match_any: Array(Object),
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      type: String,
-      filters: Object,
-    };
-  }
+export class Statistics extends LiveData {
+  static schema = 'project';
+  static table = 'statistics';
+  static columns = {
+    ...LiveData.columns,
+    type: String,
+    filters: Object,
+    filters_hash: String,
+    sample_count: Number,
+  };
+  static criteria = {
+    ...LiveData.criteria,
+    type: String,
+    filters_hash: String,
+    match_any: Array(Object),
+  };
+  static eventColumns = {
+    ...LiveData.eventColumns,
+    type: String,
+    filters: Object,
+  };
 
   /**
    * Create table in schemaroot
@@ -35,7 +32,7 @@ class Statistics extends LiveData {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -68,7 +65,7 @@ class Statistics extends LiveData {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -79,7 +76,7 @@ class Statistics extends LiveData {
    * @param  {Object} criteria
    * @param  {Object} query
    */
-  apply(criteria, query) {
+  static apply(criteria, query) {
     const { match_any, ...basic } = criteria;
     super.apply(basic, query);
 
@@ -102,7 +99,7 @@ class Statistics extends LiveData {
    *
    * @return {Promise<Array>}
    */
-  async find(db, schema, criteria, columns) {
+  static async find(db, schema, criteria, columns) {
     // autovivify rows when type and filters are specified
     const type = criteria.type;
     let filters = criteria.filters;
@@ -143,7 +140,7 @@ class Statistics extends LiveData {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -162,7 +159,7 @@ class Statistics extends LiveData {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     if (super.isRelevantTo(event, user, subscription)) {
       switch (event.current.type) {
         case 'story-popularity':
@@ -197,10 +194,3 @@ function hash(filters) {
   const hash = Crypto.createHash('md5').update(text);
   return hash.digest("hex");
 }
-
-const instance = new Statistics;
-
-export {
-  instance as default,
-  Statistics,
-};

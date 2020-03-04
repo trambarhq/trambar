@@ -1,22 +1,21 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import CrossFetch from 'cross-fetch';
-import * as TaskLog from '../task-log.mjs';
-import * as Localization from '../localization.mjs';
-import HTTPError from '../common/errors/http-error.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
-import { DefaultUserSettings } from '../common/objects/settings/user-settings.mjs';
+import { TaskLog } from '../task-log.mjs';
+import { getDefaultLanguageCode } from '../localization.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { HTTPError } from '../errors.mjs';
 
 import * as Transport from './transport.mjs';
 import * as RepoImporter from './repo-importer.mjs';
 import * as MediaImporter from '../media-server/media-importer.mjs';
 
 // accessors
-import Project from '../accessors/project.mjs';
-import Repo from '../accessors/repo.mjs';
-import Server from '../accessors/server.mjs';
-import Story from '../accessors/story.mjs';
-import User from '../accessors/user.mjs';
+import { Project } from '../accessors/project.mjs';
+import { Repo } from '../accessors/repo.mjs';
+import { Server } from '../accessors/server.mjs';
+import { Story } from '../accessors/story.mjs';
+import { User } from '../accessors/user.mjs';
 
 /**
  * Import multiple Gitlab users
@@ -227,7 +226,7 @@ function copyUserProperties(user, server, image, glUser) {
   }
   const userChanges = _.cloneDeep(user) || {
     role_ids: _.get(server, 'settings.user.role_ids', []),
-    settings: DefaultUserSettings,
+    settings: User.getDefaultSettings(),
   };
   ExternalDataUtils.addLink(userChanges, server, {
     user: {
@@ -340,8 +339,7 @@ async function processSystemEvent(db, server, glHookEvent) {
  * @return {Story}
  */
 function copyEventProperties(story, system, server, repo, author, glEvent) {
-  const defLangCode = Localization.getDefaultLanguageCode(system);
-
+  const defLangCode = getDefaultLanguageCode(system);
   const storyChanges = _.cloneDeep(story) || {};
   ExternalDataUtils.inheritLink(storyChanges, server, repo, {
     user: { id: glEvent.author_id }

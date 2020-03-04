@@ -1,42 +1,39 @@
 import _ from 'lodash';
-import HTTPError from '../common/errors/http-error.mjs';
 import { Data } from './data.mjs';
+import { HTTPError } from '../errors.mjs';
 
-class Spreadsheet extends Data {
-  constructor() {
-    super();
-    this.schema = 'project';
-    this.table = 'spreadsheet';
-    this.columns = {
-      ...this.columns,
-      language_codes: Array(String),
-      disabled: Boolean,
-      hidden: Boolean,
-      name: String,
-      url: String,
-      etag: String,
-      settings: Object,
-    };
-    this.criteria = {
-      ...this.criteria,
-      language_codes: Array(String),
-      disabled: Boolean,
-      hidden: Boolean,
-      name: String,
-      url: String,
-      etag: String,
+export class Spreadsheet extends Data {
+  static schema = 'project';
+  static table = 'spreadsheet';
+  static columns = {
+    ...Data.columns,
+    language_codes: Array(String),
+    disabled: Boolean,
+    hidden: Boolean,
+    name: String,
+    url: String,
+    etag: String,
+    settings: Object,
+  };
+  static criteria = {
+    ...Data.criteria,
+    language_codes: Array(String),
+    disabled: Boolean,
+    hidden: Boolean,
+    name: String,
+    url: String,
+    etag: String,
 
-      search: Object,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      language_codes: Array(String),
-      disabled: Boolean,
-      hidden: Boolean,
-      name: String,
-    };
-    this.version = 3;
-  }
+    search: Object,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    language_codes: Array(String),
+    disabled: Boolean,
+    hidden: Boolean,
+    name: String,
+  };
+  static version = 3;
 
   /**
    * Create table in schema
@@ -46,7 +43,7 @@ class Spreadsheet extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -79,7 +76,7 @@ class Spreadsheet extends Data {
    *
    * @return {Promise<Boolean>}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     if (version === 3) {
       await this.create(db, schema);
       await this.grant(db, schema);
@@ -96,7 +93,7 @@ class Spreadsheet extends Data {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
@@ -113,7 +110,7 @@ class Spreadsheet extends Data {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -128,7 +125,7 @@ class Spreadsheet extends Data {
    *
    * @return {Promise}
    */
-  async apply(db, schema, criteria, query) {
+  static async apply(db, schema, criteria, query) {
     const { search, ...basic } = criteria;
     super.apply(basic, query);
     if (search) {
@@ -143,7 +140,7 @@ class Spreadsheet extends Data {
    *
    * @return {String}
    */
-  getSearchableText(languageCode) {
+  static getSearchableText(languageCode) {
     return `"extractSpreadsheetText"(details, '${languageCode}')`;
   }
 
@@ -159,7 +156,7 @@ class Spreadsheet extends Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -181,7 +178,7 @@ class Spreadsheet extends Data {
    * @param  {Object} spreadsheetBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(spreadsheetReceived, spreadsheetBefore, credentials) {
+  static checkWritePermission(spreadsheetReceived, spreadsheetBefore, credentials) {
     if (credentials.unrestricted) {
       return;
     }
@@ -197,7 +194,7 @@ class Spreadsheet extends Data {
    *
    * @return {Promise<Object>}
    */
-  async saveUnique(db, schema, object) {
+  static async saveUnique(db, schema, object) {
     // this doesn't work within a transaction
     try {
       const objectAfter = await this.saveOne(db, schema, object);
@@ -219,10 +216,3 @@ class Spreadsheet extends Data {
     }
   }
 }
-
-const instance = new Spreadsheet;
-
-export {
-  instance as default,
-  Spreadsheet,
-};

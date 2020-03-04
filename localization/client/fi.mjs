@@ -1,5 +1,5 @@
-import 'moment/locale/fi';
-import { cardinal, list } from 'common/locale/grammars/finnish.mjs';
+import 'moment/locale/fi.js';
+import { cardinal, list } from '../grammars/finnish.mjs';
 
 const phrases = {
   'action-contact-by-email': 'Ota yhteyttä sähköpostitse',
@@ -714,7 +714,7 @@ const phrases = {
   },
   'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
     let text = `Yhdisti koodin`;
-    if (branches?.length > 0) {
+    if (branches && branches.length > 0) {
       let sources = branches.map((branch) => {
         return `“${branch}”`;
       });

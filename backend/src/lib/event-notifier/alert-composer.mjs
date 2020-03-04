@@ -1,10 +1,12 @@
 import _ from 'lodash';
-import * as Localization from '../localization.mjs';
+import { pick, translate, getUserName, load } from '../localization.mjs';
 
-function format(system, schema, user, notification, locale) {
-  let title = Localization.pick(locale, system.details.title);
+async function format(system, schema, user, notification, locale) {
+  await load(locale);
+
+  let title = pick(system.details.title, locale);
   if (!title) {
-    title = Localization.translate(locale, 'app-name');
+    title = translate('app-name', [], locale);
   }
   return {
     schema: schema,
@@ -21,15 +23,18 @@ function format(system, schema, user, notification, locale) {
 }
 
 function getNotificationText(user, notification, locale) {
-  const name = Localization.name(locale, user);
-  const t = function() {
-    return Localization.translate.apply(null, [ locale, ...arguments ]);
+  const name = getUserName(user, locale);
+  const story = notification.details.story_type;
+  const reaction = notification.details.reaction_type;
+  const branch = notification.details.branch;
+  const t = function(phrase, ...args) {
+    return translate(phrase, args, locale);
   };
   switch (notification.type) {
     case 'like':
-      return t('notification-$name-likes-your-$story', name, notification.details.story_type);
+      return t('notification-$name-likes-your-$story', name, story);
     case 'comment':
-      return t('notification-$name-commented-on-your-$story', name, notification.details.story_type);
+      return t('notification-$name-commented-on-your-$story', name, story);
     case 'issue':
       return t('notification-$name-opened-an-issue', name);
     case 'vote':
@@ -37,26 +42,26 @@ function getNotificationText(user, notification, locale) {
     case 'task-completion':
       return t('notification-$name-completed-task', name);
     case 'note':
-      return t('notification-$name-posted-a-note-about-your-$story', name, notification.details.story_type);
+      return t('notification-$name-posted-a-note-about-your-$story', name, story);
     case 'assignment':
-      return t('notification-$name-is-assigned-to-your-$story', name, notification.details.story_type);
+      return t('notification-$name-is-assigned-to-your-$story', name, story);
     case 'tracking':
       return t('notification-$name-added-your-post-to-issue-tracker', name);
     case 'push':
-      return t('notification-$name-pushed-code-to-$branch', name, notification.details.branch);
+      return t('notification-$name-pushed-code-to-$branch', name, branch);
     case 'merge':
-      return t('notification-$name-merged-code-to-$branch', name, notification.details.branch);
+      return t('notification-$name-merged-code-to-$branch', name, branch);
     case 'coauthor':
       return t('notification-$name-added-you-as-coauthor', name);
     case 'survey':
       return t('notification-$name-posted-a-survey', name);
     case 'bookmark':
-      return t('notification-$name-sent-bookmark-to-$story', name, notification.details.story_type);
+      return t('notification-$name-sent-bookmark-to-$story', name, story);
     case 'mention':
-      if (notification.details.story_type) {
-        return t('notification-$name-mentioned-you-in-$story', name, notification.details.story_type);
-      } else if (notification.details.reaction_type) {
-        return t('notification-$name-mentioned-you-in-$reaction', name, notification.details.reaction_type);
+      if (story) {
+        return t('notification-$name-mentioned-you-in-$story', name, story);
+      } else if (reaction) {
+        return t('notification-$name-mentioned-you-in-$reaction', name, reaction);
       } else {
         break;
       }

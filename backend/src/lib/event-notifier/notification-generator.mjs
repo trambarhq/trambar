@@ -2,12 +2,12 @@ import _ from 'lodash';
 import Moment from 'moment';
 
 // accessors
-import Bookmark from '../accessors/bookmark.mjs';
-import Notification from '../accessors/notification.mjs';
-import Project from '../accessors/project.mjs';
-import Reaction from '../accessors/reaction.mjs';
-import Story from '../accessors/story.mjs';
-import User from '../accessors/user.mjs';
+import { Bookmark } from '../accessors/bookmark.mjs';
+import { Notification } from '../accessors/notification.mjs';
+import { Project } from '../accessors/project.mjs';
+import { Reaction } from '../accessors/reaction.mjs';
+import { Story } from '../accessors/story.mjs';
+import { User } from '../accessors/user.mjs';
 
 /**
  * Create new notification objects based on database events

@@ -1,61 +1,58 @@
 import _ from 'lodash';
-import HTTPError from '../common/errors/http-error.mjs';
 import { ExternalData } from './external-data.mjs';
-import Task from './task.mjs';
-import Notification from './notification.mjs';
+import { HTTPError } from '../errors.mjs';
+import { Task } from './task.mjs';
+import { Notification } from './notification.mjs';
 
-class Reaction extends ExternalData {
-  constructor() {
-    super();
-    this.schema = 'project';
-    this.table = 'reaction';
-    this.columns = {
-      ...this.columns,
-      type: String,
-      tags: Array(String),
-      language_codes: Array(String),
-      story_id: Number,
-      user_id: Number,
-      published: Boolean,
-      ready: Boolean,
-      suppressed: Boolean,
-      ptime: String,
-      public: Boolean,
-    };
-    this.criteria = {
-      ...this.criteria,
-      type: String,
-      tags: Array(String),
-      language_codes: Array(String),
-      story_id: Number,
-      user_id: Number,
-      published: Boolean,
-      ready: Boolean,
-      suppressed: Boolean,
-      public: Boolean,
+export class Reaction extends ExternalData {
+  static schema = 'project';
+  static table = 'reaction';
+  static columns = {
+    ...ExternalData.columns,
+    type: String,
+    tags: Array(String),
+    language_codes: Array(String),
+    story_id: Number,
+    user_id: Number,
+    published: Boolean,
+    ready: Boolean,
+    suppressed: Boolean,
+    ptime: String,
+    public: Boolean,
+  };
+  static criteria = {
+    ...ExternalData.criteria,
+    type: String,
+    tags: Array(String),
+    language_codes: Array(String),
+    story_id: Number,
+    user_id: Number,
+    published: Boolean,
+    ready: Boolean,
+    suppressed: Boolean,
+    public: Boolean,
 
-      server_id: Number,
-      time_range: String,
-      newer_than: String,
-      older_than: String,
-      search: Object,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      type: String,
-      tags: Array(String),
-      language_codes: Array(String),
-      story_id: Number,
-      user_id: Number,
-      published: Boolean,
-      ready: Boolean,
-      ptime: String,
-      public: Boolean,
-    };
-    this.accessControlColumns = {
-      public: Boolean,
-    };
-  }
+    server_id: Number,
+    time_range: String,
+    newer_than: String,
+    older_than: String,
+    search: Object,
+  };
+  static eventColumns = {
+    ...ExternalData.eventColumns,
+    type: String,
+    tags: Array(String),
+    language_codes: Array(String),
+    story_id: Number,
+    user_id: Number,
+    published: Boolean,
+    ready: Boolean,
+    ptime: String,
+    public: Boolean,
+  };
+  static accessControlColumns = {
+    public: Boolean,
+  };
 
   /**
    * Create table in schema
@@ -65,7 +62,7 @@ class Reaction extends ExternalData {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -105,7 +102,7 @@ class Reaction extends ExternalData {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
     // merge changes to details->resources to avoid race between
@@ -125,7 +122,7 @@ class Reaction extends ExternalData {
    *
    * @return {Promise<Array<Object>>}
    */
-  async filter(db, schema, rows, credentials) {
+  static async filter(db, schema, rows, credentials) {
     if (credentials.user.type === 'guest') {
       rows = _.filter(rows, { public: true });
     }
@@ -142,7 +139,7 @@ class Reaction extends ExternalData {
    *
    * @return {Promise}
    */
-  async apply(db, schema, criteria, query) {
+  static async apply(db, schema, criteria, query) {
     const { time_range, newer_than, older_than, search, ...basic } = criteria;
     super.apply(basic, query);
 
@@ -173,7 +170,7 @@ class Reaction extends ExternalData {
    *
    * @return {Promise<Object>}
    */
-  async importOne(db, schema, reactionReceived, reactionBefore, credentials, options) {
+  static async importOne(db, schema, reactionReceived, reactionBefore, credentials, options) {
     const row = await super.importOne(db, schema, reactionReceived, reactionBefore, credentials, options);
     // set language_codes
     if (reactionReceived.details) {
@@ -221,7 +218,7 @@ class Reaction extends ExternalData {
    *
    * @return {Promise<Object>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -259,7 +256,7 @@ class Reaction extends ExternalData {
    *
    * @return {Promise}
    */
-   async associate(db, schema, objects, originals, rows, credentials) {
+   static async associate(db, schema, objects, originals, rows, credentials) {
      const deletedReactions = _.filter(rows, { deleted: true });
      await Notification.deleteAssociated(db, schema, { reaction: deletedReactions });
    }
@@ -273,7 +270,7 @@ class Reaction extends ExternalData {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     if (subscription.area === 'admin') {
       // admin console doesn't use this object currently
       return false;
@@ -293,7 +290,7 @@ class Reaction extends ExternalData {
    * @param  {Object} reactionBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(reactionReceived, reactionBefore, credentials) {
+  static checkWritePermission(reactionReceived, reactionBefore, credentials) {
     if (credentials.access !== 'read-comment' && credentials.access !== 'read-write') {
       throw new HTTPError(400);
     }
@@ -334,7 +331,7 @@ class Reaction extends ExternalData {
    *
    * @return {Promise}
    */
-  async deleteAssociated(db, schema, associations) {
+  static async deleteAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
       if (_.isEmpty(objects)) {
         continue;
@@ -361,7 +358,7 @@ class Reaction extends ExternalData {
    *
    * @return {Promise}
    */
-  async restoreAssociated(db, schema, associations) {
+  static async restoreAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
       if (_.isEmpty(objects)) {
         continue;
@@ -381,10 +378,3 @@ class Reaction extends ExternalData {
     }
   }
 }
-
-const instance = new Reaction;
-
-export {
-  instance as default,
-  Reaction,
-};

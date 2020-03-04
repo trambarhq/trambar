@@ -1,9 +1,9 @@
-import 'moment/locale/en-au';
-import 'moment/locale/en-ca';
-import 'moment/locale/en-gb';
-import 'moment/locale/en-ie';
-import 'moment/locale/en-nz';
-import { cardinal, list } from 'common/locale/grammars/english.mjs';
+import 'moment/locale/en-au.js';
+import 'moment/locale/en-ca.js';
+import 'moment/locale/en-gb.js';
+import 'moment/locale/en-ie.js';
+import 'moment/locale/en-nz.js';
+import { cardinal, list } from '../grammars/english.mjs';
 
 function chooseVariant(countryCode) {
   let freedomLoving;
@@ -730,7 +730,7 @@ let americanPhrases = {
   },
   'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
     let text = `Merged code`;
-    if (branches?.length > 0) {
+    if (branches && branches.length > 0) {
       let sources = branches.map((branch) => {
         return `“${branch}”`;
       });

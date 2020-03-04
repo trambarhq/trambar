@@ -3,8 +3,9 @@ import Moment from 'moment';
 import { promises as FS } from 'fs';
 import Bluebird from 'bluebird';
 import CrossFetch from 'cross-fetch';
+import Bytes from 'bytes';
 import AsciiTable from 'ascii-table';
-import * as TaskLog from '../task-log.mjs'
+import { TaskLog } from '../task-log.mjs'
 
 const CACHE_PATH = '/var/cache/nginx/data';
 
@@ -100,7 +101,7 @@ async function stat(project, options) {
   table.setHeading(heading);
   for (let { url, mtime, size, md5, status } of sorted) {
     const date = Moment(mtime).format('LLL');
-    const fileSize = (status === 200) ? _.fileSize(size) : '-';
+    const fileSize = (status === 200) ? Bytes(size) : '-';
     const title = (status === 200) ? url : `${url} [${status}]`;
     const row = [ title, date, fileSize ];
     if (showHash) {

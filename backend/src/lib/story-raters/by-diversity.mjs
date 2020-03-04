@@ -4,15 +4,13 @@ import Moment from 'moment';
 import TypeDiversityRatings from './ratings/type-diversity-ratings.mjs';
 import UserDiversityRatings from './ratings/user-diversity-ratings.mjs';
 
-class ByDiversity {
-  constructor() {
-    this.type = 'by-diversity';
-    this.calculation = 'immediate';
-    this.columns = [ 'type', 'user_ids' ];
-    this.monitoring = [];
-  }
+export class ByDiversity {
+  static type = 'by-diversity';
+  static calculation = 'immediate';
+  static columns = [ 'type', 'user_ids' ];
+  static monitoring = [];
 
-  async prepareContext(db, schema, stories, listing) {
+  static async prepareContext(db, schema, stories, listing) {
     const userCounts = {};
     const typeCounts = {};
     for (let story of stories) {
@@ -32,7 +30,7 @@ class ByDiversity {
     return { userPercentages, typePercentages };
   }
 
-  calculateRating(context, story) {
+  static calculateRating(context, story) {
     const userID = story.user_ids[0];
     const type = story.type;
     let rating = 0;
@@ -57,10 +55,3 @@ class ByDiversity {
     return rating;
   }
 }
-
-const instance = new ByDiversity;
-
-export {
-  instance as default,
-  ByDiversity,
-};

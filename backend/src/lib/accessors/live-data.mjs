@@ -1,25 +1,22 @@
 import _ from 'lodash';
-import Database from '../database.mjs';
+import { Database } from '../database.mjs';
 import { Data } from './data.mjs';
 
-class LiveData extends Data {
-  constructor() {
-    super();
-    this.columns = {
-      ...this.columns,
-      atime: String,
-      ltime: String,
-      dirty: Boolean,
-    };
-    this.criteria = {
-      ...this.criteria,
-      dirty: Boolean,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      dirty: Boolean,
-    };
-  }
+export class LiveData extends Data {
+  static columns = {
+    ...Data.columns,
+    atime: String,
+    ltime: String,
+    dirty: Boolean,
+  };
+  static criteria = {
+    ...Data.criteria,
+    dirty: Boolean,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    dirty: Boolean,
+  };
 
   /**
    * Create table in schema
@@ -31,7 +28,7 @@ class LiveData extends Data {
    *
    * @return {Promise<Boolean>}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -59,7 +56,7 @@ class LiveData extends Data {
    *
    * @return {Promise<Boolean>}
    */
-  async createChangeTrigger(db, schema) {
+  static async createChangeTrigger(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       DROP TRIGGER IF EXISTS "indicateLiveDataChangeOnUpdate" ON ${table};
@@ -80,7 +77,7 @@ class LiveData extends Data {
    *
    * @return {Promise}
    */
-  async createNotificationTriggers(db, schema) {
+  static async createNotificationTriggers(db, schema) {
     const table = this.getTableName(schema);
     const propNames = _.keys(this.eventColumns);
     const args = _.map(propNames, (propName) => {
@@ -121,7 +118,7 @@ class LiveData extends Data {
    *
    * @return {Promise<Object>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -134,7 +131,7 @@ class LiveData extends Data {
     return objects;
   }
 
-  async import() {
+  static async import() {
     throw new Error('Cannot modify live data');
   }
 
@@ -149,7 +146,7 @@ class LiveData extends Data {
    *
    * @return {Promise<Object|null>}
    */
-  async lock(db, schema, id, interval, columns) {
+  static async lock(db, schema, id, interval, columns) {
     const table = this.getTableName(schema);
     const parameters = [ id, interval ];
     const sql = `
@@ -180,7 +177,7 @@ class LiveData extends Data {
    *
    * @return {Promise<Object|null>}
    */
-  async unlock(db, schema, id, props, columns) {
+  static async unlock(db, schema, id, props, columns) {
     const table = this.getTableName(schema);
     const parameters = [ id ];
     const assignments = [];
@@ -222,7 +219,7 @@ class LiveData extends Data {
    *
    * @return {Promise}
    */
-  async relinquish(db) {
+  static async relinquish(db) {
     if (_.isEmpty(this.locked)) {
       return;
     }
@@ -240,7 +237,7 @@ class LiveData extends Data {
    *
    * @return {Promise}
    */
-  async invalidate(db, schema, ids) {
+  static async invalidate(db, schema, ids) {
     const table = this.getTableName(schema);
     const parameters = [ ids ];
     const sql = `
@@ -257,7 +254,7 @@ class LiveData extends Data {
    * @param  {String} schema
    * @param  {Object} row
    */
-  touch(db, schema, row) {
+  static touch(db, schema, row) {
     const now = new Date;
     const atime = now.toISOString();
     setTimeout(async () => {
@@ -277,7 +274,7 @@ class LiveData extends Data {
    *
    * @return {Array<Object>}
    */
-  async vivify(db, schema, keys, expectedRows, columns) {
+  static async vivify(db, schema, keys, expectedRows, columns) {
     // we need these columns in order to tell which rows are missing
     const keyColumns = _.keys(keys);
     const columnsNeeded = columns + ', ' + keyColumns.join(', ');
@@ -298,7 +295,3 @@ class LiveData extends Data {
     return _.concat(newRows.reverse(), existingRows);
   }
 }
-
-export {
-  LiveData,
-};

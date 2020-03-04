@@ -1,37 +1,34 @@
 import { Data } from './data.mjs';
-import Project from './project.mjs';
-import HTTPError from '../common/errors/http-error.mjs';
-import * as ProjectUtils from '../common/objects/utils/project-utils.mjs';
+import { Project } from './project.mjs';
+import { HTTPError } from '../errors.mjs';
+import { getUserAccessLevel } from '../project-utils.mjs';
 
-class Subscription extends Data {
-  constructor() {
-    super();
-    this.schema = 'global';
-    this.table = 'subscription';
-    this.columns = {
-      ...this.columns,
-      user_id: Number,
-      area: String,
-      method: String,
-      relay: String,
-      token: String,
-      schema: String,
-      locale: String,
-    };
-    this.criteria = {
-      ...this.criteria,
-      user_id: Number,
-      area: String,
-      method: String,
-      relay: String,
-      token: String,
-      schema: String,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      user_id: Number,
-    };
-  }
+export class Subscription extends Data {
+  static schema = 'global';
+  static table = 'subscription';
+  static columns = {
+    ...Data.columns,
+    user_id: Number,
+    area: String,
+    method: String,
+    relay: String,
+    token: String,
+    schema: String,
+    locale: String,
+  };
+  static criteria = {
+    ...Data.criteria,
+    user_id: Number,
+    area: String,
+    method: String,
+    relay: String,
+    token: String,
+    schema: String,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    user_id: Number,
+  };
 
   /**
    * Create table in schema
@@ -41,7 +38,7 @@ class Subscription extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -73,7 +70,7 @@ class Subscription extends Data {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -90,7 +87,7 @@ class Subscription extends Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -121,7 +118,7 @@ class Subscription extends Data {
    *
    * @return {Promise<Array>}
    */
-  async importOne(db, schema, subscriptionReceived, subscriptionBefore, credentials, options) {
+  static async importOne(db, schema, subscriptionReceived, subscriptionBefore, credentials, options) {
     const row = await super.importOne(db, schema, subscriptionReceived, subscriptionBefore, credentials, options);
     if (subscriptionBefore && subscriptionBefore.deleted) {
       // restore it
@@ -134,7 +131,7 @@ class Subscription extends Data {
         deleted: false,
       };
       const project = await Project.findOne(db, schema, criteria, 'user_ids, settings');
-      const access = ProjectUtils.getUserAccessLevel(project, credentials.user);
+      const access = getUserAccessLevel(project, credentials.user);
       if (!access) {
         throw new HTTPError(400);
       }
@@ -151,7 +148,7 @@ class Subscription extends Data {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     if (super.isRelevantTo(event, user, subscription)) {
       // subscriptions aren't read by client app
       if (subscription.area === 'admin') {
@@ -168,7 +165,7 @@ class Subscription extends Data {
    * @param  {Object} subscriptionBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(subscriptionReceived, subscriptionBefore, credentials) {
+  static checkWritePermission(subscriptionReceived, subscriptionBefore, credentials) {
     if (subscriptionReceived.area !== credentials.area) {
       throw new HTTPError(400);
     }
@@ -180,10 +177,3 @@ class Subscription extends Data {
     }
   }
 }
-
-const instance = new Subscription;
-
-export {
-  instance as default,
-  Subscription,
-};

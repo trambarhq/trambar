@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import * as TaskLog from '../task-log.mjs';
+import { TaskLog } from '../task-log.mjs';
 
 import * as CommitImporter from './commit-importer.mjs';
 

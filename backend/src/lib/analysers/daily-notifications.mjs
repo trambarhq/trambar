@@ -1,37 +1,35 @@
 import _ from 'lodash';
 import Moment from 'moment-timezone';
-import Notification from '../accessors/notification.mjs';
+import { Notification } from '../accessors/notification.mjs';
 
-class DailyNotifications {
-  constructor() {
-    this.type = 'daily-notifications';
-    // tables from which the stats are derived
-    this.sourceTables = [ 'notification' ];
-    // filters and the columns they act on--determine which objects are
-    // included in the statistics;
-    this.filteredColumns = {
-      notification: {
-        target_user_id: 'target_user_id',
-        time_range: 'ctime',
-      },
-    };
-    // additional criteria that objects must also meet to be included
-    this.fixedFilters = {
-      notification: {
-        deleted: false,
-      }
-    };
-    // columns in the table(s) that affects the results (columns used by the
-    // filters would, of course, also impact the results)
-    this.depedentColumns = {
-      notification: [
-        'type',
-        'ctime',
-      ],
-    };
-  }
+export class DailyNotifications {
+  static type = 'daily-notifications';
+  // tables from which the stats are derived
+  static sourceTables = [ 'notification' ];
+  // filters and the columns they act on--determine which objects are
+  // included in the statistics;
+  static filteredColumns = {
+    notification: {
+      target_user_id: 'target_user_id',
+      time_range: 'ctime',
+    },
+  };
+  // additional criteria that objects must also meet to be included
+  static fixedFilters = {
+    notification: {
+      deleted: false,
+    }
+  };
+  // columns in the table(s) that affects the results (columns used by the
+  // filters would, of course, also impact the results)
+  static depedentColumns = {
+    notification: [
+      'type',
+      'ctime',
+    ],
+  };
 
-  async generate(db, schema, filters) {
+  static async generate(db, schema, filters) {
     const { timezone, ...basic } = filters;
     const criteria = { ...this.fixedFilters.notification, ...basic };
 
@@ -55,10 +53,3 @@ class DailyNotifications {
     };
   }
 }
-
-const instance = new DailyNotifications;
-
-export {
-  instance as default,
-  DailyNotifications,
-};

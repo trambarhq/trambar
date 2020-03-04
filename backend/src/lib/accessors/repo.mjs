@@ -1,37 +1,34 @@
 import _ from 'lodash';
-import HTTPError from '../common/errors/http-error.mjs';
 import { ExternalData } from './external-data.mjs';
-import Task from './task.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import { HTTPError } from '../errors.mjs';
+import { Task } from './task.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
 
-class Repo extends ExternalData {
-  constructor() {
-    super();
-    this.schema = 'global';
-    this.table = 'repo';
-    this.columns = {
-      ...this.columns,
-      type: String,
-      name: String,
-      user_ids: Array(Number),
-      template: Boolean,
-    };
-    this.criteria = {
-      ...this.criteria,
-      id: Number,
-      deleted: Boolean,
-      type: String,
-      name: String,
-      user_ids: Array(Number),
-      server_id: Number,
-      template: Boolean,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      template: Boolean,
-    };
-    this.version = 3;
-  }
+export class Repo extends ExternalData {
+  static schema = 'global';
+  static table = 'repo';
+  static columns = {
+    ...ExternalData.columns,
+    type: String,
+    name: String,
+    user_ids: Array(Number),
+    template: Boolean,
+  };
+  static criteria = {
+    ...ExternalData.criteria,
+    id: Number,
+    deleted: Boolean,
+    type: String,
+    name: String,
+    user_ids: Array(Number),
+    server_id: Number,
+    template: Boolean,
+  };
+  static eventColumns = {
+    ...ExternalData.eventColumns,
+    template: Boolean,
+  };
+  static version = 3;
 
   /**
    * Create table in schema
@@ -41,7 +38,7 @@ class Repo extends ExternalData {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -74,7 +71,7 @@ class Repo extends ExternalData {
    *
    * @return {Promise<Boolean>}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     if (version === 3) {
       // adding: template
       const table = this.getTableName(schema);
@@ -97,7 +94,7 @@ class Repo extends ExternalData {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
@@ -114,7 +111,7 @@ class Repo extends ExternalData {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
     // completion of tasks will automatically update details->resources
@@ -133,7 +130,7 @@ class Repo extends ExternalData {
    *
    * @return {Promise<Object>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -151,7 +148,7 @@ class Repo extends ExternalData {
    * @param  {Object} repoBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(repoReceived, repoBefore, credentials) {
+  static checkWritePermission(repoReceived, repoBefore, credentials) {
     if (credentials.unrestricted) {
       return;
     }
@@ -167,7 +164,7 @@ class Repo extends ExternalData {
    *
    * @return {Promise}
    */
-  async deleteAssociated(db, schema, associations) {
+  static async deleteAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
       if (_.isEmpty(objects)) {
         continue;
@@ -193,7 +190,7 @@ class Repo extends ExternalData {
    *
    * @return {Promise}
    */
-  async restoreAssociated(db, schema, associations) {
+  static async restoreAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
       if (_.isEmpty(objects)) {
         continue;
@@ -210,10 +207,3 @@ class Repo extends ExternalData {
     }
   }
 }
-
-const instance = new Repo;
-
-export {
-  instance as default,
-  Repo
-};

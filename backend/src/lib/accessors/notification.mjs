@@ -1,46 +1,43 @@
 import _ from 'lodash';
-import HTTPError from '../common/errors/http-error.mjs';
+import { HTTPError } from '../errors.mjs';
 import { Data } from './data.mjs';
 
-class Notification extends Data {
-  constructor() {
-    super();
-    this.schema = 'both';
-    this.table = 'notification';
-    this.columns = {
-      ...this.columns,
-      type: String,
-      story_id: Number,
-      reaction_id: Number,
-      user_id: Number,
-      target_user_id: Number,
-      seen: Boolean,
-      suppressed: Boolean,
-    };
-    this.criteria = {
-      ...this.criteria,
-      type: String,
-      story_id: Number,
-      reaction_id: Number,
-      user_id: Number,
-      target_user_id: Number,
-      seen: Boolean,
-      suppressed: Boolean,
+export class Notification extends Data {
+  static schema = 'both';
+  static table = 'notification';
+  static columns = {
+    ...Data.columns,
+    type: String,
+    story_id: Number,
+    reaction_id: Number,
+    user_id: Number,
+    target_user_id: Number,
+    seen: Boolean,
+    suppressed: Boolean,
+  };
+  static criteria = {
+    ...Data.criteria,
+    type: String,
+    story_id: Number,
+    reaction_id: Number,
+    user_id: Number,
+    target_user_id: Number,
+    seen: Boolean,
+    suppressed: Boolean,
 
-      time_range: String,
-      newer_than: String,
-      older_than: String,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      type: String,
-      story_id: Number,
-      reaction_id: Number,
-      user_id: Number,
-      target_user_id: Number,
-      seen: Boolean,
-    };
-  }
+    time_range: String,
+    newer_than: String,
+    older_than: String,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    type: String,
+    story_id: Number,
+    reaction_id: Number,
+    user_id: Number,
+    target_user_id: Number,
+    seen: Boolean,
+  };
 
   /**
    * Create table in schema
@@ -50,7 +47,7 @@ class Notification extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -84,7 +81,7 @@ class Notification extends Data {
    *
    * @return {Promise}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     if (version === 2) {
       // adding: suppressed
       const table = this.getTableName(schema);
@@ -107,7 +104,7 @@ class Notification extends Data {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -120,7 +117,7 @@ class Notification extends Data {
    *
    * @return {Promise}
    */
-  apply(criteria, query) {
+  static apply(criteria, query) {
     const { time_range, newer_than, older_than, search, ...basic } = criteria;
     super.apply(basic, query);
 
@@ -149,7 +146,7 @@ class Notification extends Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -180,7 +177,7 @@ class Notification extends Data {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     if (super.isRelevantTo(event, user, subscription)) {
       if (event.current.target_user_id === user.id) {
         return true;
@@ -196,7 +193,7 @@ class Notification extends Data {
    * @param  {Object} notificationBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(notificationReceived, notificationBefore, credentials) {
+  static checkWritePermission(notificationReceived, notificationBefore, credentials) {
     if (notificationBefore.target_user_id !== credentials.user.id) {
       // can't modify an object that doesn't belong to the user
       throw new HTTPError(400);
@@ -212,7 +209,7 @@ class Notification extends Data {
    *
    * @return {Promise}
    */
-  async deleteAssociated(db, schema, associations) {
+  static async deleteAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
       if (_.isEmpty(objects)) {
         continue;
@@ -242,7 +239,7 @@ class Notification extends Data {
    *
    * @return {Promise}
    */
-  async restoreAssociated(db, schema, associations) {
+  static async restoreAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
       if (_.isEmpty(objects)) {
         return;
@@ -265,10 +262,3 @@ class Notification extends Data {
     }
   }
 }
-
-const instance = new Notification;
-
-export {
-  instance as default,
-  Notification,
-};

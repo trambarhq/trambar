@@ -4,8 +4,8 @@ import Path from 'path';
 import URL from 'url';
 import Stream from 'stream';
 import Events from 'events';
-import * as TaskLog from '../task-log.mjs'
-import HTTPError from '../common/errors/http-error.mjs';
+import { TaskLog } from '../task-log.mjs'
+import { HTTPError } from '../errors.mjs';
 
 import * as SnapshotRetriever from './snapshot-retriever.mjs';
 

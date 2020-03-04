@@ -3,9 +3,11 @@ import Bluebird from 'bluebird';
 import QueryString from 'querystring';
 import CrossFetch from 'cross-fetch';
 import Path from 'path';
-import HTTPError from '../common/errors/http-error.mjs';
-import Database from '../database.mjs';
-import Server from '../accessors/server.mjs';
+import { HTTPError } from '../errors.mjs';
+import { Database } from '../database.mjs';
+
+// accessors
+import { Server } from '../accessors/server.mjs';
 
 const PAGE_SIZE = 50;
 const PAGE_LIMIT = 5000;

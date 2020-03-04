@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import CrossFetch from 'cross-fetch';
 import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
-import Database from '../database.mjs';
-import HTTPError from '../common/errors/http-error.mjs';
-import * as TaskLog from '../task-log.mjs';
+import { Database } from '../database.mjs';
+import { HTTPError } from '../errors.mjs';
+import { TaskLog } from '../task-log.mjs';
 
 import * as ProjectSettings from './project-settings.mjs';
 import * as MediaImporter from '../media-server/media-importer.mjs';
-import Rest from '../accessors/rest.mjs';
+import { Rest } from '../accessors/rest.mjs';
 
 async function discover(project, type) {
   const taskLog = TaskLog.start('rest-discover', {

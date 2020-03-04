@@ -2,11 +2,11 @@ import _ from 'lodash';
 import JsDAV from '@pylonide/jsdav';
 import JsDAVLocksBackendFS from '@pylonide/jsdav/lib/DAV/plugins/locks/fs.js';
 import JsDAVPromise from 'jsdav-promise/es6.js'; const { File, Collection, Conflict } = JsDAVPromise;
-import Database from './lib/database.mjs';
+import { Database } from './lib/database.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
 import * as Accessors from './lib/schema-manager/accessors.mjs';
 
-import Project from './lib/accessors/project.mjs';
+import { Project } from './lib/accessors/project.mjs';
 
 let server;
 let db;

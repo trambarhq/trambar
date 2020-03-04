@@ -1,10 +1,10 @@
 import Bluebird from 'bluebird';
 import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Path from 'path';
-import Database from '../database.mjs';
-import * as TaskLog from '../task-log.mjs';
+import { Database } from '../database.mjs';
+import { TaskLog } from '../task-log.mjs';
 
-import Picture from '../accessors/picture.mjs';
+import { Picture } from '../accessors/picture.mjs';
 
 import * as CacheFolders from './cache-folders.mjs';
 import * as ImageManager from './image-manager.mjs';

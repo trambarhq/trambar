@@ -1,16 +1,14 @@
 import _ from 'lodash';
-import Statistics from '../accessors/statistics.mjs';
+import { Statistics } from '../accessors/statistics.mjs';
 
 import ReactionTypeRatings from './ratings/reaction-type-ratings.mjs';
 
-class ByPopularity {
-  constructor() {
-    this.type = 'by-popularity';
-    this.calculation = 'immediate';
-    this.columns = [ 'id' ];
-    this.monitoring = [ 'statistics' ];
-    this.statisticsCache = [];
-  }
+export class ByPopularity {
+  static type = 'by-popularity';
+  static calculation = 'immediate';
+  static columns = [ 'id' ];
+  static monitoring = [ 'statistics' ];
+  static statisticsCache = [];
 
   /**
    * Load data needed to rate the given stories
@@ -22,7 +20,7 @@ class ByPopularity {
    *
    * @return {Promise<Object>}
    */
-  async prepareContext(db, schema, stories, listing) {
+  static async prepareContext(db, schema, stories, listing) {
     const popularity = {};
     for (let story of stories) {
       let statistics = this.findCachedStatistics(schema, story.id)
@@ -42,7 +40,7 @@ class ByPopularity {
    *
    * @return {Number}
    */
-  calculateRating(context, story) {
+  static calculateRating(context, story) {
     const details = context.popularity[story.id];
     const rating = _.reduce(details, (total, count, type) => {
       const reactionRating = ReactionTypeRatings[type] || 0;
@@ -56,7 +54,7 @@ class ByPopularity {
    *
    * @param  {Object} evt
    */
-  handleEvent(evt) {
+  static handleEvent(evt) {
     if (evt.table === 'statistics') {
       if (evt.diff.details) {
         this.clearCachedStatistics(evt.schema, evt.id);
@@ -73,7 +71,7 @@ class ByPopularity {
    *
    * @return {Object|null}
    */
-  async loadStatistics(db, schema, storyID) {
+  static async loadStatistics(db, schema, storyID) {
     const criteria = {
       type: 'story-popularity',
       filters: {
@@ -95,7 +93,7 @@ class ByPopularity {
    * @param  {Number} storyID
    * @param  {Object} statistics
    */
-  cacheStatistics(schema, storyID, statistics) {
+  static cacheStatistics(schema, storyID, statistics) {
     const entry = { schema, storyID, statistics };
     this.statisticsCache.unshift(entry);
     if (this.statisticsCache.length > 5000) {
@@ -111,7 +109,7 @@ class ByPopularity {
    *
    * @return {Object|null}
    */
-  findCachedStatistics(schema, storyID) {
+  static findCachedStatistics(schema, storyID) {
     const index = _.findIndex(this.statisticsCache, { schema, storyID });
     if (index === -1) {
       return null;
@@ -128,7 +126,7 @@ class ByPopularity {
    * @param  {String} schema
    * @param  {Number} id
    */
-  clearCachedStatistics(schema, id) {
+  static clearCachedStatistics(schema, id) {
     const index = _.findIndex(this.statisticsCache, (entry) => {
       if (entry.schema === schema) {
         if (entry.statistics.id === id) {
@@ -142,10 +140,3 @@ class ByPopularity {
     this.statisticsCache.splice(index, 1);
   }
 }
-
-const instance = new ByPopularity;
-
-export {
-  instance as default,
-  ByPopularity,
-};

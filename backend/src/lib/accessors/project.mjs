@@ -1,51 +1,46 @@
 import _ from 'lodash';
 import Bluebird from 'bluebird';
 import { Data } from './data.mjs';
-import Task from './task.mjs';
-import Repo from './repo.mjs';
-import User from './user.mjs';
-import HTTPError from '../common/errors/http-error.mjs';
-import * as ProjectUtils from '../common/objects/utils/project-utils.mjs';
+import { Task } from './task.mjs';
+import { Repo } from './repo.mjs';
+import { User } from './user.mjs';
+import { HTTPError } from '../errors.mjs';
+import { isVisibleToUser } from '../project-utils.mjs';
 
-const illegalProjectNames = [ 'global', 'admin', 'public', 'srv' ];
+export class Project extends Data {
+  static schema = 'global';
+  static table = 'project';
+  static columns = {
+    ...Data.columns,
+    name: String,
+    repo_ids: Array(Number),
+    user_ids: Array(Number),
+    template_repo_id: Number,
+    settings: Object,
+    archived: Boolean,
+  };
+  static criteria = {
+    ...Data.criteria,
+    name: String,
+    repo_ids: Array(Number),
+    user_ids: Array(Number),
+    template_repo_id: Number,
+    archived: Boolean,
 
-class Project extends Data {
-  constructor() {
-    super();
-    this.schema = 'global';
-    this.table = 'project';
-    this.columns = {
-      ...this.columns,
-      name: String,
-      repo_ids: Array(Number),
-      user_ids: Array(Number),
-      template_repo_id: Number,
-      settings: Object,
-      archived: Boolean,
-    };
-    this.criteria = {
-      ...this.criteria,
-      name: String,
-      repo_ids: Array(Number),
-      user_ids: Array(Number),
-      template_repo_id: Number,
-      archived: Boolean,
-
-      website: Boolean,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      name: String,
-      repo_ids: Array(Number),
-      user_ids: Array(Number),
-      template_repo_id: Number,
-      archived: Boolean,
-    };
-    this.accessControlColumns = {
-      user_ids: Array(Number),
-      settings: Object,
-    };
-  }
+    website: Boolean,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    name: String,
+    repo_ids: Array(Number),
+    user_ids: Array(Number),
+    template_repo_id: Number,
+    archived: Boolean,
+  };
+  static accessControlColumns = {
+    user_ids: Array(Number),
+    settings: Object,
+  };
 
   /**
    * Create table in schema
@@ -55,7 +50,7 @@ class Project extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -89,7 +84,7 @@ class Project extends Data {
    *
    * @return {Promise<Boolean>}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     if (version === 3) {
       // adding: template_repo_id
       const table = this.getTableName(schema);
@@ -112,7 +107,7 @@ class Project extends Data {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       GRANT SELECT ON ${table} TO auth_role;
@@ -130,7 +125,7 @@ class Project extends Data {
    *
    * @return {Promise<Boolean>}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
     await this.createResourceCoalescenceTrigger(db, schema, []);
@@ -144,7 +139,7 @@ class Project extends Data {
    * @param  {Object} criteria
    * @param  {Object} query
    */
-  apply(criteria, query) {
+  static apply(criteria, query) {
     const { website, ...basic } = criteria;
     super.apply(basic, query);
 
@@ -169,10 +164,10 @@ class Project extends Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async filter(db, schema, rows, credentials) {
+  static async filter(db, schema, rows, credentials) {
     if (!credentials.unrestricted) {
       rows = _.filter(rows, (row) => {
-        return ProjectUtils.isVisibleToUser(row, credentials.user);
+        return isVisibleToUser(row, credentials.user);
       });
     }
     return rows;
@@ -190,7 +185,7 @@ class Project extends Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -227,7 +222,7 @@ class Project extends Data {
    *
    * @return {Promise<Object>}
    */
-  async importOne(db, schema, projectReceived, projectBefore, credentials, options) {
+  static async importOne(db, schema, projectReceived, projectBefore, credentials, options) {
     const row = await super.importOne(db, schema, projectReceived, projectBefore, credentials, options);
     if (projectReceived.repo_ids) {
       const newRepoIds = _.difference(projectReceived.repo_ids, projectBefore.repo_ids);
@@ -258,7 +253,7 @@ class Project extends Data {
    * @param  {Object} projectBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(projectReceived, projectBefore, credentials) {
+  static checkWritePermission(projectReceived, projectBefore, credentials) {
     if (_.includes(illegalProjectNames, projectReceived.name)) {
       throw new HTTPError(409); // 409 conflict
     }
@@ -284,7 +279,7 @@ class Project extends Data {
    *
    * @return {Promise}
    */
-  async associate(db, schema, projectsReceived, projectsBefore, projectsAfter, credentials) {
+  static async associate(db, schema, projectsReceived, projectsBefore, projectsAfter, credentials) {
     await this.updateNewMembers(db, schema, projectsReceived, projectsBefore, projectsAfter);
   }
 
@@ -299,7 +294,7 @@ class Project extends Data {
    *
    * @return {Promise}
    */
-  async updateNewMembers(db, schema, projectsReceived, projectsBefore, projectsAfter) {
+  static async updateNewMembers(db, schema, projectsReceived, projectsBefore, projectsAfter) {
     // first, obtain ids of projects that new members are added to
     const newUserMemberships = {}, newMemberIds = [];
     for (let [ index, projectReceived ] of projectsReceived.entries()) {
@@ -346,7 +341,7 @@ class Project extends Data {
    *
    * @return {Promise<Object>}
    */
-  async addMembers(db, schema, projectId, userIds) {
+  static async addMembers(db, schema, projectId, userIds) {
     const table = this.getTableName(schema);
     const params = [];
     const sql = `
@@ -366,7 +361,7 @@ class Project extends Data {
    *
    * @return {[type]}
    */
-  async getSignature(db, schema, credentials) {
+  static async getSignature(db, schema, credentials) {
     if (!/^[\w\-]+$/.test(schema)) {
       throw new HTTPError(404);
     }
@@ -399,9 +394,4 @@ class Project extends Data {
   }
 }
 
-const instance = new Project;
-
-export {
-  instance as default,
-  Project
-};
+const illegalProjectNames = [ 'global', 'admin', 'public', 'srv' ];

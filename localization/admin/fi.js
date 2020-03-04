@@ -1,5 +1,5 @@
 import 'moment/locale/fi';
-import { cardinal } from 'common/locale/grammars/finnish.mjs';
+import { cardinal } from '../grammars/finnish.mjs';
 
 const phrases = {
   'action-badge-add': 'lisätään',

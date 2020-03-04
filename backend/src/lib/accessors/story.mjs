@@ -1,78 +1,75 @@
 import _ from 'lodash';
-import HTTPError from '../common/errors/http-error.mjs';
 import { ExternalData } from './external-data.mjs';
-import Bookmark from './bookmark.mjs';
-import Notification from './notification.mjs';
-import User from './user.mjs';
-import Task from './task.mjs';
+import { HTTPError } from '../errors.mjs';
+import { Bookmark } from './bookmark.mjs';
+import { Notification } from './notification.mjs';
+import { User } from './user.mjs';
+import { Task } from './task.mjs';
 
-class Story extends ExternalData {
-  constructor() {
-    super();
-    this.schema = 'project';
-    this.table = 'story';
-    this.columns = {
-      ...this.columns,
-      type: String,
-      tags: Array(String),
-      language_codes: Array(String),
-      published_version_id: Number,
-      user_ids: Array(Number),
-      role_ids: Array(Number),
-      published: Boolean,
-      ready: Boolean,
-      suppressed: Boolean,
-      ptime: String,
-      btime: String,
-      public: Boolean,
-      unfinished_tasks: Number,
-    };
-    this.criteria = {
-      ...this.criteria,
-      type: String,
-      tags: Array(String),
-      language_codes: Array(String),
-      published_version_id: Number,
-      user_ids: Array(Number),
-      role_ids: Array(Number),
-      published: Boolean,
-      ready: Boolean,
-      suppressed: Boolean,
-      public: Boolean,
+export class Story extends ExternalData {
+  static schema = 'project';
+  static table = 'story';
+  static columns = {
+    ...ExternalData.columns,
+    type: String,
+    tags: Array(String),
+    language_codes: Array(String),
+    published_version_id: Number,
+    user_ids: Array(Number),
+    role_ids: Array(Number),
+    published: Boolean,
+    ready: Boolean,
+    suppressed: Boolean,
+    ptime: String,
+    btime: String,
+    public: Boolean,
+    unfinished_tasks: Number,
+  };
+  static criteria = {
+    ...ExternalData.criteria,
+    type: String,
+    tags: Array(String),
+    language_codes: Array(String),
+    published_version_id: Number,
+    user_ids: Array(Number),
+    role_ids: Array(Number),
+    published: Boolean,
+    ready: Boolean,
+    suppressed: Boolean,
+    public: Boolean,
 
-      server_id: Number,
-      lead_author_id: Number,
-      exclude: Array(Number),
-      time_range: String,
-      newer_than: String,
-      older_than: String,
-      bumped_after: String,
-      url: String,
-      has_tags: Boolean,
-      has_unfinished_tasks: Boolean,
-      search: Object,
-      created_between: String,
-      per_user_limit: Number,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      type: String,
-      tags: Array(String),
-      language_codes: Array(String),
-      user_ids: Array(Number),
-      role_ids: Array(Number),
-      published: Boolean,
-      ready: Boolean,
-      ptime: String,
-      btime: String,
-      public: Boolean,
-      unfinished_tasks: Number,
-    };
-    this.accessControlColumns = {
-      public: Boolean,
-    };
-    this.version = 3;
-  }
+    server_id: Number,
+    lead_author_id: Number,
+    exclude: Array(Number),
+    time_range: String,
+    newer_than: String,
+    older_than: String,
+    bumped_after: String,
+    url: String,
+    has_tags: Boolean,
+    has_unfinished_tasks: Boolean,
+    search: Object,
+    created_between: String,
+    per_user_limit: Number,
+  };
+  static eventColumns = {
+    ...ExternalData.eventColumns,
+    type: String,
+    tags: Array(String),
+    language_codes: Array(String),
+    user_ids: Array(Number),
+    role_ids: Array(Number),
+    published: Boolean,
+    ready: Boolean,
+    ptime: String,
+    btime: String,
+    public: Boolean,
+    unfinished_tasks: Number,
+  };
+  static accessControlColumns = {
+    public: Boolean,
+  };
+  static version = 3;
 
   /**
    * Create table in schema
@@ -82,7 +79,7 @@ class Story extends ExternalData {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -131,7 +128,7 @@ class Story extends ExternalData {
    *
    * @return {Promise<Boolean>}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     if (version === 3) {
       const table = this.getTableName(schema);
       const sql = `
@@ -151,7 +148,7 @@ class Story extends ExternalData {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
     await this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'ptime' ]);
@@ -168,7 +165,7 @@ class Story extends ExternalData {
    *
    * @return {Promise<Array<Object>>}
    */
-  async filter(db, schema, rows, credentials) {
+  static async filter(db, schema, rows, credentials) {
     if (credentials.user.type === 'guest') {
       rows = _.filter(rows, { public: true });
     }
@@ -185,7 +182,7 @@ class Story extends ExternalData {
    *
    * @return {Promise}
    */
-  async apply(db, schema, criteria, query) {
+  static async apply(db, schema, criteria, query) {
     const { lead_author_id, time_range, newer_than, older_than, bumped_after,
         url, has_tags, has_unfinished_tasks, search, per_user_limit,
         created_between,
@@ -264,7 +261,7 @@ class Story extends ExternalData {
    *
    * @return {String}
    */
-  getSearchableText(languageCode) {
+  static getSearchableText(languageCode) {
     return `"extractStoryText"(type, details, external, '${languageCode}')`;
   }
 
@@ -280,7 +277,7 @@ class Story extends ExternalData {
    *
    * @return {Promise<Array>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -326,7 +323,7 @@ class Story extends ExternalData {
    *
    * @return {Promise<Array>}
    */
-  async import(db, schema, storiesReceived, storiesBefore, credentials, options) {
+  static async import(db, schema, storiesReceived, storiesBefore, credentials, options) {
     const storiesPublished = [];
     const rows = [];
     for (let [ index, storyReceived ] of storiesReceived.entries()) {
@@ -418,7 +415,7 @@ class Story extends ExternalData {
    *
    * @return {Promise}
    */
-   async associate(db, schema, storiesReceived, storiesBefore, storiesAfter, credentials) {
+   static async associate(db, schema, storiesReceived, storiesBefore, storiesAfter, credentials) {
      const deletedStories = _.filter(storiesAfter, { deleted: true });
      await Bookmark.deleteAssociated(db, schema, { story: deletedStories });
      await Notification.deleteAssociated(db, schema, { story: deletedStories });
@@ -433,7 +430,7 @@ class Story extends ExternalData {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     if (subscription.area === 'admin') {
       // admin console doesn't use this object currently
       return false;
@@ -456,7 +453,7 @@ class Story extends ExternalData {
    * @param  {Object} storyBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(storyReceived, storyBefore, credentials) {
+  static checkWritePermission(storyReceived, storyBefore, credentials) {
     if (credentials.access !== 'read-write') {
       throw new HTTPError(400);
     }
@@ -508,7 +505,7 @@ class Story extends ExternalData {
    *
    * @return {Promise}
    */
-  async updateUserRoles(db, schema, userIDs) {
+  static async updateUserRoles(db, schema, userIDs) {
     const userTable = User.getTableName('global');
     const storyTable = this.getTableName(schema);
 
@@ -554,7 +551,7 @@ class Story extends ExternalData {
    *
    * @return {Promise}
    */
-  async deleteAssociated(db, schema, associations) {
+  static async deleteAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
       if (_.isEmpty(objects)) {
         continue;
@@ -581,7 +578,7 @@ class Story extends ExternalData {
    *
    * @return {Promise}
    */
-  async restoreAssociated(db, schema, associations) {
+  static async restoreAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
       if (_.isEmpty(objects)) {
         continue;
@@ -601,10 +598,3 @@ class Story extends ExternalData {
     }
   }
 }
-
-const instance = new Story;
-
-export {
-  instance as default,
-  Story,
-};

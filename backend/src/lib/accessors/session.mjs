@@ -1,35 +1,32 @@
 import { Data } from './data.mjs';
 
-class Session extends Data {
-  constructor() {
-    super();
-    this.schema = 'global';
-    this.table = 'session';
-    this.columns = {
-      ...this.columns,
-      user_id: Number,
-      handle: String,
-      token: String,
-      activated: Boolean,
-      area: String,
-      etime: String,
-    };
-    this.criteria = {
-      ...this.criteria,
-      user_id: Number,
-      handle: String,
-      token: String,
-      activated: Boolean,
-      area: String,
+export class Session extends Data {
+  static schema = 'global';
+  static table = 'session';
+  static columns = {
+    ...Data.columns,
+    user_id: Number,
+    handle: String,
+    token: String,
+    activated: Boolean,
+    area: String,
+    etime: String,
+  };
+  static criteria = {
+    ...Data.criteria,
+    user_id: Number,
+    handle: String,
+    token: String,
+    activated: Boolean,
+    area: String,
 
-      expired: Boolean,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      user_id: Number,
-    };
-    this.version = 3;
-  }
+    expired: Boolean,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    user_id: Number,
+  };
+  static version = 3;
 
   /**
    * Create table in schema
@@ -39,7 +36,7 @@ class Session extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -72,7 +69,7 @@ class Session extends Data {
    *
    * @return {Promise<Boolean>}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     if (version === 3) {
       await this.createNotificationTriggers(db, schema);
       return true;
@@ -88,7 +85,7 @@ class Session extends Data {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     // authorization check is performed through a stored procedure
     // other DB roles don't need direct access to this table
     const table = this.getTableName(schema);
@@ -106,7 +103,7 @@ class Session extends Data {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -120,7 +117,7 @@ class Session extends Data {
    *
    * @return {Promise<Number|null>}
    */
-  async check(db, token, area) {
+  static async check(db, token, area) {
     const sql = `SELECT "checkAuthorization"($1, $2) AS user_id`;
     const [ row ] = await db.query(sql, [ token, area ]);
     return (row) ? row.user_id : null;
@@ -135,7 +132,7 @@ class Session extends Data {
    *
    * @return {Promise}
    */
-  async extend(db, token, days) {
+  static async extend(db, token, days) {
     const sql = `SELECT "extendAuthorization"($1, $2) AS result`;
     await db.query(sql, [ token, days ]);
   }
@@ -148,7 +145,7 @@ class Session extends Data {
    *
    * @return {Promise}
    */
-  apply(criteria, query) {
+  static apply(criteria, query) {
     const { expired, ...basic } = criteria;
     super.apply(basic, query);
 
@@ -163,18 +160,11 @@ class Session extends Data {
     }
   }
 
-  async import() {
+  static async import() {
     throw new Error('Cannot write to session');
   }
 
-  async export() {
+  static async export() {
     throw new Error('Cannot retrieve session');
   }
 }
-
-const instance = new Session;
-
-export {
-  instance as default,
-  Session
-};

@@ -1,13 +1,13 @@
 import _ from 'lodash';
-import Database from '../database.mjs';
-import * as TaskLog from '../task-log.mjs'
-import HTTPError from '../common/errors/http-error.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import { Database } from '../database.mjs';
+import { TaskLog } from '../task-log.mjs'
+import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { HTTPError } from '../errors.mjs';
 
 import * as MediaImporter from '../media-server/media-importer.mjs';
 
-import Repo from '../accessors/repo.mjs';
-import Wiki from '../accessors/wiki.mjs';
+import { Repo } from '../accessors/repo.mjs';
+import { Wiki } from '../accessors/wiki.mjs';
 
 async function discover(project, identifier, search) {
   const taskLog = TaskLog.start('wiki-discover', {

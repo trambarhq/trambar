@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Project from '../accessors/project.mjs';
+import { Project } from '../accessors/project.mjs';
 
 const cache = [];
 

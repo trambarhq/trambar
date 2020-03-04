@@ -3,43 +3,18 @@ import FS from 'fs';
 import PgPool from 'pg-pool'
 import Pg from 'pg';
 
-const config = {
-  host: process.env.POSTGRES_HOST,
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  database: process.env.POSTGRES_DB,
-};
-
-const pool = new PgPool(config);
-pool.on('error', (err) => {
-  poolCheckPromise = null;
-});
-
-let poolCheckPromise = null;
-
-function checkConnectionPool() {
-  if (!poolCheckPromise) {
-    poolCheckPromise = checkConnectionPoolUncached();
-  }
-  return poolCheckPromise;
-}
-
-async function checkConnectionPoolUncached() {
-  for (let attempts = 0; attempts < 60; attempts++) {
-    try {
-      await pool.query('SELECT 1');
-    } catch (err) {
-      await Bluebird.delay(1000);
-    }
-  }
-}
-
-class Database {
+export class Database {
   constructor(exclusive) {
     this.exclusive = exclusive;
     this.client = null;
     this.connectionPromise = null;
     this.listeners = [];
+  }
+
+  static async open(exclusive) {
+    const db = new Database(exclusive);
+    await db.connect();
+    return db;
   }
 
   async connect() {
@@ -409,11 +384,36 @@ class Database {
   }
 }
 
-Database.open = async function(exclusive) {
-  const db = new Database(exclusive);
-  await db.connect();
-  return db;
+const config = {
+  host: process.env.POSTGRES_HOST,
+  user: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+  database: process.env.POSTGRES_DB,
 };
+
+const pool = new PgPool(config);
+pool.on('error', (err) => {
+  poolCheckPromise = null;
+});
+
+let poolCheckPromise = null;
+
+function checkConnectionPool() {
+  if (!poolCheckPromise) {
+    poolCheckPromise = checkConnectionPoolUncached();
+  }
+  return poolCheckPromise;
+}
+
+async function checkConnectionPoolUncached() {
+  for (let attempts = 0; attempts < 60; attempts++) {
+    try {
+      await pool.query('SELECT 1');
+    } catch (err) {
+      await Bluebird.delay(1000);
+    }
+  }
+}
 
 const BIGINT_OID = 20;
 const TIMESTAMPTZ_OID = 1184
@@ -452,8 +452,3 @@ function parseBigInt(val) {
   }
 }
 Pg.types.setTypeParser(BIGINT_OID, parseBigInt);
-
-export {
-  Database as default,
-  Database,
-};

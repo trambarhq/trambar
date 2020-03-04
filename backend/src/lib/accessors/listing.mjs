@@ -1,41 +1,38 @@
 import _ from 'lodash';
 import Crypto from 'crypto'
-import Database from '../database.mjs';
-import HTTPError from '../common/errors/http-error.mjs';
+import { Database } from '../database.mjs';
+import { HTTPError } from '../errors.mjs';
 import { LiveData } from './live-data.mjs';
 
-import ByRetrievalTime from '../story-raters/by-retrieval-time.mjs';
+import { ByRetrievalTime } from '../story-raters/by-retrieval-time.mjs';
 
-class Listing extends LiveData {
-  constructor() {
-    super();
-    this.schema = 'project';
-    this.table = 'listing';
-    this.columns = {
-      ...this.columns,
-      finalized: Boolean,
-      type: String,
-      filters: Object,
-      filters_hash: String,
-      target_user_id: Number,
-    };
-    this.criteria = {
-      ...this.criteria,
-      finalized: Boolean,
-      type: String,
-      filters: Object,
-      filters_hash: String,
-      target_user_id: Number,
-      match_any: Array(Object),
-      has_candidates: Array(Number),
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      finalized: Boolean,
-      type: String,
-      target_user_id: Number,
-    };
-  }
+export class Listing extends LiveData {
+  static schema = 'project';
+  static table = 'listing';
+  static columns = {
+    ...LiveData.columns,
+    finalized: Boolean,
+    type: String,
+    filters: Object,
+    filters_hash: String,
+    target_user_id: Number,
+  };
+  static criteria = {
+    ...LiveData.criteria,
+    finalized: Boolean,
+    type: String,
+    filters: Object,
+    filters_hash: String,
+    target_user_id: Number,
+    match_any: Array(Object),
+    has_candidates: Array(Number),
+  };
+  static eventColumns = {
+    ...LiveData.eventColumns,
+    finalized: Boolean,
+    type: String,
+    target_user_id: Number,
+  };
 
   /**
    * Create table in schema
@@ -45,7 +42,7 @@ class Listing extends LiveData {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -79,7 +76,7 @@ class Listing extends LiveData {
    *
    * @return {Promise<Boolean>}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -90,7 +87,7 @@ class Listing extends LiveData {
    * @param  {Object} criteria
    * @param  {Object} query
    */
-  apply(criteria, query) {
+  static apply(criteria, query) {
     const { filters, match_any, has_candidates, ...basic } = criteria;
     super.apply(basic, query);
 
@@ -106,7 +103,7 @@ class Listing extends LiveData {
     }
   }
 
-  async find(db, schema, criteria, columns) {
+  static async find(db, schema, criteria, columns) {
     // autovivify rows when type and filters are specified
     const type = criteria.type;
     const userId = criteria.target_user_id;
@@ -150,7 +147,7 @@ class Listing extends LiveData {
    *
    * @return {Promise<Object>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     for (let row of rows) {
       if (!row.finalized) {
         if (credentials.user.id === row.target_user_id) {
@@ -186,7 +183,7 @@ class Listing extends LiveData {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     if (subscription.area === 'admin') {
       // admin console doesn't use this object currently
       return false;
@@ -215,7 +212,7 @@ class Listing extends LiveData {
    * @param  {String} schema
    * @param  {Object} row
    */
-  finalize(db, schema, row) {
+  static finalize(db, schema, row) {
     if (chooseStories(row)) {
       // save the results
       setTimeout(async () => {
@@ -444,10 +441,3 @@ function hash(filters) {
   const hash = Crypto.createHash('md5').update(text);
   return hash.digest('hex');
 }
-
-const instance = new Listing;
-
-export {
-  instance as default,
-  Listing,
-};

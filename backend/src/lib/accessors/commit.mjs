@@ -1,31 +1,28 @@
 import { ExternalData } from './external-data.mjs';
 
-class Commit extends ExternalData {
-  constructor() {
-    super();
-    this.schema = 'global';
-    this.table = 'commit';
-    this.columns = {
-      ...this.columns,
-      initial_branch: String,
-      title_hash: String,
-      external: Array(Object),
-      exchange: Array(Object),
-      itime: String,
-      etime: String,
-    };
-    this.criteria = {
-      ...this.criteria,
-      title_hash: String,
-      external_object: Object,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      external: Array(Object),
-      itime: String,
-      etime: String,
-    };
-  }
+export class Commit extends ExternalData {
+  static schema = 'global';
+  static table = 'commit';
+  static columns = {
+    ...ExternalData.columns,
+    initial_branch: String,
+    title_hash: String,
+    external: Array(Object),
+    exchange: Array(Object),
+    itime: String,
+    etime: String,
+  };
+  static criteria = {
+    ...ExternalData.criteria,
+    title_hash: String,
+    external_object: Object,
+  };
+  static eventColumns = {
+    ...ExternalData.eventColumns,
+    external: Array(Object),
+    itime: String,
+    etime: String,
+  };
 
   /**
    * Create table in schema
@@ -35,7 +32,7 @@ class Commit extends ExternalData {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -66,7 +63,7 @@ class Commit extends ExternalData {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
@@ -83,7 +80,7 @@ class Commit extends ExternalData {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -97,15 +94,8 @@ class Commit extends ExternalData {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     // objects aren't currently used on client-side
     return false;
   }
 }
-
-const instance = new Commit;
-
-export {
-  instance as default,
-  Commit,
-};

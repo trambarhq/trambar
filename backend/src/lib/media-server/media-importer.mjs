@@ -1,5 +1,5 @@
 import CrossFetch from 'cross-fetch';
-import HTTPError from '../common/errors/http-error.mjs';
+import { HTTPError } from '../errors.mjs';
 
 /**
  * Ask Media Server to import a file at the specified URL

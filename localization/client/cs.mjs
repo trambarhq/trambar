@@ -1,10 +1,10 @@
-import 'moment/locale/cs';
+import 'moment/locale/cs.js';
 import {
   cardinal,
   list,
   genderize,
   pastTenseEnding
-} from 'common/locale/grammars/czech.mjs';
+} from '../grammars/czech.mjs';
 
 let phrases = {
   'action-contact-by-email': 'Kontaktovat e-mailem',
@@ -752,7 +752,7 @@ let phrases = {
   'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
     let l = pastTenseEnding(name);
     let text = `Slouči${l} změny`;
-    if (branches?.length > 0) {
+    if (branches && branches.length > 0) {
       let sources = branches.map((branch) => {
         return `„${branch}”`;
       });
@@ -863,7 +863,7 @@ let phrases = {
   'story-vote-submit': 'Předložit',
   'story-website-traffic-$count-on-$date': (count, date) => {
     let visitors = cardinal(count, '1 návštěvníka', '2 návštěvníky', '5 návštěvníků');
-    return `Webová stránka projektu měla ${visitors} ${date}`;    
+    return `Webová stránka projektu měla ${visitors} ${date}`;
   },
 
   'telephone-dialog-close': 'Zavřít',

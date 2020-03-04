@@ -10,9 +10,9 @@ import Moment from 'moment';
 import DNSCache from 'dnscache';
 import FileType from 'file-type';
 
-import Database from './lib/database.mjs';
-import HTTPError from './lib/common/errors/http-error.mjs';
-import * as TaskLog from './lib/task-log.mjs';
+import { Database } from './lib/database.mjs';
+import { HTTPError } from './lib/errors.mjs';
+import { TaskLog } from './lib/task-log.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
 
 import * as CacheFolders from './lib/media-server/cache-folders.mjs';

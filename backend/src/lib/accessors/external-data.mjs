@@ -1,30 +1,26 @@
 import _ from 'lodash';
-import HTTPError from '../common/errors/http-error.mjs';
 import { Data } from './data.mjs';
 import * as StoredProcs from '../stored-procs/functions.mjs';
 
-class ExternalData extends Data {
-  constructor() {
-    super();
-    this.columns = {
-      ...this.columns,
-      external: Array(Object),
-      exchange: Array(Object),
-      itime: String,
-      etime: String,
-    };
-    this.criteria = {
-      ...this.criteria,
-      external_object: Object,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      external: Array(Object),
-      mtime: String,
-      itime: String,
-      etime: String,
-    };
-  }
+export class ExternalData extends Data {
+  static columns = {
+    ...Data.columns,
+    external: Array(Object),
+    exchange: Array(Object),
+    itime: String,
+    etime: String,
+  };
+  static criteria = {
+    ...Data.criteria,
+    external_object: Object,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    external: Array(Object),
+    mtime: String,
+    itime: String,
+    etime: String,
+  };
 
   /**
    * Create table in schema
@@ -36,7 +32,7 @@ class ExternalData extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -62,7 +58,7 @@ class ExternalData extends Data {
    * @param  {Object} criteria
    * @param  {Object} query
    */
-  apply(criteria, query) {
+  static apply(criteria, query) {
     const { external_object: externalObject, ...basic } = criteria;
     super.apply(basic, query);
 
@@ -101,7 +97,7 @@ class ExternalData extends Data {
    *
    * @return {Promise<Object>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -121,7 +117,7 @@ class ExternalData extends Data {
    *
    * @return {Promise}
    */
-  async createChangeTrigger(db, schema) {
+  static async createChangeTrigger(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       DROP TRIGGER IF EXISTS "indicateDataChangeOnUpdate" ON ${table};
@@ -142,7 +138,7 @@ class ExternalData extends Data {
    *
    * @return {Promise}
    */
-  async createNotificationTriggers(db, schema) {
+  static async createNotificationTriggers(db, schema) {
     const table = this.getTableName(schema);
     const propNames = _.keys(this.eventColumns);
     const args = _.map(propNames, (propName) => {
@@ -171,7 +167,3 @@ class ExternalData extends Data {
     await db.execute(sql);
   }
 }
-
-export {
-  ExternalData,
-};

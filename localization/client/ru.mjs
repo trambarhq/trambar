@@ -1,10 +1,10 @@
-import 'moment/locale/ru';
+import 'moment/locale/ru.js';
 import {
   cardinal,
   list,
   genderize,
   pastTenseEnding,
-} from 'common/locale/grammars/russian.mjs';
+} from '../grammars/russian.mjs';
 
 let phrases = {
   'action-contact-by-email': 'Связаться по электронной почте',
@@ -762,7 +762,7 @@ let phrases = {
   'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
     let l = pastTenseEnding(name);
     let text = `Сли${l} изменения`;
-    if (branches?.length > 0) {
+    if (branches && branches.length > 0) {
       let sources = branches.map((branch) => {
         return `«${branch}»`;
       });

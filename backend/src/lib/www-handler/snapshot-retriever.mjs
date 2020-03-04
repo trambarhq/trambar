@@ -1,6 +1,6 @@
 import CrossFetch from 'cross-fetch';
-import * as TaskLog from '../task-log.mjs'
-import HTTPError from '../common/errors/http-error.mjs';
+import { TaskLog } from '../task-log.mjs'
+import { HTTPError } from '../errors.mjs';
 
 async function retrieve(project, tag, type, path) {
   if (!tag) {

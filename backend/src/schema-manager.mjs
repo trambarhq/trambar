@@ -1,20 +1,19 @@
 import _ from 'lodash';
-import './lib/common/utils/lodash-extra.mjs';
 import Bluebird from 'bluebird';
 import Moment from 'moment';
 import Crypto from 'crypto'; Bluebird.promisifyAll(Crypto);
-import Database from './lib/database.mjs';
-import * as TaskLog from './lib/task-log.mjs';
+import { Database } from './lib/database.mjs';
+import { TaskLog } from './lib/task-log.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
 import * as Accessors from './lib/schema-manager/accessors.mjs';
 
-import Project from './lib/accessors/project.mjs';
-import Reaction from './lib/accessors/reaction.mjs';
-import Story from './lib/accessors/story.mjs';
-import Spreadsheet from './lib/accessors/spreadsheet.mjs';
-import Wiki from './lib/accessors/wiki.mjs';
+import { Project } from './lib/accessors/project.mjs';
+import { Reaction } from './lib/accessors/reaction.mjs';
+import { Story } from './lib/accessors/story.mjs';
+import { Spreadsheet } from './lib/accessors/spreadsheet.mjs';
+import { Wiki } from './lib/accessors/wiki.mjs';
 
-import TaskQueue from './lib/task-queue.mjs';
+import { TaskQueue } from './lib/task-queue.mjs';
 import {
   PeriodicTaskClearMessageQueue,
   PeriodicTaskCollectGarbage,
@@ -360,7 +359,7 @@ async function deleteSchema(db, schema) {
     const size = await db.getSchemaSize(schema);
     const sql = `DROP SCHEMA "${schema}" CASCADE`;
     await db.execute(sql);
-    taskLog.set('size', _.fileSize(size));
+    taskLog.set('size', size, 'byte');
     await taskLog.finish();
     return true;
   } catch (err) {

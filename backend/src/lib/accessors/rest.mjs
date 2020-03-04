@@ -1,33 +1,30 @@
 import { Data } from './data.mjs';
 
-class Rest extends Data {
-  constructor() {
-    super();
-    this.schema = 'project';
-    this.table = 'rest';
-    this.columns = {
-      ...this.columns,
-      type: String,
-      name: String,
-      url: String,
-      disabled: Boolean,
-      settings: Object,
-    };
-    this.criteria = {
-      ...this.criteria,
-      type: String,
-      name: String,
-      url: String,
-      disabled: Boolean,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      type: String,
-      name: String,
-      disabled: Boolean,
-    };
-    this.version = 3;
-  }
+export class Rest extends Data {
+  static schema = 'project';
+  static table = 'rest';
+  static columns = {
+    ...Data.columns,
+    type: String,
+    name: String,
+    url: String,
+    disabled: Boolean,
+    settings: Object,
+  };
+  static criteria = {
+    ...Data.criteria,
+    type: String,
+    name: String,
+    url: String,
+    disabled: Boolean,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    type: String,
+    name: String,
+    disabled: Boolean,
+  };
+  static version = 3;
 
   /**
    * Create table in schema
@@ -37,7 +34,7 @@ class Rest extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -68,7 +65,7 @@ class Rest extends Data {
    *
    * @return {Promise<Boolean>}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     if (version === 3) {
       await this.create(db, schema);
       await this.grant(db, schema);
@@ -85,7 +82,7 @@ class Rest extends Data {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
@@ -102,7 +99,7 @@ class Rest extends Data {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -116,7 +113,7 @@ class Rest extends Data {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     return (subscription.area === 'admin');
   }
 
@@ -132,7 +129,7 @@ class Rest extends Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -154,17 +151,10 @@ class Rest extends Data {
    * @param  {Object} serverBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(serverReceived, serverBefore, credentials) {
+  static checkWritePermission(serverReceived, serverBefore, credentials) {
     if (credentials.unrestricted) {
       return;
     }
     throw new HTTPError(403);
   }
 }
-
-const instance = new Rest;
-
-export {
-  instance as default,
-  Rest,
-};

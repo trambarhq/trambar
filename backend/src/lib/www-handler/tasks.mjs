@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import Database from '../database.mjs';
+import { Database } from '../database.mjs';
 import { BasicTask, PeriodicTask } from '../task-queue.mjs';
 
 import * as CacheManager from './cache-manager.mjs';
@@ -10,9 +10,9 @@ import * as TrafficMonitor from './traffic-monitor.mjs';
 import * as ProjectSettings from './project-settings.mjs';
 
 // accessors
-import Project from '../accessors/project.mjs';
-import Repo from '../accessors/repo.mjs';
-import Snapshot from '../accessors/snapshot.mjs';
+import { Project } from '../accessors/project.mjs';
+import { Repo } from '../accessors/repo.mjs';
+import { Snapshot } from '../accessors/snapshot.mjs';
 
 const MIN = 60 * 1000;
 const HOUR = 60 * MIN;

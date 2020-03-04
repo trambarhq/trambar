@@ -1,7 +1,7 @@
 import 'moment/locale/lt';
 import {
   cardinal,
-} from 'common/locale/grammars/lithuanian.mjs';
+} from '../grammars/lithuanian.mjs';
 
 const phrases = {
   'action-badge-add': 'pridėti',

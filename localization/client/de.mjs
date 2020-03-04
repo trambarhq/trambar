@@ -1,7 +1,7 @@
-import 'moment/locale/de';
-import 'moment/locale/de-at';
-import 'moment/locale/de-ch';
-import { cardinal, list } from 'common/locale/grammars/german.mjs';
+import 'moment/locale/de.js';
+import 'moment/locale/de-at.js';
+import 'moment/locale/de-ch.js';
+import { cardinal, list } from '../grammars/german.mjs';
 
 const phrases = {
   'action-contact-by-email': 'Per E-Mail kontaktieren',
@@ -719,7 +719,7 @@ const phrases = {
   },
   'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
     let text = `Hat Code`;
-    if (branches?.length > 0) {
+    if (branches && branches.length > 0) {
       let sources = branches.map((branch) => {
         return `“${branch}”`;
       });

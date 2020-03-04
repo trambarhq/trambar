@@ -1,75 +1,75 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import Database from './database.mjs';
+import Bytes from 'bytes';
+import { Database } from './database.mjs';
 import * as RevertibleConsole from './revertible-console.mjs';
 import * as Shutdown from './shutdown.mjs';
-import HTTPError from './common/errors/http-error.mjs';
+import { HTTPError } from './errors.mjs';
 
-import Task from './accessors/task.mjs';
+// accessors
+import { Task } from './accessors/task.mjs';
 
-/**
- * Start a task log
- *
- * @param  {String} action
- * @param  {Object|undefined} options
- *
- * @return {TaskLog}
- */
-function start(action, options) {
-  return new TaskLog(action, options || {});
-}
-
-const taskLogHash = {};
-
-/**
- * Obtain a task that was created earlier
- *
- * @param  {String} schema
- * @param  {String} token
- * @param  {String} action
- *
- * @return {TaskLog}
- */
-async function obtain(schema, token, action) {
-  const db = await Database.open();
-  const task = await Task.findOne(db, schema, { token }, 'id, options, action');
-  if (!task || task.action !== action) {
-    throw new HTTPError(403);
+export class TaskLog {
+  /**
+   * Start a task log
+   *
+   * @param  {String} action
+   * @param  {Object|undefined} options
+   *
+   * @return {TaskLog}
+   */
+  static start(action, options) {
+    return new TaskLog(action, options || {});
   }
-  const loadedTaskLog = _.get(taskLogHash, [ schema, token ]);
-  if (loadedTaskLog) {
-    return loadedTaskLog;
+
+  /**
+   * Obtain a task that was created earlier
+   *
+   * @param  {String} schema
+   * @param  {String} token
+   * @param  {String} action
+   *
+   * @return {TaskLog}
+   */
+  static async obtain(schema, token, action) {
+    const db = await Database.open();
+    const task = await Task.findOne(db, schema, { token }, 'id, options, action');
+    if (!task || task.action !== action) {
+      throw new HTTPError(403);
+    }
+    const loadedTaskLog = _.get(taskLogHash, [ schema, token ]);
+    if (loadedTaskLog) {
+      return loadedTaskLog;
+    }
+    const newTaskLog = new TaskLog(action, {
+      saving: true,
+      database: { schema, id, token },
+      multiparts: task.options,
+    });
+    _.set(taskLogHash, [ schema, token ], newTaskLog);
+    return newTaskLog;
   }
-  const newTaskLog = new TaskLog(action, {
-    saving: true,
-    database: { schema, id, token },
-    multiparts: task.options,
-  });
-  _.set(taskLogHash, [ schema, token ], newTaskLog);
-  return newTaskLog;
-}
 
-/**
- * Return the last task
- *
- * @param  {String} action
- * @param  {Object|undefined} options
- *
- * @return {Promise<Task|null>}
- */
-async function last(action, options) {
-  const db = await Database.open();
-  const criteria = {
-    action,
-    options,
-    noop: false,
-    order: 'id DESC',
-    limit: 1,
-  };
-  return Task.findOne(db, 'global', criteria, '*');
-}
+  /**
+   * Return the last task
+   *
+   * @param  {String} action
+   * @param  {Object|undefined} options
+   *
+   * @return {Promise<Task|null>}
+   */
+  static async last(action, options) {
+    const db = await Database.open();
+    const criteria = {
+      action,
+      options,
+      noop: false,
+      order: 'id DESC',
+      limit: 1,
+    };
+    return Task.findOne(db, 'global', criteria, '*');
+  }
 
-class TaskLog {
   /**
    * @param  {String} action
    * @param  {Object|undefined} options
@@ -121,9 +121,13 @@ class TaskLog {
    *
    * @param  {path} current
    * @param  {Number} total
+   * @param  {String|undefined} unit
    */
-  set(path, value) {
+  set(path, value, unit) {
     _.set(this.details, path, value);
+    if (unit === 'byte') {
+      value = Bytes(value);
+    }
     this.noop = false;
     this.saved = false;
   }
@@ -396,8 +400,4 @@ class TaskLog {
   }
 }
 
-export {
-  start,
-  obtain,
-  last,
-};
+const taskLogHash = {};

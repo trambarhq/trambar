@@ -1,5 +1,5 @@
 import 'moment/locale/nb';
-import { cardinal } from 'common/locale/grammars/norwegian.mjs';
+import { cardinal } from '../grammars/norwegian.mjs';
 
 const phrases = {
   'action-badge-add': 'legge til',

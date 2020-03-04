@@ -3,13 +3,11 @@ import Moment from 'moment';
 
 import RetrievalTimeRatings from './ratings/retrieval-time-ratings.mjs';
 
-class ByRetrievalTime {
-  constructor() {
-    this.type = 'by-retrieval-time';
-    this.calculation = 'deferred';
-  }
+export class ByRetrievalTime {
+  static type = 'by-retrieval-time';
+  static calculation = 'deferred';
 
-  createContext(stories, listing) {
+  static createContext(stories, listing) {
     const now = Moment();
     const recent = now.clone().subtract(2, 'hour').toISOString();
     const today = now.clone().startOf('day').toISOString();
@@ -20,7 +18,7 @@ class ByRetrievalTime {
     return { recent, today, yesterday, week, month, year };
   }
 
-  calculateRating(context, story) {
+  static calculateRating(context, story) {
     const period = _.findKey(context, (time) => {
       if (story.btime > time) {
         return true;
@@ -30,10 +28,3 @@ class ByRetrievalTime {
     return rating;
   }
 }
-
-const instance = new ByRetrievalTime;
-
-export {
-  instance as default,
-  ByRetrievalTime,
-};

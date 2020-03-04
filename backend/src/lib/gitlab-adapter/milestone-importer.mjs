@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import * as Localization from '../localization.mjs';
-import * as TagScanner from '../common/utils/tag-scanner.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import { getDefaultLanguageCode } from '../localization.mjs';
+import { findTags } from '../tag-scanner.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 
 // accessors
-import Story from '../accessors/story.mjs';
+import { Story } from '../accessors/story.mjs';
 
 /**
  * Import an activity log entry about an issue
@@ -103,8 +103,8 @@ async function updateMilestones(db, system, server, repo, project) {
  * @return {Story}
  */
 function copyMilestoneProperties(story, system, server, repo, author, glMilestone) {
-  const descriptionTags = TagScanner.findTags(glMilestone.description);
-  const defLangCode = Localization.getDefaultLanguageCode(system);
+  const descriptionTags = findTags(glMilestone.description, true);
+  const defLangCode = getDefaultLanguageCode(system);
 
   const storyChanges = _.cloneDeep(story) || {};
   ExternalDataUtils.inheritLink(storyChanges, server, repo, {

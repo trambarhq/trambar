@@ -1,5 +1,5 @@
-import 'moment/locale/it';
-import { cardinal, list } from 'common/locale/grammars/italian.mjs';
+import 'moment/locale/it.js';
+import { cardinal, list } from '../grammars/italian.mjs';
 
 const phrases = {
   'action-contact-by-email': "Contatto via e-mail",
@@ -707,7 +707,7 @@ const phrases = {
   },
   'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
     let text = `Ha incorporato le modifiche`;
-    if (branches?.length > 0) {
+    if (branches && branches.length > 0) {
       let sources = branches.map((branch) => {
         return `«${branch}»`;
       });

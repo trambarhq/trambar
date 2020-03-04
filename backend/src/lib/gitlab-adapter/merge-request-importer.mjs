@@ -1,16 +1,16 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import HTTPError from '../common/errors/http-error.mjs';
-import * as Localization from '../localization.mjs';
-import * as TagScanner from '../common/utils/tag-scanner.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import { getDefaultLanguageCode } from '../localization.mjs';
+import { findTags } from '../tag-scanner.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { HTTPError } from '../errors.mjs';
 
 import * as Transport from './transport.mjs';
 import * as AssignmentImporter from './assignment-importer.mjs';
 
 // accessors
-import Reaction from '../accessors/reaction.mjs';
-import Story from '../accessors/story.mjs';
+import { Reaction } from '../accessors/reaction.mjs';
+import { Story } from '../accessors/story.mjs';
 
 /**
  * Import an activity log entry about an merge request
@@ -126,12 +126,12 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
  * @return {Story}
  */
 function copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest) {
-  const descriptionTags = TagScanner.findTags(glMergeRequest.description);
+  const descriptionTags = findTags(glMergeRequest.description, true);
   const labelTags = _.map(glMergeRequest.labels, (label) => {
     return `#${_.replace(label, /\s+/g, '-')}`;
   });
   const tags = _.union(descriptionTags, labelTags);
-  const defLangCode = Localization.getDefaultLanguageCode(system);
+  const defLangCode = getDefaultLanguageCode(system);
 
   const storyChanges = _.cloneDeep(story) || {};
   ExternalDataUtils.inheritLink(storyChanges, server, repo, {

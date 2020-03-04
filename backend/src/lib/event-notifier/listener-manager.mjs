@@ -8,14 +8,14 @@ import SockJS from 'sockjs';
 import CrossFetch from 'cross-fetch';
 import Crypto from 'crypto'; Bluebird.promisifyAll(Crypto);
 import XML2JS from 'xml2js';
-import HTTPError from '../common/errors/http-error.mjs';
-import * as TaskLog from '../task-log.mjs';
+import { HTTPError } from '../errors.mjs';
+import { TaskLog } from '../task-log.mjs';
 import * as Shutdown from '../shutdown.mjs';
 
 // accessors
-import Subscription from '../accessors/subscription.mjs';
-import System from '../accessors/system.mjs';
-import User from '../accessors/user.mjs';
+import { Subscription } from '../accessors/subscription.mjs';
+import { System } from '../accessors/system.mjs';
+import { User } from '../accessors/user.mjs';
 
 let server;
 let sockets = [];

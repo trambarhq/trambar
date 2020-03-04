@@ -3,37 +3,34 @@ import CrossFetch from 'cross-fetch';
 import CSVParse from 'csv-parse';
 import ToUTF8 from 'to-utf-8'
 import StringSimilarity from 'string-similarity';
-import HTTPError from '../common/errors/http-error.mjs';
+import { HTTPError } from '../errors.mjs';
 import { Data } from './data.mjs';
 
-class Device extends Data {
-  constructor() {
-    super();
-    this.schema = 'global';
-    this.table = 'device';
-    this.columns = {
-      ...this.columns,
-      type: String,
-      details: Object,
-      uuid: String,
-      user_id: Number,
-      session_handle: String,
-    };
-    this.criteria = {
-      ...this.criteria,
-      type: String,
-      uuid: String,
-      user_id: Number,
-      session_handle: String,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      type: String,
-      user_id: Number,
-      session_handle: String,
-    };
-    this.version = 2;
-  }
+export class Device extends Data {
+  static schema = 'global';
+  static table = 'device';
+  static columns = {
+    ...Data.columns,
+    type: String,
+    details: Object,
+    uuid: String,
+    user_id: Number,
+    session_handle: String,
+  };
+  static criteria = {
+    ...Data.criteria,
+    type: String,
+    uuid: String,
+    user_id: Number,
+    session_handle: String,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    type: String,
+    user_id: Number,
+    session_handle: String,
+  };
+  static version = 2;
 
   /**
    * Create table in schema
@@ -43,7 +40,7 @@ class Device extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -73,7 +70,7 @@ class Device extends Data {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       GRANT SELECT, UPDATE ON ${table} TO auth_role;
@@ -92,7 +89,7 @@ class Device extends Data {
    *
    * @return {Promise<Boolean>}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     if (version === 2) {
       // make index of session_handle unique
       const table = this.getTableName(schema);
@@ -116,7 +113,7 @@ class Device extends Data {
    *
    * @return {Promise<Boolean>}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -133,7 +130,7 @@ class Device extends Data {
    *
    * @return {Promise<Object>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of _.entries(objects)) {
       const row = rows[index];
@@ -160,7 +157,7 @@ class Device extends Data {
    *
    * @return {Promise<Array>}
    */
-  async importOne(db, schema, deviceReceived, deviceBefore, credentials, options) {
+  static async importOne(db, schema, deviceReceived, deviceBefore, credentials, options) {
     const row = await super.importOne(db, schema, deviceReceived, deviceBefore, credentials, options);
     if (!deviceReceived.deleted && !deviceReceived.id) {
       // look for an existing record with the same UUID
@@ -191,7 +188,7 @@ class Device extends Data {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     if (subscription.area === 'admin') {
       // admin console doesn't use this object currently
       return false;
@@ -211,7 +208,7 @@ class Device extends Data {
    * @param  {Object} deviceBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(deviceReceived, deviceBefore, credentials) {
+  static checkWritePermission(deviceReceived, deviceBefore, credentials) {
     if (credentials.unrestricted) {
       return;
     }
@@ -472,11 +469,4 @@ const wpModelNumbers = {
   'Lumia 950': /RM\-(1104|1105|1118)/,
   'Lumia 950XL': /RM\-(1085|1116)/,
   'Lumia Icon': /RM\-(927)/,
-};
-
-const instance = new Device;
-
-export {
-  instance as default,
-  Device,
 };

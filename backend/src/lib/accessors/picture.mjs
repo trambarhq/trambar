@@ -1,29 +1,26 @@
-import HTTPError from '../common/errors/http-error.mjs';
 import { Data } from './data.mjs';
-import Task from './task.mjs';
+import { HTTPError } from '../errors.mjs';
+import { Task } from './task.mjs';
 
-class Picture extends Data {
-  constructor() {
-    super();
-    this.schema = 'global';
-    this.table = 'picture';
-    this.columns = {
-      ...this.columns,
-      purpose: String,
-      user_id: Number,
-    };
-    this.criteria = {
-      ...this.criteria,
-      purpose: String,
-      user_id: Number,
-      url: String,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      purpose: String,
-      user_id: Number,
-    };
-  }
+export class Picture extends Data {
+  static schema = 'global';
+  static table = 'picture';
+  static columns = {
+    ...Data.columns,
+    purpose: String,
+    user_id: Number,
+  };
+  static criteria = {
+    ...Data.criteria,
+    purpose: String,
+    user_id: Number,
+    url: String,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    purpose: String,
+    user_id: Number,
+  };
 
   /**
    * Create table in schema
@@ -33,7 +30,7 @@ class Picture extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -61,7 +58,7 @@ class Picture extends Data {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
     await this.createResourceCoalescenceTrigger(db, schema, []);
@@ -74,7 +71,7 @@ class Picture extends Data {
    * @param  {Object} criteria
    * @param  {Object} query
    */
-  apply(criteria, query) {
+  static apply(criteria, query) {
     const { url, ...basic } = criteria;
     super.apply(basic, query);
 
@@ -97,7 +94,7 @@ class Picture extends Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -114,17 +111,10 @@ class Picture extends Data {
    * @param  {Object} pictureBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(pictureReceived, pictureBefore, credentials) {
+  static checkWritePermission(pictureReceived, pictureBefore, credentials) {
     if (credentials.unrestricted) {
       return;
     }
     throw new HTTPError(403);
   }
 }
-
-const instance = new Picture;
-
-export {
-  instance as default,
-  Picture,
-};

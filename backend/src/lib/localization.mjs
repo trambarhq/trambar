@@ -1,49 +1,36 @@
 import _ from 'lodash';
 
-/**
- * Return a string object of the name with the gender attached
- *
- * @param  {String} locale
- * @param  {User} user
- *
- * @return {Object}
- */
-function name(locale, user) {
-  const lang = getLanguageCode(locale);
-  let name = pick(locale, user.details.name);
-  if (!name) {
-    name = _.capitalize(user.username);
-  }
-  const strObject = new String(name);
-  strObject.gender = user.details.gender;
-  return strObject;
-}
-
-/**
- * Return a phrase for the given locale
- *
- * @param  {String} locale
- * @param  {String} phrase
- * @param  {...} args
- *
- * @return {String}
- */
-function translate(locale, phrase, ...args) {
-  let table = phraseTables[locale];
-  if (!table) {
+async function load(locale) {
+  if (!phraseTables[locale]) {
     const lang = getLanguageCode(locale);
     let module;
     try {
-      module = require(`locales/${lang}`);
+      module = await import(`./localization/client/${lang}.mjs`);
     } catch(err) {
-      module = require('locales/en');
+      module = await import('./localization/client/en.mjs');
     }
     let phrases = module.phrases;
     if (phrases instanceof Function) {
       const country = getCountryCode(locale);
       phrases = phrases(country);
     }
-    table = phraseTables[locale] = phrases;
+    phraseTables[locale] = phrases;
+  }
+}
+
+/**
+ * Return a phrase for the given locale
+ *
+ * @param  {String} phrase
+ * @param  {...} args
+ * @param  {String} locale
+ *
+ * @return {String}
+ */
+function translate(phrase, args, locale) {
+  const table = phraseTables[locale];
+  if (!table) {
+    throw new Error(`Locale not available: ${locale}`);
   }
   const f = table[phrase];
   if (f === undefined) {
@@ -63,14 +50,33 @@ function translate(locale, phrase, ...args) {
 const phraseTables = {};
 
 /**
+ * Return a string object of the name with the gender attached
+ *
+ * @param  {User} user
+ * @param  {String} locale
+ *
+ * @return {Object}
+ */
+function getUserName(user, locale) {
+  const lang = getLanguageCode(locale);
+  let name = pick(locale, user.details.name);
+  if (!name) {
+    name = _.capitalize(user.username);
+  }
+  const strObject = new String(name);
+  strObject.gender = user.details.gender;
+  return strObject;
+}
+
+/**
  * Return a text from a multilingual text object
  *
- * @param  {String} locale
  * @param  {Object} versions
+ * @param  {String} locale
  *
  * @return {String}
  */
-function pick(locale, versions) {
+function pick(versions, locale) {
   let s;
   if (typeof(versions) === 'object') {
     const lang = getLanguageCode(locale);
@@ -128,8 +134,9 @@ function getCountryCode(locale) {
 }
 
 export {
+  load,
   translate,
-  name,
   pick,
+  getUserName,
   getDefaultLanguageCode,
 };

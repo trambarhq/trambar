@@ -1,7 +1,7 @@
 import 'moment/locale/zh-cn';
 import 'moment/locale/zh-hk';
 import 'moment/locale/zh-tw';
-import { cardinalT, cardinalS } from 'common/locale/grammars/chinese.mjs';
+import { cardinalT, cardinalS } from '../grammars/chinese.mjs';
 
 import Moment from 'moment';
 Moment.defineLocale('zh-sg', { parentLocale: 'zh-cn' });

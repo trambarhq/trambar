@@ -1,43 +1,40 @@
 import _ from 'lodash';
 import Moment from 'moment';
+import { Story } from '../accessors/story.mjs';
 
-import Story from '../accessors/story.mjs';
+export class DailyActivities {
+  static type = 'daily-activities';
+  // tables from which the stats are derived
+  static sourceTables = [ 'story' ];
+  // filters and the columns they act on--determine which objects are
+  // included in the statistics;
+  static filteredColumns = {
+    story: {
+      user_ids: 'user_ids',
+      role_ids: 'role_ids',
+      time_range: 'ptime',
+      external_object: 'external',
+      public: 'public',
+    },
+  };
+  // additional criteria that objects must also meet to be included
+  static fixedFilters = {
+    story: {
+      deleted: false,
+      published: true,
+    }
+  };
+  // columns in the table(s) that affects the results (columns used by the
+  // filters would, of course, also impact the results)
+  static depedentColumns = {
+    story: [
+      'type',
+      'ptime',
+      'tags',
+    ],
+  };
 
-class DailyActivities {
-  constructor() {
-    this.type = 'daily-activities';
-    // tables from which the stats are derived
-    this.sourceTables = [ 'story' ];
-    // filters and the columns they act on--determine which objects are
-    // included in the statistics;
-    this.filteredColumns = {
-      story: {
-        user_ids: 'user_ids',
-        role_ids: 'role_ids',
-        time_range: 'ptime',
-        external_object: 'external',
-        public: 'public',
-      },
-    };
-    // additional criteria that objects must also meet to be included
-    this.fixedFilters = {
-      story: {
-        deleted: false,
-        published: true,
-      }
-    };
-    // columns in the table(s) that affects the results (columns used by the
-    // filters would, of course, also impact the results)
-    this.depedentColumns = {
-      story: [
-        'type',
-        'ptime',
-        'tags',
-      ],
-    };
-  }
-
-  async generate(db, schema, filters) {
+  static async generate(db, schema, filters) {
     // apply fixed filters
     const { tz_offset, ...basic } = filters;
     const criteria = { ...this.fixedFilters.story, ...basic };
@@ -65,10 +62,3 @@ class DailyActivities {
     };
   }
 }
-
-const instance = new DailyActivities;
-
-export {
-  instance as default,
-  DailyActivities,
-};

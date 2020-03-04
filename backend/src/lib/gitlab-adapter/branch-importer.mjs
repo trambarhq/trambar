@@ -1,8 +1,8 @@
 import _ from 'lodash';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 // accessors
-import Story from '../accessors/story.mjs';
+import { Story } from '../accessors/story.mjs';
 
 /**
  * Import an activity log entry about a push

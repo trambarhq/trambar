@@ -3,7 +3,7 @@ import 'moment/locale/en-ca';
 import 'moment/locale/en-gb';
 import 'moment/locale/en-ie';
 import 'moment/locale/en-nz';
-import { cardinal } from 'common/locale/grammars/english.mjs';
+import { cardinal } from '../grammars/english.mjs';
 
 const phrases = {
   'action-badge-add': 'add',

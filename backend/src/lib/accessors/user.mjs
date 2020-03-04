@@ -1,39 +1,37 @@
 import _ from 'lodash';
-import HTTPError from '../common/errors/http-error.mjs';
-import { ExternalData } from './external-data.mjs';
-import Project from './project.mjs';
-import Story from './story.mjs';
-import Reaction from './reaction.mjs';
-import Task from './task.mjs';
+import { HTTPError } from '../errors.mjs';
 
-class User extends ExternalData {
-  constructor() {
-    super();
-    this.schema = 'global';
-    this.table = 'user';
-    this.columns = {
-      ...this.columns,
-      type: String,
-      username: String,
-      role_ids: Array(Number),
-      requested_project_ids: Array(Number),
-      disabled: Boolean,
-      settings: Object,
-    };
-    this.criteria = {
-      ...this.criteria,
-      type: String,
-      username: String,
-      email: String,
-      role_ids: Array(Number),
-      requested_project_ids: Array(Number),
-      disabled: Boolean,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      requested_project_ids: Array(Number),
-    };
-  }
+import { ExternalData } from './external-data.mjs';
+import { Project } from './project.mjs';
+import { Story } from './story.mjs';
+import { Reaction } from './reaction.mjs';
+import { Task } from './task.mjs';
+
+export class User extends ExternalData {
+  static schema = 'global';
+  static table = 'user';
+  static columns = {
+    ...ExternalData.columns,
+    type: String,
+    username: String,
+    role_ids: Array(Number),
+    requested_project_ids: Array(Number),
+    disabled: Boolean,
+    settings: Object,
+  };
+  static criteria = {
+    ...ExternalData.criteria,
+    type: String,
+    username: String,
+    email: String,
+    role_ids: Array(Number),
+    requested_project_ids: Array(Number),
+    disabled: Boolean,
+  };
+  static eventColumns = {
+    ...ExternalData.eventColumns,
+    requested_project_ids: Array(Number),
+  };
 
   /**
    * Create table in schema
@@ -43,7 +41,7 @@ class User extends ExternalData {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -80,7 +78,7 @@ class User extends ExternalData {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     // TODO revoke INSERT and UPDATE of column 'type'
     const table = this.getTableName(schema);
     const sql = `
@@ -99,7 +97,7 @@ class User extends ExternalData {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
     await this.createResourceCoalescenceTrigger(db, schema, []);
@@ -112,7 +110,7 @@ class User extends ExternalData {
    * @param  {Object} criteria
    * @param  {Object} query
    */
-  apply(criteria, query) {
+  static apply(criteria, query) {
     const { email, ...basic } = criteria;
     super.apply(basic, query);
 
@@ -132,7 +130,7 @@ class User extends ExternalData {
    *
    * @return {Promise<Object>}
    */
-  async saveUnique(db, schema, user) {
+  static async saveUnique(db, schema, user) {
     // this doesn't work within a transaction
     try {
       const objectAfter = await this.saveOne(db, schema, user);
@@ -166,7 +164,7 @@ class User extends ExternalData {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -217,7 +215,7 @@ class User extends ExternalData {
    *
    * @return {Promise<Object>}
    */
-  async importOne(db, schema, userReceived, userBefore, credentials, options) {
+  static async importOne(db, schema, userReceived, userBefore, credentials, options) {
     const row = await super.importOne(db, schema, userReceived, userBefore, credentials, options);
     if (userBefore && !userBefore.deleted && !_.isEmpty(userReceived.requested_project_ids)) {
       // remove ids of projects that'd accept the user automatically
@@ -255,7 +253,7 @@ class User extends ExternalData {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     if (super.isRelevantTo(event, user, subscription)) {
       if (event.id === user.id) {
         return true;
@@ -278,7 +276,7 @@ class User extends ExternalData {
    *
    * @return {Boolean}
    */
-  canJoin(user, project) {
+  static canJoin(user, project) {
     if (!project) {
       return false;
     }
@@ -297,7 +295,7 @@ class User extends ExternalData {
    *
    * @return {Boolean}
    */
-  canJoinAutomatically(user, project) {
+  static canJoinAutomatically(user, project) {
     if (_.includes(project.user_ids, user.id)) {
       // user is already a member
       return true;
@@ -316,7 +314,7 @@ class User extends ExternalData {
    * @param  {Object} userBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(userReceived, userBefore, credentials) {
+  static checkWritePermission(userReceived, userBefore, credentials) {
     if (credentials.unrestricted) {
       return;
     }
@@ -359,7 +357,7 @@ class User extends ExternalData {
    *
    * @return {Promise}
    */
-   async associate(db, schema, usersReceived, usersBefore, usersAfter, credentials) {
+   static async associate(db, schema, usersReceived, usersBefore, usersAfter, credentials) {
      await this.updateMemberList(db, schema, usersReceived, usersBefore, usersAfter);
      await this.updateStoryRoles(db, schema, usersBefore, usersAfter);
      await this.updateContentDeletion(db, schema, usersBefore, usersAfter);
@@ -376,7 +374,7 @@ class User extends ExternalData {
    *
    * @return {Promise}
    */
-  async updateMemberList(db, schema, usersReceived, usersBefore, usersAfter) {
+  static async updateMemberList(db, schema, usersReceived, usersBefore, usersAfter) {
     const newMembers = {};
     for (let [ index, userReceived ] of usersReceived.entries()) {
       // the project ids removed earlier by import() are the ones that
@@ -422,7 +420,7 @@ class User extends ExternalData {
    *
    * @return {Promise}
    */
-  async updateStoryRoles(db, schema, usersBefore, usersAfter) {
+  static async updateStoryRoles(db, schema, usersBefore, usersAfter) {
     const usersWithRoleChanges = _.filter(usersBefore, (userBefore, index) => {
       if (userBefore) {
         const userAfter = usersAfter[index];
@@ -454,7 +452,7 @@ class User extends ExternalData {
    *
    * @return {Promise}
    */
-  async updateContentDeletion(db, schema, usersBefore, usersAfter) {
+  static async updateContentDeletion(db, schema, usersBefore, usersAfter) {
     const deletedUsers = _.filter(usersAfter, (userAfter, index) => {
       const userBefore = usersBefore[index];
       if (userBefore) {
@@ -482,11 +480,36 @@ class User extends ExternalData {
       await Reaction.restoreAssociated(db, contentSchema, { user: undeletedUsers });
     }
   }
+
+  static getDefaultSettings() {
+    return {
+      notification: {
+        like: true,
+        comment: true,
+        task_completion: true,
+        vote: true,
+        bookmark: true,
+        mention: true,
+        coauthor: true,
+      },
+      web_alert: {
+        like: true,
+        comment: true,
+        task_completion: true,
+        vote: true,
+        bookmark: true,
+        mention: true,
+        coauthor: true,
+      },
+      mobile_alert: {
+        like: true,
+        comment: true,
+        task_completion: true,
+        vote: true,
+        bookmark: true,
+        mention: true,
+        coauthor: true,
+      },
+    };
+  }
 }
-
-const instance = new User;
-
-export {
-  instance as default,
-  User,
-};

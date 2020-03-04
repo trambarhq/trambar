@@ -143,23 +143,6 @@ _.mixin({
   },
 
   /**
-   * Obscure properties in an object
-   *
-   * @param  {Object} object
-   * @param  {Array<String>} paths
-   *
-   * @return {Object}
-   */
-  obscure: function(object, paths) {
-    let clone = _.cloneDeep(object);
-    _.each(paths, (path) => {
-      let value = _.get(clone, path);
-      _.set(clone, path, obscureValue(value));
-    });
-    return clone;
-  },
-
-  /**
    * Parse an integer, the string isn't the exact representation
    *
    * @param  {String} s
@@ -173,41 +156,4 @@ _.mixin({
     }
     return n;
   },
-
-  /**
-   * Return file size in human readable form
-   *
-   * @param  {Number} bytes
-   *
-   * @return {String}
-   */
-  fileSize(bytes) {
-    if (bytes < 1024) {
-      return bytes + 'B';
-    }
-    let kilobytes = bytes / 1024;
-    if (kilobytes < 1024) {
-      return _.round(kilobytes) + 'KB';
-    }
-    let megabytes = kilobytes / 1024;
-    if (megabytes < 1024) {
-      return _.round(megabytes, 1) + 'MB';
-    }
-    let gigabytes = megabytes / 1024;
-    return _.round(gigabytes, 2) + 'GB';
-  },
 });
-
-function obscureValue(value) {
-  switch (typeof(value)) {
-    case 'number': return 0;
-    case 'string': return _.repeat('x', value.length);
-    case 'boolean': return false;
-    case 'object':
-      if (value instanceof Array) {
-        return _.map(value, obscureValue);
-      } else {
-        return _.mapValues(value, obscureValue);
-      }
-  }
-}

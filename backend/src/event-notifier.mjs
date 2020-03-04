@@ -1,18 +1,19 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import Database from './lib/database.mjs';
+import { Database } from './lib/database.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
-import HTTPError from './lib/common/errors/http-error.mjs';
+import { HTTPError } from './lib/errors.mjs';
 
 import * as ListenerManager from './lib/event-notifier/listener-manager.mjs';
 import * as NotificationGenerator from './lib/event-notifier/notification-generator.mjs';
 import * as AlertComposer from './lib/event-notifier/alert-composer.mjs';
 import * as Accessors from './lib/data-server/accessors.mjs';
 
-import Subscription from './lib/accessors/subscription.mjs';
-import System from './lib/accessors/system.mjs';
-import User from './lib/accessors/user.mjs';
-import Notification from './lib/accessors/notification.mjs';
+// accessors
+import { Subscription } from './lib/accessors/subscription.mjs';
+import { System } from './lib/accessors/system.mjs';
+import { User } from './lib/accessors/user.mjs';
+import { Notification } from './lib/accessors/notification.mjs';
 
 let database;
 
@@ -174,7 +175,7 @@ async function sendAlerts(db, events, listeners, system) {
           const user = _.find(users, { id: notification.user_id });
           if (user) {
             const locale = listener.subscription.locale || 'en-us';
-            const alert = AlertComposer.format(system, schema, user, notification, locale);
+            const alert = await AlertComposer.format(system, schema, user, notification, locale);
             messages.push(new Message('alert', listener, { alert }, system));
           }
         }

@@ -1,10 +1,12 @@
 import _ from 'lodash';
 import Crypto from 'crypto'
-import Database from '../database.mjs';
-import * as TaskLog from '../task-log.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
-import Server from '../accessors/server.mjs';
-import HTTPError from '../common/errors/http-error.mjs';
+import { Database } from '../database.mjs';
+import { TaskLog } from '../task-log.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { HTTPError } from '../errors.mjs';
+
+// accessors
+import { Server } from '../accessors/server.mjs';
 
 import * as Transport from './transport.mjs';
 

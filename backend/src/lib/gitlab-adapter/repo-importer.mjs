@@ -1,17 +1,17 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import * as TaskLog from '../task-log.mjs';
-import * as Localization from '../localization.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import { TaskLog } from '../task-log.mjs';
+import { getDefaultLanguageCode } from '../localization.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 import * as SnapshotManager from './snapshot-manager.mjs';
 import * as UserImporter from './user-importer.mjs';
 
 // accessors
-import Project from '../accessors/project.mjs';
-import Repo from '../accessors/repo.mjs';
-import Story from '../accessors/story.mjs';
+import { Project } from '../accessors/project.mjs';
+import { Repo } from '../accessors/repo.mjs';
+import { Story } from '../accessors/story.mjs';
 
 /**
  * Import repositories that aren't in the system yet
@@ -188,8 +188,7 @@ async function processSystemEvent(db, server, glHookEvent) {
  * @return {Story}
  */
 function copyEventProperties(story, system, server, repo, author, glEvent) {
-  const defLangCode = Localization.getDefaultLanguageCode(system);
-
+  const defLangCode = getDefaultLanguageCode(system);
   const storyChanges = _.cloneDeep(story) || {};
   ExternalDataUtils.inheritLink(storyChanges, server, repo);
   ExternalDataUtils.importProperty(storyChanges, server, 'type', {

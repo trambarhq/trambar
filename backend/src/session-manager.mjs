@@ -9,24 +9,23 @@ import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Moment from 'moment';
 import CrossFetch from 'cross-fetch';
 import HtpasswdJS from 'htpasswd-js';
-import HTTPError from './lib/common/errors/http-error.mjs';
-import Database from './lib/database.mjs';
-import * as TaskLog from './lib/task-log.mjs';
+
+import { HTTPError } from './lib/errors.mjs';
+import { Database } from './lib/database.mjs';
+import { TaskLog } from './lib/task-log.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
-import * as ExternalDataUtils from './lib/common/objects/utils/external-data-utils.mjs';
-import { DefaultUserSettings } from './lib/common/objects/settings/user-settings.mjs';
-import * as Whitelist from './lib/common/utils/whitelist.mjs';
+import * as ExternalDataUtils from './lib/external-data-utils.mjs';
 
 import * as GitlabUserImporter from './lib/gitlab-adapter/user-importer.mjs';
 import * as MediaImporter from './lib/media-server/media-importer.mjs';
 
 // accessors
-import Device from './lib/accessors/device.mjs';
-import Project from './lib/accessors/project.mjs';
-import Server from './lib/accessors/server.mjs';
-import Session from './lib/accessors/session.mjs';
-import System from './lib/accessors/system.mjs';
-import User from './lib/accessors/user.mjs';
+import { Device } from './lib/accessors/device.mjs';
+import { Project } from './lib/accessors/project.mjs';
+import { Server } from './lib/accessors/server.mjs';
+import { Session } from './lib/accessors/session.mjs';
+import { System } from './lib/accessors/system.mjs';
+import { User } from './lib/accessors/user.mjs';
 
 const SESSION_LIFETIME_AUTHENTICATION = 120; // minutes
 const SESSION_LIFETIME_DEVICE_ACTIVATION = 60;
@@ -803,7 +802,7 @@ async function findUserByName(username) {
       username,
       type: 'admin',
       details: { name },
-      settings: DefaultUserSettings,
+      settings: User.getDefaultSettings(),
     };
     user = await User.insertOne(db, 'global', userNew);
   }
@@ -1002,11 +1001,41 @@ function acceptNewUser(server, profile) {
   if (whitelist) {
     const emails = _.map(profile.emails, 'value');
     return _.some(emails, (email) => {
-      return Whitelist.match(email, whitelist);
+      return matchWhiteList(email, whitelist);
     });
   } else {
     return true;
   }
+}
+
+/**
+ * Return true if a email address matches an item on a whitelist
+ *
+ * @param  {String} email
+ * @param  {String} whitelist
+ *
+ * @return {Boolean}
+ */
+function matchWhiteList(email, whitelist) {
+  let items = _.split(_.trim(whitelist), /\s*\n\s*/);
+  let emailParts = _.split(email, '@');
+  let name = emailParts[0];
+  let domain = emailParts[1];
+  return _.some(items, (item) => {
+    if (/^#/.test(item)) {
+      return;
+    }
+    let permitted = _.split(item, '@');
+    if (permitted.length === 1) {
+      if (domain === permitted[0]) {
+        return true;
+      }
+    } else if (permitted.length === 2) {
+      if (domain === permitted[1] && name === permitted[0]) {
+        return true;
+      }
+    }
+  });
 }
 
 /**
@@ -1047,7 +1076,7 @@ function copyUserProperties(user, server, image, profile) {
     } else {
       userAfter = {
         role_ids: _.get(server, 'settings.user.role_ids', []),
-        settings: DefaultUserSettings,
+        settings: User.getDefaultSettings(),
       };
     }
 

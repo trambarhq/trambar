@@ -1,30 +1,27 @@
 import _ from 'lodash';
-import * as TagScanner from '../common/utils/tag-scanner.mjs';
+import { isTag } from '../tag-scanner.mjs';
 
-class Data {
-  constructor() {
-    this.schema = '?';
-    this.table = '?';
-    this.columns = {
-      id: Number,
-      gn: Number,
-      deleted: Boolean,
-      ctime: String,
-      mtime: String,
-      details: Object,
-    };
-    this.criteria = {
-      id: Number,
-      deleted: Boolean,
-      exclude: Array(Number),
-    };
-    this.eventColumns = {
-      deleted: Boolean,
-    };
-    this.accessControlColumns = {
-    };
-    this.version = 1;
-  }
+export class Data {
+  static schema = '?';
+  static table = '?';
+  static columns = {
+    id: Number,
+    gn: Number,
+    deleted: Boolean,
+    ctime: String,
+    mtime: String,
+    details: Object,
+  };
+  static criteria = {
+    id: Number,
+    deleted: Boolean,
+    exclude: Array(Number),
+  };
+  static eventColumns = {
+    deleted: Boolean,
+  };
+  static accessControlColumns = {};
+  static version = 1;
 
   /**
    * Return fully-qualify name of table
@@ -33,7 +30,7 @@ class Data {
    *
    * @return {String}
    */
-  getTableName(schema) {
+  static getTableName(schema) {
     // allow non-alphanumeric schema name during testing
     if (!process.env.DOCKER_MOCHA) {
       if (!/^[\w\-]+$/.test(schema)) {
@@ -61,7 +58,7 @@ class Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -85,7 +82,7 @@ class Data {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
@@ -102,7 +99,7 @@ class Data {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
   }
 
   /**
@@ -114,7 +111,7 @@ class Data {
    *
    * @return {Promise}
    */
-  async createChangeTrigger(db, schema) {
+  static async createChangeTrigger(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       DROP TRIGGER IF EXISTS "indicateDataChangeOnUpdate" ON ${table};
@@ -135,7 +132,7 @@ class Data {
    *
    * @return {Promise}
    */
-  async createNotificationTriggers(db, schema) {
+  static async createNotificationTriggers(db, schema) {
     const table = this.getTableName(schema);
     const propNames = _.keys(this.eventColumns);
     const args = _.map(propNames, (propName) => {
@@ -173,7 +170,7 @@ class Data {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     if (this.schema === 'global') {
       return true;
     }
@@ -190,7 +187,7 @@ class Data {
    * @param  {Object} objectBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(objectReceived, objectBefore, credentials) {
+  static checkWritePermission(objectReceived, objectBefore, credentials) {
   }
 
   /**
@@ -202,7 +199,7 @@ class Data {
    *
    * @return {Promise<Boolean>}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     return false;
   }
 
@@ -212,7 +209,7 @@ class Data {
    * @param  {Object} criteria
    * @param  {Object} query
    */
-  apply(criteria, query) {
+  static apply(criteria, query) {
     const params = query.parameters;
     const conds = query.conditions;
     for (let [ name, type ] of _.entries(this.criteria)) {
@@ -272,7 +269,7 @@ class Data {
    *
    * @return {Promise<Array>}
    */
-  async find(db, schema, criteria, columns) {
+  static async find(db, schema, criteria, columns) {
     if (!criteria) {
       return [];
     }
@@ -312,7 +309,7 @@ class Data {
    *
    * @return {Promise<Object>}
    */
-  async findOne(db, schema, criteria, columns) {
+  static async findOne(db, schema, criteria, columns) {
     if (!criteria) {
       return null;
     }
@@ -330,7 +327,7 @@ class Data {
    *
    * @return {Promise<Array>}
    */
-  async update(db, schema, rows) {
+  static async update(db, schema, rows) {
     const results = [];
     for (let row of rows) {
       const result = await this.updateOne(db, schema, row);
@@ -348,7 +345,7 @@ class Data {
    *
    * @return {Promise<Object>}
    */
-  async updateOne(db, schema, row) {
+  static async updateOne(db, schema, row) {
     if (!row) {
       return null;
     }
@@ -396,7 +393,7 @@ class Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async updateMatching(db, schema, criteria, values) {
+  static async updateMatching(db, schema, criteria, values) {
     if (!criteria) {
       return [];
     }
@@ -447,7 +444,7 @@ class Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async insert(db, schema, rows) {
+  static async insert(db, schema, rows) {
     if (_.isEmpty(rows)) {
       return [];
     }
@@ -517,7 +514,7 @@ class Data {
    *
    * @return {Promise<Object>}
    */
-  async insertOne(db, schema, row) {
+  static async insertOne(db, schema, row) {
     if (!row) {
       return null;
     }
@@ -534,7 +531,7 @@ class Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async save(db, schema, rows) {
+  static async save(db, schema, rows) {
     if (_.isEmpty(rows)) {
       return [];
     }
@@ -565,7 +562,7 @@ class Data {
    *
    * @return {Promise<Object>}
    */
-  async saveOne(db, schema, row) {
+  static async saveOne(db, schema, row) {
     if (!row) {
       return null;
     }
@@ -585,7 +582,7 @@ class Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async remove(db, schema, rows) {
+  static async remove(db, schema, rows) {
     if (!_.isEmpty(rows)) {
       return [];
     }
@@ -610,7 +607,7 @@ class Data {
    *
    * @return {Promise<Object>}
    */
-  async removeOne(db, schema, row) {
+  static async removeOne(db, schema, row) {
     if (!row) {
       return null;
     }
@@ -627,7 +624,7 @@ class Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async removeMatching(db, schema, criteria) {
+  static async removeMatching(db, schema, criteria) {
     if (!criteria) {
       return [];
     }
@@ -662,7 +659,7 @@ class Data {
    *
    * @return {Promise<Array>}
    */
-  async filter(db, schema, rows, credentials) {
+  static async filter(db, schema, rows, credentials) {
     return rows;
   }
 
@@ -678,7 +675,7 @@ class Data {
    *
    * @return {Promise<Array>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     return _.map(rows, (row) => {
       const object = {
         id: row.id,
@@ -710,7 +707,7 @@ class Data {
    *
    * @return {Promise<Array>}
    */
-  async import(db, schema, objectsReceived, objectsBefore, credentials, options) {
+  static async import(db, schema, objectsReceived, objectsBefore, credentials, options) {
     const rows = [];
     for (let [ index, objectReceived ] of objectsReceived.entries()) {
       const objectBefore = objectsBefore[index];
@@ -733,7 +730,7 @@ class Data {
    *
    * @return {Promise<Array>}
    */
-  async importOne(db, schema, object, original, credentials, options) {
+  static async importOne(db, schema, object, original, credentials, options) {
     // these properties cannot be modified from the client side
     return _.omit(object, 'gn', 'ctime', 'mtime');
   }
@@ -750,7 +747,7 @@ class Data {
    *
    * @return {Promise}
    */
-  async associate(db, schema, objects, originals, rows, credentials) {
+  static async associate(db, schema, objects, originals, rows, credentials) {
   }
 
   /**
@@ -763,7 +760,7 @@ class Data {
    *
    * @return {Promise<Number>}
    */
-  async clean(db, schema, interval) {
+  static async clean(db, schema, interval) {
     const table = this.getTableName(schema);
     const sql1 = `
       SELECT id FROM ${table}
@@ -789,7 +786,7 @@ class Data {
    *
    * @return {Promise}
    */
-  async applyTextSearch(db, schema, search, query) {
+  static async applyTextSearch(db, schema, search, query) {
     const ts = parseSearchQuery(search.text);
     if (!_.isEmpty(ts.tags)) {
       query.conditions.push(`cardinality(tags) <> 0`);
@@ -844,7 +841,7 @@ class Data {
    *
    * @return {String}
    */
-  getSearchableText(languageCode) {
+  static getSearchableText(languageCode) {
     return `"extractText"(details, '${languageCode}')`;
   }
 
@@ -856,7 +853,7 @@ class Data {
    *
    * @return {Promise<Array<String>>}
    */
-  async getTextSearchLanguages(db, schema) {
+  static async getTextSearchLanguages(db, schema) {
     let languages = _.get(searchLanguages, [ schema, this.table ]);
     if (!languages) {
       const prefix = `${this.table}_search_`;
@@ -883,7 +880,7 @@ class Data {
    *
    * @return {Promise}
    */
-  async addTextSearchLanguages(db, schema, codes) {
+  static async addTextSearchLanguages(db, schema, codes) {
     for (let code of codes) {
       // create language
       await this.createSearchConfigure(db, code);
@@ -914,7 +911,7 @@ class Data {
    *
    * @return {Promise}
    */
-  async createSearchConfigure(db, code) {
+  static async createSearchConfigure(db, code) {
     if (!/^[a-z]{2}$/.test(code)) {
       throw new Error(`Invalid language code: ${code}`);
     }
@@ -955,7 +952,7 @@ class Data {
    *
    * @return {Promise}
    */
-  async createResourceCoalescenceTrigger(db, schema, args) {
+  static async createResourceCoalescenceTrigger(db, schema, args) {
     const table = this.getTableName(schema);
     // trigger name needs to be smaller than "indicateDataChange" so it runs first
     const sql = `
@@ -985,7 +982,7 @@ class Data {
    *
    * @return {Promise}
    */
-  async ensureUniqueName(db, schema, objectBefore, objectReceived, propName) {
+  static async ensureUniqueName(db, schema, objectBefore, objectReceived, propName) {
     if (objectBefore) {
       if (objectBefore.deleted === true && objectReceived.deleted === false) {
         if (!propName) {
@@ -1014,7 +1011,7 @@ class Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async findCached(db, schema, criteria, columns) {
+  static async findCached(db, schema, criteria, columns) {
     // remove old ones
     const time = new Date;
     _.remove(this.cachedSearches, (search) => {
@@ -1050,7 +1047,7 @@ class Data {
    *
    * @param  {Function|undefined} cb
    */
-  clearCache(cb) {
+  static clearCache(cb) {
     this.cachedSearches = _.filter(this.cachedSearches, cb || false);
   }
 };
@@ -1062,7 +1059,7 @@ function parseSearchQuery(text) {
   const searchWords = [];
   const tokens = _.split(_.trim(text), /\s+/);
   for (let token of tokens) {
-    if (TagScanner.isTag(token)) {
+    if (isTag(token)) {
       tags.push(_.toLower(token));
     } else {
       const prefix = '';
@@ -1088,7 +1085,3 @@ const punctRE = /[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}
 function removePunctuations(s) {
   return s.replace(punctRE, '');
 }
-
-export {
-  Data,
-};

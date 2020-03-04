@@ -1,7 +1,7 @@
-import 'moment/locale/zh-cn';
-import 'moment/locale/zh-hk';
-import 'moment/locale/zh-tw';
-import { cardinalT, cardinalS } from 'common/locale/grammars/chinese.mjs';
+import 'moment/locale/zh-cn.js';
+import 'moment/locale/zh-hk.js';
+import 'moment/locale/zh-tw.js';
+import { cardinalT, cardinalS } from '../grammars/chinese.mjs';
 
 import Moment from 'moment';
 Moment.defineLocale('zh-sg', { parentLocale: 'zh-cn' });
@@ -756,7 +756,7 @@ let traditionalPhrases = {
   },
   'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
     let text = `將`;
-    if (branches?.length > 0) {
+    if (branches && branches.length > 0) {
       let sources = branches.map((branch) => {
         return `《${branch}》`;
       });
@@ -1701,7 +1701,7 @@ let simplifiedPhrases = {
   },
   'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
     let text = `将`;
-    if (branches?.length > 0) {
+    if (branches && branches.length > 0) {
       let sources = branches.map((branch) => {
         return `《${branch}》`;
       });
@@ -2212,7 +2212,7 @@ let cantonesePhrases = {
   },
   'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
     let text = `將`;
-    if (branches?.length > 0) {
+    if (branches && branches.length > 0) {
       let sources = branches.map((branch) => {
         return `《${branch}》`;
       });

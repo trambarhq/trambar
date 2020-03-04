@@ -2,12 +2,12 @@ import _ from 'lodash';
 import Moment from 'moment';
 import Crypto from 'crypto';
 import ParseDiff from 'parse-diff';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 
 // accessors
-import Commit from '../accessors/commit.mjs';
+import { Commit } from '../accessors/commit.mjs';
 
 /**
  * Import a commit from Gitlab

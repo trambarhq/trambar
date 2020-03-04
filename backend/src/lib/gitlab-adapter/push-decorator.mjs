@@ -2,9 +2,9 @@ import _ from 'lodash';
 import Path from 'path';
 import Ignore from 'ignore';
 import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
-import HTTPError from '../common/errors/http-error.mjs';
-import * as TaskLog from '../task-log.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import { TaskLog } from '../task-log.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { HTTPError } from '../errors.mjs';
 
 import * as Transport from './transport.mjs';
 

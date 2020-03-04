@@ -1,4 +1,4 @@
-import 'moment/locale/pl';
+import 'moment/locale/pl.js';
 import {
   plural,
   cardinal,
@@ -6,7 +6,7 @@ import {
   gender,
   genderize,
   pastTenseEnding,
-} from 'common/locale/grammars/polish.mjs';
+} from '../grammars/polish.mjs';
 
 const phrases = {
   'action-contact-by-email': 'Skontaktuj się przez e-mail',
@@ -780,7 +780,7 @@ const phrases = {
   'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
     let l = pastTenseEnding(name, 3);
     let text = `Scali${l} zmiany`;
-    if (branches?.length > 0) {
+    if (branches && branches.length > 0) {
       let sources = branches.map((branch) => {
         return `„${branch}”`;
       });

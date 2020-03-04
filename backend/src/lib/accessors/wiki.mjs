@@ -1,38 +1,35 @@
 import { ExternalData } from './external-data.mjs';
 
-class Wiki extends ExternalData {
-  constructor() {
-    super();
-    this.schema = 'project';
-    this.table = 'wiki';
-    this.columns = {
-      ...this.columns,
-      language_codes: Array(String),
-      slug: String,
-      public: Boolean,
-      chosen: Boolean,
-      hidden: Boolean,
-    };
-    this.criteria = {
-      ...this.criteria,
-      language_codes: Array(String),
-      slug: String,
-      public: Boolean,
-      chosen: Boolean,
-      hidden: Boolean,
+export class Wiki extends ExternalData {
+  static schema = 'project';
+  static table = 'wiki';
+  static columns = {
+    ...ExternalData.columns,
+    language_codes: Array(String),
+    slug: String,
+    public: Boolean,
+    chosen: Boolean,
+    hidden: Boolean,
+  };
+  static criteria = {
+    ...ExternalData.criteria,
+    language_codes: Array(String),
+    slug: String,
+    public: Boolean,
+    chosen: Boolean,
+    hidden: Boolean,
 
-      search: Object,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      language_codes: Array(String),
-      slug: String,
-      public: Boolean,
-      chosen: Boolean,
-      hidden: Boolean,
-    };
-    this.version = 3;
-  }
+    search: Object,
+  };
+  static eventColumns = {
+    ...ExternalData.eventColumns,
+    language_codes: Array(String),
+    slug: String,
+    public: Boolean,
+    chosen: Boolean,
+    hidden: Boolean,
+  };
+  static version = 3;
 
   /**
    * Create table in schema
@@ -42,7 +39,7 @@ class Wiki extends ExternalData {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -76,7 +73,7 @@ class Wiki extends ExternalData {
    *
    * @return {Promise<Boolean>}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     if (version === 3) {
       await this.create(db, schema);
       await this.grant(db, schema);
@@ -93,7 +90,7 @@ class Wiki extends ExternalData {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
@@ -110,7 +107,7 @@ class Wiki extends ExternalData {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -126,7 +123,7 @@ class Wiki extends ExternalData {
    *
    * @return {Promise}
    */
-  async apply(db, schema, criteria, query) {
+  static async apply(db, schema, criteria, query) {
     const { search, ...basic } = criteria;
     super.apply(basic, query);
     if (search) {
@@ -141,7 +138,7 @@ class Wiki extends ExternalData {
    *
    * @return {String}
    */
-  getSearchableText(languageCode) {
+  static getSearchableText(languageCode) {
     return `"extractWikiText"(details, '${languageCode}')`;
   }
 
@@ -154,7 +151,7 @@ class Wiki extends ExternalData {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     return (subscription.area === 'admin');
   }
 
@@ -172,7 +169,7 @@ class Wiki extends ExternalData {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -194,17 +191,10 @@ class Wiki extends ExternalData {
    * @param  {Object} wikiBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(wikiReceived, wikiBefore, credentials) {
+  static checkWritePermission(wikiReceived, wikiBefore, credentials) {
     if (credentials.unrestricted) {
       return;
     }
     throw new HTTPError(403);
   }
 }
-
-const instance = new Wiki;
-
-export {
-  instance as default,
-  Wiki,
-};

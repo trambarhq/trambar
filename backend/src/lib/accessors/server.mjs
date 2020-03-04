@@ -1,33 +1,30 @@
 import _ from 'lodash';
-import HTTPError from '../common/errors/http-error.mjs';
 import { Data } from './data.mjs';
-import Task from './task.mjs';
-import Repo from './repo.mjs';
+import { HTTPError } from '../errors.mjs';
+import { Task } from './task.mjs';
+import { Repo } from './repo.mjs';
 
-class Server extends Data {
-  constructor() {
-    super();
-    this.schema = 'global';
-    this.table = 'server';
-    this.columns = {
-      ...this.columns,
-      type: String,
-      name: String,
-      disabled: Boolean,
-      settings: Object,
-    };
-    this.criteria = {
-      ...this.criteria,
-      type: String,
-      name: String,
-      disabled: Boolean,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      type: String,
-      disabled: Boolean,
-    };
-  }
+export class Server extends Data {
+  static schema = 'global';
+  static table = 'server';
+  static columns = {
+    ...Data.columns,
+    type: String,
+    name: String,
+    disabled: Boolean,
+    settings: Object,
+  };
+  static criteria = {
+    ...Data.criteria,
+    type: String,
+    name: String,
+    disabled: Boolean,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    type: String,
+    disabled: Boolean,
+  };
 
   /**
    * Create table in schema
@@ -37,7 +34,7 @@ class Server extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -66,7 +63,7 @@ class Server extends Data {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     const table = this.getTableName(schema);
     // Auth Manager needs to be able to update a server's OAuth tokens
     const sql = `
@@ -84,7 +81,7 @@ class Server extends Data {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
     // completion of tasks will automatically update details->resources
@@ -103,14 +100,19 @@ class Server extends Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
       object.type = row.type;
       object.name = row.name;
       if (credentials.unrestricted || process.env.ADMIN_GUEST_MODE) {
-        object.settings = _.obscure(row.settings, sensitiveSettings);
+        const sensitiveSettings = [
+          'api.access_token',
+          'api.refresh_token',
+          'oauth.client_secret',
+        ];
+        object.settings = obscure(row.settings, sensitiveSettings);
         object.disabled = row.disabled;
       } else {
         if (row.disabled) {
@@ -133,7 +135,7 @@ class Server extends Data {
    *
    * @return {Promise<Object>}
    */
-  async importOne(db, schema, serverReceived, serverBefore, credentials, options) {
+  static async importOne(db, schema, serverReceived, serverBefore, credentials, options) {
     const row = await super.importOne(db, schema, serverReceived, serverBefore, credentials, options);
     if (serverReceived.settings instanceof Object) {
       for (let path of sensitiveSettings) {
@@ -162,7 +164,7 @@ class Server extends Data {
    *
    * @return {Promise}
    */
-   async associate(db, schema, objects, originals, rows, credentials) {
+   static async associate(db, schema, objects, originals, rows, credentials) {
      const deletedServers = _.filter(rows, (serverAfter, index) => {
        const serverBefore = originals[index];
        if (serverBefore) {
@@ -188,7 +190,7 @@ class Server extends Data {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     if (super.isRelevantTo(event, user, subscription)) {
       // not used in client app
       if (subscription.area === 'admin') {
@@ -205,7 +207,7 @@ class Server extends Data {
    * @param  {Object} serverBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(serverReceived, serverBefore, credentials) {
+  static checkWritePermission(serverReceived, serverBefore, credentials) {
     if (credentials.unrestricted) {
       return;
     }
@@ -213,15 +215,33 @@ class Server extends Data {
   }
 }
 
-const sensitiveSettings = [
-  'api.access_token',
-  'api.refresh_token',
-  'oauth.client_secret',
-];
+/**
+ * Obscure properties in an object
+ *
+ * @param  {Object} object
+ * @param  {Array<String>} paths
+ *
+ * @return {Object}
+ */
+function obscure(object, paths) {
+  let clone = _.cloneDeep(object);
+  _.each(paths, (path) => {
+    let value = _.get(clone, path);
+    _.set(clone, path, obscureValue(value));
+  });
+  return clone;
+}
 
-const instance = new Server;
-
-export {
-  instance as default,
-  Server,
-};
+function obscureValue(value) {
+  switch (typeof(value)) {
+    case 'number': return 0;
+    case 'string': return _.repeat('x', value.length);
+    case 'boolean': return false;
+    case 'object':
+      if (value instanceof Array) {
+        return _.map(value, obscureValue);
+      } else {
+        return _.mapValues(value, obscureValue);
+      }
+  }
+}

@@ -6,11 +6,11 @@ import Zlib from 'zlib';
 import Tar from 'tar';
 import ConcatStream from 'concat-stream';
 import GeoIP2Node from '@maxmind/geoip2-node';
-import Database from '../database.mjs';
-import * as TaskLog from '../task-log.mjs';
+import { Database } from '../database.mjs';
+import { TaskLog } from '../task-log.mjs';
 
 import * as ProjectSettings from './project-settings.mjs';
-import Story from '../accessors/story.mjs';
+import { Story } from '../accessors/story.mjs';
 
 let traffic = {};
 
@@ -216,7 +216,7 @@ async function downloadGeoLite2(lastModified) {
         });
       });
       data.mtime = res.headers.get('last-modified');
-      taskLog.set('size', _.fileSize(data.length));
+      taskLog.set('size', data.length, 'byte');
     }
     await taskLog.finish();
     return data;

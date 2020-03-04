@@ -1,17 +1,17 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import Crypto from 'crypto';
-import * as TaskLog from '../task-log.mjs';
-import * as Localization from '../localization.mjs';
-import HTTPError from '../common/errors/http-error.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import { TaskLog } from '../task-log.mjs';
+import { getDefaultLanguageCode } from '../localization.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { HTTPError } from '../errors.mjs';
 
 import * as Transport from './transport.mjs';
 import * as UserImporter from './user-importer.mjs';
 
-import Commit from '../accessors/commit.mjs';
-import Story from '../accessors/story.mjs';
-import Reaction from '../accessors/reaction.mjs';
+import { Commit } from '../accessors/commit.mjs';
+import { Story } from '../accessors/story.mjs';
+import { Reaction } from '../accessors/reaction.mjs';
 
 /**
  * @param  {Database} db
@@ -187,7 +187,7 @@ async function findCommitID(db, server, repo, glEvent, glHookEvent) {
  * @return {Reaction}
  */
 function copyEventProperties(reaction, system, server, story, author, glNote) {
-  const defLangCode = Localization.getDefaultLanguageCode(system);
+  const defLangCode = getDefaultLanguageCode(system);
   const reactionChanges = _.cloneDeep(reaction) || {};
   ExternalDataUtils.inheritLink(reactionChanges, server, story, {
     note: { id: _.get(glNote, 'note.id') }

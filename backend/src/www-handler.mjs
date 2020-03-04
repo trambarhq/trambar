@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import './lib/common/utils/lodash-extra.mjs';
 import Moment from 'moment';
 import OS from 'os';
 import { promises as FS } from 'fs';
@@ -12,11 +11,10 @@ import CORS from 'cors';
 import Compression from 'compression';
 import SpiderDetector from 'spider-detector';
 import DNSCache from 'dnscache';
-import Database from './lib/database.mjs';
-import * as TaskLog from './lib/task-log.mjs'
+import { Database } from './lib/database.mjs';
+import { TaskLog } from './lib/task-log.mjs'
+import { getDefaultLanguageCode } from './lib/localization.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
-import * as Localization from './lib/localization.mjs';
-import HTTPError from './lib/common/errors/http-error.mjs';
 
 import * as CacheManager from './lib/www-handler/cache-manager.mjs';
 import * as ExcelRetriever from './lib/www-handler/excel-retriever.mjs';
@@ -27,9 +25,9 @@ import * as SnapshotRetriever from './lib/www-handler/snapshot-retriever.mjs';
 import * as TrafficMonitor from './lib/www-handler/traffic-monitor.mjs';
 import * as WikiRetriever from './lib/www-handler/wiki-retriever.mjs';
 
-import System from './lib/accessors/system.mjs';
+import { System } from './lib/accessors/system.mjs';
 
-import TaskQueue from './lib/task-queue.mjs';
+import { TaskQueue } from './lib/task-queue.mjs';
 import {
   TaskImportSpreadsheet,
   TaskPurgeTemplate,
@@ -277,7 +275,7 @@ async function handleSnapshotPageRequest(req, res, next) {
     if (!lang) {
       let selected = getPreferredLanguage(req);
       if (!selected) {
-        selected = await getDefaultLanguage();
+        selected = await getSystemLanguage();
       }
       const vars = { ...req.query, lang: selected };
       const qs = QueryString.stringify(vars);
@@ -566,7 +564,7 @@ async function getSearchParameters(req) {
   if (lang) {
     lang = _.toLower(lang.substr(0, 2));
   } else {
-    lang = await getDefaultLanguage();
+    lang = await getSystemLanguage();
   }
   return { text, lang };
 }
@@ -588,11 +586,11 @@ function getPreferredLanguage(req) {
   }
 }
 
-async function getDefaultLanguage() {
+async function getSystemLanguage() {
   const db = await Database.open();
   const criteria = { deleted: false };
   const system = await System.findOne(db, 'global', criteria, '*');
-  return Localization.getDefaultLanguageCode(system);
+  return getDefaultLanguageCode(system);
 }
 
 function convertMultilingualText(langText) {

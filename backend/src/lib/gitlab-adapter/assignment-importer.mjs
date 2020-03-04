@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 import * as UserImporter from './user-importer.mjs';
 
 // accessors
-import Reaction from '../accessors/reaction.mjs';
+import { Reaction } from '../accessors/reaction.mjs';
 
 /**
 - * Add assignment reactions to story

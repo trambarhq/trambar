@@ -4,17 +4,17 @@ import CORS from 'cors';
 import BodyParser from 'body-parser';
 import Moment from 'moment';
 
-import './lib/common/utils/lodash-extra.mjs';
-import Database from './lib/database.mjs';
-import HTTPError from './lib/common/errors/http-error.mjs';
-import * as TaskLog from './lib/task-log.mjs';
+import { Database } from './lib/database.mjs';
+import { HTTPError } from './lib/errors.mjs';
+import { TaskLog } from './lib/task-log.mjs';
+import { getUserAccessLevel } from './lib/project-utils.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
-import * as ProjectUtils from './lib/common/objects/utils/project-utils.mjs';
 import * as Accessors from './lib/data-server/accessors.mjs';
 
-import Project from './lib/accessors/project.mjs';
-import Session from './lib/accessors/session.mjs';
-import User from './lib/accessors/user.mjs';
+// accessors
+import { Project } from './lib/accessors/project.mjs';
+import { Session } from './lib/accessors/session.mjs';
+import { User } from './lib/accessors/user.mjs';
 
 const SESSION_LIFETIME_ADMIN = 1;
 const SESSION_LIFETIME_CLIENT = 30;
@@ -402,7 +402,7 @@ async function fetchCredentials(db, userID, schema) {
     project = await Project.findOne(db, 'global', projectCriteria, '*');
 
     // see if user has any access to project
-    access = ProjectUtils.getUserAccessLevel(project, user);
+    access = getUserAccessLevel(project, user);
     if (!access) {
       throw new HTTPError(403);
     }

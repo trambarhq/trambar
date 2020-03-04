@@ -1,14 +1,14 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import * as Localization from '../localization.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import { getDefaultLanguageCode } from '../localization.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 import * as PushReconstructor from './push-reconstructor.mjs';
 import * as PushDecorator from './push-decorator.mjs';
 import * as SnapshotManager from './snapshot-manager.mjs';
 
 // accessors
-import Story from '../accessors/story.mjs';
+import { Story } from '../accessors/story.mjs';
 
 /**
  * Import an activity log entry about a push
@@ -49,7 +49,7 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
   // retrieve all commits in the push
   const push = await PushReconstructor.reconstructPush(db, server, repo, type, branch, headID, tailID, count);
   // look for component descriptions
-  const languageCode = Localization.getDefaultLanguageCode(system);
+  const languageCode = getDefaultLanguageCode(system);
   const components = await PushDecorator.retrieveDescriptions(server, repo, push, languageCode);
   const storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
   await Story.insertOne(db, schema, storyNew);
@@ -99,8 +99,7 @@ function copyPushProperties(story, system, server, repo, author, push, component
     }
   }
 
-  const defLangCode = Localization.getDefaultLanguageCode(system);
-
+  const defLangCode = getDefaultLanguageCode(system);
   const storyChanges = _.cloneDeep(story) || {};
   ExternalDataUtils.inheritLink(storyChanges, server, repo, {
     commit: { ids: push.commitIDs }

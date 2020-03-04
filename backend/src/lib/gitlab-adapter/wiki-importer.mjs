@@ -5,17 +5,17 @@ import AsciiDoctor from 'asciidoctor';
 import PrismJs from 'prismjs';
 import loadLanguages from 'prismjs/components/index.js';
 import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
-import * as TaskLog from '../task-log.mjs';
-import * as Localization from '../localization.mjs';
-import * as ExternalDataUtils from '../common/objects/utils/external-data-utils.mjs';
+import { TaskLog } from '../task-log.mjs';
+import { getDefaultLanguageCode } from '../localization.mjs';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 import * as MediaImporter from '../media-server/media-importer.mjs';
 
 // accessors
-import Story from '../accessors/story.mjs';
-import User from '../accessors/user.mjs';
-import Wiki from '../accessors/wiki.mjs';
+import { Story } from '../accessors/story.mjs';
+import { User } from '../accessors/user.mjs';
+import { Wiki } from '../accessors/wiki.mjs';
 
 /**
  * Import wikis from repo
@@ -183,7 +183,7 @@ async function removeWikis(db, system, server, repo, project) {
  * @return {Story|null}
  */
 function copyWikiProperties(wiki, system, server, repo, glWikiParsed) {
-  const defLangCode = Localization.getDefaultLanguageCode(system);
+  const defLangCode = getDefaultLanguageCode(system);
   const wikiChanges = _.cloneDeep(wiki) || {};
   ExternalDataUtils.inheritLink(wikiChanges, server, repo);
   ExternalDataUtils.importProperty(wikiChanges, server, 'language_codes', {

@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import Database from '../database.mjs';
+import { Database } from '../database.mjs';
 import { PeriodicTask } from '../task-queue.mjs';
-import * as TaskLog from '../task-log.mjs';
+import { TaskLog } from '../task-log.mjs';
 import * as Accessors from './accessors.mjs';
 
-import Project from '../accessors/project.mjs';
+import { Project } from '../accessors/project.mjs';
 
 const MIN = 60 * 1000;
 const HOUR = 60 * MIN;
@@ -104,7 +104,7 @@ class PeriodicTaskReportSchemaSize extends PeriodicTask {
       const schemas = await db.getSchemaNames();
       for (let schema of schemas) {
         const size = await db.getSchemaSize(schema);
-        taskLog.set(schema, _.fileSize(size));
+        taskLog.set(schema, size, 'byte');
       }
       await taskLog.finish();
     } catch (err) {

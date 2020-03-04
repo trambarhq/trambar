@@ -1,10 +1,10 @@
 import _ from 'lodash';
-import AsyncQueue from './common/utils/async-queue.mjs';
+import { AsyncQueue } from './async-queue.mjs';
 
-class TaskQueue {
+export class TaskQueue {
   constructor() {
     const priority = (entry) => {
-      return entry.task.priority(entry.initial); 
+      return entry.task.priority(entry.initial);
     };
     this.queue = new AsyncQueue([ priority ], [ 'desc' ]);
     this.periodicTasks = [];
@@ -106,8 +106,6 @@ class PeriodicTask extends BasicTask {
 }
 
 export {
-  TaskQueue as default,
-  TaskQueue,
   BasicTask,
   PeriodicTask,
 };

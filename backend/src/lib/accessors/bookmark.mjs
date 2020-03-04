@@ -1,37 +1,34 @@
 import _ from 'lodash';
-import HTTPError from '../common/errors/http-error.mjs';
+import { HTTPError } from '../errors.mjs';
 import { Data } from './data.mjs';
 
-class Bookmark extends Data {
-  constructor() {
-    super();
-    this.schema = 'project';
-    this.table = 'bookmark';
-    this.columns = {
-      ...this.columns,
-      story_id: Number,
-      user_ids: Array(Number),
-      target_user_id: Number,
-      hidden: Boolean,
-      suppressed: Boolean,
-    };
-    this.criteria = {
-      ...this.criteria,
-      story_id: Number,
-      user_ids: Array(Number),
-      target_user_id: Number,
-      hidden: Boolean,
-      suppressed: Boolean,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      story_id: Number,
-      user_ids: Array(Number),
-      target_user_id: Number,
-      hidden: Boolean,
-    };
-    this.version = 2;
-  }
+export class Bookmark extends Data {
+  static schema = 'project';
+  static table = 'bookmark';
+  static columns = {
+    ...Data.columns,
+    story_id: Number,
+    user_ids: Array(Number),
+    target_user_id: Number,
+    hidden: Boolean,
+    suppressed: Boolean,
+  };
+  static criteria = {
+    ...Data.criteria,
+    story_id: Number,
+    user_ids: Array(Number),
+    target_user_id: Number,
+    hidden: Boolean,
+    suppressed: Boolean,
+  };
+  static eventColumns = {
+    ...Data.eventColumns,
+    story_id: Number,
+    user_ids: Array(Number),
+    target_user_id: Number,
+    hidden: Boolean,
+  };
+  static version = 2;
 
   /**
    * Create table in schema
@@ -41,7 +38,7 @@ class Bookmark extends Data {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -74,7 +71,7 @@ class Bookmark extends Data {
    *
    * @return {Promise<Boolean>}
    */
-  async upgrade(db, schema, version) {
+  static async upgrade(db, schema, version) {
     if (version === 2) {
       // adding: hidden, suppressed
       const table = this.getTableName(schema);
@@ -100,7 +97,7 @@ class Bookmark extends Data {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
   }
@@ -117,7 +114,7 @@ class Bookmark extends Data {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -141,7 +138,7 @@ class Bookmark extends Data {
    *
    * @return {Promise<Object>}
    */
-  async importOne(db, schema, bookmarkReceived, bookmarkBefore, credentials, options) {
+  static async importOne(db, schema, bookmarkReceived, bookmarkBefore, credentials, options) {
     const row = await super.importOne(db, schema, bookmarkReceived, bookmarkBefore, credentials);
     if (bookmarkBefore) {
       if (bookmarkReceived.deleted) {
@@ -185,7 +182,7 @@ class Bookmark extends Data {
    *
    * @return {Boolean}
    */
-  isRelevantTo(event, user, subscription) {
+  static isRelevantTo(event, user, subscription) {
     if (subscription.area === 'admin') {
       // admin console doesn't use this object currently
       return false;
@@ -208,7 +205,7 @@ class Bookmark extends Data {
    * @param  {Object} bookmarkBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(bookmarkReceived, bookmarkBefore, credentials) {
+  static checkWritePermission(bookmarkReceived, bookmarkBefore, credentials) {
     if (bookmarkBefore) {
       // the only operation permitted is the removal of the bookmark
       if (bookmarkReceived.deleted) {
@@ -246,7 +243,7 @@ class Bookmark extends Data {
    *
    * @return {Promise}
    */
-  async deleteAssociated(db, schema, associations) {
+  static async deleteAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
       if (_.isEmpty(objects)) {
         continue;
@@ -272,7 +269,7 @@ class Bookmark extends Data {
    *
    * @return {Promise}
    */
-  async restoreAssociated(db, schema, associations) {
+  static async restoreAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
       if (_.isEmpty(objects)) {
         continue;
@@ -290,10 +287,3 @@ class Bookmark extends Data {
     }
   }
 }
-
-const instance = new Bookmark;
-
-export {
-  instance as default,
-  Bookmark,
-};

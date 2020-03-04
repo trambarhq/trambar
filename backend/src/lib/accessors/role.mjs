@@ -1,31 +1,28 @@
-import HTTPError from '../common/errors/http-error.mjs';
+import { HTTPError } from '../errors.mjs';
 import { ExternalData } from './external-data.mjs';
-import Task from './task.mjs';
+import { Task } from './task.mjs';
 
-class Role extends ExternalData {
-  constructor() {
-    super();
-    this.schema = 'global';
-    this.table = 'role';
-    this.columns = {
-      ...this.columns,
-      name: String,
-      disabled: Boolean,
-      general: Boolean,
-      settings: Object,
-    };
-    this.criteria = {
-      ...this.criteria,
-      name: String,
-      disabled: Boolean,
-      general: Boolean,
-    };
-    this.eventColumns = {
-      ...this.eventColumns,
-      disabled: Boolean,
-      general: Boolean,
-    };
-  }
+export class Role extends ExternalData {
+  static schema = 'global';
+  static table = 'role';
+  static columns = {
+    ...ExternalData.columns,
+    name: String,
+    disabled: Boolean,
+    general: Boolean,
+    settings: Object,
+  };
+  static criteria = {
+    ...ExternalData.criteria,
+    name: String,
+    disabled: Boolean,
+    general: Boolean,
+  };
+  static eventColumns = {
+    ...ExternalData.eventColumns,
+    disabled: Boolean,
+    general: Boolean,
+  };
 
   /**
    * Create table in schema
@@ -35,7 +32,7 @@ class Role extends ExternalData {
    *
    * @return {Promise}
    */
-  async create(db, schema) {
+  static async create(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       CREATE TABLE ${table} (
@@ -68,7 +65,7 @@ class Role extends ExternalData {
    *
    * @return {Promise}
    */
-  async grant(db, schema) {
+  static async grant(db, schema) {
     const table = this.getTableName(schema);
     const sql = `
       GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
@@ -85,7 +82,7 @@ class Role extends ExternalData {
    *
    * @return {Promise}
    */
-  async watch(db, schema) {
+  static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
     await this.createNotificationTriggers(db, schema);
     await Task.createUpdateTrigger(db, schema, 'updateRole', 'updateResource', [ this.table ]);
@@ -103,7 +100,7 @@ class Role extends ExternalData {
    *
    * @return {Promise<Array<Object>>}
    */
-  async export(db, schema, rows, credentials, options) {
+  static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
     for (let [ index, object ] of objects.entries()) {
       const row = rows[index];
@@ -133,7 +130,7 @@ class Role extends ExternalData {
    *
    * @return {Promise<Object>}
    */
-  async importOne(db, schema, roleReceived, roleBefore, credentials, options) {
+  static async importOne(db, schema, roleReceived, roleBefore, credentials, options) {
     const row = await super.importOne(db, schema, roleReceived, roleBefore, credentials, options);
     await this.ensureUniqueName(db, schema, roleBefore, roleReceived);
     return row;
@@ -146,17 +143,10 @@ class Role extends ExternalData {
    * @param  {Object} roleBefore
    * @param  {Object} credentials
    */
-  checkWritePermission(roleReceived, roleBefore, credentials) {
+  static checkWritePermission(roleReceived, roleBefore, credentials) {
     if (credentials.unrestricted) {
       return;
     }
     throw new HTTPError(403);
   }
 }
-
-const instance = new Role;
-
-export {
-  instance as default,
-  Role,
-};

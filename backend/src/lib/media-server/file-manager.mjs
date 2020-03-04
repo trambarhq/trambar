@@ -4,7 +4,7 @@ import FS from 'fs'; Bluebird.promisifyAll(FS);
 import CrossFetch from 'cross-fetch';
 import Crypto from 'crypto';
 import { PassThrough } from 'stream';
-import HTTPError from '../common/errors/http-error.mjs';
+import { HTTPError } from '../errors.mjs';
 
 /**
  * Save file to cache folder, using the MD5 hash of its content as name

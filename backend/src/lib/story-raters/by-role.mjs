@@ -1,15 +1,13 @@
 import _ from 'lodash';
 
-import Role from '../accessors/role.mjs';
+import { Role } from '../accessors/role.mjs';
 
-class ByRole {
-  constructor() {
-    this.type = 'by-role';
-    this.calculation = 'immediate';
-    this.columns = [ 'role_ids' ];
-    this.monitoring = [ 'role' ];
-    this.roleCache = [];
-  }
+export class ByRole {
+  static type = 'by-role';
+  static calculation = 'immediate';
+  static columns = [ 'role_ids' ];
+  static monitoring = [ 'role' ];
+  static roleCache = [];
 
   /**
    * Load data needed to rate the given stories
@@ -21,7 +19,7 @@ class ByRole {
    *
    * @return {Promise<Object>}
    */
-  async prepareContext(db, schema, stories, listing) {
+  static async prepareContext(db, schema, stories, listing) {
     const roles = [];
     const roleIDs = _.filter(_.uniq(_.flatten(_.map(stories, 'role_ids'))));
     for (let roleID of roleIDs) {
@@ -44,7 +42,7 @@ class ByRole {
    *
    * @return {Number}
    */
-  calculateRating(context, story) {
+  static calculateRating(context, story) {
     const roles = _.filter(context.roles, (role) => {
       return _.includes(story.role_ids, role.id);
     });
@@ -59,7 +57,7 @@ class ByRole {
    *
    * @param  {Object} evt
    */
-  handleEvent(evt) {
+  static handleEvent(evt) {
     if (evt.table === 'role') {
       if (evt.diff.details) {
         this.clearCachedRole(evt.id);
@@ -75,7 +73,7 @@ class ByRole {
    *
    * @return {Object|null}
    */
-  async loadRole(db, roleID) {
+  static async loadRole(db, roleID) {
     const criteria = {
       id: roleID,
       deleted: false,
@@ -92,7 +90,7 @@ class ByRole {
    *
    * @param  {Object} role
    */
-  cacheRole(role) {
+  static cacheRole(role) {
     this.roleCache.unshift(role);
     if (this.roleCache.length > 100) {
       this.roleCache.splice(100);
@@ -106,7 +104,7 @@ class ByRole {
    *
    * @return {Object|null}
    */
-  findCachedRole(roleID) {
+  static findCachedRole(roleID) {
     const index = _.findIndex(this.roleCache, { id: roleID });
     if (index === -1) {
       return null;
@@ -122,7 +120,7 @@ class ByRole {
    *
    * @param  {Number} roleID
    */
-  clearCachedRole(roleID) {
+  static clearCachedRole(roleID) {
     const index = _.findIndex(this.roleCache, { id: roleID });
     if (index === -1) {
       return;
@@ -130,10 +128,3 @@ class ByRole {
     this.roleCache.splice(index, 1);
   }
 }
-
-const instance = new ByRole;
-
-export {
-  instance as default,
-  ByRole,
-};
