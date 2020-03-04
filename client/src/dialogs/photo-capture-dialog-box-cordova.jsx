@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import { useAsyncEffect } from 'relaks';
-import * as MediaLoader from 'common/media/media-loader.mjs';
-import CordovaFile from 'common/transport/cordova-file.mjs';
+import * as MediaLoader from 'common/media/media-loader.js';
+import CordovaFile from 'common/transport/cordova-file.js';
 
 /**
  * Non-visual component that uses the Camera Cordova plugin to take a photo.

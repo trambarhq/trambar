@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as TagScanner from 'common/utils/tag-scanner.mjs';
-import * as Markdown from 'common/utils/markdown.mjs';
-import * as FocusManager from 'common/utils/focus-manager.mjs';
-import * as ReactionSaver from 'common/objects/savers/reaction-saver.mjs';
-import * as ReactionUtils from 'common/objects/utils/reaction-utils.mjs';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as TagScanner from 'common/utils/tag-scanner.js';
+import * as Markdown from 'common/utils/markdown.js';
+import * as FocusManager from 'common/utils/focus-manager.js';
+import * as ReactionSaver from 'common/objects/savers/reaction-saver.js';
+import * as ReactionUtils from 'common/objects/utils/reaction-utils.js';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { AutosizeTextArea } from 'common/widgets/autosize-text-area.jsx';
@@ -22,7 +22,7 @@ import { MediaImporter } from '../editors/media-importer.jsx';
 // custom hooks
 import {
   useDraftBuffer,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './reaction-editor.scss';
 

@@ -17,7 +17,7 @@ export function CodePushPanel(props) {
   return (
     <SettingsPanel className="code-push">
       <header>
-        <i className="fa fa-gear" /> Code Push
+        <i className="fasfa-gear" /> Code Push
       </header>
       <body>
         <DiagnosticsSection label="Update check">

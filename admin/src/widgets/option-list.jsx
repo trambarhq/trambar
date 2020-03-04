@@ -63,9 +63,9 @@ function OptionList(props) {
     let badge;
     if (!readOnly) {
       if (selected && !previous) {
-        badge = <i className="fa fa-check-circle-o badge add" />;
+        badge = <i className="fasfa-check-circle-o badge add" />;
       } else if (!selected && previous) {
-        badge = <i className="fa fa-times-circle-o badge remove" />;
+        badge = <i className="fasfa-times-circle-o badge remove" />;
       }
     }
     const props = {

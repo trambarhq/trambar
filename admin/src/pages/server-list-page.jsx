@@ -2,11 +2,11 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useRef } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
-import * as ServerSaver from 'common/objects/savers/server-saver.mjs';
-import * as ServerUtils from 'common/objects/utils/server-utils.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as ServerFinder from 'common/objects/finders/server-finder.js';
+import * as ServerSaver from 'common/objects/savers/server-saver.js';
+import * as ServerUtils from 'common/objects/utils/server-utils.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -25,7 +25,7 @@ import {
   useRowToggle,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './server-list-page.scss';
 

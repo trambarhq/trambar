@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
+import * as RepoUtils from 'common/objects/utils/repo-utils.js';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';
@@ -37,7 +37,7 @@ function RepositoryTooltip(props) {
     list.splice(max);
     list.push(
       <div className="ellipsis" key={0}>
-        <i className="fa fa-ellipsis-v" />
+        <i className="fas fa-ellipsis-v" />
       </div>
     );
   }

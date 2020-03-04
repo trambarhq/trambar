@@ -43,8 +43,10 @@ const folders = _.mapValues({
   context: 'src',
   output: 'www',
   assets: 'assets',
+  locales: '../localization/client',
   commonCode: '../common/src',
   commonAssets: '../common/assets',
+  modules: [ 'node_modules' ],
 }, resolve);
 if (event !== 'start') {
   console.log(`Output folder: ${folders.output}`);
@@ -70,23 +72,28 @@ _.each(env, (value, name) => {
 });
 
 // get list of external libraries
-const libraries = parseLibraryList(`${folders.context}/libraries.mjs`);
+const libraries = parseLibraryList(`${folders.context}/libraries.js`);
 
 module.exports = {
   mode: env.NODE_ENV,
   context: folders.context,
-  entry: './main.mjs',
+  entry: './main.js',
   output: {
     path: folders.output,
     filename: '[name].js?[hash]',
     chunkFilename: '[name].js?[chunkhash]',
   },
   resolve: {
+    modules: folders.modules,
     alias: {
+      'context': folders.context,
       'common': folders.commonCode,
       'common-assets': folders.commonAssets,
-      'context': folders.context,
+      'locales': folders.locales,
     }
+  },
+  resolveLoader: {
+    modules: folders.modules,
   },
   module: {
     rules: [
@@ -98,27 +105,27 @@ module.exports = {
           presets: [
             '@babel/env',
             '@babel/react',
-          ],
+          ].map(resolvePreset),
           plugins: [
             '@babel/proposal-class-properties',
             '@babel/proposal-nullish-coalescing-operator',
             '@babel/proposal-optional-chaining',
             '@babel/transform-runtime',
             'relaks/transform-memo',
-          ],
+          ].map(resolvePlugin),
         }
       },
       {
         test: /\.css$/,
         use: [
-          MiniCSSExtractPlugin.loader,
+          //MiniCSSExtractPlugin.loader,
           'css-loader',
         ],
       },
       {
         test: /\.scss$/,
         use: [
-          MiniCSSExtractPlugin.loader,
+          //MiniCSSExtractPlugin.loader,
           'css-loader',
           'sass-loader'
         ],
@@ -245,4 +252,33 @@ function parseLibraryList(path) {
     libraries[name] = modules;
   }
   return libraries;
+}
+
+function resolveBabel(name, type) {
+  if (name instanceof Array) {
+    name = name.slice();
+    name[0] = resolveBabel(name[0], type);
+    return name;
+  }
+  if (_.startsWith(name, '@babel/') && !_.startsWith(name, '@babel/' + type + '-')) {
+    name = name.replace('/', '/' + type + '-');
+  }
+  const path = _.reduce(folders.modules, (path, folder) => {
+    if (!path) {
+      path = folder + '/' + name;
+      if (!FS.existsSync(path)) {
+        path = null;
+      }
+    }
+    return path;
+  }, null);
+  return path || name;
+}
+
+function resolvePreset(name) {
+  return resolveBabel(name, 'preset');
+}
+
+function resolvePlugin(name) {
+  return resolveBabel(name, 'plugin');
 }

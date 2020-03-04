@@ -1,15 +1,15 @@
 import _ from 'lodash';
 import React, { useEffect } from 'react';
 import { useProgress, useListener, useSaveBuffer, useAutoSave } from 'relaks';
-import * as KonamiCode from 'common/utils/konami-code.mjs';
-import * as DeviceFinder from 'common/objects/finders/device-finder.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.mjs';
-import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
-import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as UserSaver from 'common/objects/savers/user-saver.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as KonamiCode from 'common/utils/konami-code.js';
+import * as DeviceFinder from 'common/objects/finders/device-finder.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.js';
+import * as RepoFinder from 'common/objects/finders/repo-finder.js';
+import * as SystemFinder from 'common/objects/finders/system-finder.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import * as UserSaver from 'common/objects/savers/user-saver.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { PageContainer } from '../widgets/page-container.jsx';
@@ -28,7 +28,7 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 // custom hooks
 import {
   useDraftBuffer,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './settings-page.scss';
 

@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useAsyncEffect } from 'relaks';
-import * as MediaLoader from '../media/media-loader.mjs';
-import * as ImageCropping from '../media/image-cropping.mjs';
-import * as ResourceUtils from '../objects/utils/resource-utils.mjs';
+import * as MediaLoader from '../media/media-loader.js';
+import * as ImageCropping from '../media/image-cropping.js';
+import * as ResourceUtils from '../objects/utils/resource-utils.js';
 
 import { BitmapView } from './bitmap-view.jsx';
 import { VectorView } from './vector-view.jsx';

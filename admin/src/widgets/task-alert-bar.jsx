@@ -3,8 +3,8 @@ import { delay } from 'bluebird';
 import Moment from 'moment';
 import React, { useEffect } from 'react';
 import Relaks, { useProgress, useListener } from 'relaks';
-import * as TaskFinder from 'common/objects/finders/task-finder.mjs';
-import * as TaskSaver from 'common/objects/savers/task-saver.mjs';
+import * as TaskFinder from 'common/objects/finders/task-finder.js';
+import * as TaskSaver from 'common/objects/savers/task-saver.js';
 
 import './task-alert-bar.scss';
 

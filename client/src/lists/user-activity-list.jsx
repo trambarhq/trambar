@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
 
 // widgets
 import { ProfileImage } from '../widgets/profile-image.jsx';

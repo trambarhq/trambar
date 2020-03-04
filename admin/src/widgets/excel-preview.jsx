@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { usePlainText, useRichText } from 'trambar-www';
-import { detectDirection } from 'common/utils/plain-text.mjs';
+import { detectDirection } from 'common/utils/plain-text.js';
 
 import './excel-preview.scss';
 

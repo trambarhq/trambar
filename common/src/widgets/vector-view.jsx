@@ -1,5 +1,5 @@
 import React, { useState, useRef, useImperativeHandle, useEffect } from 'react';
-import * as MediaLoader from '../media/media-loader.mjs';
+import * as MediaLoader from '../media/media-loader.js';
 
 /**
  * A component for displaying a SVG file, with proper support for zooming

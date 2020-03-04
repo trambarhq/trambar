@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React, { useState, useMemo } from 'react';
 import { useListener, useErrorCatcher } from 'relaks';
-import * as BookmarkSaver from 'common/objects/savers/bookmark-saver.mjs';
-import * as IssueUtils from 'common/objects/utils/issue-utils.mjs';
-import * as StorySaver from 'common/objects/savers/story-saver.mjs';
-import * as TaskSaver from 'common/objects/savers/task-saver.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as BookmarkSaver from 'common/objects/savers/bookmark-saver.js';
+import * as IssueUtils from 'common/objects/utils/issue-utils.js';
+import * as StorySaver from 'common/objects/savers/story-saver.js';
+import * as TaskSaver from 'common/objects/savers/task-saver.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { OptionButton } from '../widgets/option-button.jsx';
@@ -15,7 +15,7 @@ import { IssueDialogBox } from '../dialogs/issue-dialog-box.jsx';
 // custom hooks
 import {
   useDraftBuffer,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './story-view-options.scss';
 

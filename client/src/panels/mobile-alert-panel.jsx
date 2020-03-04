@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React, { useCallback } from 'react';
 import { useListener } from 'relaks';
-import NotificationTypes, { AdminNotificationTypes } from 'common/objects/types/notification-types.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import NotificationTypes, { AdminNotificationTypes } from 'common/objects/types/notification-types.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -32,8 +32,8 @@ export function MobileAlertPanel(props) {
     <SettingsPanel className="mobile-alert">
       <header>
         <div className="icon">
-          <i className="fa fa-tablet" />
-          <i className="fa fa-exclamation-circle icon-overlay" />
+          <i className="fasfa-tablet" />
+          <i className="fasfa-exclamation-circle icon-overlay" />
         </div>
         {' '}
         {t('settings-mobile-alert')}

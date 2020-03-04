@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
-import Cancellation from 'common/errors/cancellation.mjs';
+import Cancellation from 'common/errors/cancellation.js';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -11,7 +11,7 @@ import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 // custom hooks
 import {
   useConfirmation,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './device-panel.scss';
 
@@ -43,7 +43,7 @@ export function DevicePanel(props) {
   return (
     <SettingsPanel className="device">
       <header>
-        <i className="fa fa-tablet" /> {title}
+        <i className="fasfa-tablet" /> {title}
       </header>
       <body>
         {_.map(devices, renderDevice)}
@@ -62,7 +62,7 @@ export function DevicePanel(props) {
         <div className="text">
           <span className="name">{deviceName}</span>
           <div data-device-id={device.id} className="revoke" onClick={handleRevokeClick}>
-            <i className="fa fa-ban" />
+            <i className="fasfa-ban" />
             {' '}
             <span>{t('mobile-device-revoke')}</span>
           </div>
@@ -82,7 +82,7 @@ function DeviceIcon(props) {
   }
   return (
     <div className="device-icon">
-      <i className="fa fa-tablet background" />
+      <i className="fasfa-tablet background" />
       <i className={`fa fa-${icon} icon-overlay`} />
     </div>
   );

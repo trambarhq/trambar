@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom';
 // custom hooks
 import {
   useAfterglow,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './new-items-alert.scss';
 
@@ -49,7 +49,7 @@ export function NewItemsAlert(props) {
     };
     const element = (
       <a {...anchorProps}>
-        <i className="fa fa-arrow-up" />
+        <i className="fasfa-arrow-up" />
         {contents}
       </a>
     );

@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import React, { useState, useMemo } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
-import * as RestFinder from 'common/objects/finders/rest-finder.mjs';
-import * as RestSaver from 'common/objects/savers/rest-saver.mjs';
-import * as RestUtils from 'common/objects/utils/rest-utils.mjs';
-import { RestTypes } from 'common/objects/types/rest-types.mjs';
-import * as HTTPRequest from 'common/transport/http-request.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as ProjectUtils from 'common/objects/utils/project-utils.js';
+import * as RestFinder from 'common/objects/finders/rest-finder.js';
+import * as RestSaver from 'common/objects/savers/rest-saver.js';
+import * as RestUtils from 'common/objects/utils/rest-utils.js';
+import { RestTypes } from 'common/objects/types/rest-types.js';
+import * as HTTPRequest from 'common/transport/http-request.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -30,7 +30,7 @@ import {
   useValidation,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './rest-summary-page.scss';
 

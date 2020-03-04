@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';
@@ -44,7 +44,7 @@ function UserTooltip(props) {
     list.splice(max);
     list.push(
       <div className="ellipsis" key={0}>
-        <i className="fa fa-ellipsis-v" />
+        <i className="fasfa-ellipsis-v" />
       </div>
     );
   }

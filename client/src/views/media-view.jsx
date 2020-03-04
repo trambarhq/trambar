@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { MediaButton } from '../widgets/media-button.jsx';
@@ -12,7 +12,7 @@ import { formatDuration } from '../widgets/duration-indicator.jsx';
 
 import {
   useDialogHandling,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './media-view.scss';
 
@@ -157,7 +157,7 @@ export function MediaView(props) {
         {poster}
         <div className="overlay">
           <div className="icon">
-            <i className="fa fa-play-circle-o" />
+            <i className="fasfa-play-circle-o" />
           </div>
           <div className="duration">
             {formatDuration(resource.duration)}
@@ -196,7 +196,7 @@ export function MediaView(props) {
           {renderImageElement()}
           <div className="overlay hidden">
             <div className="icon">
-              <i className="fa fa-external-link" />
+              <i className="fasfa-external-link" />
             </div>
           </div>
         </a>

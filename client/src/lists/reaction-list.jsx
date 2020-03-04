@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import Merger from 'common/data/merger.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import Merger from 'common/data/merger.js';
 
 // widgets
 import { ReactionView } from '../views/reaction-view.jsx';

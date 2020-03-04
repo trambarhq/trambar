@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as ProjectSaver from 'common/objects/savers/project-saver.mjs';
-import * as ProjectSettings from 'common/objects/settings/project-settings.mjs';
-import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
-import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as ProjectSaver from 'common/objects/savers/project-saver.js';
+import * as ProjectSettings from 'common/objects/settings/project-settings.js';
+import * as ProjectUtils from 'common/objects/utils/project-utils.js';
+import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
+import * as SystemFinder from 'common/objects/finders/system-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -29,7 +29,7 @@ import {
   useValidation,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './project-summary-page.scss';
 

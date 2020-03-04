@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { useListener } from 'relaks';
 import Hammer from 'hammerjs';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';

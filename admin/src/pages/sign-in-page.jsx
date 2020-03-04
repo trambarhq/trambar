@@ -2,8 +2,8 @@ import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import Moment from 'moment';
-import * as ServerUtils from 'common/objects/utils/server-utils.mjs';
-import * as HTTPRequest from 'common/transport/http-request.mjs';
+import * as ServerUtils from 'common/objects/utils/server-utils.js';
+import * as HTTPRequest from 'common/transport/http-request.js';
 
 // widgets
 import PushButton from '../widgets/push-button.jsx';
@@ -152,7 +152,7 @@ function SignInPageSync(props) {
     }
     return (
       <div className="error">
-        <i className="fa fa-exclamation-circle" />
+        <i className="fasfa-exclamation-circle" />
         {' '}
         {t(`sign-in-problem-${problem}`)}
       </div>

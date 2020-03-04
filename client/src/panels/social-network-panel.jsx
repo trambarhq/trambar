@@ -48,7 +48,7 @@ export function SocialNetworkPanel(props) {
   return (
     <SettingsPanel className="user">
       <header>
-        <i className="fa fa-handshake-o" /> {t('settings-social-networks')}
+        <i className="fasfa-handshake-o" /> {t('settings-social-networks')}
       </header>
       <body>
         {renderSkypeNameInput()}

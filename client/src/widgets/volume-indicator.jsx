@@ -53,7 +53,7 @@ export function VolumeIndicator(props) {
   }
 
   function renderIcon() {
-    const classNames = [ 'fa' ];
+    const classNames = [ 'fas' ];
     if (volume > 40) {
       classNames.push('fa-volume-up');
     } else if (volume > 10) {

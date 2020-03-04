@@ -2,11 +2,11 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
 import { useProgress } from 'relaks';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as StoryFinder from 'common/objects/finders/story-finder.mjs';
-import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
-import * as TagScanner from 'common/utils/tag-scanner.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as StoryFinder from 'common/objects/finders/story-finder.js';
+import * as ProjectUtils from 'common/objects/utils/project-utils.js';
+import * as TagScanner from 'common/utils/tag-scanner.js';
 
 // widgets
 import { PageContainer } from '../widgets/page-container.jsx';

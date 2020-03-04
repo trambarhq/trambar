@@ -1,21 +1,21 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
-import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
-import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
-import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
-import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
-import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
-import * as ServerUtils from 'common/objects/utils/server-utils.mjs';
-import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
-import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
-import * as RestFinder from 'common/objects/finders/rest-finder.mjs';
-import * as RestUtils from 'common/objects/utils/rest-utils.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
-import * as WikiFinder from 'common/objects/finders/wiki-finder.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as ProjectUtils from 'common/objects/utils/project-utils.js';
+import * as RepoFinder from 'common/objects/finders/repo-finder.js';
+import * as RepoUtils from 'common/objects/utils/repo-utils.js';
+import * as RoleFinder from 'common/objects/finders/role-finder.js';
+import * as RoleUtils from 'common/objects/utils/role-utils.js';
+import * as ServerFinder from 'common/objects/finders/server-finder.js';
+import * as ServerUtils from 'common/objects/utils/server-utils.js';
+import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.js';
+import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.js';
+import * as RestFinder from 'common/objects/finders/rest-finder.js';
+import * as RestUtils from 'common/objects/utils/rest-utils.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
+import * as WikiFinder from 'common/objects/finders/wiki-finder.js';
 
 // widgets
 import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
@@ -126,11 +126,11 @@ async function NavigationTree(props) {
     };
     return (
       <div {...arrowProps}>
-        <i className="fa fa-play first" />
-        <i className="fa fa-play second" />
-        <i className="fa fa-play third" />
-        <i className="fa fa-play fourth" />
-        <i className="fa fa-play fifth" />
+        <i className="fasfa-play first" />
+        <i className="fasfa-play second" />
+        <i className="fasfa-play third" />
+        <i className="fasfa-play fourth" />
+        <i className="fasfa-play fifth" />
       </div>
     );
   }

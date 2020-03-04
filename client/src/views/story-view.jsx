@@ -2,11 +2,11 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as FocusManager from 'common/utils/focus-manager.mjs';
-import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
-import * as ReactionSaver from 'common/objects/savers/reaction-saver.mjs';
-import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as FocusManager from 'common/utils/focus-manager.js';
+import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.js';
+import * as ReactionSaver from 'common/objects/savers/reaction-saver.js';
+import * as StoryUtils from 'common/objects/utils/story-utils.js';
 
 // widgets
 import { ProfileImage } from '../widgets/profile-image.jsx';

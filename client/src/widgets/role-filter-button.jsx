@@ -73,7 +73,7 @@ export function RoleFilterButton(props) {
     }
     return (
       <div className="user-count">
-        <i className="fa fa-male"></i>
+        <i className="fasfa-male"></i>
         <span className="number">{users.length}</span>
       </div>
     );

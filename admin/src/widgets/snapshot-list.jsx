@@ -2,11 +2,11 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
 import Relaks, { useProgress, useListener } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as TaskFinder from 'common/objects/finders/task-finder.mjs';
-import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as TaskFinder from 'common/objects/finders/task-finder.js';
+import * as ProjectUtils from 'common/objects/utils/project-utils.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 import './snapshot-list.scss';
 

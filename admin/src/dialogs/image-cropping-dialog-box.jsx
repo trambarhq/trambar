@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
-import * as ImageCropping from 'common/media/image-cropping.mjs';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import * as ImageCropping from 'common/media/image-cropping.js';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -96,8 +96,8 @@ function ImageCroppingDialogBox(props) {
     return (
       <div key="select" className="buttons">
         <div className="left">
-          <PushButton {...zoomOutProps}><i className="fa fa-search-minus" /></PushButton>
-          <PushButton {...zoomInProps}><i className="fa fa-search-plus" /></PushButton>
+          <PushButton {...zoomOutProps}><i className="fas fa-search-minus" /></PushButton>
+          <PushButton {...zoomInProps}><i className="fas fa-search-plus" /></PushButton>
         </div>
         <div className="right">
           <PushButton {...cancelProps}>{t('image-cropping-cancel')}</PushButton>

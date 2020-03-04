@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { useProgress } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import Merger from 'common/data/merger.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as StoryFinder from 'common/objects/finders/story-finder.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import Merger from 'common/data/merger.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import * as StoryFinder from 'common/objects/finders/story-finder.js';
 
 // widgets
 import { SmartList } from 'common/widgets/smart-list.jsx';

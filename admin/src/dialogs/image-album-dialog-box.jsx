@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as MediaLoader from 'common/media/media-loader.mjs';
-import * as PictureFinder from 'common/objects/finders/picture-finder.mjs';
-import * as PictureSaver from 'common/objects/savers/picture-saver.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as MediaLoader from 'common/media/media-loader.js';
+import * as PictureFinder from 'common/objects/finders/picture-finder.js';
+import * as PictureSaver from 'common/objects/savers/picture-saver.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';

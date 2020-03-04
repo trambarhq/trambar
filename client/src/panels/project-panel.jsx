@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { useListener, useErrorCatcher } from 'relaks';
-import * as ProjectLinkSaver from 'common/objects/savers/project-link-saver.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as ProjectLinkSaver from 'common/objects/savers/project-link-saver.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -16,7 +16,7 @@ import { ProjectManagementDialogBox } from '../dialogs/project-management-dialog
 import {
   useConfirmation,
   useDialogHandling,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './project-panel.scss';
 
@@ -99,7 +99,7 @@ export function ProjectPanel(props) {
   return (
     <SettingsPanel className="project">
       <header>
-        <i className="fa fa-database" /> {t('settings-projects')}
+        <i className="fasfa-database" /> {t('settings-projects')}
       </header>
       <body>
         {_.map(projectLinks, renderProject)}

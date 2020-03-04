@@ -25,7 +25,7 @@ export function AudioEditor(props) {
       <div className="audio-editor">
         <div className="graphic">
           <div className="icon">
-            <i className="fa fa-microphone" />
+            <i className="fasfa-microphone" />
           </div>
           <div className="duration">
             {formatDuration(duration)}

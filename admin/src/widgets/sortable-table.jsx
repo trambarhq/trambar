@@ -170,8 +170,8 @@ function TH(props) {
   return (
     <th {...props}>
       {props.children}
-      <i className="fa fa-chevron-down arrow down"/>
-      <i className="fa fa-chevron-up arrow up"/>
+      <i className="fasfa-chevron-down arrow down"/>
+      <i className="fasfa-chevron-up arrow up"/>
     </th>
   );
 }

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import Relaks, { useProgress, useListener } from 'relaks';
-import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
+import * as SystemFinder from 'common/objects/finders/system-finder.js';
 
 import './start-page.scss';
 

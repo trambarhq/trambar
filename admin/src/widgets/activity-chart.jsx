@@ -2,9 +2,9 @@ import _ from 'lodash';
 import React from 'react';
 import Chartist from 'common/widgets/chartist.jsx';
 import Moment from 'moment';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
 
-import StoryTypes from 'common/objects/types/story-types.mjs';
+import StoryTypes from 'common/objects/types/story-types.js';
 
 import './activity-chart.scss';
 

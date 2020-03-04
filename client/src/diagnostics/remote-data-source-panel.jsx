@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import CodePush from 'common/transport/code-push.mjs';
+import CodePush from 'common/transport/code-push.js';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -21,7 +21,7 @@ export function RemoteDataSourcePanel(props) {
   return (
     <SettingsPanel className="remote-data-source">
       <header>
-        <i className="fa fa-gear" /> Remote Data Source
+        <i className="fasfa-gear" /> Remote Data Source
       </header>
       <body>
         <DiagnosticsSection label="Recent searches">

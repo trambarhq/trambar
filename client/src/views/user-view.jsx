@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
-import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
-import * as TagScanner from 'common/utils/tag-scanner.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as RoleUtils from 'common/objects/utils/role-utils.js';
+import * as TagScanner from 'common/utils/tag-scanner.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { ProfileImage } from '../widgets/profile-image.jsx';
@@ -275,7 +275,7 @@ export function UserView(props) {
     return (
       <div className="back-link">
         <a href={url}>
-          <i className="fa fa-chevron-left" />
+          <i className="fasfa-chevron-left" />
           {' '}
           {t('user-activity-back')}
         </a>

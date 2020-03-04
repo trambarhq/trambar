@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import * as UniversalLink from 'common/routing/universal-link.mjs';
-import * as DeviceFinder from 'common/objects/finders/device-finder.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as UniversalLink from 'common/routing/universal-link.js';
+import * as DeviceFinder from 'common/objects/finders/device-finder.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';

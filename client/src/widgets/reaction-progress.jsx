@@ -1,5 +1,5 @@
 import React from 'react';
-import * as ReactionUtils from 'common/objects/utils/reaction-utils.mjs';
+import * as ReactionUtils from 'common/objects/utils/reaction-utils.js';
 
 // widgets
 import { Time } from './time.jsx';

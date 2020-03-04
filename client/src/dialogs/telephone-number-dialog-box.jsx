@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Environment } from 'common/env/environment.mjs';
+import { Environment } from 'common/env/environment.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';

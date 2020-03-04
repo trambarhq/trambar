@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { MultipleUserNames } from '../widgets/multiple-user-names.jsx';

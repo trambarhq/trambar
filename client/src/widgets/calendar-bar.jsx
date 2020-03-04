@@ -2,8 +2,8 @@ import _ from 'lodash';
 import React from 'react';
 import Relaks, { useProgress } from 'relaks';
 import Moment from 'moment';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
 
 // widgets
 import { Calendar } from './calendar.jsx';

@@ -65,7 +65,7 @@ function ImagePreviewDialogBox(props) {
       <a href={image.source} className="link" target="_blank">
         {t(`image-preview-${source}`)}
         {' '}
-        <i className="fa fa-external-link" />
+        <i className="fas fa-external-link" />
       </a>
     );
   }

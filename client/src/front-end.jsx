@@ -1,21 +1,21 @@
 import _ from 'lodash';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useListener, useEventTime } from 'relaks';
-import { routes } from './routing.mjs';
-import CORSRewriter from 'common/routing/cors-rewriter.mjs';
-import SchemaRewriter from 'common/routing/schema-rewriter.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.mjs';
-import * as ProjectLinkSaver from 'common/objects/savers/project-link-saver.mjs';
-import TopLevelMouseTrap from 'common/utils/top-level-mouse-trap.mjs';
-import { codePushDeploymentKeys } from './keys.mjs';
+import { routes } from './routing.js';
+import CORSRewriter from 'common/routing/cors-rewriter.js';
+import SchemaRewriter from 'common/routing/schema-rewriter.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.js';
+import * as ProjectLinkSaver from 'common/objects/savers/project-link-saver.js';
+import TopLevelMouseTrap from 'common/utils/top-level-mouse-trap.js';
+import { codePushDeploymentKeys } from './keys.js';
 
 // non-visual components
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Payloads from 'common/transport/payloads.mjs';
-import Locale from 'common/locale/locale.mjs';
-import Environment from 'common/env/environment.mjs';
+import Database from 'common/data/database.js';
+import Route from 'common/routing/route.js';
+import Payloads from 'common/transport/payloads.js';
+import Locale from 'common/locale/locale.js';
+import Environment from 'common/env/environment.js';
 
 // widgets
 import { TopNavigation } from './widgets/top-navigation.jsx';
@@ -24,9 +24,9 @@ import { UploadProgress } from 'common/widgets/upload-progress.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 import { processMobileAlert } from './views/notification-view.jsx';
 
-import 'common/utils/lodash-extra.mjs';
+import 'common/utils/lodash-extra.js';
 import './front-end.scss';
-import 'font-awesome-webpack';
+import '@fortawesome/fontawesome-free/css/all.css';
 
 const widthDefinitions = {
   'single-col': 0,
@@ -290,8 +290,8 @@ export const coreConfiguration = {
   },
 };
 
-export { FrontEndCore } from 'common/front-end-core.mjs';
+export { FrontEndCore } from 'common/front-end-core.js';
 
 if (process.env.NODE_ENV !== 'production') {
-  require('./__PROPTYPES__.mjs');
+  require('./__PROPTYPES__.js');
 }

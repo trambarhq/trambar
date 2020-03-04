@@ -23,7 +23,7 @@ export function DurationIndicator(props) {
     if (recording) {
       return (
         <span className="icon blinking">
-          <i className="fa fa-circle"/>
+          <i className="fasfa-circle"/>
         </span>
       )
     }

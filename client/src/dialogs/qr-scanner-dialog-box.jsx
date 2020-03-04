@@ -365,7 +365,7 @@ export {
   CameraOverlay,
 };
 
-import Environment from 'common/env/environment.mjs';
+import Environment from 'common/env/environment.js';
 
 if (process.env.NODE_ENV !== 'production') {
   const PropTypes = require('prop-types');

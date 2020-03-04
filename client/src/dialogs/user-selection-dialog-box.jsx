@@ -10,7 +10,7 @@ import { UserSelectionList } from '../lists/user-selection-list.jsx';
 // custom hooks
 import {
   useSelectionBuffer,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './user-selection-dialog-box.scss';
 

@@ -12,7 +12,7 @@ function UnexpectedError(props) {
   }
   return (
     <div className="unexpected-error">
-      <i className="fa fa-exclamation-circle" />
+      <i className="fasfa-exclamation-circle" />
       {' '}
       {error.message}
     </div>

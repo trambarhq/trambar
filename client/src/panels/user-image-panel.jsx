@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useState, useRef } from 'react';
 import { useListener } from 'relaks';
-import * as FocusManager from 'common/utils/focus-manager.mjs';
+import * as FocusManager from 'common/utils/focus-manager.js';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -62,7 +62,7 @@ export function UserImagePanel(props) {
   return (
     <SettingsPanel className="user-image">
       <header>
-        <i className="fa fa-image" /> {t('settings-profile-image')}
+        <i className="fasfa-image" /> {t('settings-profile-image')}
       </header>
       <body>
         {renderProfilePicture()}

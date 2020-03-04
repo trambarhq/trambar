@@ -2,11 +2,11 @@ import _ from 'lodash';
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { GitlabWiki } from 'trambar-www';
-import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
-import * as WikiFinder from 'common/objects/finders/wiki-finder.mjs';
-import * as WikiSaver from 'common/objects/savers/wiki-saver.mjs';
+import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as RepoFinder from 'common/objects/finders/repo-finder.js';
+import * as WikiFinder from 'common/objects/finders/wiki-finder.js';
+import * as WikiSaver from 'common/objects/savers/wiki-saver.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -29,7 +29,7 @@ import {
   useValidation,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './wiki-summary-page.scss';
 

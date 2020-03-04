@@ -2,12 +2,12 @@ import _ from 'lodash';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { ExcelFile } from 'trambar-www';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
-import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
-import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.mjs';
-import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
-import * as HTTPRequest from 'common/transport/http-request.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as ProjectUtils from 'common/objects/utils/project-utils.js';
+import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.js';
+import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.js';
+import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.js';
+import * as HTTPRequest from 'common/transport/http-request.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -31,7 +31,7 @@ import {
   useValidation,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './spreadsheet-summary-page.scss';
 

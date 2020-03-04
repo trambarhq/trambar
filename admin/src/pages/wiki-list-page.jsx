@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import React from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
-import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
-import * as WikiFinder from 'common/objects/finders/wiki-finder.mjs';
-import * as WikiSaver from 'common/objects/savers/wiki-saver.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as RepoFinder from 'common/objects/finders/repo-finder.js';
+import * as RepoUtils from 'common/objects/utils/repo-utils.js';
+import * as WikiFinder from 'common/objects/finders/wiki-finder.js';
+import * as WikiSaver from 'common/objects/savers/wiki-saver.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -24,7 +24,7 @@ import {
   useRowToggle,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './wiki-list-page.scss';
 

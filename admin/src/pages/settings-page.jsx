@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
-import * as SystemSaver from 'common/objects/savers/system-saver.mjs';
-import * as SystemSettings from 'common/objects/settings/system-settings.mjs';
+import * as SystemFinder from 'common/objects/finders/system-finder.js';
+import * as SystemSaver from 'common/objects/savers/system-saver.js';
+import * as SystemSettings from 'common/objects/settings/system-settings.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -21,7 +21,7 @@ import {
   useValidation,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './settings-page.scss';
 

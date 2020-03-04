@@ -18,7 +18,7 @@ export function WebsocketNotifierPanel(props) {
   return (
     <SettingsPanel className="websocket-notifier">
       <header>
-        <i className="fa fa-gear" /> Web Socket
+        <i className="fasfa-gear" /> Web Socket
       </header>
       <body>
         <DiagnosticsSection label="Connection">

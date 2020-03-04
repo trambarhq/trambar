@@ -1,15 +1,15 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener } from 'relaks';
-import HTTPRequest from 'common/transport/http-request.mjs';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as UniversalLink from 'common/routing/universal-link.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.mjs';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
-import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import HTTPRequest from 'common/transport/http-request.js';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as UniversalLink from 'common/routing/universal-link.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.js';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
+import * as SystemFinder from 'common/objects/finders/system-finder.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { Scrollable } from '../widgets/scrollable.jsx';
@@ -343,7 +343,7 @@ export default async function StartPage(props) {
       ),
       mobileSetup: (
         <span key="2" className="ui">
-          <i className="fa fa-qrcode" />
+          <i className="fasfa-qrcode" />
           {' '}
           {t('project-management-mobile-set-up')}
         </span>
@@ -483,9 +483,9 @@ export default async function StartPage(props) {
     // add badge to indicate membership status
     let badge;
     if (UserUtils.isMember(currentUser, project)) {
-      badge = <i className="fa fa-user-circle-o badge" />;
+      badge = <i className="fasfa-user-circle-o badge" />;
     } else if (UserUtils.isPendingMember(currentUser, project)) {
-      badge = <i className="fa fa-clock-o badge" />;
+      badge = <i className="fasfa-clock-o badge" />;
     }
 
     // don't show dialog box if user has previously visited the project
@@ -518,7 +518,7 @@ export default async function StartPage(props) {
             <div className="contents">
               {p(description)}
               <div className="ellipsis">
-                <i className="fa fa-ellipsis-h" />
+                <i className="fasfa-ellipsis-h" />
               </div>
             </div>
           </div>
@@ -576,7 +576,7 @@ export default async function StartPage(props) {
     return (
       <li key={key}>
         <a href={url}>
-          <i className="fa fa-home" /> {server}
+          <i className="fasfa-home" /> {server}
         </a>
       </li>
     );
@@ -615,7 +615,7 @@ export default async function StartPage(props) {
       ),
       mobileSetup: (
         <span key="2" className="ui">
-          <i className="fa fa-qrcode" />
+          <i className="fasfa-qrcode" />
           {' '}
           {t('project-management-mobile-set-up')}
         </span>

@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React, { useRef } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
-import * as RoleSaver from 'common/objects/savers/role-saver.mjs';
-import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as RoleFinder from 'common/objects/finders/role-finder.js';
+import * as RoleSaver from 'common/objects/savers/role-saver.js';
+import * as RoleUtils from 'common/objects/utils/role-utils.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -24,7 +24,7 @@ import {
   useRowToggle,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './role-list-page.scss';
 

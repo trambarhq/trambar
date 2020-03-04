@@ -1,17 +1,17 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
-import * as ListParser from 'common/utils/list-parser.mjs';
-import * as Markdown from 'common/utils/markdown.mjs';
-import * as TagScanner from 'common/utils/tag-scanner.mjs';
-import * as PlainText from 'common/utils/plain-text.mjs';
-import * as FocusManager from 'common/utils/focus-manager.mjs';
-import * as StorySaver from 'common/objects/savers/story-saver.mjs';
-import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
-import * as IssueUtils from 'common/objects/utils/issue-utils.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
-import * as TemporaryID from 'common/data/remote-data-source/temporary-id.mjs';
+import * as ListParser from 'common/utils/list-parser.js';
+import * as Markdown from 'common/utils/markdown.js';
+import * as TagScanner from 'common/utils/tag-scanner.js';
+import * as PlainText from 'common/utils/plain-text.js';
+import * as FocusManager from 'common/utils/focus-manager.js';
+import * as StorySaver from 'common/objects/savers/story-saver.js';
+import * as StoryUtils from 'common/objects/utils/story-utils.js';
+import * as IssueUtils from 'common/objects/utils/issue-utils.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
+import * as TemporaryID from 'common/data/remote-data-source/temporary-id.js';
 
 // widgets
 import { AuthorNames } from '../widgets/author-names.jsx';
@@ -35,7 +35,7 @@ import {
   useDraftBuffer,
   useMarkdownResources,
   useConfirmation,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './story-editor.scss';
 

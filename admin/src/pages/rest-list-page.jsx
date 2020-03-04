@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as RestFinder from 'common/objects/finders/rest-finder.mjs';
-import * as RestSaver from 'common/objects/savers/rest-saver.mjs';
-import * as RestUtils from 'common/objects/utils/rest-utils.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as RestFinder from 'common/objects/finders/rest-finder.js';
+import * as RestSaver from 'common/objects/savers/rest-saver.js';
+import * as RestUtils from 'common/objects/utils/rest-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -23,7 +23,7 @@ import {
   useRowToggle,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './rest-list-page.scss';
 

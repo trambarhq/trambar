@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import * as BlobManager from 'common/transport/blob-manager.mjs';
+import * as BlobManager from 'common/transport/blob-manager.js';
 import { ResourceView }  from 'common/widgets/resource-view.jsx';
 
 import ProfileIcon from 'octicons/build/svg/person.svg';

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener } from 'relaks';
-import { useLatest } from '../hooks.mjs';
+import { useLatest } from '../hooks.js';
 
 import './combo-button.scss';
 
@@ -76,7 +76,7 @@ function ComboButton(props) {
   function renderSideButton() {
     return (
       <button className="side" onClick={handleSideButtonClick}>
-        <i className="fa fa-angle-down" />
+        <i className="fas fa-angle-down" />
       </button>
     );
   }

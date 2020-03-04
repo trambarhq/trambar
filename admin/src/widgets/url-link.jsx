@@ -9,7 +9,7 @@ function URLLink(props) {
   }
   return (
     <a className="url-link" href={url} target="_blank">
-      <i className="fa fa-external-link" />
+      <i className="fas fa-external-link" />
     </a>
   );
 }

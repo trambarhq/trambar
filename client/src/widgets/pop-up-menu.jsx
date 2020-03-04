@@ -3,7 +3,7 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import { useListener } from 'relaks';
 import ReactDOM from 'react-dom';
 import ScrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
-import TopLevelMouseTrap from 'common/utils/top-level-mouse-trap.mjs';
+import TopLevelMouseTrap from 'common/utils/top-level-mouse-trap.js';
 
 import './pop-up-menu.scss';
 

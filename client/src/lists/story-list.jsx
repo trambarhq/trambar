@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
-import * as BookmarkFinder from 'common/objects/finders/bookmark-finder.mjs';
-import * as ReactionFinder from 'common/objects/finders/reaction-finder.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import * as RepoFinder from 'common/objects/finders/repo-finder.js';
+import * as BookmarkFinder from 'common/objects/finders/bookmark-finder.js';
+import * as ReactionFinder from 'common/objects/finders/reaction-finder.js';
 
 // widgets
 import { SmartList } from 'common/widgets/smart-list.jsx';

@@ -1,4 +1,6 @@
 import 'moment/locale/fr.js';
+import 'moment/locale/fr-ca.js';
+import 'moment/locale/fr-ch.js';
 import { cardinal, list } from '../grammars/french.mjs';
 
 const phrases = {

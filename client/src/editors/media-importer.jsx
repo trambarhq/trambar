@@ -2,11 +2,11 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState, useImperativeHandle } from 'react';
 import { useListener } from 'relaks';
-import * as MediaLoader from 'common/media/media-loader.mjs';
-import * as MediaTagReader from 'common/media/media-tag-reader.mjs';
-import * as QuickStart from 'common/media/quick-start.mjs';
-import * as BlobReader from 'common/transport/blob-reader.mjs';
-import ResourceTypes from 'common/objects/types/resource-types.mjs';
+import * as MediaLoader from 'common/media/media-loader.js';
+import * as MediaTagReader from 'common/media/media-tag-reader.js';
+import * as QuickStart from 'common/media/quick-start.js';
+import * as BlobReader from 'common/transport/blob-reader.js';
+import ResourceTypes from 'common/objects/types/resource-types.js';
 
 // widgets
 import { PhotoCaptureDialogBoxBrowser } from '../dialogs/photo-capture-dialog-box-browser.jsx';

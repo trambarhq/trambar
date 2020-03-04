@@ -1,6 +1,6 @@
 import React from 'react';
 import Moment from 'moment';
-import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
+import * as StoryUtils from 'common/objects/utils/story-utils.js';
 
 // widgets
 import { Time } from './time.jsx';
@@ -29,7 +29,7 @@ export function StoryProgress(props) {
           <span>
             {t('story-status-storage-pending')}
             {' '}
-            <i className="fa fa-warning" />
+            <i className="fasfa-warning" />
           </span>
         );
       }
@@ -50,7 +50,7 @@ export function StoryProgress(props) {
             {contents}
             {' '}
             <span className="spinner" style={spinnerStyle}>
-              <i className="fa fa-spinner fa-pulse" />
+              <i className="fasfa-spinner fa-pulse" />
             </span>
           </span>
         );

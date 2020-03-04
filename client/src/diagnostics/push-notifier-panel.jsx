@@ -20,7 +20,7 @@ export function PushNotifierPanel(props) {
   return (
     <SettingsPanel className="push-notifier">
       <header>
-        <i className="fa fa-gear" /> Push Notification
+        <i className="fasfa-gear" /> Push Notification
       </header>
       <body>
         <DiagnosticsSection label="Registration">

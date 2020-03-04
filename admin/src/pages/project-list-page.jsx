@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import React, { useRef } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as ProjectSaver from 'common/objects/savers/project-saver.mjs';
-import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
-import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as ProjectSaver from 'common/objects/savers/project-saver.js';
+import * as ProjectUtils from 'common/objects/utils/project-utils.js';
+import * as RepoFinder from 'common/objects/finders/repo-finder.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -28,7 +28,7 @@ import {
   useRowToggle,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './project-list-page.scss';
 

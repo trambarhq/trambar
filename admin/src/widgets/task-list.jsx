@@ -2,8 +2,8 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState, useRef, useEffect } from 'react';
 import Relaks, { useProgress, useListener } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as TaskFinder from 'common/objects/finders/task-finder.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as TaskFinder from 'common/objects/finders/task-finder.js';
 
 // widgets
 import SmartList from 'common/widgets/smart-list.jsx';
@@ -105,7 +105,7 @@ async function TaskList(props) {
       message = task.action + ' (noop)';
     }
     if (task.failed) {
-      badge = <i className="fa fa-exclamation-triangle" />;
+      badge = <i className="fasfa-exclamation-triangle" />;
     }
     return <div className="message">{message}{badge}</div>;
   }

@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React, { useState, useImperativeHandle } from 'react';
 import { useListener } from 'relaks';
-import * as MediaLoader from 'common/media/media-loader.mjs';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import * as MediaLoader from 'common/media/media-loader.js';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { ImageCroppingDialogBox } from '../dialogs/image-cropping-dialog-box.jsx';
@@ -127,7 +127,7 @@ function ImageSelector(props, ref) {
       return (
         <div className="image">
           <div className="placeholder" style={{ width, height }}>
-            <i className="fa fa-photo" />
+            <i className="fasfa-photo" />
           </div>
         </div>
       );
@@ -157,7 +157,7 @@ function ImageSelector(props, ref) {
     }
     return (
       <div {...props}>
-        <i className="fa fa-crop" />
+        <i className="fas fa-crop" />
         {' '}
         {t('image-selector-crop-image')}
       </div>
@@ -174,7 +174,7 @@ function ImageSelector(props, ref) {
     }
     return (
       <div {...props}>
-        <i className="fa fa-th" />
+        <i className="fas fa-th" />
         {' '}
         {t('image-selector-choose-from-album')}
       </div>
@@ -191,7 +191,7 @@ function ImageSelector(props, ref) {
     };
     return (
       <label className="option">
-        <i className="fa fa-upload" />
+        <i className="fas fa-upload" />
         {' '}
         {t('image-selector-upload-file')}
         <input {...inputProps} />

@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
-import * as NotificationSaver from 'common/objects/savers/notification-saver.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as NotificationSaver from 'common/objects/savers/notification-saver.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { Time } from '../widgets/time.jsx';

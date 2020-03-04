@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Relaks, { useProgress, useListener } from 'relaks';
-import * as TagScanner from 'common/utils/tag-scanner.mjs';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as TagScanner from 'common/utils/tag-scanner.js';
+import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
 
 import './search-bar.scss';
 

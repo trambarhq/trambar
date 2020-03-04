@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
-import NotificationTypes, { AdminNotificationTypes } from 'common/objects/types/notification-types.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import NotificationTypes, { AdminNotificationTypes } from 'common/objects/types/notification-types.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -49,7 +49,7 @@ export function NotificationPanel(props) {
   return (
     <SettingsPanel className="notification">
       <header>
-        <i className="fa fa-exclamation-circle" /> {t('settings-notification')}
+        <i className="fasfa-exclamation-circle" /> {t('settings-notification')}
       </header>
       <body>
         {_.map(types, renderOption)}

@@ -13,7 +13,7 @@ import { VolumeIndicator } from '../widgets/volume-indicator.jsx';
 import {
   useMediaCapture,
   useStreamHandling,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './audio-capture-dialog-box-browser.scss';
 

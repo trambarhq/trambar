@@ -1,7 +1,7 @@
 import React from 'react';
 import Relaks, { useProgress, useListener } from 'relaks';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import ProfileImage from './profile-image.jsx';

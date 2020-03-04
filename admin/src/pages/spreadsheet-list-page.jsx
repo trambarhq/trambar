@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.mjs';
-import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.mjs';
-import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.js';
+import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.js';
+import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -24,7 +24,7 @@ import {
   useRowToggle,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './spreadsheet-list-page.scss';
 

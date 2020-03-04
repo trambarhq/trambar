@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React, { useState, useMemo, useRef, useImperativeHandle, useEffect } from 'react';
 import { useListener, useAsyncEffect } from 'relaks';
-import * as BlobManager from 'common/transport/blob-manager.mjs';
-import Payload from 'common/transport/payload.mjs';
-import * as ImageCropping from 'common/media/image-cropping.mjs';
-import * as FocusManager from 'common/utils/focus-manager.mjs';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import * as BlobManager from 'common/transport/blob-manager.js';
+import Payload from 'common/transport/payload.js';
+import * as ImageCropping from 'common/media/image-cropping.js';
+import * as FocusManager from 'common/utils/focus-manager.js';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { ImageCropper } from 'common/widgets/image-cropper.jsx';
@@ -110,7 +110,7 @@ export const ImageEditor = React.forwardRef((props, ref) => {
     }
     return (
       <div className="spinner">
-        <i className="fa fa-refresh fa-spin fa-fw" />
+        <i className="fasfa-refresh fa-spin fa-fw" />
       </div>
     );
   }

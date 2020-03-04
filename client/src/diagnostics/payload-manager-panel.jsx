@@ -22,7 +22,7 @@ export function PayloadManagerPanel(props) {
   return (
     <SettingsPanel className="payload-manager">
       <header>
-        <i className="fa fa-gear" /> Payloads
+        <i className="fasfa-gear" /> Payloads
       </header>
       <body>
         <DiagnosticsSection label="Pending payloads" hidden={_.isEmpty(pending)}>

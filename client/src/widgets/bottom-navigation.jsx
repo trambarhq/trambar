@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import HTTPError from 'common/errors/http-error.mjs';
-import * as NotificationFinder from 'common/objects/finders/notification-finder.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import { setApplicationIconBadgeNumber } from 'common/transport/push-notifier.mjs';
+import HTTPError from 'common/errors/http-error.js';
+import * as NotificationFinder from 'common/objects/finders/notification-finder.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import { setApplicationIconBadgeNumber } from 'common/transport/push-notifier.js';
 
 // widgets
 import { Link } from './link.jsx';
@@ -41,7 +41,7 @@ export function BottomNavigation(props) {
   }, [ showing ]);
   useEffect(() => {
     const detectStacking = () => {
-      const icon = containerRef.current.getElementsByClassName('fa')[1];
+      const icon = containerRef.current.getElementsByClassName('fas')[1];
       const label = containerRef.current.getElementsByClassName('label')[1];
       let stackingAfter = (label.offsetTop >= icon.offsetTop + icon.offsetHeight);
       if (stackingAfter !== stacking) {

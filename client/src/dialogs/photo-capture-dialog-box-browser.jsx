@@ -12,7 +12,7 @@ import { DevicePlaceholder } from '../widgets/device-placeholder.jsx';
 // custom hooks
 import {
   useMediaCapture,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './photo-capture-dialog-box-browser.scss';
 

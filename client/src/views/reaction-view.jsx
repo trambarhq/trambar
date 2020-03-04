@@ -1,13 +1,12 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
-import * as Markdown from 'common/utils/markdown.mjs';
-import * as PlainText from 'common/utils/plain-text.mjs';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
-import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import * as Markdown from 'common/utils/markdown.js';
+import * as PlainText from 'common/utils/plain-text.js';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
+import * as RepoUtils from 'common/objects/utils/repo-utils.js';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { ProfileImage } from '../widgets/profile-image.jsx';
@@ -20,7 +19,7 @@ import { ReactionViewOptions } from '../views/reaction-view-options.jsx';
 // custom hooks
 import {
   useMarkdownResources
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './reaction-view.scss';
 

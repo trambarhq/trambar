@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { PopUpMenu } from '../widgets/pop-up-menu.jsx';
@@ -68,7 +68,7 @@ export function ReactionViewOptions(props) {
   return (
     <PopUpMenu {...menuProps}>
       <button>
-        <i className="fa fa-ellipsis-v" />
+        <i className="fasfa-ellipsis-v" />
       </button>
       <menu>
         {renderOptions()}

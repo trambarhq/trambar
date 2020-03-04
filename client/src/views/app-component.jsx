@@ -60,7 +60,7 @@ export function AppComponent(props) {
         <div className="description-contents">
           {elements}
           <div className="ellipsis">
-            <i className="fa fa-ellipsis-h" />
+            <i className="fasfa-ellipsis-h" />
           </div>
         </div>
       </div>

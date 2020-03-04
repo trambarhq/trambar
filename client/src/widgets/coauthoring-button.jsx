@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { HeaderButton } from './header-button.jsx';

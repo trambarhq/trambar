@@ -34,11 +34,11 @@ function Direction(props) {
   return (
     <div className="media-direction">
       <label className="backward-button" onClick={onBackwardClick}>
-        <i className="fa fa-caret-left"/>
+        <i className="fasfa-caret-left"/>
       </label>
       <span className="position">{text}</span>
       <label className="forward-button" onClick={onForwardClick}>
-        <i className="fa fa-caret-right"/>
+        <i className="fasfa-caret-right"/>
       </label>
     </div>
   );
@@ -58,7 +58,7 @@ function buttonClasses(props) {
 function iconClasses(props) {
   const classNames = [];
   if (props.icon) {
-    classNames.push('fa', `fa-${props.icon}`);
+    classNames.push('fas', `fa-${props.icon}`);
   }
   return classNames.join(' ');
 }

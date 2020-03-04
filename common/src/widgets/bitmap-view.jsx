@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import React, { useState, useRef, useImperativeHandle, useEffect } from 'react';
-import * as BlobManager from '../transport/blob-manager.mjs';
-import * as BlobReader from '../transport/blob-reader.mjs';
-import * as MediaLoader from '../media/media-loader.mjs';
-import * as JPEGAnalyser from '../media/jpeg-analyser.mjs';
-import * as ImageOrientation from '../media/image-orientation.mjs';
+import * as BlobManager from '../transport/blob-manager.js';
+import * as BlobReader from '../transport/blob-reader.js';
+import * as MediaLoader from '../media/media-loader.js';
+import * as JPEGAnalyser from '../media/jpeg-analyser.js';
+import * as ImageOrientation from '../media/image-orientation.js';
 
 /**
  * A component that displays a bitmap image file (JPEG, PNG, etc.), with

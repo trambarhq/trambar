@@ -3,12 +3,12 @@ import Moment from 'moment';
 import 'moment-timezone';
 import React, { useMemo } from 'react';
 import Relaks, { useProgress, useListener, useSaveBuffer, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as ProjectSaver from 'common/objects/savers/project-saver.mjs';
-import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
-import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
-import * as SnapshotFinder from 'common/objects/finders/snapshot-finder.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as ProjectSaver from 'common/objects/savers/project-saver.js';
+import * as RepoFinder from 'common/objects/finders/repo-finder.js';
+import * as RepoUtils from 'common/objects/utils/repo-utils.js';
+import * as SnapshotFinder from 'common/objects/finders/snapshot-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -28,7 +28,7 @@ import {
   useRowToggle,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './website-summary-page.scss';
 
@@ -275,7 +275,7 @@ function WebsiteSummaryPageSync(props) {
     }
     return (
       <a className="link" href={url} target="_blank">
-        <i className="fa fa-external-link" />
+        <i className="fasfa-external-link" />
       </a>
     );
   }

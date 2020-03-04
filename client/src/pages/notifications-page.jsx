@@ -2,8 +2,8 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
 import { useProgress } from 'relaks';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as NotificationFinder from 'common/objects/finders/notification-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import * as NotificationFinder from 'common/objects/finders/notification-finder.js';
 
 // widgets
 import { PageContainer } from '../widgets/page-container.jsx';

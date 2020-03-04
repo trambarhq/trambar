@@ -1,15 +1,15 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
-import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
-import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
-import * as ServerSaver from 'common/objects/savers/server-saver.mjs';
-import * as ServerUtils from 'common/objects/utils/server-utils.mjs';
-import { ServerTypes, IntegratedServerTypes } from 'common/objects/types/server-types.mjs';
-import * as ServerSettings from 'common/objects/settings/server-settings.mjs';
-import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as RoleFinder from 'common/objects/finders/role-finder.js';
+import * as RoleUtils from 'common/objects/utils/role-utils.js';
+import * as ServerFinder from 'common/objects/finders/server-finder.js';
+import * as ServerSaver from 'common/objects/savers/server-saver.js';
+import * as ServerUtils from 'common/objects/utils/server-utils.js';
+import { ServerTypes, IntegratedServerTypes } from 'common/objects/types/server-types.js';
+import * as ServerSettings from 'common/objects/settings/server-settings.js';
+import * as SystemFinder from 'common/objects/finders/system-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -32,7 +32,7 @@ import {
   useValidation,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './server-summary-page.scss';
 
@@ -466,7 +466,7 @@ function ServerSummaryPageSync(props) {
         <span>
           {t(option.label[0])}
           {' '}
-          <i className="fa fa-arrow-right" />
+          <i className="fas fa-arrow-right" />
           {' '}
           {t(option.label[1])}
         </span>
@@ -504,7 +504,7 @@ function ServerSummaryPageSync(props) {
         <span>
           {t(option.label[0])}
           {' '}
-          <i className="fa fa-arrow-right" />
+          <i className="fas fa-arrow-right" />
           {' '}
           {t(option.label[1])}
         </span>
@@ -566,7 +566,7 @@ function ServerSummaryPageSync(props) {
         <span>
           {t(option.label[0])}
           {' '}
-          <i className="fa fa-arrow-right" />
+          <i className="fas fa-arrow-right" />
           {' '}
           {option.label[1]}
         </span>

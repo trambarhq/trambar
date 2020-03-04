@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import React from 'react';
 import Relaks, { useProgress } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as RoleFinder from 'common/objects/finders/role-finder.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
 
 // widgets
 import { RoleFilterButton } from './role-filter-button.jsx';

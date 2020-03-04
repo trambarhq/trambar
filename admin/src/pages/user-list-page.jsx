@@ -2,15 +2,15 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState, useRef } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
-import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
-import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as UserSaver from 'common/objects/savers/user-saver.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
-import UserTypes from 'common/objects/types/user-types.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as ProjectUtils from 'common/objects/utils/project-utils.js';
+import * as RoleFinder from 'common/objects/finders/role-finder.js';
+import * as RoleUtils from 'common/objects/utils/role-utils.js';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import * as UserSaver from 'common/objects/savers/user-saver.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
+import UserTypes from 'common/objects/types/user-types.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -31,7 +31,7 @@ import {
   useRowToggle,
   useConfirmation,
   useDataLossWarning,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './user-list-page.scss';
 

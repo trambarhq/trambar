@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { SmartList } from 'common/widgets/smart-list.jsx';

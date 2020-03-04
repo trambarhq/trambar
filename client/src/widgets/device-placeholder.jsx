@@ -16,7 +16,7 @@ export function DevicePlaceholder(props) {
     <div className={className}>
       <span className="fa-stack fa-lg">
         <i className={`fa fa-${icon} fa-stack-1x`} />
-        <i className="fa fa-ban fa-stack-2x" />
+        <i className="fasfa-ban fa-stack-2x" />
       </span>
     </div>
   );

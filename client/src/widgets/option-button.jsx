@@ -41,7 +41,7 @@ function buttonClasses(props) {
 }
 
 function iconClasses(props) {
-  const classNames = [ 'fa' ];
+  const classNames = [ 'fas' ];
   if (props.icon) {
     classNames.push(`fa-${props.icon}`);
   } else {

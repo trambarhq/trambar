@@ -80,7 +80,7 @@ function SideNavigation(props) {
       }
       return (
         <div key={i} {...props}>
-          <i className="fa fa-check-circle-o" /> {language.name}
+          <i className="fasfa-check-circle-o" /> {language.name}
         </div>
       )
     });
@@ -88,7 +88,7 @@ function SideNavigation(props) {
       <div className="button language">
         <Tooltip upward>
           <inline>
-            <i className="fa fa-language" />
+            <i className="fasfa-language" />
             {' '}
             {selectedLanguage.name}
           </inline>
@@ -118,7 +118,7 @@ function SideNavigation(props) {
       }
       return (
         <div key={code} {...props}>
-          <i className="fa fa-check-circle-o" /> {name}
+          <i className="fasfa-check-circle-o" /> {name}
         </div>
       )
     });
@@ -142,7 +142,7 @@ function SideNavigation(props) {
       <div className="button user">
         <Tooltip upward leftward disabled={disabled}>
           <inline>
-            <i className="fa fa-user-circle-o" />
+            <i className="fasfa-user-circle-o" />
           </inline>
           <window>
             <SignOffMenu {...menuProps} />

@@ -1,19 +1,19 @@
 import _ from 'lodash';
 import React, { useState, useMemo, useEffect } from 'react';
 import Relaks, { useEventTime } from 'relaks';
-import { FrontEndCore } from 'common/front-end-core.mjs';
-import { CORSRewriter } from 'common/routing/cors-rewriter.mjs';
+import { FrontEndCore } from 'common/front-end-core.js';
+import { CORSRewriter } from 'common/routing/cors-rewriter.js';
 
-import { HTTPError } from 'common/errors/http-error.mjs';
+import { HTTPError } from 'common/errors/http-error.js';
 
-import { routes } from './routing.mjs';
+import { routes } from './routing.js';
 
 // proxy objects
-import { Database } from 'common/data/database.mjs';
-import { Route } from 'common/routing/route.mjs';
-import { Payloads } from 'common/transport/payloads.mjs';
-import { Locale } from 'common/locale/locale.mjs';
-import { Environment } from 'common/env/environment.mjs';
+import { Database } from 'common/data/database.js';
+import { Route } from 'common/routing/route.js';
+import { Payloads } from 'common/transport/payloads.js';
+import { Locale } from 'common/locale/locale.js';
+import { Environment } from 'common/env/environment.js';
 
 // widgets
 import { SideNavigation } from './widgets/side-navigation.jsx';
@@ -22,8 +22,8 @@ import { UploadProgress } from 'common/widgets/upload-progress.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import 'setimmediate';
-import 'common/utils/lodash-extra.mjs';
-import 'font-awesome-webpack';
+import 'common/utils/lodash-extra.js';
+import '@fortawesome/fontawesome-free/css/all.css';
 import './front-end.scss';
 import './colors.scss';
 
@@ -197,5 +197,5 @@ export {
 };
 
 if (process.env.NODE_ENV !== 'production') {
-  require('./__PROPTYPES__.mjs');
+  require('./__PROPTYPES__.js');
 }

@@ -36,14 +36,15 @@ module.exports = function(config) {
             test: /\.(js|jsx|mjs)$/,
             loader: 'babel-loader',
             exclude: Path.resolve('./node_modules'),
-            type: 'javascript/auto',
             query: {
               presets: [
                 '@babel/env',
                 '@babel/react',
               ],
               plugins: [
-                '@babel/plugin-proposal-class-properties',
+                '@babel/proposal-nullish-coalescing-operator',
+                '@babel/proposal-optional-chaining',
+                '@babel/proposal-class-properties',
                 '@babel/transform-runtime',
               ]
             }

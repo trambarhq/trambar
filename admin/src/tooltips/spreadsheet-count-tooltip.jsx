@@ -31,7 +31,7 @@ function SpreadsheetCountTooltip(props) {
       list.splice(max);
       list.push(
         <div className="ellipsis" key={0}>
-          <i className="fa fa-ellipsis-v" />
+          <i className="fasfa-ellipsis-v" />
         </div>
       );
     }

@@ -2,17 +2,17 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState, useMemo, useRef } from 'react';
 import { useListener, useSaveBuffer, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as Markdown from 'common/utils/markdown.mjs';
-import * as PlainText from 'common/utils/plain-text.mjs';
-import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
-import * as ReactionSaver from 'common/objects/savers/reaction-saver.mjs';
-import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
-import * as StorySaver from 'common/objects/savers/story-saver.mjs';
-import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
-import Payload from 'common/transport/payload.mjs';
+import { memoizeWeak } from 'common/utils/memoize.js';
+import * as Markdown from 'common/utils/markdown.js';
+import * as PlainText from 'common/utils/plain-text.js';
+import * as ProjectUtils from 'common/objects/utils/project-utils.js';
+import * as ReactionSaver from 'common/objects/savers/reaction-saver.js';
+import * as RepoUtils from 'common/objects/utils/repo-utils.js';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
+import * as StorySaver from 'common/objects/savers/story-saver.js';
+import * as StoryUtils from 'common/objects/utils/story-utils.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
+import Payload from 'common/transport/payload.js';
 
 // widgets
 import { MediaView } from '../views/media-view.jsx';
@@ -26,7 +26,7 @@ import { PushButton } from '../widgets/push-button.jsx';
 import {
   useMarkdownResources,
   useDraftBuffer,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './story-contents.scss';
 

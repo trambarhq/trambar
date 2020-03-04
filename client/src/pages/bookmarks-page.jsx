@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import React from 'react';
 import { useProgress } from 'relaks';
-import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import * as BookmarkFinder from 'common/objects/finders/bookmark-finder.mjs';
-import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
-import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.js';
+import * as BookmarkFinder from 'common/objects/finders/bookmark-finder.js';
+import * as ProjectFinder from 'common/objects/finders/project-finder.js';
+import * as ProjectUtils from 'common/objects/utils/project-utils.js';
 
 // widgets
 import { PageContainer } from '../widgets/page-container.jsx';

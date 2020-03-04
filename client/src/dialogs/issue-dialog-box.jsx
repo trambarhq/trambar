@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { useRef, useMemo } from 'react';
 import { useListener } from 'relaks';
-import * as TagScanner from 'common/utils/tag-scanner.mjs';
-import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
-import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as TagScanner from 'common/utils/tag-scanner.js';
+import * as RepoUtils from 'common/objects/utils/repo-utils.js';
+import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -13,7 +13,7 @@ import { TextField } from '../widgets/text-field.jsx';
 // custom hooks
 import {
   useDraftBuffer,
-} from '../hooks.mjs';
+} from '../hooks.js';
 
 import './issue-dialog-box.scss';
 
