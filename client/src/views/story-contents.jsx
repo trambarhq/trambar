@@ -33,7 +33,7 @@ import './story-contents.scss';
 /**
  * Component that renders a story's contents. Used by StoryView.
  */
-function StoryContents(props) {
+export function StoryContents(props) {
   const { story, authors, reactions, repo, project, currentUser } = props;
   const { database, env, access } = props;
   const { t, p, g, f } = env.locale;
@@ -649,8 +649,3 @@ const sortComponents = memoizeWeak(null, function(components, env) {
     return _.toLower(p(component.text));
   });
 });
-
-export {
-  StoryContents as default,
-  StoryContents,
-};

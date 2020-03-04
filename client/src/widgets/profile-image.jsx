@@ -12,10 +12,15 @@ import './profile-image.scss';
  * Stateless component that renders a user's profile image. If there's none,
  * it renders a placeholder graphic.
  */
-function ProfileImage(props) {
+export function ProfileImage(props) {
   const { env, href, user, robot, size } = props;
   const className = `profile-image ${size}`;
   const profileImage = _.find(user?.details?.resources, { type: 'image' });
+  const imageResolutions = {
+    small: 24,
+    medium: 48,
+    large: 96,
+  };
   let image;
   if (profileImage) {
     const width = imageResolutions[size];
@@ -47,17 +52,6 @@ function ProfileImage(props) {
   }
 }
 
-const imageResolutions = {
-  small: 24,
-  medium: 48,
-  large: 96,
-};
-
 ProfileImage.defaultProps = {
   size: 'small'
-};
-
-export {
-  ProfileImage as default,
-  ProfileImage,
 };

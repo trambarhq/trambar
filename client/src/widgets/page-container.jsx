@@ -5,7 +5,7 @@ import './page-container.scss';
 /**
  * Container holding a page's contents.
  */
-function PageContainer(props) {
+export function PageContainer(props) {
   const { className, children } = props;
   const ref = useRef();
 
@@ -29,8 +29,3 @@ function PageContainer(props) {
     </div>
   );
 }
-
-export {
-  PageContainer as default,
-  PageContainer,
-};

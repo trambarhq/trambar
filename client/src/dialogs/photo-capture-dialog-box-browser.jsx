@@ -165,11 +165,8 @@ async function PhotoCaptureDialogBoxBrowser(props) {
   }
 }
 
-const component = Overlay.create(
-  Relaks.memo(PhotoCaptureDialogBoxBrowser)
-);
+const overlay = Overlay.create(PhotoCaptureDialogBoxBrowser);
 
 export {
-  component as default,
-  component as PhotoCaptureDialogBoxBrowser,
+  overlay as PhotoCaptureDialogBoxBrowser,
 };

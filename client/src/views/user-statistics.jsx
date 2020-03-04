@@ -11,7 +11,7 @@ import './user-statistics.scss';
 /**
  * Component for rendering a user's statistics. Used by UserView.
  */
-function UserStatistics(props) {
+export const UserStatistics = React.memo((props) => {
   const { user, dailyActivities } = props;
   const { route, env, selectedDate, chartType, chartRange } = props;
   const { t, localeCode } = env.locale;
@@ -262,7 +262,7 @@ function UserStatistics(props) {
       cxt.element.attr({ 'data-date': date });
     }
   }
-}
+});
 
 const getActivityIndices = memoizeWeak(null, function(activities, dates) {
   const present = {};
@@ -452,11 +452,4 @@ function ChartContainer(props) {
 
 UserStatistics.defaultProps = {
   chartRange: 'biweekly'
-};
-
-const component = React.memo(UserStatistics);
-
-export {
-  component as default,
-  component as UserStatistics,
 };

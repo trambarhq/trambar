@@ -10,7 +10,7 @@ import './locale-manager-panel.scss';
 /**
  * Diagnostic panel displaying state of LocaleManager
  */
-function LocaleManagerPanel(props) {
+export function LocaleManagerPanel(props) {
   const { localeManager } = props;
   const {
     browserLocaleCode,
@@ -38,8 +38,3 @@ function LocaleManagerPanel(props) {
     return <div key={i}>{phrase}</div>;
   }
 }
-
-export {
-  LocaleManagerPanel as default,
-  LocaleManagerPanel
-};

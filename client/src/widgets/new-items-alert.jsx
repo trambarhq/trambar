@@ -15,7 +15,7 @@ import './new-items-alert.scss';
  * to the fact that new contents has appeared at the top of the page that they
  * otherwise wouldn't notice due to scrolling.
  */
-function NewItemsAlert(props) {
+export function NewItemsAlert(props) {
   const { url, children, onClick } = props;
   const [ container, setContainer ] = useState(null);
   const show = useAfterglow(!!url, 500);
@@ -58,8 +58,3 @@ function NewItemsAlert(props) {
     return null;
   }
 }
-
-export {
-  NewItemsAlert as default,
-  NewItemsAlert,
-};

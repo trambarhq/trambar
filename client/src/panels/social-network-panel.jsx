@@ -12,7 +12,7 @@ import './social-network-panel.scss';
 /**
  * Panel for entering links to social network accounts.
  */
-function SocialNetworkPanel(props) {
+export function SocialNetworkPanel(props) {
   const { env, userDraft } = props;
   const { t } = env.locale;
 
@@ -142,8 +142,3 @@ function extractUsername(text, type) {
   }
   return text;
 }
-
-export {
-  SocialNetworkPanel as default,
-  SocialNetworkPanel,
-};

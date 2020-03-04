@@ -1,7 +1,6 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener } from 'relaks';
+import { useProgress, useListener } from 'relaks';
 import HTTPRequest from 'common/transport/http-request.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as UniversalLink from 'common/routing/universal-link.mjs';
@@ -26,7 +25,7 @@ import Logo from '../../assets/trambar-logo.svg';
 
 import './start-page.scss';
 
-async function StartPage(props) {
+export default async function StartPage(props) {
   const { database, route, env, transitionOut, activationCode, onTransitionOut } = props;
   const { t, p, g } = env.locale;
   const [ show, cancel, delay ] = useProgress();
@@ -803,11 +802,4 @@ function getDeviceDetails() {
   return {};
 }
 
-const component = Relaks.memo(StartPage);
-
-component.useTransition = true;
-
-export {
-  component as default,
-  component as StartPage,
-};
+StartPage.useTransition = true;

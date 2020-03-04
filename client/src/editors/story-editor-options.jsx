@@ -14,7 +14,7 @@ import './story-editor-options.scss';
 /**
  * Component responsible for the handling of story options. Used by StoryEditor.
  */
-function StoryEditorOptions(props) {
+export function StoryEditorOptions(props) {
   const { story, repos, currentUser, options } = props;
   const { database, route, env, section, onComplete } = props;
   const { t } = env.locale;
@@ -184,9 +184,4 @@ function StoryEditorOptions(props) {
 
 StoryEditorOptions.defaultProps = {
   section: 'both',
-};
-
-export {
-  StoryEditorOptions as default,
-  StoryEditorOptions,
 };

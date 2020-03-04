@@ -14,7 +14,7 @@ import './user-list.scss';
 /**
  * A list of users. Parent component must supply all needed data.
  */
-function UserList(props) {
+export function UserList(props) {
   const { database, route, env } = props;
   const { users, roles, listings, stories, dailyActivities, currentUser } = props;
   const { scrollToUserID, selectedDate, link } = props;
@@ -147,8 +147,3 @@ const findUserStories = memoizeWeak(null, function(stories, user) {
     return _.includes(story.user_ids, user.id);
   });
 });
-
-export {
-  UserList as default,
-  UserList,
-};

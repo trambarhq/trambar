@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { useRef, useMemo } from 'react';
 import { useListener } from 'relaks';
 import * as TagScanner from 'common/utils/tag-scanner.mjs';
@@ -226,9 +225,8 @@ function IssueDialogBox(props) {
   }
 }
 
-const component = Overlay.create(IssueDialogBox);
+const overlay = Overlay.create(IssueDialogBox);
 
 export {
-  component as default,
-  component as IssueDialogBox,
+  overlay as IssueDialogBox,
 };

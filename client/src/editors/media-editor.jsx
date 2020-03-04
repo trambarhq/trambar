@@ -13,7 +13,7 @@ import './media-editor.scss';
 /**
  * Component for adjusting a media resource attached to a story or reaction.
  */
-function MediaEditor(props) {
+export function MediaEditor(props) {
   const { resources, resourceIndex, allowEmbedding, allowShifting } = props;
   const { env, payloads, children, onChange, onEmbed } = props;
   const { t } = env.locale;
@@ -159,8 +159,3 @@ function MediaEditor(props) {
     );
   }
 }
-
-export {
-  MediaEditor as default,
-  MediaEditor,
-};

@@ -12,12 +12,18 @@ import LocaleManager from 'common/locale/locale-manager.mjs';
 import Notifier from 'common/transport/notifier.mjs';
 import CodePush from 'common/transport/code-push.mjs';
 
-import { SettingsPage, SettingsPageSync } from './settings-page.jsx';
+import BookmarksPage from './bookmarks-page.jsx';
+import DiagnosticsPage from './diagnostics-page.jsx';
+import ErrorPage from './error-page.jsx';
+import NewsPage from './news-page.jsx';
+import NotificationsPage from './notifications-page.jsx';
+import PeoplePage from './people-page.jsx';
+import SettingsPage from './settings-page.jsx';
+import StartPage from './start-page.jsx';
 
 BookmarksPage.propTypes = {
   scrollToStoryID: PropTypes.number,
   highlightStoryID: PropTypes.number,
-
   database: PropTypes.instanceOf(Database).isRequired,
   payloads: PropTypes.instanceOf(Payloads).isRequired,
   route: PropTypes.instanceOf(Route).isRequired,
@@ -28,7 +34,6 @@ DiagnosticsPage.propTypes = {
   payloads: PropTypes.instanceOf(Payloads).isRequired,
   route: PropTypes.instanceOf(Route).isRequired,
   env: PropTypes.instanceOf(Environment).isRequired,
-
   envMonitor: PropTypes.instanceOf(EnvironmentMonitor).isRequired,
   dataSource: PropTypes.instanceOf(RemoteDataSource).isRequired,
   localeManager: PropTypes.instanceOf(LocaleManager).isRequired,

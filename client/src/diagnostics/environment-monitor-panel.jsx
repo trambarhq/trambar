@@ -9,7 +9,7 @@ import './environment-monitor-panel.scss';
 /**
  * Diagnostic panel displaying state of EnvironmentMonitor
  */
-function EnvironmentMonitorPanel(props) {
+export function EnvironmentMonitorPanel(props) {
   const { envMonitor } = props;
   const {
     online,
@@ -60,8 +60,3 @@ function EnvironmentMonitorPanel(props) {
     </SettingsPanel>
   );
 }
-
-export {
-  EnvironmentMonitorPanel as default,
-  EnvironmentMonitorPanel
-};

@@ -15,7 +15,7 @@ import './user-image-panel.scss';
 /**
  * Panel for adding and changing the user's profile image.
  */
-function UserImagePanel(props) {
+export function UserImagePanel(props) {
   const { env, payloads, userDraft } = props;
   const { t } = env.locale;
   const importerRef = useRef();
@@ -184,8 +184,3 @@ function UserImagePanel(props) {
     }
   }
 }
-
-export {
-  UserImagePanel as default,
-  UserImagePanel,
-};

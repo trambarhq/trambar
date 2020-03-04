@@ -8,7 +8,7 @@ import './device-selector.scss';
  * capture device when there're more than one (e.g. typical mobile phone
  * with front and back camera).
  */
-function DeviceSelector(props) {
+export function DeviceSelector(props) {
   const { env, type, onSelect } = props;
   const { t } = env.locale;
   const devices = _.filter(env.devices, { kind: `${type}input` });
@@ -70,9 +70,4 @@ DeviceSelector.choose = function(devices, type, descriptor) {
       }
     }
   })
-};
-
-export {
-  DeviceSelector as default,
-  DeviceSelector,
 };

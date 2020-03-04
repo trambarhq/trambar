@@ -3,7 +3,7 @@ import React from 'react';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import MultipleUserNames from './multiple-user-names.jsx';
+import { MultipleUserNames } from './multiple-user-names.jsx';
 
 import './author-names.scss';
 
@@ -12,7 +12,7 @@ import './author-names.scss';
  * co-authors. When more there are more than two names, only the first
  * will appear while the rests are given in a pop-up (MultipleUserNames).
  */
-function AuthorNames(props) {
+export function AuthorNames(props) {
   let { env, authors, robot } = props;
   let { t } = env.locale;
   let names = _.map(authors, (author) => {
@@ -46,8 +46,3 @@ function AuthorNames(props) {
   }
   return <span className="author-names selectable">{contents}</span>;
 }
-
-export {
-  AuthorNames as default,
-  AuthorNames,
-};

@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { useState, useMemo, useRef, useImperativeHandle, useEffect } from 'react';
 import { useListener, useAsyncEffect } from 'relaks';
 import * as BlobManager from 'common/transport/blob-manager.mjs';
@@ -19,7 +18,7 @@ import './image-editor.scss';
  * local image that was selected by the user or an image that was uploaded
  * previously.
  */
-function ImageEditor(props, ref) {
+export const ImageEditor = React.forwardRef((props, ref) => {
   const { env, resource, previewWidth, previewHeight, disabled, children } = props;
   const { onChange } = props;
   const { t } = env.locale;
@@ -163,17 +162,10 @@ function ImageEditor(props, ref) {
       </div>
     );
   }
-}
+});
 
-const component = React.forwardRef(ImageEditor);
-
-component.defaultProps = {
+ImageEditor.defaultProps = {
   previewWidth: 512,
   previewHeight: 512,
   disabled: false,
-};
-
-export {
-  component as default,
-  component as ImageEditor,
 };

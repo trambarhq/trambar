@@ -6,7 +6,7 @@ import './header-button.scss';
  * Stateless component that renders the type of buttons that appears in the
  * header of a panel.
  */
-function HeaderButton(props) {
+export function HeaderButton(props) {
   const { label, hidden, disabled, highlighted, onClick, ...otherProps } = props;
   if (hidden) {
     return null;
@@ -92,8 +92,3 @@ function iconClasses(props) {
   }
   return classNames.join(' ');
 }
-
-export {
-  HeaderButton as default,
-  HeaderButton,
-};

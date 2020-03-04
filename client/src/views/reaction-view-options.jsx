@@ -5,8 +5,8 @@ import { useListener } from 'relaks';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import PopUpMenu from '../widgets/pop-up-menu.jsx';
-import OptionButton from '../widgets/option-button.jsx';
+import { PopUpMenu } from '../widgets/pop-up-menu.jsx';
+import { OptionButton } from '../widgets/option-button.jsx';
 
 import './reaction-view-options.scss';
 
@@ -14,7 +14,7 @@ import './reaction-view-options.scss';
  * Component that renders a pop-up menu used to alter options of reactions to
  * stories.
  */
-function ReactionViewOptions(props) {
+export function ReactionViewOptions(props) {
   const { env, options, reaction, story, currentUser, access, onChange } = props;
   const { t } = env.locale;
   const [ openMenu, setOpenMenu ] = useState('');
@@ -104,8 +104,3 @@ function ReactionViewOptions(props) {
     );
   }
 }
-
-export {
-  ReactionViewOptions as default,
-  ReactionViewOptions,
-};

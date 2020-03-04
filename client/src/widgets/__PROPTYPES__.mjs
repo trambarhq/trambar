@@ -7,7 +7,10 @@ import { Payloads } from 'common/transport/payloads.mjs';
 import { AuthorNames } from './author-names.jsx';
 import { BottomNavigation } from './bottom-navigation.jsx';
 import { CalendarBar } from './calendar-bar.jsx';
+import { Calendar } from './calendar.jsx';
 import { ChartToolbar } from './chart-toolbar.jsx';
+import { CoauthoringButton } from './coauthoring-button.jsx';
+import { CornerPopUp } from './corner-pop-up.jsx';
 import { DevicePlaceholder } from './device-placeholder.jsx';
 import { DiagnosticsSection } from './diagnostics-section.jsx';
 import { DropZone } from './drop-zone.jsx';
@@ -15,11 +18,13 @@ import { DurationIndicator } from './duration-indicator.jsx';
 import { EmptyMessage } from './empty-message.jsx';
 import { HeaderButton } from './header-button.jsx';
 import { Link } from './link.jsx';
-import { MediaButton, Direction } from './media-button.jsx';
+import { MediaButton } from './media-button.jsx';
 import { MediaPlaceholder } from './media-placeholder.jsx';
 import { MediaToolbar } from './media-toolbar.jsx';
 import { MultipleUserNames } from './multiple-user-names.jsx';
+import { NewItemsAlert } from './new-items-alert.jsx';
 import { OptionButton } from './option-button.jsx';
+import { PopUpMenu } from './pop-up-menu.jsx';
 import { ProfileImage } from './profile-image.jsx';
 import { PushButton } from './push-button.jsx';
 import { QRCode } from './qr-code.jsx';
@@ -28,6 +33,7 @@ import { ReactionProgress } from './reaction-progress.jsx';
 import { ReactionToolbar } from './reaction-toolbar.jsx';
 import { RoleFilterBar } from './role-filter-bar.jsx';
 import { RoleFilterButton } from './role-filter-button.jsx';
+import { SearchBar } from './search-bar.jsx';
 import { StoryEmblem } from './story-emblem.jsx';
 import { StoryProgress } from './story-progress.jsx';
 import { TextField } from './text-field.jsx';
@@ -54,6 +60,14 @@ CalendarBar.propTypes = {
   route: PropTypes.instanceOf(Route).isRequired,
   env: PropTypes.instanceOf(Environment).isRequired,
 };
+Calendar.propTypes = {
+  year: PropTypes.number.isRequired,
+  month: PropTypes.number.isRequired,
+  showYear: PropTypes.bool,
+  selection: PropTypes.string,
+  env: PropTypes.instanceOf(Environment).isRequired,
+  onDateURL: PropTypes.func,
+};
 ChartToolbar.propTypes = {
   chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
   env: PropTypes.instanceOf(Environment).isRequired,
@@ -65,12 +79,11 @@ CoauthoringButton.propTypes = {
   database: PropTypes.instanceOf(Database).isRequired,
   route: PropTypes.instanceOf(Route).isRequired,
   env: PropTypes.instanceOf(Environment).isRequired,
-
   onSelect: PropTypes.func,
   onRemove: PropTypes.func,
 };
 CornerPopUp.ropType = {
-  open: PropTYpes.bool,
+  open: PropTypes.bool,
   disabled: PropTypes.bool,
   name: PropTypes.string,
 
@@ -125,7 +138,7 @@ MediaButton.propTypes = {
   disabled: PropTypes.bool,
   onChange: PropTypes.func,
 };
-Direction.propTypes = {
+MediaButton.Direction.propTypes = {
   index: PropTypes.number,
   count: PropTypes.number,
   hidden: PropTypes.bool,
@@ -148,7 +161,6 @@ MultipleUserNames.propTypes = {
   title: PropTypes.string,
   users: PropTypes.arrayOf(PropTypes.object).isRequired,
   popupLimit: PropTypes.number,
-
   env: PropTypes.instanceOf(Environment).isRequired,
 };
 NewItemsAlert.propTypes = {
@@ -169,11 +181,10 @@ OptionButton.propTypes = {
   onClick: PropTypes.func,
 };
 PopUpMenu.propTypes = {
-  open: PropTYpes.bool,
+  open: PropTypes.bool,
   disabled: PropTypes.bool,
   name: PropTypes.string,
   popOut: PropTypes.bool,
-
   onOpen: PropTypes.func,
   onClose: PropTypes.func,
 };
@@ -225,7 +236,6 @@ ReactionToolbar.propTypes = {
 }
 RoleFilterBar.propTypes = {
   settings: PropTypes.object.isRequired,
-
   database: PropTypes.instanceOf(Database).isRequired,
   route: PropTypes.instanceOf(Route).isRequired,
   env: PropTypes.instanceOf(Environment).isRequired,
@@ -235,7 +245,6 @@ RoleFilterButton.propTypes = {
   users: PropTypes.arrayOf(PropTypes.object),
   selected: PropTypes.bool,
   url: PropTypes.string,
-
   env: PropTypes.instanceOf(Environment).isRequired,
 };
 SearchBar.propTypes = {
@@ -267,7 +276,6 @@ Time.propTypes = {
 };
 TopNavigation.propTypes = {
   settings: PropTypes.object.isRequired,
-
   database: PropTypes.instanceOf(Database).isRequired,
   payloads: PropTypes.instanceOf(Payloads).isRequired,
   route: PropTypes.instanceOf(Route).isRequired,

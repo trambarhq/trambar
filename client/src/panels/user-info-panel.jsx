@@ -12,7 +12,7 @@ import './user-info-panel.scss';
 /**
  * Panel for entering the user's basic personal information.
  */
-function UserInfoPanel(props) {
+export function UserInfoPanel(props) {
   const { env, userDraft } = props;
   const { t, p } = env.locale;
 
@@ -97,8 +97,3 @@ function UserInfoPanel(props) {
     );
   }
 }
-
-export {
-  UserInfoPanel as default,
-  UserInfoPanel,
-};

@@ -22,13 +22,13 @@ function cardinal(num, sg, pl, plGenitive) {
   }
 }
 
-let numberRegExp = /\d+/;
+const numberRegExp = /\d+/;
 
 function replaceNumber(s, n) {
   return s.replace(numberRegExp, n);
 }
 
-let nameGenders = {};
+const nameGenders = {};
 
 function genderize(name, gender) {
   nameGenders[name] = gender;
@@ -37,8 +37,9 @@ function genderize(name, gender) {
 function gender(name) {
   // handle multiple names
   if (name instanceof Array) {
-    for (let i = 0; i < name.length; i++) {
-      if (gender(name[i]) === 'male') {
+    const names = name;
+    for (let name of names) {
+      if (gender(name) === 'male') {
         return 'male';
       }
     }
@@ -47,14 +48,14 @@ function gender(name) {
 
   if (name) {
     // use value from prior call to genderize()
-    let gender = nameGenders[name];
+    const gender = nameGenders[name];
     if (gender) {
       return gender;
     }
 
     // see if the first name ends in an 'a', taking exceptions into consideration
-    let parts = name.split(/\s+/);
-    let fname = parts[0].toLocaleLowerCase();
+    const parts = name.split(/\s+/);
+    const fname = parts[0].toLocaleLowerCase();
     if (/a$/.test(fname)) {
       if (!isMasculine[fname]) {
         return 'female';
@@ -112,8 +113,8 @@ function list(items) {
 }
 
 // żeńskie imiona nie kończące się na a
-let isFeminine = {};
-[
+const isFeminine = {};
+const feminineNames  = [
   'Abigail',
   'Beatrycze',
   'Bogudać',
@@ -124,13 +125,14 @@ let isFeminine = {};
   'Noemi',
   'Przybycześć',
   'Świętożyźń',
-].forEach((name) => {
+];
+for (let name of feminineNames) {
   isFeminine[name.toLocaleLowerCase()] = true;
-});
+}
 
 // męskie imiona kończące się na a
-let isMasculine = {};
-[
+const isMasculine = {};
+const masculineNames = [
   'Barnaba',
   'Bodzęta',
   'Bogdała',
@@ -148,11 +150,12 @@ let isMasculine = {};
   'Strachota',
   'Zawisza',
   'Żegota',
-].forEach((name) => {
+];
+for (let name of masculineNames) {
   isMasculine[name.toLocaleLowerCase()] = true;
-});
+}
 
-module.exports = {
+export {
   singular,
   plural,
   cardinal,

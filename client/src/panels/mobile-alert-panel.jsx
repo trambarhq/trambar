@@ -13,7 +13,7 @@ import './mobile-alert-panel.scss';
 /**
  * Panel for controling the sending of alerts to the user's mobile phone.
  */
-function MobileAlertPanel(props) {
+export function MobileAlertPanel(props) {
   const { env, userDraft, repos } = props;
   const { t } = env.locale;
   let types = NotificationTypes;
@@ -60,8 +60,3 @@ function MobileAlertPanel(props) {
     return <OptionButton key={index} {...buttonProps} />
   }
 }
-
-export {
-  MobileAlertPanel as default,
-  MobileAlertPanel,
-};

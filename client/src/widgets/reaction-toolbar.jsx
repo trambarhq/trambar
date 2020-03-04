@@ -10,7 +10,7 @@ import './reaction-toolbar.scss';
 /**
  * Buttons for liking or commenting on a story.
  */
-function ReactionToolbar(props) {
+export function ReactionToolbar(props) {
   const { env, access, reactions, currentUser, addingComment, disabled, onAction } = props;
   const { t } = env.locale;
   const canComment = (access === 'read-comment' || access === 'read-write');
@@ -62,8 +62,3 @@ function ReactionToolbar(props) {
     </div>
   );
 }
-
-export {
-  ReactionToolbar as default,
-  ReactionToolbar,
-};

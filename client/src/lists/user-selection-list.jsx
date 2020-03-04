@@ -1,17 +1,17 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress, useListener } from 'relaks';
+import { useProgress, useListener } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import ProfileImage from '../widgets/profile-image.jsx';
+import { ProfileImage } from '../widgets/profile-image.jsx';
 
 import './user-selection-list.scss';
 
-async function UserSelectionList(props) {
+export async function UserSelectionList(props) {
   const { database, route, env, selection, disabled, onSelect } = props;
   const [ show ] = useProgress();
 
@@ -88,10 +88,3 @@ const sortUsers = memoizeWeak(null, function(users, env) {
   };
   return _.orderBy(users, [ name ], [ 'asc' ]);
 });
-
-const component = Relaks.memo(UserSelectionList);
-
-export {
-  component as default,
-  component as UserSelectionList,
-};

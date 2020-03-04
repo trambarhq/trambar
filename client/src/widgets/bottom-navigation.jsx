@@ -15,7 +15,7 @@ import './bottom-navigation.scss';
 /**
  * Row of buttons at the bottom of the user interface.
  */
-function BottomNavigation(props) {
+export function BottomNavigation(props) {
   const { database, route, env, settings } = props;
   const { t } = env.locale;
   const routeParams = settings?.navigation?.route;
@@ -153,7 +153,7 @@ function Button(props) {
  * Asynchronous component that retrieves of un-read notifications from the
  * remote server. If there are any, it renders a small badge with a number.
  */
-const NewNotificationsBadge = Relaks.memo(async function NewNotificationsBadge(props) {
+async function NewNotificationsBadge(props) {
   const { database, env } = props;
   const active = (database.context.schema && database.authorized);
   const db = database.use({ by: this });
@@ -184,7 +184,7 @@ const NewNotificationsBadge = Relaks.memo(async function NewNotificationsBadge(p
       );
     }
   }
-});
+}
 
 let favIcons;
 
@@ -240,8 +240,3 @@ function changeDocumentTitle(count) {
   }
   document.title = title;
 }
-
-export {
-  BottomNavigation as default,
-  BottomNavigation,
-};

@@ -7,7 +7,7 @@ import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 // widgets
-import RoleFilterButton from './role-filter-button.jsx';
+import { RoleFilterButton } from './role-filter-button.jsx';
 
 import './role-filter-bar.scss';
 
@@ -15,7 +15,7 @@ import './role-filter-bar.scss';
  * Asynchronous component that retrieve data needed by the role filter bar,
  * namely the list of roles and list of project members.
  */
-async function RoleFilterBar(props) {
+export async function RoleFilterBar(props) {
   const { database, route, env, settings } = props;
   const db = database.use({ by: this });
   const [ show ] = useProgress();
@@ -73,10 +73,3 @@ const findUsers = memoizeWeak(null, function(users, role) {
     return list;
   }
 });
-
-const component = Relaks.memo(RoleFilterBar);
-
-export {
-  component as default,
-  component as RoleFilterBar,
-};

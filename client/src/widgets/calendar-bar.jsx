@@ -14,7 +14,7 @@ import './calendar-bar.scss';
  * Component in top nav that shows a list of calendars, used to navigate
  * to news of a particular date.
  */
-async function CalendarBar(props) {
+export async function CalendarBar(props) {
   const { database, route, env, settings } = props;
   const db = database.use({ by: this });
   const selection = route.params.date;
@@ -93,10 +93,3 @@ async function CalendarBar(props) {
     return months;
   }
 }
-
-const component = Relaks.memo(CalendarBar);
-
-export {
-  component as default,
-  component as CalendarBar,
-};

@@ -2,14 +2,14 @@ import _ from 'lodash';
 import React from 'react';
 
 // widgets
-import ProfileImage from './profile-image.jsx';
+import { ProfileImage } from './profile-image.jsx';
 
 import './role-filter-button.scss';
 
 /**
  * A button decorated with profile images of members with a given role.
  */
-function RoleFilterButton(props) {
+export function RoleFilterButton(props) {
   const { env, url, role, users, selected } = props;
   const { t, p } = env.locale;
   const classNames = [ 'role-filter-button' ];
@@ -79,8 +79,3 @@ function RoleFilterButton(props) {
     );
   }
 }
-
-export {
-  RoleFilterButton as default,
-  RoleFilterButton,
-};

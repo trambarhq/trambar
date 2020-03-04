@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import Merger from 'common/data/merger.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
@@ -18,7 +18,7 @@ const minimumSeenDelay = 3000;
 const maximumSeenDelay = 5000;
 const delayPerNotification = 1500;
 
-async function NotificationList(props) {
+export async function NotificationList(props) {
   const { database, route, env } = props;
   const { currentUser, notifications } = props;
   const { scrollToNotificationID } = props;
@@ -176,10 +176,3 @@ const findUser = memoizeWeak(null, function(users, notification) {
     return _.find(users, { id: notification.user_id });
   }
 });
-
-const component = Relaks.memo(NotificationList);
-
-export {
-  component as default,
-  component as NotificationList,
-};

@@ -12,7 +12,7 @@ import './user-view-options.scss';
  * Component that lists a user's social links. It also handles options for
  * different statistics views.
  */
-function UserViewOptions(props) {
+export function UserViewOptions(props) {
   const { env, user, options, section, selectedDate } = props;
   const { onChange, onComplete } = props;
   const { t } = env.locale;
@@ -209,9 +209,4 @@ function UserViewOptions(props) {
 
 UserViewOptions.defaultProps = {
   section: 'both',
-};
-
-export {
-  UserViewOptions as default,
-  UserViewOptions,
 };

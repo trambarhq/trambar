@@ -2,10 +2,10 @@ import React from 'react';
 import { useListener } from 'relaks';
 
 // widgets
-import Overlay from 'common/widgets/overlay.jsx';
-import PushButton from '../widgets/push-button.jsx';
-import Scrollable from '../widgets/scrollable.jsx';
-import UserSelectionList from '../lists/user-selection-list.jsx';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { Scrollable } from '../widgets/scrollable.jsx';
+import { UserSelectionList } from '../lists/user-selection-list.jsx';
 
 // custom hooks
 import {
@@ -80,9 +80,8 @@ function UserSelectionDialogBox(props) {
   }
 }
 
-const component = Overlay.create(UserSelectionDialogBox);
+const overlay = Overlay.create(UserSelectionDialogBox);
 
 export {
-  component as default,
-  component as UserSelectionDialogBox,
+  overlay as UserSelectionDialogBox,
 };

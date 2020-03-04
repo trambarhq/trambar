@@ -6,7 +6,7 @@ import './scrollable.scss';
 /**
  * Stateless component that renders a container with a scroll-bar
  */
-function Scrollable(props) {
+export function Scrollable(props) {
   const { className, children } = props;
   const classNames = [ 'scrollable' ];
   if (className) {
@@ -18,8 +18,3 @@ function Scrollable(props) {
   };
   return <div {...containerProps}>{children}</div>;
 }
-
-export {
-  Scrollable as default,
-  Scrollable,
-};

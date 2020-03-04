@@ -27,7 +27,7 @@ import './reaction-view.scss';
 /**
  * Component for displaying a reaction to a story.
  */
-function ReactionView(props) {
+export function ReactionView(props) {
   const { reaction, respondent, story, currentUser } = props;
   const { env, route, repo, highlighting, access } = props;
   const { t, p, g } = env.locale;
@@ -305,8 +305,3 @@ const getZoomableResources = memoizeWeak(null, function(resources) {
     }
   })
 });
-
-export {
-  ReactionView as default,
-  ReactionView,
-};

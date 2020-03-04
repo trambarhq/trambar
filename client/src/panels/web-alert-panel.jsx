@@ -13,7 +13,7 @@ import './web-alert-panel.scss';
 /**
  * Panel for controlling the sending of alerts to the web browser.
  */
-function WebAlertPanel(props) {
+export function WebAlertPanel(props) {
   const { env, userDraft, repos } = props;
   const { t } = env.locale;
   const userType = userDraft.get('type');
@@ -78,8 +78,3 @@ function getBrowserIcon() {
   }
   return 'globe';
 }
-
-export {
-  WebAlertPanel as default,
-  WebAlertPanel,
-};

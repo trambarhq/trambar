@@ -5,7 +5,7 @@ import './volume-indicator.scss';
 /**
  * A component that shows volume of audio from microphone
  */
-function VolumeIndicator(props) {
+export function VolumeIndicator(props) {
   const { type, volume, recording } = props;
 
   if (type === 'bar') {
@@ -68,9 +68,4 @@ function VolumeIndicator(props) {
 VolumeIndicator.defaultProps = {
   type: 'bar',
   recording: false,
-};
-
-export {
-  VolumeIndicator as default,
-  VolumeIndicator,
 };

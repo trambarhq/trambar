@@ -31,8 +31,4 @@ class TopLevelMouseTrap {
 }
 
 const instance = new TopLevelMouseTrap;
-
-export {
-  instance as default,
-  instance as TopLevelMouseTrap,
-};
+export default instance;

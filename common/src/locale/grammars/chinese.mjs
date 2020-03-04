@@ -22,10 +22,10 @@ function number(num, literals) {
   }
 }
 
-let numberRegExp = /\d+/;
-let chineseNumberRegExp = /[〇零一二兩两三四五六七八九十]+/;
-let traditionalChineseNumbers = [ '零', '一', '兩', '三', '四', '五', '六', '七', '八', '九' ]
-let simplifiedChineseNumbers = [ '〇', '一', '两', '三', '四', '五', '六', '七', '八', '九' ]
+const numberRegExp = /\d+/;
+const chineseNumberRegExp = /[〇零一二兩两三四五六七八九十]+/;
+const traditionalChineseNumbers = [ '零', '一', '兩', '三', '四', '五', '六', '七', '八', '九' ]
+const simplifiedChineseNumbers = [ '〇', '一', '两', '三', '四', '五', '六', '七', '八', '九' ]
 
 function replaceNumberT(s, num) {
   if (numberRegExp.test(s)) {

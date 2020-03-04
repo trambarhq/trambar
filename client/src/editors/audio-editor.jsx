@@ -10,7 +10,7 @@ import './audio-editor.scss';
  * Stateless component that renders an image editor for adjusting the album
  * art if there's one. Otherwise a static placeholder graphic is rendered.
  */
-function AudioEditor(props) {
+export function AudioEditor(props) {
   const { resource, duration } = props;
   if (resource.width && resource.height) {
     return (
@@ -35,8 +35,3 @@ function AudioEditor(props) {
     );
   }
 }
-
-export {
-  AudioEditor as default,
-  AudioEditor,
-};

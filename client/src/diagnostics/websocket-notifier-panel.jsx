@@ -7,7 +7,7 @@ import { DiagnosticsSection } from '../widgets/diagnostics-section.jsx';
 
 import './websocket-notifier-panel.scss';
 
-function WebsocketNotifierPanel(props) {
+export function WebsocketNotifierPanel(props) {
   const { notifier } = props;
   const {
     socket,
@@ -38,8 +38,3 @@ function WebsocketNotifierPanel(props) {
     return <pre key={i}>{JSON.stringify(object, undefined, 4)}</pre>;
   }
 }
-
-export {
-  WebsocketNotifierPanel as default,
-  WebsocketNotifierPanel,
-};

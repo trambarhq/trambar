@@ -13,7 +13,7 @@ import './coauthoring-button.scss';
  * Button for adding/removing co-authors from a story. The component is also
  * responsible for rendering the dialog box.
  */
-function CoauthoringButton(props) {
+export function CoauthoringButton(props) {
   const { authors, currentUser } = props;
   const { database, route, env } = props;
   const { onRemove, onSelect } = props;
@@ -76,8 +76,3 @@ function CoauthoringButton(props) {
     return <UserSelectionDialogBox {...props} />;
   }
 }
-
-export {
-  CoauthoringButton as default,
-  CoauthoringButton,
-};

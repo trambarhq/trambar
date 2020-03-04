@@ -2,12 +2,12 @@ import React, { useState, useImperativeHandle } from 'react';
 import { useListener } from 'relaks';
 
 // widgets
-import ConfirmationDialogBox from '../dialogs/confirmation-dialog-box.jsx';
+import { ConfirmationDialogBox } from '../dialogs/confirmation-dialog-box.jsx';
 
 /**
  * Component that renders a confirmation dialog box.
  */
-function ActionConfirmation(props, ref) {
+export const ActionConfirmation = React.forwardRef((props, ref) => {
   const { env } = props;
   const [ question, setQuestion ] = useState(null);
 
@@ -61,11 +61,4 @@ function ActionConfirmation(props, ref) {
       {question ? question.message : undefined}
     </ConfirmationDialogBox>
   )
-}
-
-const component = React.forwardRef(ActionConfirmation);
-
-export {
-  component as default,
-  component as ActionConfirmation,
-};
+});

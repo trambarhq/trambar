@@ -48,9 +48,8 @@ function ConfirmationDialogBox(props) {
   }
 }
 
-const component = Overlay.create(ConfirmationDialogBox);
+const overlay = Overlay.create(ConfirmationDialogBox);
 
 export {
-  component as default,
-  component as ConfirmationDialogBox,
+  overlay as ConfirmationDialogBox,
 };

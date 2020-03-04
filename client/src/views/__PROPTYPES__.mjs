@@ -2,11 +2,20 @@ import PropTypes from 'prop-types';
 import { Database } from 'common/data/database.mjs';
 import { Route } from 'common/routing/route.mjs';
 import { Environment } from 'common/env/environment.mjs';
+import { Payloads } from 'common/transport/payloads.mjs';
 
 import { AppComponent } from './app-component.jsx';
 import { BookmarkView } from './bookmark-view.jsx';
 import { MediaView } from './media-view.jsx';
 import { NotificationView } from './notification-view.jsx';
+import { ReactionViewOptions } from './reaction-view-options.jsx';
+import { ReactionView } from './reaction-view.jsx';
+import { StoryContents } from './story-contents.jsx';
+import { StoryView } from './story-view.jsx';
+import { StoryViewOptions } from './story-view-options.jsx';
+import { UserStatistics } from './user-statistics.jsx';
+import { UserViewOptions } from './user-view-options.jsx';
+import { UserView } from './user-view.jsx';
 
 AppComponent.propTypes = {
   component: PropTypes.object.isRequired,
@@ -18,7 +27,6 @@ BookmarkView.propTypes = {
   bookmark: PropTypes.object,
   senders: PropTypes.arrayOf(PropTypes.object),
   currentUser: PropTypes.object,
-
   database: PropTypes.instanceOf(Database).isRequired,
   route: PropTypes.instanceOf(Route).isRequired,
   env: PropTypes.instanceOf(Environment).isRequired,
@@ -31,11 +39,9 @@ MediaView.propTypes = {
 NotificationView.propTypes = {
   notification: PropTypes.object.isRequired,
   user: PropTypes.object,
-
   database: PropTypes.instanceOf(Database).isRequired,
   route: PropTypes.instanceOf(Route).isRequired,
   env: PropTypes.instanceOf(Environment).isRequired,
-
   onClick: PropTypes.func,
 };
 ReactionViewOptions.propTypes = {
@@ -44,7 +50,6 @@ ReactionViewOptions.propTypes = {
   reaction: PropTypes.object.isRequired,
   story: PropTypes.object.isRequired,
   options: PropTypes.object.isRequired,
-
   env: PropTypes.instanceOf(Environment).isRequired,
 };
 ReactionView.propTypes = {
@@ -55,12 +60,10 @@ ReactionView.propTypes = {
   story: PropTypes.object.isRequired,
   currentUser: PropTypes.object.isRequired,
   repo: PropTypes.object,
-
   database: PropTypes.instanceOf(Database).isRequired,
   route: PropTypes.instanceOf(Route).isRequired,
   env: PropTypes.instanceOf(Environment).isRequired,
 };
-
 StoryContents.propTypes = {
   access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
   story: PropTypes.object.isRequired,
@@ -69,7 +72,6 @@ StoryContents.propTypes = {
   reactions: PropTypes.arrayOf(PropTypes.object),
   project: PropTypes.object,
   repo: PropTypes.object,
-
   database: PropTypes.instanceOf(Database).isRequired,
   env: PropTypes.instanceOf(Environment).isRequired,
 };
@@ -81,7 +83,6 @@ StoryView.propTypes = {
   bookmark: PropTypes.object,
   highlightReactionID: PropTypes.number,
   scrollToReactionID: PropTypes.number,
-
   authors: PropTypes.arrayOf(PropTypes.object),
   reactions: PropTypes.arrayOf(PropTypes.object),
   respondents: PropTypes.arrayOf(PropTypes.object),
@@ -89,7 +90,6 @@ StoryView.propTypes = {
   recipients: PropTypes.arrayOf(PropTypes.object),
   repos: PropTypes.arrayOf(PropTypes.object),
   currentUser: PropTypes.object.isRequired,
-
   database: PropTypes.instanceOf(Database).isRequired,
   payloads: PropTypes.instanceOf(Payloads).isRequired,
   route: PropTypes.instanceOf(Route).isRequired,

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
-import MarkGor from 'mark-gor/react';
+import { parse } from 'mark-gor/react';
 
 // widgets
 import { ResourceView } from 'common/widgets/resource-view.jsx';
@@ -11,7 +11,7 @@ import './app-component.scss';
 /**
  * Widget for displaying component description.
  */
-function AppComponent(props) {
+export function AppComponent(props) {
   const { env, component, onSelect } = props;
   const { p } = env.locale;
 
@@ -54,7 +54,7 @@ function AppComponent(props) {
 
   function renderText() {
     const { text } = component;
-    const elements = MarkGor.parse(p(text));
+    const elements = parse(p(text));
     return (
       <div className="description">
         <div className="description-contents">
@@ -67,8 +67,3 @@ function AppComponent(props) {
     );
   }
 }
-
-export {
-  AppComponent as default,
-  AppComponent,
-};

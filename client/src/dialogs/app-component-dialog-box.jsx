@@ -1,5 +1,5 @@
 import React from 'react';
-import MarkGor from 'mark-gor/react';
+import { parse } from 'mark-gor';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -53,7 +53,7 @@ function AppComponentDialogBox(props) {
 
   function renderText() {
     const text = p(component.text);
-    const elements = MarkGor.parse(text);
+    const elements = parse(text);
     return <div className="text">{elements}</div>;
   }
 
@@ -71,9 +71,8 @@ function AppComponentDialogBox(props) {
   }
 }
 
-const component = Overlay.create(AppComponentDialogBox);
+const overlay = Overlay.create(AppComponentDialogBox);
 
 export {
-  component as default,
-  component as AppComponentDialogBox,
+  overlay as AppComponentDialogBox,
 };

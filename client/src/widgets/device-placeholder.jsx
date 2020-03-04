@@ -6,7 +6,7 @@ import './device-placeholder.scss';
  * A stateless component that display a placeholder graphic for when a device
  * isn't ready or available.
  */
-function DevicePlaceholder(props) {
+export function DevicePlaceholder(props) {
   const { icon, blocked } = props;
   const className = [ 'device-placeholder' ];
   if (blocked) {
@@ -21,8 +21,3 @@ function DevicePlaceholder(props) {
     </div>
   );
 }
-
-export {
-  DevicePlaceholder as default,
-  DevicePlaceholder,
-};

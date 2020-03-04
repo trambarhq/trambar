@@ -6,7 +6,7 @@ import './option-button.scss';
  * Stateless component that renders a text button with either a checkbox or
  * an icon next to it.
  */
-function OptionButton(props) {
+export function OptionButton(props) {
   const { id, label, url, target, hidden, disabled, onClick } = props;
   if (hidden) {
     return null;
@@ -57,9 +57,4 @@ function iconClasses(props) {
 OptionButton.defaultProps = {
   iconOn: 'check-circle',
   iconOff: 'circle-o',
-};
-
-export {
-  OptionButton as default,
-  OptionButton,
 };

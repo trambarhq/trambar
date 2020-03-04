@@ -3,7 +3,7 @@ import React from 'react';
 import { useListener } from 'relaks';
 
 // widgets
-import HeaderButton from './header-button.jsx';
+import { HeaderButton } from './header-button.jsx';
 
 import './reaction-media-toolbar.scss';
 
@@ -11,7 +11,7 @@ import './reaction-media-toolbar.scss';
  * Buttons for attaching media to a comment. It also handling the toggling of
  * Markdown formatting.
  */
-function ReactionMediaToolbar(props) {
+export function ReactionMediaToolbar(props) {
   const { env, reaction, capturing, onAction } = props;
   const { t } = env.locale;
   const canCaptureImage = _.includes(env.recorders, 'image');
@@ -103,8 +103,3 @@ function ReactionMediaToolbar(props) {
     </div>
   );
 }
-
-export {
-  ReactionMediaToolbar as default,
-  ReactionMediaToolbar,
-};

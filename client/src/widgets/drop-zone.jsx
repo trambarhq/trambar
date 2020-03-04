@@ -8,7 +8,7 @@ import './drop-zone.scss';
  * the OS's file manager over it. Children passed to it are rendered within
  * its HTML node. When files are dropped, it'll fire an onDrop event.
  */
-function DropZone(props) {
+export function DropZone(props) {
   const { children, onDrop } = props;
   const [ active, setActive ] = useState(false);
 
@@ -52,8 +52,3 @@ function DropZone(props) {
     return <div className="overlay" {...handlers} />;
   }
 }
-
-export {
-  DropZone as default,
-  DropZone,
-};

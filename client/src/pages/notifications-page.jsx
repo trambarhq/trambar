@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as NotificationFinder from 'common/objects/finders/notification-finder.mjs';
 
@@ -16,7 +16,7 @@ import './notifications-page.scss';
 /**
  * Asynchronous component that retrieves data needed by the Notifications page.
  */
-async function NotificationsPage(props) {
+export default async function NotificationsPage(props) {
   const { database, route, env, date, scrollToNotificationID } = props;
   const [ show ] = useProgress();
 
@@ -71,10 +71,3 @@ async function NotificationsPage(props) {
     }
   }
 }
-
-const component = Relaks.memo(NotificationsPage);
-
-export {
-  component as default,
-  component as NotificationsPage,
-};

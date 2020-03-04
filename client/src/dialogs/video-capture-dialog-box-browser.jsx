@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress, useListener } from 'relaks';
+import { useProgress, useListener } from 'relaks';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -244,11 +244,8 @@ async function VideoCaptureDialogBoxBrowser(props) {
   }
 }
 
-const component = Overlay.create(
-  Relaks.memo(VideoCaptureDialogBoxBrowser)
-);
+const overlay = Overlay.create(VideoCaptureDialogBoxBrowser);
 
 export {
-  component as default,
-  component as VideoCaptureDialogBoxBrowser,
+  overlay as VideoCaptureDialogBoxBrowser,
 };

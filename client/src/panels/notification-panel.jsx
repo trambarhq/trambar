@@ -13,7 +13,7 @@ import './notification-panel.scss';
 /**
  * Panel for controlling which events generate notifications.
  */
-function NotificationPanel(props) {
+export function NotificationPanel(props) {
   const { env, userDraft, repos } = props;
   const { t } = env.locale;
   const userType = userDraft.get('type');
@@ -71,8 +71,3 @@ function NotificationPanel(props) {
     return <OptionButton key={index} {...buttonProps} />
   }
 }
-
-export {
-  NotificationPanel as default,
-  NotificationPanel,
-};

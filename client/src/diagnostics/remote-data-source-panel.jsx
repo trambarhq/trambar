@@ -11,7 +11,7 @@ import './remote-data-source-panel.scss';
 /**
  * Diagnostic panel displaying state of RemoteDataSource
  */
-function RemoteDataSourcePanel(props) {
+export function RemoteDataSourcePanel(props) {
   const { dataSource } = props;
   const {
     recentSearchResults,
@@ -131,8 +131,3 @@ const RecentRemovalTable = RecentStorageTable;
 function truncateLongArray(json) {
   return json.replace(/\[([^\]]{1,50},\s*)[^\]]{50,}?(\s*)\]/g, '[$1...$2]');
 }
-
-export {
-  RemoteDataSourcePanel,
-  RemoteDataSourcePanel as default,
-};

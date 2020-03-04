@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
@@ -16,7 +16,7 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import './story-list.scss';
 
-async function StoryList(props) {
+export async function StoryList(props) {
   const { database, route, payloads, env } = props;
   const { stories, draftStories, pendingStories } = props;
   const { currentUser, project } = props;
@@ -317,13 +317,6 @@ const findRecipients = memoizeWeak(null, function(recipients, bookmarks, story, 
   });
 });
 
-const component = Relaks.memo(StoryList);
-
-component.defaultProps = {
+StoryList.defaultProps = {
   acceptNewStory: false,
-};
-
-export {
-  component as default,
-  component as StoryList,
 };

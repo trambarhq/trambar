@@ -8,7 +8,7 @@ import { DiagnosticsSection } from '../widgets/diagnostics-section.jsx';
 
 import './payload-manager-panel.scss';
 
-function PayloadManagerPanel(props) {
+export function PayloadManagerPanel(props) {
   const { payloadManager } = props;
   const { payloads } = payloadManager;
   if (_.isEmpty(payloads)) {
@@ -130,8 +130,3 @@ function fileSize(bytes) {
     return '0';
   }
 }
-
-export {
-  PayloadManagerPanel as default,
-  PayloadManagerPanel,
-};

@@ -23,7 +23,7 @@ import './project-panel.scss';
 /**
  * Panel for switching between different projects.
  */
-function ProjectPanel(props) {
+export function ProjectPanel(props) {
   const { database, route, env, userDraft, system, project, projectLinks } = props;
   const { t, p } = env.locale;
   const isMember = UserUtils.isMember(userDraft.current, project);
@@ -268,8 +268,3 @@ function SupplementalProjectOption(props) {
     </div>
   );
 }
-
-export {
-  ProjectPanel as default,
-  ProjectPanel,
-};

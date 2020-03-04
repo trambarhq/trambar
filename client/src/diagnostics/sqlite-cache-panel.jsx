@@ -10,7 +10,7 @@ import './sqlite-cache-panel.scss';
 /**
  * Diagnostic panel displaying state of RemoteDataSource
  */
-function SQLiteCachePanel(props) {
+export function SQLiteCachePanel(props) {
   const { cache } = props;
   const {
     options,
@@ -41,8 +41,3 @@ function SQLiteCachePanel(props) {
     </SettingsPanel>
   );
 }
-
-export {
-  SQLiteCachePanel as default,
-  SQLiteCachePanel,
-};

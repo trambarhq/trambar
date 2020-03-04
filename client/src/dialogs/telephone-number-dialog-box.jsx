@@ -46,9 +46,8 @@ function TelephoneNumberDialogBox(props) {
   }
 }
 
-const component = Overlay.create(TelephoneNumberDialogBox);
+const overlay = Overlay.create(TelephoneNumberDialogBox);
 
 export {
-  component as default,
-  component as TelephoneNumberDialogBox,
+  overlay as TelephoneNumberDialogBox,
 };

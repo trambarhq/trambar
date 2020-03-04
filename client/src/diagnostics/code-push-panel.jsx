@@ -10,7 +10,7 @@ import './code-push-panel.scss';
 /**
  * Diagnostic panel displaying state of RemoteDataSource
  */
-function CodePushPanel(props) {
+export function CodePushPanel(props) {
   const { codePush } = props;
   const { lastSyncTime, lastSyncStatus, currentPackage, pendingPackage } = codePush;
 
@@ -47,8 +47,3 @@ function CodePushPackageDiagnostics(props) {
     </DiagnosticsSection>
   );
 }
-
-export {
-  CodePushPanel as default,
-  CodePushPanel,
-};

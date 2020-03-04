@@ -79,11 +79,8 @@ function insertSpacers(s) {
   return _.toUpper(parts.join(' '));
 }
 
-const component = Overlay.create(
-  Relaks.memo(MobileSetupDialogBox)
-);
+const overlay = Overlay.create(MobileSetupDialogBox);
 
 export {
-  component as default,
-  component as MobileSetupDialogBox,
+  overlay as MobileSetupDialogBox,
 };

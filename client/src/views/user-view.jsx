@@ -20,7 +20,7 @@ import './user-view.scss';
 /**
  * Component for showing information about a user.
  */
-function UserView(props) {
+export function UserView(props) {
   const { user, roles, stories, dailyActivities, options } = props;
   const { database, route, env, selectedDate, search, link } = props;
   const { t, p } = env.locale;
@@ -323,8 +323,3 @@ function UserView(props) {
     return <UserViewOptions {...props} />;
   }
 }
-
-export {
-  UserView as default,
-  UserView,
-};

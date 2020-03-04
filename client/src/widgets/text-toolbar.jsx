@@ -2,14 +2,14 @@ import React from 'react';
 import { useListener } from 'relaks';
 
 // widgets
-import HeaderButton from './header-button.jsx';
+import { HeaderButton } from './header-button.jsx';
 
 import './text-toolbar.scss';
 
 /**
  * Row of buttons for changing text type.
  */
-function TextToolbar(props) {
+export function TextToolbar(props) {
   const { env, story, onAction } = props;
   const { t } = env.locale;
 
@@ -58,8 +58,3 @@ function TextToolbar(props) {
     </div>
   );
 }
-
-export {
-  TextToolbar as default,
-  TextToolbar,
-};

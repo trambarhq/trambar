@@ -68,9 +68,8 @@ function ProjectManagementDialogBox(props) {
   }
 }
 
-const component = Overlay.create(ProjectManagementDialogBox);
+const overlay = Overlay.create(ProjectManagementDialogBox);
 
 export {
-  component as default,
-  component as ProjectManagementDialogBox,
+  overlay as ProjectManagementDialogBox,
 };

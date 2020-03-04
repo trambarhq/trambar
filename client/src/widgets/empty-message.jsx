@@ -7,7 +7,7 @@ import './empty-message.scss';
  * no contents. If the reason for lack of contents might be the lack of
  * Internet access, an alternate message will say so to that effect.
  */
-function EmptyMessage(props) {
+export function EmptyMessage(props) {
   let { env, phrase } = props;
   let { t } = env.locale;
   if (!env.online) {
@@ -19,8 +19,3 @@ function EmptyMessage(props) {
     </div>
   );
 }
-
-export {
-  EmptyMessage as default,
-  EmptyMessage,
-};

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 
 // widgets
@@ -12,7 +12,7 @@ import './user-activity-list.scss';
 /**
  * A short list showing a user's recent history. Used by UserView.
  */
-function UserActivityList(props) {
+export function UserActivityList(props) {
   const { route, env, user, stories, storyCountEstimate } = props;
   const { t, g } = env.locale;
 
@@ -114,9 +114,4 @@ const sortStories = memoizeWeak(null, function(stories) {
 
 function getStoryTime(story) {
   return story.btime || story.ptime;
-};
-
-export {
-  UserActivityList as default,
-  UserActivityList,
 };

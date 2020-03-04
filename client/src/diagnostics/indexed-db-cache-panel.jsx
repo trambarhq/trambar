@@ -10,7 +10,7 @@ import './indexed-db-cache-panel.scss';
 /**
  * Diagnostic panel displaying state of RemoteDataSource
  */
-function IndexedDBCachePanel(props) {
+export function IndexedDBCachePanel(props) {
   const { cache } = props;
   const {
     options,
@@ -41,8 +41,3 @@ function IndexedDBCachePanel(props) {
     </SettingsPanel>
   );
 }
-
-export {
-  IndexedDBCachePanel as default,
-  IndexedDBCachePanel,
-};

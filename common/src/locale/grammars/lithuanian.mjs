@@ -19,7 +19,7 @@ function cardinal(num, sg, pl, plGenitive) {
   }
 }
 
-let numberRegExp = /\d+/;
+const numberRegExp = /\d+/;
 
 function replaceNumber(s, n) {
   return s.replace(numberRegExp, n);
@@ -36,7 +36,7 @@ function list(items) {
   return items.join(', ');
 }
 
-module.exports = {
+export {
   singular,
   plural,
   cardinal,

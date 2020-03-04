@@ -13,7 +13,7 @@ import './notification-view.scss';
 /**
  * Component for displaying a notification.
  */
-function NotificationView(props) {
+export function NotificationView(props) {
   const { route, env, user, notification, onClick } = props;
 
   const handleClick = useListener((evt) => {
@@ -198,7 +198,5 @@ function getNotificationIcon(notification) {
 }
 
 export {
-  NotificationView as default,
-  NotificationView,
   processMobileAlert,
 };

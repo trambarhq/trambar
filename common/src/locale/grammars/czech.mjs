@@ -19,7 +19,7 @@ function cardinal(num, sg, pl, plGenitive) {
   }
 }
 
-let numberRegExp = /\d+/;
+const numberRegExp = /\d+/;
 
 function replaceNumber(s, n) {
   return s.replace(numberRegExp, n);
@@ -34,8 +34,9 @@ function genderize(name, gender) {
 function gender(name) {
   // handle multiple names
   if (name instanceof Array) {
-    for (let i = 0; i < name.length; i++) {
-      if (gender(name[i]) === 'male') {
+    const names = name;
+    for (let name of names) {
+      if (gender(name) === 'male') {
         return 'male';
       }
     }
@@ -79,14 +80,14 @@ function pastTenseEnding(name, plural) {
 
 function list(items) {
   if (items.length >= 2) {
-    let lastItem = items.pop();
+    const lastItem = items.pop();
     items[items.length - 1] += ' a ' + lastItem;
   }
   return items.join(', ');
 }
 
-let isFeminine = {};
-[
+const isFeminine = {};
+const feminineNames = [
   'Abigail',
   'Adél',
   'Adele',
@@ -236,12 +237,13 @@ let isFeminine = {};
   'Yasmine',
   'Zoe',
   'Žofie',
-].forEach((name) => {
+];
+for (let name of feminineNames) {
   isFeminine[name.toLocaleLowerCase()] = true;
-});
+}
 
-let isMasculine = {};
-[
+const isMasculine = {};
+const masculineNames = [
   'Honza',
   'Jožka',
   'Jura',
@@ -249,11 +251,12 @@ let isMasculine = {};
   'Nikolka',
   'Peťulka',
   'Sáva',
-].forEach((name) => {
+];
+for (let name of masculineNames) {
   isMasculine[name.toLocaleLowerCase()] = true;
-});
+}
 
-module.exports = {
+export {
   singular,
   plural,
   cardinal,

@@ -17,3 +17,12 @@ FrontEnd.propTypes = {
   notifier: PropTypes.instanceOf(Notifier),
   codePush: PropTypes.instanceOf(CodePush),
 };
+
+import './diagnostics/__PROPTYPES__.mjs';
+import './dialogs/__PROPTYPES__.mjs';
+import './editors/__PROPTYPES__.mjs';
+import './lists/__PROPTYPES__.mjs';
+import './pages/__PROPTYPES__.mjs';
+import './panels/__PROPTYPES__.mjs';
+import './views/__PROPTYPES__.mjs';
+import './widgets/__PROPTYPES__.mjs';

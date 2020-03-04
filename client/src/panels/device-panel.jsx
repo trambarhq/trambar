@@ -18,7 +18,7 @@ import './device-panel.scss';
 /**
  * Panel listing mobile devices currently attached to the user's account.
  */
-function DevicePanel(props) {
+export function DevicePanel(props) {
   const { database, env, devices } = props;
   const { t } = env.locale;
   const [ confirmationRef, confirm ] = useConfirmation();
@@ -96,8 +96,3 @@ function formatDeviceName(device) {
   }
   return name;
 }
-
-export {
-  DevicePanel as default,
-  DevicePanel,
-};

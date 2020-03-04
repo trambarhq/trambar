@@ -10,8 +10,6 @@ import './error-boundary.scss';
  * @extends {Component}
  */
 class ErrorBoundary extends Component {
-  static displayName = 'ErrorBoundary';
-
   constructor(props) {
     super(props);
     this.state = { error: null, errorChildren: null };
@@ -80,6 +78,5 @@ function compareElements(e1, e2) {
 }
 
 export {
-  ErrorBoundary as default,
   ErrorBoundary,
 };

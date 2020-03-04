@@ -4,7 +4,7 @@ import React, { PureComponent, Children } from 'react';
 import ReactDOM from 'react-dom';
 
 // widgets
-import PushButton from '../widgets/push-button.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
 
 import './qr-scanner-dialog-box.scss';
 

@@ -9,7 +9,7 @@ import './chart-toolbar.scss';
 /**
  * Toolbar with buttons for changing the chart type.
  */
-function ChartToolbar(props) {
+export function ChartToolbar(props) {
   const { env, chartType, onAction } = props;
   const { t } = env.locale;
 
@@ -50,8 +50,3 @@ function ChartToolbar(props) {
     </div>
   );
 }
-
-export {
-  ChartToolbar as default,
-  ChartToolbar,
-};

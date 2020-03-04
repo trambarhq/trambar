@@ -14,7 +14,7 @@ import './top-navigation.scss';
 /**
  * Expandable navigation bar at the top of the user interface.
  */
-function TopNavigation(props) {
+export function TopNavigation(props) {
   const { database, route, env, payloads, settings, makingRequests } = props;
   const showing = settings?.navigation?.top ?? true;
   const [ height, setHeight ] = useState();
@@ -173,8 +173,3 @@ function ConnectionIndicator(props) {
     return null;
   }
 }
-
-export {
-  TopNavigation as default,
-  TopNavigation,
-};

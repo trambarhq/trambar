@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import MarkGor from 'mark-gor/react';
+import { Parser, InlineLexer, ReactRenderer } from 'mark-gor/src/react.mjs';
 import * as ListParser from './list-parser.mjs';
 import * as PlainText from './plain-text.mjs';
 import * as ResourceUtils from '../objects/utils/resource-utils.mjs';
@@ -286,14 +286,25 @@ function renderListTokens(listTokens, onReference) {
  * @return {Parser}
  */
 function createParser(onReference) {
-  const blockLexer = new MarkGor.BlockLexer();
-  const inlineLexer = new MarkGor.InlineLexer({
-    links: blockLexer.links,
-    findRefLink: findMarkdownRefLink,
-    onReference,
-  });
-  const parser = new MarkGor.Parser({ blockLexer, inlineLexer });
-  return parser;
+  class inlineLexerClass extends InlineLexer {
+    findRefLink(name, forImage) {
+      let link = super.findRefLink(name, forImage);
+      if (link) {
+        return link;
+      }
+      if (onReference) {
+        link = onReference({
+          type: 'reference',
+          target: this,
+          name,
+          forImage,
+        });
+      }
+      return link;
+
+    }
+  }
+  return new Parser({ inlineLexerClass });
 }
 
 /**
@@ -335,30 +346,6 @@ function renderImage(token, key) {
  */
 function renderText(token, key) {
   return PlainText.renderEmoji(token.text, { key });
-}
-
-/**
- * Override Mark-Gor's default ref-link lookup mechanism
- *
- * @param  {String} name
- * @param  {Boolean} forImage
- *
- * @return {Object|undefined}
- */
-function findMarkdownRefLink(name, forImage) {
-  let link = this.links[name];
-  if (link) {
-    return link;
-  }
-  if (this.onReference) {
-    link = this.onReference({
-      type: 'reference',
-      target: this,
-      name,
-      forImage,
-    });
-  }
-  return link;
 }
 
 function findReferencedResource(resources, name) {

@@ -5,7 +5,7 @@ import './media-button.scss';
 /**
  * Stateless component that renders a button for adding/removing attached media.
  */
-function MediaButton(props) {
+export function MediaButton(props) {
   const { label, hidden, disabled, onClick } = props;
   if (hidden) {
     return null;
@@ -62,9 +62,3 @@ function iconClasses(props) {
   }
   return classNames.join(' ');
 }
-
-export {
-  MediaButton as default,
-  MediaButton,
-  Direction,
-};

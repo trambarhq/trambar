@@ -9,7 +9,7 @@ import { useListener } from 'relaks';
  * navigation, so that buttons would remain unobstructed. When the component
  * has keyboard focus, a true hyperlink is always rendered.
  */
-function Link(props) {
+export function Link(props) {
   const { url, alwaysAsLink, blurDelay, children, ...otherProps } = props;
   const [ hasFocus, setHasFocus ] = useState(false);
 
@@ -54,9 +54,4 @@ function Link(props) {
 Link.defaultProps = {
   alwaysAsLink: false,
   blurDelay: 200,
-};
-
-export {
-  Link as default,
-  Link,
 };

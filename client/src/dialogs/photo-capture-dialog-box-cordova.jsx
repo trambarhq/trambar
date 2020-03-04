@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React from 'react';
 import { useAsyncEffect } from 'relaks';
 import * as MediaLoader from 'common/media/media-loader.mjs';

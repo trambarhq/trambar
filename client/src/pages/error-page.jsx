@@ -9,7 +9,7 @@ import './error-page.scss';
 /**
  * Component for the Error page.
  */
-function ErrorPage(props) {
+export default function ErrorPage(props) {
   return (
     <PageContainer className="error-page">
       <div className="graphic"><Unicorn /></div>
@@ -20,8 +20,3 @@ function ErrorPage(props) {
     </PageContainer>
   );
 }
-
-export {
-  ErrorPage as default,
-  ErrorPage,
-};

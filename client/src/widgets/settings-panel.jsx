@@ -6,7 +6,7 @@ import './settings-panel.scss';
 /**
  * Component that renders a settings panel's outer frame.
  */
-function SettingsPanel(props) {
+export function SettingsPanel(props) {
   const { className, children } = props;
   const classNames = [ 'settings-panel' ];
   if (className) {
@@ -35,8 +35,3 @@ function SettingsPanel(props) {
     );
   }
 }
-
-export {
-  SettingsPanel as default,
-  SettingsPanel,
-};

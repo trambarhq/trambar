@@ -8,7 +8,7 @@ import './calendar.scss';
  * A component that draws a monthly calendar. Statistics passed as prop
  * determines whether a day is highlighted and clickable.
  */
-function Calendar(props) {
+export function Calendar(props) {
   const { env, year, month, selection, showYear, onDateURL } = props;
   const { localeCode } = env.locale;
   const localeData = Moment.localeData(localeCode);
@@ -126,25 +126,3 @@ function pad(num) {
 Calendar.defaultProps = {
   showYear: false
 };
-
-export {
-  Calendar as default,
-  Calendar,
-};
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-  const PropTypes = require('prop-types');
-
-  Calendar.propTypes = {
-    year: PropTypes.number.isRequired,
-    month: PropTypes.number.isRequired,
-    showYear: PropTypes.bool,
-    selection: PropTypes.string,
-
-    env: PropTypes.instanceOf(Environment).isRequired,
-
-    onDateURL: PropTypes.func,
-  }
-}

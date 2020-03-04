@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
@@ -11,11 +11,11 @@ import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as TagScanner from 'common/utils/tag-scanner.mjs';
 
 // widgets
-import PageContainer from '../widgets/page-container.jsx';
-import UserList from '../lists/user-list.jsx';
-import StoryList from '../lists/story-list.jsx';
-import LoadingAnimation from '../widgets/loading-animation.jsx';
-import EmptyMessage from '../widgets/empty-message.jsx';
+import { PageContainer } from '../widgets/page-container.jsx';
+import { UserList } from '../lists/user-list.jsx';
+import { StoryList } from '../lists/story-list.jsx';
+import { LoadingAnimation } from '../widgets/loading-animation.jsx';
+import { EmptyMessage } from '../widgets/empty-message.jsx';
 
 import './people-page.scss';
 
@@ -23,7 +23,7 @@ import './people-page.scss';
  * Asynchronous component that retrieves data needed by the People or
  * Person page, depending on whether selectedUserID is given.
  */
-async function PeoplePage(props) {
+export default async function PeoplePage(props) {
   const { database, route, payloads, env, date, roleIDs, search } = props;
   const { selectedUserID, scrollToUserID, highlightStoryID, scrollToStoryID } = props;
   const [ show ] = useProgress();
@@ -319,10 +319,3 @@ const findUsersWithStories = memoizeWeak(null, function(users, stories) {
     });
   });
 });
-
-const component = Relaks.memo(PeoplePage);
-
-export {
-  component as default,
-  component as PeoplePage,
-};

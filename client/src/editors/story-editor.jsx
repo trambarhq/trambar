@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
 import * as ListParser from 'common/utils/list-parser.mjs';
@@ -45,7 +44,7 @@ const autoSaveDuration = 2000;
 /**
  * Component for creating or editing a story.
  */
-function StoryEditor(props) {
+export function StoryEditor(props) {
   const { story, authors, repos, bookmarks, recipients, currentUser } = props;
   const { database, route, env, payloads } = props;
   const { highlighting, isStationary } = props;
@@ -665,9 +664,4 @@ function insertText(text) {
 
 StoryEditor.defaultProps = {
   isStationary: false
-};
-
-export {
-  StoryEditor as default,
-  StoryEditor,
 };

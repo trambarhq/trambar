@@ -22,7 +22,7 @@ import './diagnostics-page.scss';
 /**
  * Synchronous component that actually renders the Diagnostics page.
  */
-function DiagnosticsPage(props) {
+export default function DiagnosticsPage(props) {
   const { env, envMonitor, dataSource, localeManager, notifier, payloadManager, codePush } = props;
 
   return (
@@ -90,8 +90,3 @@ function DiagnosticsPage(props) {
 }
 
 DiagnosticsPage.diagnostics = true;
-
-export {
-  DiagnosticsPage as default,
-  DiagnosticsPage,
-};

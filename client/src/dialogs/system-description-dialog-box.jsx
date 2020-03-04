@@ -49,9 +49,8 @@ function SystemDescriptionDialogBox(props) {
   }
 }
 
-const component = Overlay.create(SystemDescriptionDialogBox);
+const overlay = Overlay.create(SystemDescriptionDialogBox);
 
 export {
-  component as default,
-  component as SystemDescriptionDialogBox,
+  overlay as SystemDescriptionDialogBox,
 };

@@ -54,9 +54,8 @@ function ProjectDescriptionDialogBox(props) {
   }
 }
 
-const component = Overlay.create(ProjectDescriptionDialogBox);
+const overlay = Overlay.create(ProjectDescriptionDialogBox);
 
 export {
-  component as default,
-  component as ProjectDescriptionDialogBox,
+  overlay as ProjectDescriptionDialogBox,
 };

@@ -10,7 +10,7 @@ import './pop-up-menu.scss';
 /**
  * A button that opens a pop-up menu when clicked.
  */
-function PopUpMenu(props) {
+export function PopUpMenu(props) {
   const { className, children, open, name, disabled, popOut } = props;
   const { onOpen, onClose } = props;
   const containerRef = useRef();
@@ -178,9 +178,4 @@ PopUpMenu.defaultProps = {
   open: false,
   disabled: false,
   popOut: false,
-};
-
-export {
-  PopUpMenu as default,
-  PopUpMenu,
 };

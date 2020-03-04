@@ -3,7 +3,7 @@ import React, { useRef, useEffect } from 'react';
 /**
  * Component for generating and displaying a QR code.
  */
-function QRCode(props) {
+export function QRCode(props) {
   const { text, scale } = props;
   const canvasRef = useRef();
 
@@ -26,9 +26,4 @@ function QRCode(props) {
 
 QRCode.defaultProps = {
   scale: 4
-};
-
-export {
-  QRCode as default,
-  QRCode,
 };

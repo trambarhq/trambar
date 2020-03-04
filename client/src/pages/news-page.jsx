@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as StoryFinder from 'common/objects/finders/story-finder.mjs';
@@ -16,7 +16,7 @@ import { EmptyMessage } from '../widgets/empty-message.jsx';
 
 import './news-page.scss';
 
-async function NewsPage(props) {
+export default async function NewsPage(props) {
   const { database, route, payloads, env, search, roleIDs, date } = props;
   const { highlightStoryID, scrollToStoryID, highlightReactionID, scrollToReactionID } = props;
   const [ show ] = useProgress();
@@ -148,10 +148,3 @@ async function NewsPage(props) {
     }
   }
 }
-
-const component = Relaks.memo(NewsPage);
-
-export {
-  component as default,
-  component as NewsPage,
-};

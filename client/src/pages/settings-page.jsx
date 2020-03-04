@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useEffect } from 'react';
-import Relaks, { useProgress, useListener, useSaveBuffer, useAutoSave } from 'relaks';
+import { useProgress, useListener, useSaveBuffer, useAutoSave } from 'relaks';
 import * as KonamiCode from 'common/utils/konami-code.mjs';
 import * as DeviceFinder from 'common/objects/finders/device-finder.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
@@ -34,7 +34,7 @@ import './settings-page.scss';
 
 const autosave = 2000;
 
-async function SettingsPage(props) {
+export default async function SettingsPage(props) {
   const { database } = props;
   const [ show ] = useProgress();
 
@@ -214,11 +214,3 @@ function SettingsPageSync(props) {
     return <LanguagePanel {...props} />;
   }
 }
-
-const component = Relaks.memo(SettingsPage);
-
-export {
-  component as default,
-  component as SettingsPage,
-  SettingsPageSync,
-};

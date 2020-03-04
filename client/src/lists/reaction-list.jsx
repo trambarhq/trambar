@@ -4,14 +4,14 @@ import { memoizeWeak } from 'common/utils/memoize.mjs';
 import Merger from 'common/data/merger.mjs';
 
 // widgets
-import ReactionView from '../views/reaction-view.jsx';
-import ReactionEditor from '../editors/reaction-editor.jsx';
-import SmartList from 'common/widgets/smart-list.jsx';
-import ErrorBoundary from 'common/widgets/error-boundary.jsx';
+import { ReactionView } from '../views/reaction-view.jsx';
+import { ReactionEditor } from '../editors/reaction-editor.jsx';
+import { SmartList } from 'common/widgets/smart-list.jsx';
+import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import './reaction-list.scss';
 
-function ReactionList(props) {
+export function ReactionList(props) {
   const { database, payloads, route, env } = props;
   const { access, story, reactions, respondents, repo, currentUser } = props;
   const { highlightReactionID, scrollToReactionID } = props;
@@ -143,8 +143,3 @@ const findRespondent = memoizeWeak(null, function(users, reaction) {
     return _.find(users, { id: reaction.user_id });
   }
 });
-
-export {
-  ReactionList as default,
-  ReactionList,
-};

@@ -6,7 +6,7 @@ function cardinal(num, sg, pl) {
   }
 }
 
-let numberRegExp = /\d+/;
+const numberRegExp = /\d+/;
 
 function replaceNumber(s, n) {
   return s.replace(numberRegExp, n);
@@ -23,7 +23,7 @@ function list(items) {
   return items.join(', ');
 }
 
-module.exports = {
+export {
   cardinal,
   list,
 };

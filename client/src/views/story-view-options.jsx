@@ -8,9 +8,9 @@ import * as TaskSaver from 'common/objects/savers/task-saver.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import OptionButton from '../widgets/option-button.jsx';
-import UserSelectionDialogBox from '../dialogs/user-selection-dialog-box.jsx';
-import IssueDialogBox from '../dialogs/issue-dialog-box.jsx';
+import { OptionButton } from '../widgets/option-button.jsx';
+import { UserSelectionDialogBox } from '../dialogs/user-selection-dialog-box.jsx';
+import { IssueDialogBox } from '../dialogs/issue-dialog-box.jsx';
 
 // custom hooks
 import {
@@ -24,7 +24,7 @@ import './story-view-options.scss';
  * both rendering the options when they appear in a pop-up menu and when they
  * appear within the story view when there's room for the third column.
  */
-function StoryViewOptions(props) {
+export function StoryViewOptions(props) {
   const { story, reactions, bookmarks, recipients, repos, currentUser } = props;
   const { database, route, env, access, bookmarkExpected, onComplete } = props;
   const { t } = env.locale;
@@ -233,9 +233,4 @@ function StoryViewOptions(props) {
 
 StoryViewOptions.defaultProps = {
   section: 'both',
-};
-
-export {
-  StoryViewOptions as default,
-  StoryViewOptions,
 };

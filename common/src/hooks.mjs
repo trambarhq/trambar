@@ -1,7 +1,9 @@
 import _ from 'lodash';
-import { useState, useMemo, useRef, useCallback } from 'react';
+import React from 'react';
 import { useSaveBuffer, AsyncSaveBuffer } from 'relaks';
 import Cancellation from './errors/cancellation.mjs';
+
+const { useState, useMemo, useRef, useCallback } = React;
 
 function useLatest(propValue) {
   const [ stateValue, setStateValue ] = useState();

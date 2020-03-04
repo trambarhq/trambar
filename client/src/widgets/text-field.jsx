@@ -9,7 +9,7 @@ import './text-field.scss';
  * Component that renders a text field and a label, which is provided as
  * a child element. Used mainly by panels in the Settings page.
  */
-function TextField(props, ref) {
+export const TextField = React.forwardRef((props, ref) => {
   const { env, id, type, children, readOnly, ...otherProps } = props;
   const { t } = env.locale;
   const inputRef = useRef();
@@ -43,15 +43,8 @@ function TextField(props, ref) {
       <Input ref={inputRef} {...inputProps} />
     </div>
   );
-}
+});
 
-const component = React.forwardRef(TextField);
-
-component.defaultProps = {
+TextField.defaultProps = {
   type: 'text',
-};
-
-export {
-  component as default,
-  component as TextField,
 };

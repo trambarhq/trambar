@@ -7,7 +7,7 @@ import './duration-indicator.scss';
  * recording is true, indicating that a device is actively capturing video
  * or audio.
  */
-function DurationIndicator(props) {
+export function DurationIndicator(props) {
   const { duration, recording } = props;
 
   return (
@@ -46,7 +46,5 @@ DurationIndicator.defaultProps = {
 };
 
 export {
-  DurationIndicator as default,
-  DurationIndicator,
   formatDuration,
 };

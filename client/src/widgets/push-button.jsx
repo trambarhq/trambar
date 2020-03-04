@@ -5,7 +5,7 @@ import './push-button.scss';
 /**
  * Stateless component that renders a basic push button.
  */
-function PushButton(props) {
+export function PushButton(props) {
   const { label, emphasized, hidden, disabled, onClick } = props;
   if (hidden) {
     return null;
@@ -50,9 +50,3 @@ function FileButton(props) {
     </label>
   );
 }
-
-export {
-  PushButton as default,
-  PushButton,
-  FileButton,
-};

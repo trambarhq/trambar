@@ -45,7 +45,6 @@ const folders = _.mapValues({
   assets: 'assets',
   commonCode: '../common/src',
   commonAssets: '../common/assets',
-  modules: [ 'node_modules', '../common/node_modules' ],
 }, resolve);
 if (event !== 'start') {
   console.log(`Output folder: ${folders.output}`);
@@ -83,15 +82,11 @@ module.exports = {
     chunkFilename: '[name].js?[chunkhash]',
   },
   resolve: {
-    modules: folders.modules,
     alias: {
       'common': folders.commonCode,
       'common-assets': folders.commonAssets,
       'context': folders.context,
     }
-  },
-  resolveLoader: {
-    modules: folders.modules,
   },
   module: {
     rules: [
@@ -99,18 +94,18 @@ module.exports = {
         test: /\.(js|jsx|mjs)$/,
         loader: 'babel-loader',
         exclude: /node_modules/,
-        type: 'javascript/auto',
         query: {
           presets: [
             '@babel/env',
             '@babel/react',
-          ].map(resolvePreset),
+          ],
           plugins: [
             '@babel/proposal-class-properties',
             '@babel/proposal-nullish-coalescing-operator',
             '@babel/proposal-optional-chaining',
             '@babel/transform-runtime',
-          ].map(resolvePlugin),
+            'relaks/transform-memo',
+          ],
         }
       },
       {
@@ -250,35 +245,4 @@ function parseLibraryList(path) {
     libraries[name] = modules;
   }
   return libraries;
-}
-
-function resolveBabel(name, type) {
-  if (name instanceof Array) {
-    name = name.slice();
-    name[0] = resolveBabel(name[0], type);
-    return name;
-  }
-  if (_.startsWith(name, '@babel/') && !_.startsWith(name, '@babel/' + type + '-')) {
-    name = name.replace('/', '/' + type + '-');
-  } else if (!_.startsWith(name, 'babel-' + type + '-')) {
-    name = name.replace('', 'babel-' + type + '-');
-  }
-  const path = _.reduce(folders.modules, (path, folder) => {
-    if (!path) {
-      path = folder + '/' + name;
-      if (!FS.existsSync(path)) {
-        path = null;
-      }
-    }
-    return path;
-  }, null);
-  return path || name;
-}
-
-function resolvePreset(name) {
-  return resolveBabel(name, 'preset');
-}
-
-function resolvePlugin(name) {
-  return resolveBabel(name, 'plugin');
 }

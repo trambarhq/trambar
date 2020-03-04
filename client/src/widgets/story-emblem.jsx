@@ -9,7 +9,7 @@ import './story-emblem.scss';
  * describe git activities. It's also responsible for rendering the special
  * "#yippeekiyay" explosion.
  */
-function StoryEmblem(props) {
+export function StoryEmblem(props) {
   const { story } = props;
   const { type, tags } = story;
   if (_.includes(tags, '#yippeekiyay')) {
@@ -40,8 +40,3 @@ function StoryEmblem(props) {
     </div>
   );
 }
-
-export {
-  StoryEmblem as default,
-  StoryEmblem,
-};

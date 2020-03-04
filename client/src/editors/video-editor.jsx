@@ -10,7 +10,7 @@ import './video-editor.scss';
  * Stateless component that renders an image editor for adjusting the video
  * preview image. The duration of the video is overlayed over the image.
  */
-function VideoEditor(props) {
+export function VideoEditor(props) {
   const { duration } = props;
   return (
     <ImageEditor {...props}>
@@ -20,8 +20,3 @@ function VideoEditor(props) {
     </ImageEditor>
   );
 }
-
-export {
-  VideoEditor as default,
-  VideoEditor,
-};

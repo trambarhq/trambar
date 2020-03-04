@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import { AsyncSaveBuffer } from 'relaks';
 import { Database } from 'common/data/database.mjs';
 import { Route } from 'common/routing/route.mjs';
@@ -10,6 +11,7 @@ import { LanguagePanel } from './language-panel.jsx';
 import { MobileAlertPanel } from './mobile-alert-panel.jsx';
 import { NotificationPanel } from './notification-panel.jsx';
 import { ProjectPanel } from './project-panel.jsx';
+import { SocialNetworkPanel } from './social-network-panel.jsx';
 import { UserImagePanel } from './user-image-panel.jsx';
 import { UserInfoPanel } from './user-info-panel.jsx';
 import { WebAlertPanel } from './web-alert-panel.jsx';

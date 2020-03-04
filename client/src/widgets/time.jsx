@@ -8,7 +8,7 @@ import './time.scss';
  * Depending on how long ago it was, it'll display either the amount of time
  * elapsed since or an actual date.
  */
-function Time(props) {
+export function Time(props) {
   const { env, time, compact } = props;
   const { t } = env.locale;
   const [ updateTime, setUpdateTime ] = useState();
@@ -74,9 +74,4 @@ function Time(props) {
 
 Time.defaultProps = {
   compact: false,
-};
-
-export {
-  Time as default,
-  Time,
 };

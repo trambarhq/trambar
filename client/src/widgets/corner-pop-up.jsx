@@ -1,7 +1,7 @@
 import React from 'react';
 
 // widgets
-import PopUpMenu from './pop-up-menu.jsx';
+import { PopUpMenu } from './pop-up-menu.jsx';
 
 import './corner-pop-up.scss';
 
@@ -9,7 +9,7 @@ import './corner-pop-up.scss';
  * A button that brings up a pop-up menu when clicked. Children given to the
  * component will be the menu's contents.
  */
-function CornerPopUp(props) {
+export function CornerPopUp(props) {
   const { open, children } = props;
   const dir = (open) ? 'left' : 'down';
   return (
@@ -23,8 +23,3 @@ function CornerPopUp(props) {
     </PopUpMenu>
   );
 }
-
-export {
-  CornerPopUp as default,
-  CornerPopUp,
-};

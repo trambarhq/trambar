@@ -12,11 +12,12 @@ import './development-panel.scss';
 /**
  * Panel for toggling developer settings.
  */
-function DevelopmentPanel(props) {
+export function DevelopmentPanel(props) {
   const { route, env, userDraft } = props;
   const { t } = env.locale;
   const [ selectedDeploymentName, setSelectedDeploymentName ] = useState({});
   const deploymentNames = (env.codePush) ? env.codePush.getDeploymentNames() : [];
+  const deploymentOptions = [ 'show-panel' ];
 
   const handleDevelopmentOptionClick = useListener((evt) => {
     const optionName = evt.currentTarget.id;
@@ -98,10 +99,3 @@ function DevelopmentPanel(props) {
     );
   }
 }
-
-const deploymentOptions = [ 'show-panel' ];
-
-export {
-  DevelopmentPanel as default,
-  DevelopmentPanel,
-};

@@ -224,11 +224,8 @@ async function AudioCaptureDialogBoxBrowser(props) {
   }
 }
 
-const component = Overlay.create(
-  Relaks.memo(AudioCaptureDialogBoxBrowser)
-);
+const overlay = Overlay.create(AudioCaptureDialogBoxBrowser);
 
 export {
-  component as default,
-  component as AudioCaptureDialogBoxBrowser,
+  overlay as AudioCaptureDialogBoxBrowser,
 };

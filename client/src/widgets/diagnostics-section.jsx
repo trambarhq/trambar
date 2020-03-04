@@ -3,7 +3,7 @@ import { useListener } from 'relaks';
 
 import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 
-function DiagnosticsSection(props) {
+export function DiagnosticsSection(props) {
   const { hidden, label, children } = props;
   const [ open, setOpen ] = useState(false);
 
@@ -27,8 +27,3 @@ function DiagnosticsSection(props) {
     </div>
   );
 }
-
-export {
-  DiagnosticsSection as default,
-  DiagnosticsSection,
-};

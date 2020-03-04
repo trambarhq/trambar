@@ -27,7 +27,7 @@ import './story-view.scss';
  * Component for rendering a story. It provides the basic frame, leaving the
  * task of rendering the actual story contents to StoryContents.
  */
-function StoryView(props) {
+export function StoryView(props) {
   const { story, authors, reactions, respondents, bookmarks, recipients, project, repos, currentUser } = props;
   const { access, highlighting, pending } = props;
   const { highlightReactionID, scrollToReactionID } = props;
@@ -437,8 +437,3 @@ const countRespondents = memoizeWeak(null, function(reactions) {
   const userIds = _.map(reactions, 'user_id');
   return _.size(_.uniq(userIds));
 });
-
-export {
-  StoryView as default,
-  StoryView,
-};

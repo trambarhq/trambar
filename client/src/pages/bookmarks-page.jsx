@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as BookmarkFinder from 'common/objects/finders/bookmark-finder.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
@@ -17,7 +17,7 @@ import './bookmarks-page.scss';
 /**
  * Asynchronous component that retrieves data needed by the Bookmarks page.
  */
-async function BookmarksPage(props) {
+export default async function BookmarksPage(props) {
   const { database, route, env, payloads, highlightStoryID, scrollToStoryID } = props;
   const [ show ] = useProgress();
 
@@ -69,10 +69,3 @@ async function BookmarksPage(props) {
     }
   }
 }
-
-const component = Relaks.memo(BookmarksPage);
-
-export {
-  component as default,
-  component as BookmarksPage,
-};

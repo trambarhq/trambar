@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import Merger from 'common/data/merger.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
@@ -19,7 +19,7 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import './bookmark-list.scss';
 
-async function BookmarkList(props) {
+export async function BookmarkList(props) {
   const { database, route, payloads, env } = props;
   const { access, bookmarks, currentUser, project } = props;
   const { highlightStoryID, scrollToStoryID } = props;
@@ -257,10 +257,3 @@ function getAuthorIDs(stories, currentUser) {
   }
   return _.uniq(userIDs);
 }
-
-const component = Relaks.memo(BookmarkList);
-
-export {
-  component as default,
-  component as BookmarkList,
-};

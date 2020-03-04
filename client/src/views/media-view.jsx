@@ -19,7 +19,7 @@ import './media-view.scss';
 /**
  * Component for displaying media resources attached to a story or reaction.
  */
-function MediaView(props) {
+export function MediaView(props) {
   const { env, width, resources } = props;
   const audioPlayerRef = useRef();
   const [ selectedIndex, setSelectedIndex ] = useState(0);
@@ -219,8 +219,3 @@ function MediaView(props) {
     return <ResourceView {...props} />;
   }
 }
-
-export {
-  MediaView as default,
-  MediaView,
-};

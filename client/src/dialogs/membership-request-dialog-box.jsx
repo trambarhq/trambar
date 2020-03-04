@@ -166,9 +166,8 @@ function MembershipRequestDialogBox(props) {
   }
 }
 
-const component = Overlay.create(MembershipRequestDialogBox);
+const overlay = Overlay.create(MembershipRequestDialogBox);
 
 export {
-  component as default,
-  component as MembershipRequestDialogBox,
+  overlay as MembershipRequestDialogBox,
 };

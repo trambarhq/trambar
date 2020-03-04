@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { useState, useEffect } from 'react';
 import { useListener } from 'relaks';
 import Hammer from 'hammerjs';
@@ -251,9 +250,8 @@ function MediaDialogBox(props) {
   }
 }
 
-const component = Overlay.create(MediaDialogBox);
+const overlay = Overlay.create(MediaDialogBox);
 
 export {
-  component as default,
-  component as MediaDialogBox,
+  overlay as MediaDialogBox,
 };

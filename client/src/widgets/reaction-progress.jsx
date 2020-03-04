@@ -11,7 +11,7 @@ import './reaction-progress.scss';
  * publishing a reaction, when doing so requires significant amount of time due
  * to attached media.
  */
-function ReactionProgress(props) {
+export function ReactionProgress(props) {
   const { env, reaction, status } = props;
   const { t } = env.locale;
   let contents;
@@ -27,8 +27,3 @@ function ReactionProgress(props) {
   }
   return <span className="reaction-progress">{contents}</span>;
 }
-
-export {
-  ReactionProgress as default,
-  ReactionProgress,
-};

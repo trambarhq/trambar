@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import React, { useState, useImperativeHandle } from 'react';
 import { useListener } from 'relaks';
@@ -10,12 +9,12 @@ import * as BlobReader from 'common/transport/blob-reader.mjs';
 import ResourceTypes from 'common/objects/types/resource-types.mjs';
 
 // widgets
-import PhotoCaptureDialogBoxBrowser from '../dialogs/photo-capture-dialog-box-browser.jsx';
-import PhotoCaptureDialogBoxCordova from '../dialogs/photo-capture-dialog-box-cordova.jsx';
-import AudioCaptureDialogBoxBrowser from '../dialogs/audio-capture-dialog-box-browser.jsx';
-import AudioCaptureDialogBoxCordova from '../dialogs/audio-capture-dialog-box-cordova.jsx';
-import VideoCaptureDialogBoxBrowser from '../dialogs/video-capture-dialog-box-browser.jsx';
-import VideoCaptureDialogBoxCordova from '../dialogs/video-capture-dialog-box-cordova.jsx';
+import { PhotoCaptureDialogBoxBrowser } from '../dialogs/photo-capture-dialog-box-browser.jsx';
+import { PhotoCaptureDialogBoxCordova } from '../dialogs/photo-capture-dialog-box-cordova.jsx';
+import { AudioCaptureDialogBoxBrowser } from '../dialogs/audio-capture-dialog-box-browser.jsx';
+import { AudioCaptureDialogBoxCordova } from '../dialogs/audio-capture-dialog-box-cordova.jsx';
+import { VideoCaptureDialogBoxBrowser } from '../dialogs/video-capture-dialog-box-browser.jsx';
+import { VideoCaptureDialogBoxCordova } from '../dialogs/video-capture-dialog-box-cordova.jsx';
 
 import './media-editor.scss';
 
@@ -25,7 +24,7 @@ import './media-editor.scss';
  * It also contains the code for importing files from a file input or
  * drag and drop event.
  */
-function MediaImporter(props, ref) {
+export const MediaImporter = React.forwardRef((props, ref) => {
   const { resources } = props;
   const { payloads, env, cameraDirection, types, limit } = props;
   const { onCaptureStart, onCaptureEnd, onChange } = props;
@@ -322,7 +321,7 @@ function MediaImporter(props, ref) {
       return <AudioCaptureDialogBoxCordova {...props} />;
     }
   }
-}
+});
 
 let importCount = 0;
 let captureCount = 0;
@@ -377,14 +376,7 @@ function getFilenameFromTime(ext) {
   return _.toUpper(Moment().format('YYYY-MMM-DD-hhA')) + ext;
 }
 
-const component = React.forwardRef(MediaImporter);
-
-component.defaultProps = {
+MediaImporter.defaultProps = {
   types: ResourceTypes,
   limit: Infinity,
-};
-
-export {
-  component as default,
-  component as MediaImporter,
 };

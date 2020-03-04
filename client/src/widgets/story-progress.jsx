@@ -3,7 +3,7 @@ import Moment from 'moment';
 import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
 
 // widgets
-import Time from './time.jsx';
+import { Time } from './time.jsx';
 
 import './story-progress.scss';
 
@@ -12,7 +12,7 @@ import './story-progress.scss';
  * publishing a story, when doing so requires significant amount of time due
  * to attached media.
  */
-function StoryProgress(props) {
+export function StoryProgress(props) {
   const { env, story, status, pending } = props;
   const { t } = env.locale;
   let contents;
@@ -59,8 +59,3 @@ function StoryProgress(props) {
   }
   return <span className="story-progress">{contents}</span>;
 }
-
-export {
-  StoryProgress as default,
-  StoryProgress,
-};

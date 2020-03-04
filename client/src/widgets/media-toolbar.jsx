@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
+
 // widgets
 import { HeaderButton } from './header-button.jsx';
 
@@ -10,7 +11,7 @@ import './media-toolbar.scss';
  * Toolbar for attaching media to a story. It's responsbile for rendering
  * the appropripate dialog box when a button is clicked.
  */
-function MediaToolbar(props) {
+export function MediaToolbar(props) {
   const { env, story, capturing, onAction } = props;
   const { t } = env.locale;
   const canCaptureImage = _.includes(env.recorders, 'image');
@@ -94,8 +95,3 @@ function MediaToolbar(props) {
     </div>
   );
 }
-
-export {
-  MediaToolbar as default,
-  MediaToolbar,
-};

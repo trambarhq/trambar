@@ -22,13 +22,13 @@ function cardinal(num, sg, sgGenitive, plGenitive) {
   }
 }
 
-let numberRegExp = /\d+/;
+const numberRegExp = /\d+/;
 
 function replaceNumber(s, n) {
   return s.replace(numberRegExp, n);
 }
 
-let nameGenders = {};
+const nameGenders = {};
 
 function genderize(name, gender) {
   nameGenders[name] = gender;
@@ -37,8 +37,9 @@ function genderize(name, gender) {
 function gender(name) {
   // handle multiple names
   if (name instanceof Array) {
-    for (let i = 0; i < name.length; i++) {
-      if (gender(name[i]) === 'male') {
+    const names = name;
+    for (let name of names) {
+      if (gender(name) === 'male') {
         return 'male';
       }
     }
@@ -47,12 +48,12 @@ function gender(name) {
 
   if (name) {
     // use value from prior call to genderize()
-    let gender = nameGenders[name];
+    const gender = nameGenders[name];
     if (gender) {
       return gender;
     }
 
-    let parts = name.split(/\s+/);
+    const parts = name.split(/\s+/);
     if (parts.length > 1) {
       // check patronymic and family name
       for (let i = 1; i < parts.length; i++) {
@@ -113,8 +114,8 @@ function list(items) {
   return items.join(', ');
 }
 
-let isFeminine = {};
-[
+const isFeminine = {};
+const feminineNames = [
   'Анна',
   'Алла',
   'Анастасия',
@@ -232,11 +233,12 @@ let isFeminine = {};
   'Julija',
   'Julja',
   'Jana',
-].forEach((name) => {
+];
+for (let name of feminineNames) {
   isFeminine[name.toLocaleLowerCase()] = true;
-});
+}
 
-module.exports = {
+export {
   cardinal,
   genderize,
   gender,

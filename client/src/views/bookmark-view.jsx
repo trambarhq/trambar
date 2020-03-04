@@ -3,14 +3,14 @@ import React from 'react';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import MultipleUserNames from '../widgets/multiple-user-names.jsx';
+import { MultipleUserNames } from '../widgets/multiple-user-names.jsx';
 
 import './bookmark-view.scss';
 
 /**
  * Component for rendering a frame around a bookmarked story.
  */
-function BookmarkView(props) {
+export function BookmarkView(props) {
   const { env, senders, currentUser, highlighting, children } = props;
   const { t, g } = env.locale;
 
@@ -85,8 +85,3 @@ function BookmarkView(props) {
     return <span className="name">{contents}</span>
   }
 }
-
-export {
-  BookmarkView as default,
-  BookmarkView,
-};

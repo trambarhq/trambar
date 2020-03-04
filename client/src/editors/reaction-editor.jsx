@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
@@ -11,14 +10,14 @@ import * as ReactionUtils from 'common/objects/utils/reaction-utils.mjs';
 import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
 // widgets
-import AutosizeTextArea from 'common/widgets/autosize-text-area.jsx';
-import PushButton from '../widgets/push-button.jsx';
-import HeaderButton from '../widgets/header-button.jsx';
-import ProfileImage from '../widgets/profile-image.jsx';
-import DropZone from '../widgets/drop-zone.jsx';
-import ReactionMediaToolbar from '../widgets/reaction-media-toolbar.jsx';
-import MediaEditor from '../editors/media-editor.jsx';
-import MediaImporter from '../editors/media-importer.jsx';
+import { AutosizeTextArea } from 'common/widgets/autosize-text-area.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { HeaderButton } from '../widgets/header-button.jsx';
+import { ProfileImage } from '../widgets/profile-image.jsx';
+import { DropZone } from '../widgets/drop-zone.jsx';
+import { ReactionMediaToolbar } from '../widgets/reaction-media-toolbar.jsx';
+import { MediaEditor } from '../editors/media-editor.jsx';
+import { MediaImporter } from '../editors/media-importer.jsx';
 
 // custom hooks
 import {
@@ -33,7 +32,7 @@ const autoSaveDuration = 2000;
  * Component for creating or editing a comment--the only reaction where the
  * user enters the text.
  */
-function ReactionEditor(props) {
+export function ReactionEditor(props) {
   const { reaction, story, currentUser } = props;
   const { database, env, payloads, onFinish } = props;
   const { t, languageCode } = env.locale;
@@ -273,8 +272,3 @@ function adjustReaction(reaction) {
 
   return reaction
 }
-
-export {
-  ReactionEditor as default,
-  ReactionEditor,
-};

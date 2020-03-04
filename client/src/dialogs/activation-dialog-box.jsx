@@ -12,7 +12,7 @@ import './activation-dialog-box.scss';
 /**
  * Dialog box for manually entering the activation code.
  */
-function ActivationDialogBox(props) {
+export function ActivationDialogBox(props) {
   const { env, show, onCancel, onConfirm } = props;
   const { t } = env.locale;
   const [ address, setAddress ] = useState('');
@@ -132,8 +132,3 @@ function ActivationDialogBox(props) {
     );
   }
 }
-
-export {
-  ActivationDialogBox as default,
-  ActivationDialogBox,
-};

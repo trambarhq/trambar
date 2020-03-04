@@ -16,7 +16,7 @@ import './multiple-user-names.scss';
  * the mouse pointer goes over a label. The list is truncated when it's long.
  * Clicking on the label brings up the full list in a dialog box.
  */
-function MultipleUserNames(props) {
+export function MultipleUserNames(props) {
   const { env, users, label, className } = props;
   const { t, p } = env.locale;
   const [ showingPopUp, showPopUp ] = useState(false);
@@ -139,9 +139,4 @@ function User(props) {
 
 MultipleUserNames.defaultProps = {
   popupLimit: 8
-};
-
-export {
-  MultipleUserNames as default,
-  MultipleUserNames,
 };

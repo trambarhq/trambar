@@ -7,7 +7,7 @@ import { DiagnosticsSection } from '../widgets/diagnostics-section.jsx';
 
 import './push-notifier-panel.scss';
 
-function PushNotifierPanel(props) {
+export function PushNotifierPanel(props) {
   const { notifier } = props;
   const {
     registrationID,
@@ -62,8 +62,3 @@ function getDeviceDetails() {
   }
   return {};
 }
-
-export {
-  PushNotifierPanel as default,
-  PushNotifierPanel,
-};

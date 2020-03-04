@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useListener, useEventTime } from 'relaks';
-import FrontEndCore from 'common/front-end-core.mjs';
 import { routes } from './routing.mjs';
 import CORSRewriter from 'common/routing/cors-rewriter.mjs';
 import SchemaRewriter from 'common/routing/schema-rewriter.mjs';
@@ -35,7 +34,7 @@ const widthDefinitions = {
   'triple-col': 1300,
 };
 
-function FrontEnd(props) {
+export function FrontEnd(props) {
   const { dataSource, routeManager, payloadManager, envMonitor, localeManager, codePush } = props;
   const [ routeChanged, setRouteChanged ] = useEventTime();
   const route = useMemo(() => {
@@ -272,7 +271,7 @@ function FrontEnd(props) {
   }
 }
 
-const coreConfiguration = {
+export const coreConfiguration = {
   area: 'client',
   routeManager: {
     routes,
@@ -291,12 +290,7 @@ const coreConfiguration = {
   },
 };
 
-export {
-  FrontEnd as default,
-  FrontEnd,
-  FrontEndCore,
-  coreConfiguration,
-};
+export { FrontEndCore } from 'common/front-end-core.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
   require('./__PROPTYPES__.mjs');

@@ -11,7 +11,7 @@ import './search-bar.scss';
  * Asynchronous component that retrieves data needed by the search bar, namely
  * project statistics, which include information concerning tag usage.
  */
-async function SearchBar(props) {
+export async function SearchBar(props) {
   const { database, route, env, settings } = props;
   const [ show ] = useProgress();
 
@@ -256,10 +256,3 @@ function extractTags(dailyActivities, env) {
   // sort in case-sensitive manner, as it's done in Gitlab
   return _.sortBy(hashTags, 'name');
 }
-
-const component = Relaks.memo(SearchBar);
-
-export {
-  component as default,
-  component as SearchBar,
-};
