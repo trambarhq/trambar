@@ -4,7 +4,7 @@ import React, { useRef, useEffect } from 'react';
  * A video component that accepts a stream or blob as a prop. A workaround for
  * scalar-only limitation of regular HTML elements in React.
  */
-function LiveVideo(props) {
+export function LiveVideo(props) {
   const { srcObject, ...otherProps } = props;
   const videoRef = useRef();
 
@@ -29,8 +29,3 @@ function LiveVideo(props) {
 
   return <video ref={videoRef} {...otherProps} />
 }
-
-export {
-  LiveVideo as default,
-  LiveVideo,
-};

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
-import { Bar, Pie, Line, Interpolation, Svg } from 'chartist';
+import { Bar, Pie, Line } from 'chartist';
 
 import 'context/widgets/chartist.scss';
 
@@ -10,7 +10,7 @@ const chartClasses = {
   line: Line
 };
 
-function Chartist(props) {
+export function Chartist(props) {
   const { type, data, options, responsiveOptions, style, className } = props;
   const { onClick, onDraw } = props;
   const containerRef = useRef();
@@ -60,9 +60,4 @@ function Chartist(props) {
   return <div ref={containerRef} {...containerProps} />
 }
 
-export {
-  Chartist as default,
-  Chartist,
-  Interpolation,
-  Svg,
-};
+export { Interpolation, Svg } from 'chartist';

@@ -17,7 +17,7 @@ import './user-selection-dialog-box.scss';
 /**
  * Dialog box for selecting users from a list.
  */
-function UserSelectionDialogBox(props) {
+export const UserSelectionDialogBox = Overlay.create((props) => {
   const { database, route, env, disabled, selection, onSelect, onCancel } = props;
   const { t } = env.locale;
   const userSelection = useSelectionBuffer({
@@ -78,10 +78,4 @@ function UserSelectionDialogBox(props) {
       </div>
     );
   }
-}
-
-const overlay = Overlay.create(UserSelectionDialogBox);
-
-export {
-  overlay as UserSelectionDialogBox,
-};
+});

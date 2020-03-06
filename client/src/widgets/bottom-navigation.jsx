@@ -41,8 +41,8 @@ export function BottomNavigation(props) {
   }, [ showing ]);
   useEffect(() => {
     const detectStacking = () => {
-      const icon = containerRef.current.getElementsByClassName('fas')[1];
-      const label = containerRef.current.getElementsByClassName('label')[1];
+      const icon = containerRef.current.getElementsByTagName('i')[1];
+      const label = containerRef.current.getElementsByTagName('span')[1];
       let stackingAfter = (label.offsetTop >= icon.offsetTop + icon.offsetHeight);
       if (stackingAfter !== stacking) {
         setStacking(stackingAfter);
@@ -65,10 +65,10 @@ export function BottomNavigation(props) {
   );
 
   function renderButton(section, i) {
-    const { name, icon, label } = section;
+    const { name, iconClass, label } = section;
     const url = route.find(`${name}-page`, routeParams);
     const active = (activeSection === name);
-    const props = { label: t(label), icon, active, stacking, url };
+    const props = { label: t(label), iconClass, active, stacking, url };
     return <Button key={i} {...props}>{renderBadge(section)}</Button>;
   }
 
@@ -89,27 +89,27 @@ const sections = [
   {
     name: 'news',
     label: 'bottom-nav-news',
-    icon: 'newspaper-o',
+    iconClass: 'fas fa-newspaper',
   },
   {
     name: 'notifications',
     label: 'bottom-nav-notifications',
-    icon: 'comments',
+    iconClass: 'fas fa-comments',
   },
   {
     name: 'bookmarks',
     label: 'bottom-nav-bookmarks',
-    icon: 'bookmark',
+    iconClass: 'fas fa-bookmark',
   },
   {
     name: 'people',
     label: 'bottom-nav-people',
-    icon: 'users',
+    iconClass: 'fas fa-users',
   },
   {
     name: 'settings',
     label: 'bottom-nav-settings',
-    icon: 'gears',
+    iconClass: 'fas fa-cogs',
   },
 ];
 
@@ -117,7 +117,7 @@ const sections = [
  * Stateless component that renders a clickable button.
  */
 function Button(props) {
-  const { className, url, label, icon, children, active, stacking } = props;
+  const { className, url, label, iconClass, children, active, stacking } = props;
   const classNames = [ 'button' ];
   if (className) {
     classNames.push(className);
@@ -131,7 +131,7 @@ function Button(props) {
   if (stacking) {
     return (
       <Link className={classNames.join(' ')} url={url}>
-        <i className={`fa fa-${icon}`} />
+        <i className={iconClass} />
           {children}
           {' '}
         <span className="label">{label}</span>
@@ -140,7 +140,7 @@ function Button(props) {
   } else {
     return (
       <Link className={classNames.join(' ')} url={url}>
-        <i className={`fa fa-${icon}`} />
+        <i className={iconClass} />
         {' '}
         <span className="label">{label}</span>
         {children}

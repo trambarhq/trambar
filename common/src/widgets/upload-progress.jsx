@@ -7,7 +7,7 @@ import './upload-progress.scss';
  * A warning message that appears when file upload is in progress. Designed
  * to be shown when a beforeunload event occurs and we need to warn the user.
  */
-function UploadProgress(props) {
+export function UploadProgress(props) {
   const { env, payloads } = props;
   const { t } = env.locale;
   if (!payloads.uploading) {
@@ -21,7 +21,3 @@ function UploadProgress(props) {
     </div>
   );
 }
-
-export {
-  UploadProgress,
-};

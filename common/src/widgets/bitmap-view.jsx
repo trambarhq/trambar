@@ -10,7 +10,7 @@ import * as ImageOrientation from '../media/image-orientation.js';
  * A component that displays a bitmap image file (JPEG, PNG, etc.), with
  * correction for orientation flag.
  */
-function BitmapView(props, ref) {
+export const BitmapView = React.forwardRef((props, ref) => {
   const { url, clippingRect, width, height, onLoad, ...otherProps } = props;
   const [ image, setImage ] = useState(null);
   const canvasRef = useRef();
@@ -90,11 +90,4 @@ function BitmapView(props, ref) {
     ...otherProps,
   };
   return <canvas {...canvasProps} />
-}
-
-const component = React.forwardRef(BitmapView);
-
-export {
-  component as default,
-  component as BitmapView,
-};
+});

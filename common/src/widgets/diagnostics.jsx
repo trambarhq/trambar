@@ -4,7 +4,7 @@ let diagnosticsContents = {};
 let listeners = [];
 let immediate = 0;
 
-function Diagnostics(props) {
+export function Diagnostics(props) {
   let type = props.type;
   let contents = props.children;
   diagnosticsContents[type] = contents;
@@ -34,9 +34,4 @@ Diagnostics.addListener = function(listener) {
 
 Diagnostics.removeListener = function(listener) {
   _.pull(listeners, listener);
-};
-
-export {
-  Diagnostics as default,
-  Diagnostics,
 };

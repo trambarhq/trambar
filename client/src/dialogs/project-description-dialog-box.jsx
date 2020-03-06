@@ -12,7 +12,7 @@ import './project-description-dialog-box.scss';
 /**
  * Dialog box for displaying a project's description in full.
  */
-function ProjectDescriptionDialogBox(props) {
+export const ProjectDescriptionDialogBox = Overlay.create((props) => {
   const { env, project, onClose } = props;
   const { t, p } = env.locale;
 
@@ -52,10 +52,4 @@ function ProjectDescriptionDialogBox(props) {
       </div>
     );
   }
-}
-
-const overlay = Overlay.create(ProjectDescriptionDialogBox);
-
-export {
-  overlay as ProjectDescriptionDialogBox,
-};
+});

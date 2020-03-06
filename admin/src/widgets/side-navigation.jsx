@@ -80,7 +80,7 @@ export function SideNavigation(props) {
       }
       return (
         <div key={i} {...props}>
-          <i className="far fa-check-circle" /> {language.name}
+          <i className="icon far fa-check-circle" /> {language.name}
         </div>
       )
     });

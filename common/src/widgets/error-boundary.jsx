@@ -9,7 +9,7 @@ import './error-boundary.scss';
  *
  * @extends {Component}
  */
-class ErrorBoundary extends Component {
+export class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
     this.state = { error: null, errorChildren: null };
@@ -76,7 +76,3 @@ function compareElements(e1, e2) {
   let diff = _.shallowDiff(e1.props, e2.props);
   return _.isEmpty(diff);
 }
-
-export {
-  ErrorBoundary,
-};

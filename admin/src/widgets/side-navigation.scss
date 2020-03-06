@@ -85,7 +85,7 @@
           margin-right: 0.25em;
           cursor: pointer;
 
-          .fa {
+          .icon {
             visibility: hidden;
           }
 
@@ -93,7 +93,7 @@
             cursor: default;
             color: $navigation-menu-button-text-color;
 
-            .fa {
+            .icon {
               visibility: visible;
             }
           }

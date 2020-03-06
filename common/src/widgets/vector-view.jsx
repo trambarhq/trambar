@@ -1,11 +1,11 @@
 import React, { useState, useRef, useImperativeHandle, useEffect } from 'react';
-import * as MediaLoader from '../media/media-loader.js';
+import { loadSVG } from '../media/media-loader.js';
 
 /**
  * A component for displaying a SVG file, with proper support for zooming
  * and clipping.
  */
-function VectorView(props, ref) {
+export const VectorView = React.forwardRef((props, ref) => {
   const { url, clippingRect, title, onError, onLoad, ...otherProps } = props;
   const [ svg, setSVG ] = useState(null);
   const containerRef = useRef();
@@ -125,11 +125,4 @@ function VectorView(props, ref) {
     ...otherProps
   };
   return <svg {...svgProps} />;
-}
-
-const component = React.forwardRef(VectorView);
-
-export {
-  component as default,
-  component as VectorView,
-};
+});

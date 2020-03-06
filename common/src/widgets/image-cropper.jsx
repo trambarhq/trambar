@@ -11,7 +11,7 @@ import './image-cropper.scss';
 /**
  * A component for cropping images. It handles both mouse and touch input.
  */
-function ImageCropper(props, ref) {
+export const ImageCropper = React.forwardRef((props, ref) => {
   const { url, clippingRect, disabled, vector, onLoad, onChange } = props;
   const containerRef = useRef();
   const imageRef = useRef();
@@ -327,7 +327,7 @@ function ImageCropper(props, ref) {
       <View ref={imageRef} {...imageProps} />
     </div>
   );
-}
+});
 
 /**
  * Keep clipping rect from going outside of the image
@@ -349,13 +349,6 @@ function constrainPosition(clippingRect, imageWidth, imageHeight) {
   }
 }
 
-const component = React.forwardRef(ImageCropper);
-
-component.defaultProps = {
+ImageCropper.defaultProps = {
   vector: false,
-};
-
-export {
-  component as default,
-  component as ImageCropper,
 };

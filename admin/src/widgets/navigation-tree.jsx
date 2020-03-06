@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
 import * as ProjectUtils from 'common/objects/utils/project-utils.js';
 import * as RepoFinder from 'common/objects/finders/repo-finder.js';

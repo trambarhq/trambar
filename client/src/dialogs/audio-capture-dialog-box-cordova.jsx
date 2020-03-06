@@ -8,7 +8,7 @@ import CordovaFile from 'common/transport/cordova-file.js';
  * Non-visual component that uses the Media Capture Cordiva plug-in to capture
  * an audio clip on an mobile phone.
  */
-function AudioCaptureDialogBoxCordova(props) {
+export function AudioCaptureDialogBoxCordova(props) {
   const { payloads, show } = props;
   const { onClose, onCapture, onCapturePending, onCaptureError } = props;
 
@@ -91,8 +91,3 @@ async function requestPermissions() {
     ], successCB, errorCB);
   });
 }
-
-export {
-  AudioCaptureDialogBoxCordova as default,
-  AudioCaptureDialogBoxCordova,
-};

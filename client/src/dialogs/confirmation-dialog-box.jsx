@@ -9,7 +9,7 @@ import './confirmation-dialog-box.scss';
 /**
  * Dialog box for asking the user for a confirmation of an action.
  */
-function ConfirmationDialogBox(props) {
+export const ConfirmationDialogBox = Overlay.create((props) => {
   const { env, children, onCancel, onConfirm } = props;
   const { t } = env.locale;
   let { onClose } = props;
@@ -46,10 +46,4 @@ function ConfirmationDialogBox(props) {
       </div>
     );
   }
-}
-
-const overlay = Overlay.create(ConfirmationDialogBox);
-
-export {
-  overlay as ConfirmationDialogBox,
-};
+});

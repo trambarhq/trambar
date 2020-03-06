@@ -1,10 +1,12 @@
 import _ from 'lodash';
 import React, { useMemo } from 'react';
 import { useListener } from 'relaks';
-import Chartist, { Svg } from 'common/widgets/chartist.jsx';
 import Moment from 'moment';
 import { memoizeWeak, memoizeStrong } from 'common/utils/memoize.js';
 import StoryTypes from 'common/objects/types/story-types.js';
+
+// widgets
+import { Chartist, Svg } from 'common/widgets/chartist.jsx';
 
 import './user-statistics.scss';
 

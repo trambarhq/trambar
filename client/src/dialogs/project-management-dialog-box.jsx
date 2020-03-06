@@ -13,7 +13,7 @@ import './project-management-dialog-box.scss';
 /**
  * Dialog box for removing a project from the list.
  */
-function ProjectManagementDialogBox(props) {
+export const ProjectManagementDialogBox = Overlay.create((props) => {
   const { env, projectLinks, onDelete, onCancel } = props;
   const { t, p } = env.locale;
   const [ selection, setSelection ] = _.map(projectLinks, 'key');
@@ -66,10 +66,4 @@ function ProjectManagementDialogBox(props) {
       </div>
     );
   }
-}
-
-const overlay = Overlay.create(ProjectManagementDialogBox);
-
-export {
-  overlay as ProjectManagementDialogBox,
-};
+});

@@ -74,6 +74,8 @@ _.each(env, (value, name) => {
 // get list of external libraries
 const libraries = parseLibraryList(`${folders.context}/libraries.js`);
 
+const otherHOCs = [ 'Overlay.create' ];
+
 module.exports = {
   mode: env.NODE_ENV,
   context: folders.context,
@@ -112,21 +114,21 @@ module.exports = {
             '@babel/proposal-nullish-coalescing-operator',
             '@babel/proposal-optional-chaining',
             '@babel/transform-runtime',
-            'relaks/transform-memo',
+            [ 'relaks/transform-memo', { otherHOCs } ],
           ].map(resolvePlugin),
         }
       },
       {
         test: /\.css$/,
         use: [
-          //MiniCSSExtractPlugin.loader,
+          MiniCSSExtractPlugin.loader,
           'css-loader',
         ],
       },
       {
         test: /\.scss$/,
         use: [
-          //MiniCSSExtractPlugin.loader,
+          MiniCSSExtractPlugin.loader,
           'css-loader',
           'sass-loader'
         ],

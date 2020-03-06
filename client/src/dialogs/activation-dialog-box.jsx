@@ -12,7 +12,7 @@ import './activation-dialog-box.scss';
 /**
  * Dialog box for manually entering the activation code.
  */
-export function ActivationDialogBox(props) {
+export const ActivationDialogBox = Overlay.create((props) => {
   const { env, show, onCancel, onConfirm } = props;
   const { t } = env.locale;
   const [ address, setAddress ] = useState('');
@@ -45,16 +45,13 @@ export function ActivationDialogBox(props) {
     setSchema(schema);
   });
 
-  const overlayProps = { show, onBackgroundClick: onCancel };
   return (
-    <Overlay {...overlayProps}>
-      <div className="activation-dialog-box">
-        {renderForm()}
-        <div className="controls">
-          {renderButtons()}
-        </div>
+    <div className="activation-dialog-box">
+      {renderForm()}
+      <div className="controls">
+        {renderButtons()}
       </div>
-    </Overlay>
+    </div>
   );
 
   function renderForm() {
@@ -131,4 +128,4 @@ export function ActivationDialogBox(props) {
       </div>
     );
   }
-}
+});

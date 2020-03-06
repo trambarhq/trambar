@@ -8,7 +8,7 @@ import { SettingsPanel } from '../widgets/settings-panel.jsx';
 import { PushButton } from '../widgets/push-button.jsx';
 import { ImageEditor } from '../editors/image-editor.jsx';
 import { MediaImporter } from '../editors/media-importer.jsx';
-import { Icon } from 'octicons/build/svg/person.svg';
+import Icon from 'octicons/build/svg/person.svg';
 
 import './user-image-panel.scss';
 

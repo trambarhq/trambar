@@ -19,7 +19,7 @@ import './photo-capture-dialog-box-browser.scss';
 /**
  * Dialog box for taking a picture in the web browser.
  */
-async function PhotoCaptureDialogBoxBrowser(props) {
+export const PhotoCaptureDialogBoxBrowser = Overlay.create(async (props) => {
   const { env, payloads, onCapture, onClose } = props;
   const { t } = env.locale;
   const [ show ] = useProgress(50, 50);
@@ -163,10 +163,4 @@ async function PhotoCaptureDialogBoxBrowser(props) {
         );
     }
   }
-}
-
-const overlay = Overlay.create(PhotoCaptureDialogBoxBrowser);
-
-export {
-  overlay as PhotoCaptureDialogBoxBrowser,
-};
+});

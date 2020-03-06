@@ -27,7 +27,7 @@ export function ProjectPanel(props) {
   const { database, route, env, userDraft, system, project, projectLinks } = props;
   const { t, p } = env.locale;
   const isMember = UserUtils.isMember(userDraft.current, project);
-  const [ wasMember ] = useState(isMember);
+  const [ wasMember, setWasMember ] = useState(isMember);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
 
@@ -92,7 +92,7 @@ export function ProjectPanel(props) {
     // dialog box with a message
     if (!wasMember && isMember) {
       confirm(t('membership-request-$you-are-now-member', name), true);
-      setMember(true);
+      setWasMember(true);
     }
   }, [ wasMember, isMember ]);
 

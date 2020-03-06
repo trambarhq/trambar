@@ -21,7 +21,7 @@ import './issue-dialog-box.scss';
  * Dialog box for adding a title and tags to a story being exported to an
  * issue tracker.
  */
-function IssueDialogBox(props) {
+export const IssueDialogBox = Overlay.create((props) => {
   const { env, currentUser, issue, story, repos, allowDeletion } = props;
   const { onCancel, onConfirm } = props;
   const { t, p } = env.locale;
@@ -223,10 +223,4 @@ function IssueDialogBox(props) {
       repo_id: (repo) ? repo.id : undefined,
     };
   }
-}
-
-const overlay = Overlay.create(IssueDialogBox);
-
-export {
-  overlay as IssueDialogBox,
-};
+});

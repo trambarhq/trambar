@@ -7,7 +7,7 @@ import CordovaFile from 'common/transport/cordova-file.js';
 /**
  * Non-visual component that uses the Camera Cordova plugin to take a photo.
  */
-function PhotoCaptureDialogBoxCordova(props) {
+export function PhotoCaptureDialogBoxCordova(props) {
   const { payloads, cameraDirection, show } = props;
   const { onClose, onCapture, onCapturePending, onCaptureError } = props;
 
@@ -71,8 +71,3 @@ function PhotoCaptureDialogBoxCordova(props) {
 
   return null;
 }
-
-export {
-  PhotoCaptureDialogBoxCordova as default,
-  PhotoCaptureDialogBoxCordova,
-};

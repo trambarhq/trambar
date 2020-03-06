@@ -11,7 +11,7 @@ import './system-description-dialog-box.scss';
 /**
  * Dialog box for displaying the system description.
  */
-function SystemDescriptionDialogBox(props) {
+export const SystemDescriptionDialogBox = Overlay.create((props) => {
   const { env, system, onClose } = props;
   const { t, p } = env.locale;
 
@@ -47,10 +47,4 @@ function SystemDescriptionDialogBox(props) {
       </div>
     );
   }
-}
-
-const overlay = Overlay.create(SystemDescriptionDialogBox);
-
-export {
-  overlay as SystemDescriptionDialogBox,
-};
+});

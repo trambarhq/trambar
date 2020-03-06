@@ -1,7 +1,5 @@
 import React from 'react';
 
-import { Environment } from 'common/env/environment.js';
-
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
 import { PushButton } from '../widgets/push-button.jsx';
@@ -12,7 +10,7 @@ import './telephone-number-dialog-box.scss';
 /**
  * Dialog box that displays a phone number and a QR code for dialing that number.
  */
-function TelephoneNumberDialogBox(props) {
+export const TelephoneNumberDialogBox = Overlay.create((props) => {
   const { env, number, onClose } = props;
   const { t } = env.locale;
   return (
@@ -44,10 +42,4 @@ function TelephoneNumberDialogBox(props) {
       </div>
     );
   }
-}
-
-const overlay = Overlay.create(TelephoneNumberDialogBox);
-
-export {
-  overlay as TelephoneNumberDialogBox,
-};
+});

@@ -11,7 +11,7 @@ import { QRCode } from '../widgets/qr-code.jsx';
 
 import './mobile-setup-dialog-box.scss';
 
-async function MobileSetupDialogBox(props) {
+export const MobileSetupDialogBox = Overlay.create(async (props) =>{
   const { database, env, system, onClose } = props;
   const { t } = env.locale;
   const [ show ] = useProgress();
@@ -69,7 +69,7 @@ async function MobileSetupDialogBox(props) {
       </div>
     );
   }
-}
+});
 
 function insertSpacers(s) {
   if (!s) {
@@ -78,9 +78,3 @@ function insertSpacers(s) {
   let parts = s.match(/.{1,4}/g);
   return _.toUpper(parts.join(' '));
 }
-
-const overlay = Overlay.create(MobileSetupDialogBox);
-
-export {
-  overlay as MobileSetupDialogBox,
-};

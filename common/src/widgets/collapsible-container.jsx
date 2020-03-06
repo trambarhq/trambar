@@ -6,7 +6,7 @@ import './collapsible-container.scss';
 /**
  * A HTML container that can collapse to nothing.
  */
-function CollapsibleContainer(props) {
+export function CollapsibleContainer(props) {
   const { open, animateIn, children } = props;
   const [ state, setState ] = useState({
     contents: null,
@@ -74,8 +74,3 @@ function getContentHeight(div) {
   }
   return height;
 }
-
-export {
-  CollapsibleContainer as default,
-  CollapsibleContainer,
-};

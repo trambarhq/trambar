@@ -8,7 +8,7 @@ import './autosize-text-area.scss';
  * A text area that automatically expands its height to accommodate the text
  * within it.
  */
-function AutosizeTextArea(props, ref) {
+export const AutosizeTextArea = React.forwardRef((props, ref) => {
   const { value, style, ...otherProps } = props;
   const [ requiredHeight, setRequiredHeight ] = useState();
   const actualRef = useRef();
@@ -50,11 +50,4 @@ function AutosizeTextArea(props, ref) {
       <textarea ref={actualRef} style={stylePlus} value={value} {...otherProps} />
     </div>
   );
-}
-
-const component = React.forwardRef(AutosizeTextArea);
-
-export {
-  component as default,
-  component as AutosizeTextArea,
-};
+});

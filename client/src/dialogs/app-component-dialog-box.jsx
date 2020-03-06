@@ -11,7 +11,7 @@ import './app-component-dialog-box.scss';
 /**
  * Dialog box for displaying the description of an app component in full.
  */
-function AppComponentDialogBox(props) {
+export const AppComponentDialogBox = Overlay.create((props) => {
   const { env, component, onClose } = props;
   const { t, p } = env.locale;
   if (!component) {
@@ -69,10 +69,4 @@ function AppComponentDialogBox(props) {
       </div>
     );
   }
-}
-
-const overlay = Overlay.create(AppComponentDialogBox);
-
-export {
-  overlay as AppComponentDialogBox,
-};
+});

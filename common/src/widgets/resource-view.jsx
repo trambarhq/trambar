@@ -1,9 +1,8 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useAsyncEffect } from 'relaks';
-import * as MediaLoader from '../media/media-loader.js';
-import * as ImageCropping from '../media/image-cropping.js';
-import * as ResourceUtils from '../objects/utils/resource-utils.js';
+import { loadImage } from '../media/media-loader.js';
+import { getImageURL, getImageDimensions, getClippingRect } from '../objects/utils/resource-utils.js';
 
 import { BitmapView } from './bitmap-view.jsx';
 import { VectorView } from './vector-view.jsx';
@@ -15,7 +14,7 @@ import './resource-view.scss';
  * It's capable of displaying local files that have just need selected for
  * uploading to remote server.
  */
-function ResourceView(props) {
+export function ResourceView(props) {
   const { env, resource, width, height, clip, showAnimation, showMosaic, children, ...otherProps } = props;
   const [ remoteURLLoaded, setRemoteURLLoaded ] = useState('');
   const remoteParams = { remote: true };
@@ -32,14 +31,14 @@ function ResourceView(props) {
     remoteParams.width = width;
     remoteParams.height = height;
   }
-  const localURL = ResourceUtils.getImageURL(resource, localParams, env);
-  const remoteURL = ResourceUtils.getImageURL(resource, remoteParams, env);
+  const localURL = getImageURL(resource, localParams, env);
+  const remoteURL = getImageURL(resource, remoteParams, env);
 
   useAsyncEffect(async () => {
     if (localURL && remoteURL) {
       // the image has just become available on the remote server
       // pre-cache it before switching from the local copy
-      await MediaLoader.loadImage(remoteURL);
+      await loadImage(remoteURL);
       setRemoteURLLoaded(remoteURL);
     }
   }, [ localURL, remoteURL ]);
@@ -55,7 +54,7 @@ function ResourceView(props) {
   }
 
   function renderRemoteImage() {
-    const dims = ResourceUtils.getImageDimensions(resource, { original: !clip });
+    const dims = getImageDimensions(resource, { original: !clip });
     let imageWidth, imageHeight;
     if (width) {
       imageWidth = width;
@@ -89,7 +88,7 @@ function ResourceView(props) {
   }
 
   function renderLocalImage() {
-    const clippingRect = (clip) ? ResourceUtils.getClippingRect(resource) : null;
+    const clippingRect = (clip) ? getClippingRect(resource) : null;
     const imageProps = {
       url: localURL,
       width,
@@ -133,9 +132,4 @@ ResourceView.defaultProps = {
   clip: true,
   showAnimation: false,
   showMosaic: false,
-};
-
-export {
-  ResourceView as default,
-  ResourceView,
 };

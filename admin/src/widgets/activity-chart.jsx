@@ -1,17 +1,18 @@
 import _ from 'lodash';
 import React from 'react';
-import Chartist from 'common/widgets/chartist.jsx';
 import Moment from 'moment';
 import { memoizeWeak } from 'common/utils/memoize.js';
-
 import StoryTypes from 'common/objects/types/story-types.js';
+
+// widgets
+import { Chartist } from 'common/widgets/chartist.jsx';
 
 import './activity-chart.scss';
 
 /**
  * Bar chart showing daily activities.
  */
-export function ActivityChart(props) {
+export const ActivityChart = React.memo((props) => {
   const { env, statistics, children } = props;
   const { t } = env.locale;
 
@@ -132,9 +133,9 @@ export function ActivityChart(props) {
       }
     }
   }
-}
+});
 
-function LegendItem(props) {
+export function LegendItem(props) {
   return (
     <div className="item">
       <svg className="ct-chart-bar" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
@@ -217,9 +218,3 @@ const getUpperRange = memoizeWeak(0, function(series, additive) {
 function getDay(date) {
   return parseInt(date.substr(8));
 }
-
-const component = React.memo(ActivityChart);
-
-export {
-  LegendItem,
-};

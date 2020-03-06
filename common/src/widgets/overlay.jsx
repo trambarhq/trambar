@@ -8,7 +8,7 @@ import './overlay.scss';
  * A component for displaying pop-up contents whose HTML nodes aren't contained
  * in the HTML node of the parent.
  */
-function Overlay(props) {
+export function Overlay(props) {
   const { className, show, children, onBackgroundClick, ...otherProps } = props;
   const [ container, setContainer ] = useState(null);
   const [ rendering, setRendering ] = useState(show);
@@ -162,9 +162,4 @@ Overlay.create = function(Component) {
     writable: false
   });
   return newComponent;
-};
-
-export {
-  Overlay as default,
-  Overlay,
 };

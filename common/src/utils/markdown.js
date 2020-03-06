@@ -6,7 +6,7 @@ import * as PlainText from './plain-text.js';
 import * as ResourceUtils from '../objects/utils/resource-utils.js';
 
 // widgets
-import ResourceView from '../widgets/resource-view.jsx';
+import { ResourceView } from '../widgets/resource-view.jsx';
 
 /**
  * Detect whether text appears to be Markdown

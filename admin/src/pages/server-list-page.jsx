@@ -3,10 +3,10 @@ import Moment from 'moment';
 import React, { useRef } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ServerFinder from 'common/objects/finders/server-finder.js';
-import * as ServerSaver from 'common/objects/savers/server-saver.js';
-import * as ServerUtils from 'common/objects/utils/server-utils.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
+import { findAllServers } from 'common/objects/finders/server-finder.js';
+import { disableServers, restoreServers } from 'common/objects/savers/server-saver.js';
+import { getDisplayName, getIconClass } from 'common/objects/utils/server-utils.js';
+import { findActiveUsers } from 'common/objects/finders/user-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -35,9 +35,9 @@ export default async function ServerListPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const servers = await ServerFinder.findAllServers(database);
+  const servers = await findAllServers(database);
   render();
-  const users = await UserFinder.findActiveUsers(database);
+  const users = await findActiveUsers(database);
   render();
 
   function render() {
@@ -81,8 +81,8 @@ function ServerListPageSync(props) {
       if (adding.length > 0) {
         await confirm(t('server-list-confirm-reactivate-$count', adding.length));
       }
-      await ServerSaver.disableServers(database, removing);
-      await ServerSaver.restoreServers(database, adding);
+      await disableServers(database, removing);
+      await restoreServers(database, adding);
       warnDataLoss(false);
       handleCancelClick();
     });
@@ -213,7 +213,7 @@ function ServerListPageSync(props) {
     if (!server) {
       return <TH id="title">{t('server-list-column-title')}</TH>;
     } else {
-      const title = ServerUtils.getDisplayName(server, env);
+      const title = getDisplayName(server, env);
       let url, badge;
       if (selection.shown) {
         if (selection.isAdding(server)) {
@@ -237,10 +237,10 @@ function ServerListPageSync(props) {
     if (!server) {
       return <TH id="type">{t('server-list-column-type')}</TH>;
     } else {
-      const iconName = ServerUtils.getIcon(server);
+      const iconClass = getIconClass(server);
       return (
         <td>
-          <i className={`fa fa-${iconName} fa-fw`} />
+          <i className={iconClass} />
           {' '}
           {t(`server-type-${server.type}`)}
         </td>
@@ -317,7 +317,7 @@ const sortServers = memoizeWeak(null, function(servers, users, env, sort) {
     switch (column) {
       case 'title':
         return (server) => {
-          return _.toLower(ServerUtils.getDisplayName(server, env));
+          return _.toLower(getDisplayName(server, env));
         };
       case 'type':
         return (server) => {

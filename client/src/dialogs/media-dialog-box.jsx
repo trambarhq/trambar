@@ -14,7 +14,7 @@ import './media-dialog-box.scss';
 /**
  * Dialog box for showing attached photos and videos.
  */
-function MediaDialogBox(props) {
+export const MediaDialogBox = Overlay.create((props) => {
   const { env, resources, selectedIndex, onClose } = props;
   const { t } = env.locale;
   const [ resourceIndex, setResourceIndex ] = useState(selectedIndex);
@@ -248,10 +248,4 @@ function MediaDialogBox(props) {
       setResourceIndex(newIndex);
     }
   }
-}
-
-const overlay = Overlay.create(MediaDialogBox);
-
-export {
-  overlay as MediaDialogBox,
-};
+});

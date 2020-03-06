@@ -9,7 +9,7 @@ import './smart-list.scss';
  * only when the current scroll position make them visible (or likely to be
  * visible in the near future).
  */
-function SmartList(props) {
+export function SmartList(props) {
   const { items, behind, ahead, anchor, offset, inverted, noReset } = props;
   const { onIdentity, onTransition, onRender, onAnchorChange, onBeforeAnchor } = props;
   const containerRef = useRef();
@@ -479,9 +479,4 @@ SmartList.defaultProps = {
   offset: 0,
   inverted: false,
   noReset: false,
-};
-
-export {
-  SmartList as default,
-  SmartList,
 };

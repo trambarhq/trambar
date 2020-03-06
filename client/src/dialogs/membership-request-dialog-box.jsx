@@ -15,7 +15,7 @@ import './membership-request-dialog-box.scss';
 /**
  * Dialog box for requesting membership to a project.
  */
-function MembershipRequestDialogBox(props) {
+export const MembershipRequestDialogBox = Overlay.create((props) => {
   const { env, project, currentUser } = props;
   const { onConfirm, onRevoke, onProceed, onClose } = props;
   const { t, p, g } = env.locale;
@@ -89,7 +89,7 @@ function MembershipRequestDialogBox(props) {
       message = t('membership-request-$you-have-requested-membership', you);
     }
     return (
-      <CollapsibleContainer open={!!icon}>
+      <CollapsibleContainer open={!!iconClass}>
         <div className={`message ${className}`}>
           <i className={iconClass} />
           {' '}
@@ -164,10 +164,4 @@ function MembershipRequestDialogBox(props) {
       );
     }
   }
-}
-
-const overlay = Overlay.create(MembershipRequestDialogBox);
-
-export {
-  overlay as MembershipRequestDialogBox,
-};
+});

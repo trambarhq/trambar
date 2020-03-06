@@ -22,7 +22,7 @@ import './video-capture-dialog-box-browser.scss';
 /**
  * Dialog box for capturing a video in the web browser.
  */
-async function VideoCaptureDialogBoxBrowser(props) {
+export const VideoCaptureDialogBoxBrowser = Overlay.create(async (props) => {
   const { env, payloads, onCapture, onClose } = props;
   const { t } = env.locale;
   const [ show ] = useProgress(50, 50);
@@ -242,10 +242,4 @@ async function VideoCaptureDialogBoxBrowser(props) {
         );
     }
   }
-}
-
-const overlay = Overlay.create(VideoCaptureDialogBoxBrowser);
-
-export {
-  overlay as VideoCaptureDialogBoxBrowser,
-};
+});

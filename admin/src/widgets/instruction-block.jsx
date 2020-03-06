@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 import { parseAsync } from 'mark-gor';
 
 // widgets
-import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
+import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 
 import './instruction-block.scss';
 

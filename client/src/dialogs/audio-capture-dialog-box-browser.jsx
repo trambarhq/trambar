@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress, useListener } from 'relaks';
+import { useProgress, useListener } from 'relaks';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -20,7 +20,7 @@ import './audio-capture-dialog-box-browser.scss';
 /**
  * Dialog box for capturing a audio in the web browser.
  */
-async function AudioCaptureDialogBoxBrowser(props) {
+export const AudioCaptureDialogBoxBrowser = Overlay.create(async (props) => {
   const { env, payloads, onCapture, onClose } = props;
   const { t } = env.locale;
   const [ show ] = useProgress(50, 50);
@@ -222,10 +222,4 @@ async function AudioCaptureDialogBoxBrowser(props) {
         );
     }
   }
-}
-
-const overlay = Overlay.create(AudioCaptureDialogBoxBrowser);
-
-export {
-  overlay as AudioCaptureDialogBoxBrowser,
-};
+});
