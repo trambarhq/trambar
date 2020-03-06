@@ -1,12 +1,13 @@
 import _ from 'lodash';
 
-function getDisplayName(project, env) {
+function getProjectName(project, env) {
   const { p } = env.locale;
   return p(_.get(project, 'details.title')) || _.get(project, 'name') || '';
 }
 
 export {
-  getDisplayName,
+  getProjectName,
+  getProjectName as getDisplayName,
 };
 
 // use code from backend

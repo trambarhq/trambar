@@ -493,7 +493,7 @@ function canReceiveNotification(user, repos, type) {
  *
  * @return {String}
  */
-function getDisplayName(user, env) {
+function getUserName(user, env) {
   let { p } = env.locale;
   return p(_.get(user, 'details.name')) || _.capitalize(_.get(user, 'username')) || '';
 }
@@ -532,7 +532,8 @@ export {
   canHideReaction,
   canRemoveReaction,
   canReceiveNotification,
-  getDisplayName,
+  getUserName,
+  getUserName as getDisplayName,
   getGender,
   mergeRemoteChanges,
 };

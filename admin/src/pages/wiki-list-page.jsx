@@ -2,12 +2,12 @@ import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as RepoFinder from 'common/objects/finders/repo-finder.js';
-import * as RepoUtils from 'common/objects/utils/repo-utils.js';
-import * as WikiFinder from 'common/objects/finders/wiki-finder.js';
-import * as WikiSaver from 'common/objects/savers/wiki-saver.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
+import { getRepoName } from 'common/objects/utils/repo-utils.js';
+import { findAllWikis } from 'common/objects/finders/wiki-finder.js';
+import { selectWikis, deselectWikis } from 'common/objects/savers/wiki-saver.js';
+import { findLinkByRelative } from 'common/objects/utils/external-data-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -34,11 +34,11 @@ export default async function WikiListPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const project = await ProjectFinder.findProject(database, projectID);
+  const project = await findProject(database, projectID);
   const schema = project.name;
-  const wikis = await WikiFinder.findAllWikis(database, schema);
+  const wikis = await findAllWikis(database, schema);
   render();
-  const repos = await RepoFinder.findProjectRepos(database, project);
+  const repos = await findProjectRepos(database, project);
   render();
 
   function render() {
@@ -80,8 +80,8 @@ function WikiListPageSync(props) {
       if (adding.length > 0) {
         await confirm(t('wiki-list-confirm-select-$count', adding.length));
       }
-      await WikiSaver.selectWikis(database, schema, adding);
-      await WikiSaver.deselectWikis(database, schema, removing);
+      await selectWikis(database, schema, adding);
+      await deselectWikis(database, schema, removing);
       warnDataLoss(false);
       handleCancelClick();
     });
@@ -222,7 +222,7 @@ function WikiListPageSync(props) {
       const repo = findRepo(repos, wiki);
       let contents;
       if (repo) {
-        const title = RepoUtils.getDisplayName(repo, env);
+        const title = getRepoName(repo, env);
         let url;
         if (!selection.shown) {
           url = route.find('repo-summary-page', {
@@ -311,7 +311,7 @@ const filterWikis = memoizeWeak(null, function(wikis, chosen) {
 
 const findRepo = memoizeWeak(null, function(repos, wiki) {
   return _.find(repos, (repo) => {
-    let link = ExternalDataUtils.findLinkByRelative(repo, wiki, 'project');
+    const link = findLinkByRelative(repo, wiki, 'project');
     return !!link;
   });
 });

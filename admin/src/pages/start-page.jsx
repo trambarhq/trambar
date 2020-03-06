@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener } from 'relaks';
-import * as SystemFinder from 'common/objects/finders/system-finder.js';
+import { findSystem } from 'common/objects/finders/system-finder.js';
 
 import './start-page.scss';
 
@@ -16,7 +16,7 @@ export default async function StartPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const system = await SystemFinder.findSystem(database);
+  const system = await findSystem(database);
   if (!_.isEmpty(system)) {
     await route.replace('project-list-page');
     return null;

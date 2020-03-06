@@ -1,16 +1,15 @@
 import _ from 'lodash';
-import React, { useRef } from 'react';
+import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectSaver from 'common/objects/savers/project-saver.js';
-import * as RepoFinder from 'common/objects/finders/repo-finder.js';
-import * as RepoSaver from 'common/objects/savers/repo-saver.js';
-import * as RepoUtils from 'common/objects/utils/repo-utils.js';
-import * as ServerFinder from 'common/objects/finders/server-finder.js';
-import * as ServerUtils from 'common/objects/utils/server-utils.js';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { associateRepos } from 'common/objects/savers/project-saver.js';
+import { findExistingRepos } from 'common/objects/finders/repo-finder.js';
+import { getRepoName } from 'common/objects/utils/repo-utils.js';
+import { findRepoServers } from 'common/objects/finders/server-finder.js';
+import { getServerName } from 'common/objects/utils/server-utils.js';
+import { findDailyActivitiesOfRepos } from 'common/objects/finders/statistics-finder.js';
+import { findLink } from 'common/objects/utils/external-data-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -38,13 +37,13 @@ export default async function RepoListPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const project = await ProjectFinder.findProject(database, projectID);
-  const repos = await RepoFinder.findExistingRepos(database);
+  const project = await findProject(database, projectID);
+  const repos = await findExistingRepos(database);
   render();
-  const servers = await ServerFinder.findRepoServers(database, repos);
+  const servers = await findRepoServers(database, repos);
   render();
   const linkedRepos = findRepos(repos, project);
-  const statistics = await StatisticsFinder.findDailyActivitiesOfRepos(database, project, linkedRepos);
+  const statistics = await findDailyActivitiesOfRepos(database, project, linkedRepos);
   render();
 
   function render() {
@@ -83,7 +82,7 @@ function RepoListPageSync(props) {
       if (removing.length > 0) {
         await confirm(t('repo-list-confirm-remove-$count', removing.length));
       }
-      await ProjectSaver.associateRepos(database, project, selection.current);
+      await associateRepos(database, project, selection.current);
       warnDataLoss(false);
       handleCancelClick();
     });
@@ -230,7 +229,7 @@ function RepoListPageSync(props) {
       const server = findServer(servers, repo);
       let contents;
       if (server) {
-        const title = ServerUtils.getDisplayName(server, env);
+        const title = getServerName(server, env);
         let url;
         if (!selection.shown) {
           url = route.find('server-summary-page', {
@@ -344,12 +343,12 @@ const sortRepos = memoizeWeak(null, function(repos, servers, statistics, env, so
     switch (column) {
       case 'title':
         return (repo) => {
-          return _.toLower(RepoUtils.getDisplayName(repo, env));
+          return _.toLower(getRepoName(repo, env));
         };
       case 'server':
         return (repo) => {
           let server = findServer(servers, repo);
-          return _.toLower(ServerUtils.getDisplayName(server, env));
+          return _.toLower(getServerName(server, env));
         };
       case 'issue_tracker':
         return 'details.issues_enabled';
@@ -378,7 +377,7 @@ const sortRepos = memoizeWeak(null, function(repos, servers, statistics, env, so
 
 const findServer = memoizeWeak(null, function(servers, repo) {
   return _.find(servers, (server) => {
-    let link = ExternalDataUtils.findLink(repo, server);
+    let link = findLink(repo, server);
     return !!link;
   });
 });

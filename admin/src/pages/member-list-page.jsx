@@ -2,12 +2,12 @@ import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectSaver from 'common/objects/savers/project-saver.js';
-import * as RoleFinder from 'common/objects/finders/role-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { associateUsers, addUsers } from 'common/objects/savers/project-saver.js';
+import { findRolesOfUsers } from 'common/objects/finders/role-finder.js';
+import { findExistingUsers } from 'common/objects/finders/user-finder.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
+import { findDailyActivitiesOfUsers } from 'common/objects/finders/statistics-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -38,13 +38,13 @@ export default async function MemberListPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const project = await ProjectFinder.findProject(database, projectID);
-  const users = await UserFinder.findExistingUsers(database);
+  const project = await findProject(database, projectID);
+  const users = await findExistingUsers(database);
   render();
-  const roles = await RoleFinder.findRolesOfUsers(database, users);
+  const roles = await findRolesOfUsers(database, users);
   render();
   const members = filterUsers(users, project);
-  const statistics = await StatisticsFinder.findDailyActivitiesOfUsers(database, project, members);
+  const statistics = await findDailyActivitiesOfUsers(database, project, members);
   render();
 
   function render() {
@@ -81,7 +81,7 @@ function MemberListPageSync(props) {
   });
   const handleSaveClick = async (evt) => {
     run(async () => {
-      await ProjectSaver.associateUsers(database, project, selection.current);
+      await associateUsers(database, project, selection.current);
       warnDataLoss(false);
       handleCancelClick();
     });
@@ -91,7 +91,7 @@ function MemberListPageSync(props) {
       const pendingUsers = _.filter(users, (user) => {
         return _.includes(user.requested_project_ids, project.id);
       });
-      await ProjectSaver.addUsers(database, project, pendingUser);
+      await addUsers(database, project, pendingUser);
     });
   });
   const handleRejectClick = useListener((evt) => {
@@ -240,7 +240,7 @@ function MemberListPageSync(props) {
     if (!user) {
       return <TH id="name">{t('member-list-column-name')}</TH>;
     } else {
-      const name = UserUtils.getDisplayName(user, env);
+      const name = getUserName(user, env);
       let url, badge;
       if (selection.shown) {
         if (selection.isAdding(user)) {
@@ -391,7 +391,7 @@ const sortUsers = memoizeWeak(null, function(users, roles, statistics, env, sort
     switch (column) {
       case 'name':
         return (user) => {
-          return _.toLower(UserUtils.getDisplayName(user, env));
+          return _.toLower(getUserName(user, env));
         };
       case 'range':
         return (user) => {

@@ -1,9 +1,7 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import Moment from 'moment';
-import { getDisplayName, getIconClass } from 'common/objects/utils/server-utils.js';
-import * as HTTPRequest from 'common/transport/http-request.js';
+import { getServerName, getIconClass } from 'common/objects/utils/server-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -175,7 +173,7 @@ function SignInPageSync(props) {
   }
 
   function renderOAuthButton(server, i) {
-    const name = getDisplayName(server, env);
+    const name = getServerName(server, env);
     const iconClass = getIconClass(server);
     const url = database.getOAuthURL(server);
     const props = {

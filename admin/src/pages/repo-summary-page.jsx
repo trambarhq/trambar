@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as RepoFinder from 'common/objects/finders/repo-finder.js';
-import * as RepoSaver from 'common/objects/savers/repo-saver.js';
-import * as RepoUtils from 'common/objects/utils/repo-utils.js';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
-import * as SystemFinder from 'common/objects/finders/system-finder.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { findRepo } from 'common/objects/finders/repo-finder.js';
+import { saveRepo } from 'common/objects/savers/repo-saver.js';
+import { getRepoName } from 'common/objects/utils/repo-utils.js';
+import { findDailyActivitiesOfRepo } from 'common/objects/finders/statistics-finder.js';
+import { findSystem } from 'common/objects/finders/system-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -36,12 +36,12 @@ export default async function RepoSummaryPage(props) {
 
   render();
   const currentUserID = await database.start()
-  const system = await SystemFinder.findSystem(database);
-  const repo = await RepoFinder.findRepo(database, repoID);
+  const system = await findSystem(database);
+  const repo = await findRepo(database, repoID);
   render();
-  const project = await ProjectFinder.findProject(database, projectID);
+  const project = await findProject(database, projectID);
   render();
-  const statistics = await StatisticsFinder.findDailyActivitiesOfRepo(database, project, repo);
+  const statistics = await findDailyActivitiesOfRepo(database, project, repo);
   render();
 
   function render() {
@@ -89,7 +89,7 @@ function RepoSummaryPageSync(props) {
   });
   const handleSaveClick = useListener((evt) => {
     run(async () => {
-      await RepoSaver.saveRepo(database, draft.current);
+      await saveRepo(database, draft.current);
       warnDataLoss(false);
       handleCancelClick();
     });
@@ -102,7 +102,7 @@ function RepoSummaryPageSync(props) {
   warnDataLoss(draft.changed);
 
   const { changed } = draft;
-  const title = RepoUtils.getDisplayName(repo, env);
+  const title = getRepoName(repo, env);
   return (
     <div className="repo-summary-page">
       {renderButtons()}

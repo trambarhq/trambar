@@ -1,13 +1,13 @@
 import _ from 'lodash';
-import React, { useRef } from 'react';
+import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectSaver from 'common/objects/savers/project-saver.js';
-import * as ProjectUtils from 'common/objects/utils/project-utils.js';
-import * as RepoFinder from 'common/objects/finders/repo-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
+import { findAllProjects } from 'common/objects/finders/project-finder.js';
+import { archiveProjects, restoreProjects } from 'common/objects/savers/project-saver.js';
+import { getProjectName } from 'common/objects/utils/project-utils.js';
+import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
+import { findProjectMembers } from 'common/objects/finders/user-finder.js';
+import { findDailyActivitiesOfProjects } from 'common/objects/finders/statistics-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -38,13 +38,13 @@ export default async function ProjectListPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const projects = await ProjectFinder.findAllProjects(database);
+  const projects = await findAllProjects(database);
   render();
-  const repos = await RepoFinder.findProjectRepos(database, projects);
+  const repos = await findProjectRepos(database, projects);
   render();
-  const users = await UserFinder.findProjectMembers(database, projects);
+  const users = await findProjectMembers(database, projects);
   render();
-  const statistics = await StatisticsFinder.findDailyActivitiesOfProjects(database, projects);
+  const statistics = await findDailyActivitiesOfProjects(database, projects);
   render();
 
   function render() {
@@ -88,8 +88,8 @@ function ProjectListPageSync(props) {
       if (adding.length > 0) {
         await confirm(t('project-list-confirm-restore-$count', adding.length));
       }
-      await ProjectSaver.archiveProjects(database, removing);
-      await ProjectSaver.restoreProjects(database, adding);
+      await archiveProjects(database, removing);
+      await restoreProjects(database, adding);
       warnDataLoss(false);
       handleCancelClick();
     })
@@ -370,7 +370,7 @@ const sortProjects = memoizeWeak(null, function(projects, users, repos, statisti
     switch (column) {
       case 'title':
         return (project) => {
-          return _.toLower(ProjectUtils.getDisplayName(project, env))
+          return _.toLower(getProjectName(project, env))
         };
       case 'users':
         return (project) => {

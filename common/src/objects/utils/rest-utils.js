@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-function getDisplayName(rest, env) {
+function getRestName(rest, env) {
   const { p } = env.locale;
   let name = _.get(rest, 'details.title');
   if (!name) {
@@ -10,5 +10,6 @@ function getDisplayName(rest, env) {
 }
 
 export {
-  getDisplayName,
+  getRestName,
+  getRestName as getDisplayName,
 };

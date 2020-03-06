@@ -1,11 +1,11 @@
 import _ from 'lodash';
-import React, { useRef } from 'react';
+import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as RoleFinder from 'common/objects/finders/role-finder.js';
-import * as RoleSaver from 'common/objects/savers/role-saver.js';
-import * as RoleUtils from 'common/objects/utils/role-utils.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
+import { findAllRoles } from 'common/objects/finders/role-finder.js';
+import { disableRoles, restoreRoles } from 'common/objects/savers/role-saver.js';
+import { getRoleName } from 'common/objects/utils/role-utils.js';
+import { findUsersWithRoles } from 'common/objects/finders/user-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -34,9 +34,9 @@ export default async function RoleListPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const roles = await RoleFinder.findAllRoles(database);
+  const roles = await findAllRoles(database);
   render();
-  const users = await UserFinder.findUsersWithRoles(database, roles);
+  const users = await findUsersWithRoles(database, roles);
   render();
 
   function render() {
@@ -80,8 +80,8 @@ function RoleListPageSync(props) {
       if (adding.length > 0) {
         await confirm(t('role-list-confirm-reactivate-$count', adding.length));
       }
-      await RoleSaver.disableRoles(database, removing);
-      await RoleSaver.restoreRoles(database, adding);
+      await disableRoles(database, removing);
+      await restoreRoles(database, adding);
       warnDataLoss(false);
       handleCancelClick();
     });
@@ -206,7 +206,7 @@ function RoleListPageSync(props) {
     if (!role) {
       return <TH id="title">{t('role-list-column-title')}</TH>;
     } else {
-      const title = RoleUtils.getDisplayName(role, env) || '-';
+      const title = getRoleName(role, env) || '-';
       let url, badge;
       if (selection.shown) {
         // add a badge next to the name if we're disabling or
@@ -273,7 +273,7 @@ const sortRoles = memoizeWeak(null, function(roles, users, env, sort) {
     switch (column) {
       case 'title':
         return (role) => {
-          return _.toLower(RoleUtils.getDisplayName(role, env));
+          return _.toLower(getRoleName(role, env));
         };
       case 'users':
         return (role) => {

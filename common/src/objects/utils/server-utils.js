@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-function getDisplayName(server, env) {
+function getServerName(server, env) {
   const { p, t } = env.locale;
   let title = p(_.get(server, 'details.title'));
   if (title && server && server.type) {
@@ -27,6 +27,7 @@ function getIconClass(server) {
 }
 
 export {
-  getDisplayName,
+  getServerName,
+  getServerName as getDisplayName,
   getIconClass,
 };

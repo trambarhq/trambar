@@ -2,12 +2,12 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as RoleFinder from 'common/objects/finders/role-finder.js';
-import * as RoleSaver from 'common/objects/savers/role-saver.js';
-import * as RoleUtils from 'common/objects/utils/role-utils.js';
-import * as SystemFinder from 'common/objects/finders/system-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as UserSaver from 'common/objects/savers/user-saver.js';
+import { findRole } from 'common/objects/finders/role-finder.js';
+import { disableRole, removeRole, restoreRole, saveRole } from 'common/objects/savers/role-saver.js';
+import { getRoleName } from 'common/objects/utils/role-utils.js';
+import { findSystem } from 'common/objects/finders/system-finder.js';
+import { findActiveUsers } from 'common/objects/finders/user-finder.js';
+import { assignRole, stripRole } from 'common/objects/savers/user-saver.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -39,10 +39,10 @@ export default async function RoleSummaryPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const system = await SystemFinder.findSystem(database);
-  const role = !creating ? await RoleFinder.findRole(database, roleID) : null;
+  const system = await findSystem(database);
+  const role = !creating ? await findRole(database, roleID) : null;
   render();
-  const users = await UserFinder.findActiveUsers(database);
+  const users = await findActiveUsers(database);
   render();
 
   function render() {
@@ -93,21 +93,21 @@ function RoleSummaryPageSync(props) {
   const handleDisableClick = useListener((evt) => {
     run(async () => {
       await confirm(t('role-summary-confirm-disable'));
-      await RoleSaver.disableRole(database, role);
+      await disableRole(database, role);
       handleReturnClick();
     });
   });
   const handleRemoveClick = useListener((evt) => {
     run(async () => {
       await confirm(t('role-summary-confirm-delete'));
-      await RoleSaver.removeRole(database, role);
+      await removeRole(database, role);
       handleReturnClick();
     });
   });
   const handleRestoreClick = useListener((evt) => {
     run(async () => {
       await confirm(t('role-summary-confirm-reactivate'));
-      await RoleSaver.restoreRole(database, role);
+      await restoreRole(database, role);
     });
   });
   const handleSaveClick = useListener((evt) => {
@@ -120,11 +120,11 @@ function RoleSummaryPageSync(props) {
         }
         reportProblems(problems);
 
-        const roleAfter = await RoleSaver.saveRole(database, draft.current);
+        const roleAfter = await saveRole(database, draft.current);
         const adding = userSelection.adding();
         const removing = userSelection.removing();
-        await UserSaver.addRole(database, adding, roleAfter);
-        await UserSaver.removeRole(database, removing, roleAfter);
+        await assignRole(database, adding, roleAfter);
+        await stripRole(database, removing, roleAfter);
 
         if (creating) {
           setAdding(true);
@@ -161,7 +161,7 @@ function RoleSummaryPageSync(props) {
 
   warnDataLoss(draft.changed || userSelection.changed);
 
-  const title = RoleUtils.getDisplayName(draft.current, env);
+  const title = getRoleName(draft.current, env);
   return (
     <div className="role-summary-page">
       {renderButtons()}

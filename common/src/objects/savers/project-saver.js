@@ -54,12 +54,12 @@ async function associateRepos(db, project, repos) {
   return saveProject(db, { id: project.id, repo_ids: repoIDs });
 }
 
-async function addRepos(db, project, repos) {
+async function attachRepos(db, project, repos) {
   const repoIDs = _.union(project.repo_ids, _.map(repos, 'id'));
   return saveProject(db, { id: project.id, repo_ids: repoIDs });
 }
 
-async function removeRepos(db, project, repos) {
+async function detachRepos(db, project, repos) {
   const repoIDs = _.difference(project.repo_ids, _.map(repos, 'id'));
   return saveProject(db, { id: project.id, repo_ids: repoIDs });
 }
@@ -69,13 +69,13 @@ async function associateUsers(db, project, users) {
   return saveProject(db, { id: project.id, user_ids: userIDs });
 }
 
-async function addUsers(db, project, users) {
-  const userIDs = _.union(project.repo_ids, _.map(users, 'id'));
+async function addMembers(db, project, users) {
+  const userIDs = _.union(project.user_ids, _.map(users, 'id'));
   return saveProject(db, { id: project.id, user_ids: userIDs });
 }
 
-async function removeUsers(db, project, users) {
-  const userIDs = _.difference(project.repo_ids, _.map(users, 'id'));
+async function removeMembers(db, project, users) {
+  const userIDs = _.difference(project.user_ids, _.map(users, 'id'));
   return saveProject(db, { id: project.id, user_ids: userIDs });
 }
 
@@ -90,10 +90,14 @@ export {
   restoreProjects,
 
   associateRepos,
-  addRepos,
-  removeRepos,
+  attachRepos,
+  attachRepos as addRepos,
+  detachRepos,
+  detachRepos as removeRepos,
 
   associateUsers,
-  addUsers,
-  removeUsers,
+  addMembers,
+  addMembers as addUsers,
+  removeMembers,
+  removeMembers as removeUsers,
 };

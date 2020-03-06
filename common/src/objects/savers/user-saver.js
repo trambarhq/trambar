@@ -47,7 +47,7 @@ async function restoreUser(db, user) {
   return userAfter;
 }
 
-async function addRole(db, users, role) {
+async function assignRole(db, users, role) {
   const changes = _.map(users, (user) => {
     return {
       id: user.id,
@@ -57,7 +57,7 @@ async function addRole(db, users, role) {
   return saveUsers(db, changes);
 }
 
-async function removeRole(db, users, role) {
+async function stripRole(db, users, role) {
   const changes = _.map(users, (user) => {
     return {
       id: user.id,
@@ -87,8 +87,10 @@ export {
   restoreUsers,
   restoreUser,
 
-  addRole,
-  removeRole,
+  assignRole,
+  assignRole as addRole,
+  stripRole,
+  stripRole as removeRole,
 
   removeRequestedProject,
 };

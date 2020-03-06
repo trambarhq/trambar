@@ -1,9 +1,8 @@
 import _ from 'lodash';
-import React, { useState } from 'react';
+import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import * as SystemFinder from 'common/objects/finders/system-finder.js';
-import * as SystemSaver from 'common/objects/savers/system-saver.js';
-import * as SystemSettings from 'common/objects/settings/system-settings.js';
+import { findSystem } from 'common/objects/finders/system-finder.js';
+import { saveSystem } from 'common/objects/savers/system-saver.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -31,7 +30,7 @@ export default async function SettingsPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const system = await SystemFinder.findSystem(database);
+  const system = await findSystem(database);
   render();
 
   function render() {
@@ -63,7 +62,7 @@ function SettingsPageSync(props) {
   });
   const handleSaveClick = useListener((evt) => {
     run(async () => {
-      const systemAfter = await SystemSaver.saveSystem(database, draft.current);
+      const systemAfter = await saveSystem(database, draft.current);
       payloads.dispatch(systemAfter);
       warnDataLoss(false);
       handleCancelClick();

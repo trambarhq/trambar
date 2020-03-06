@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-function getDisplayName(spreadsheet, env) {
+function getSpreadsheetName(spreadsheet, env) {
   const { p } = env.locale;
   let name = _.get(spreadsheet, 'details.filename');
   if (!name) {
@@ -10,5 +10,6 @@ function getDisplayName(spreadsheet, env) {
 }
 
 export {
-  getDisplayName,
+  getSpreadsheetName,
+  getSpreadsheetName as getDisplayName,
 };

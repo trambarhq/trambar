@@ -1,6 +1,5 @@
 import _ from 'lodash';
-import Moment from 'moment';
-import React, { useRef } from 'react';
+import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import { findAllServers } from 'common/objects/finders/server-finder.js';

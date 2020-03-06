@@ -2,15 +2,15 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectSaver from 'common/objects/savers/project-saver.js';
-import * as RoleFinder from 'common/objects/finders/role-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { removeMembers, addMembers } from 'common/objects/savers/project-saver.js';
+import { findActiveRoles } from 'common/objects/finders/role-finder.js';
+import { findUser } from 'common/objects/finders/user-finder.js';
+import { disableUser, removeUser, restoreUser, saveUser } from 'common/objects/savers/user-saver.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
 import { UserTypes } from 'common/objects/types/user-types.js';
-import * as UserSettings from 'common/objects/settings/user-settings.js';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
-import * as SystemFinder from 'common/objects/finders/system-finder.js';
+import { findDailyActivitiesOfUser } from 'common/objects/finders/statistics-finder.js';
+import { findSystem } from 'common/objects/finders/system-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -44,15 +44,15 @@ export default async function UserSummaryPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const system = await SystemFinder.findSystem(database);
-  const user = (!creating) ? await UserFinder.findUser(database, userID) : null;
+  const system = await findSystem(database);
+  const user = (!creating) ? await findUser(database, userID) : null;
   render();
-  const roles = await RoleFinder.findActiveRoles(database)
+  const roles = await findActiveRoles(database)
   render();
   // load project if project id is provided (i.e. member summary)
-  const project = (projectID) ? await ProjectFinder.findProject(database, projectID) : null;
+  const project = (projectID) ? await findProject(database, projectID) : null;
   render();
-  const statistics = (project && user) ? await StatisticsFinder.findDailyActivitiesOfUser(database, project, user) : null;
+  const statistics = (project && user) ? await findDailyActivitiesOfUser(database, project, user) : null;
   render();
 
   function render() {
@@ -100,32 +100,32 @@ function UserSummaryPageSync(props) {
   const handleDisableClick = useListener(async (evt) => {
     run(async () => {
       await confirm(t('user-summary-confirm-disable'));
-      await UserSaver.disableUser(database, user);
+      await disableUser(database, user);
       handleReturnClick();
     });
   });
   const handleRemoveClick = useListener(async (evt) => {
     run(async () => {
       await confirm(t('user-summary-confirm-delete'));
-      await UserSaver.removeUser(database, user);
+      await removeUser(database, user);
       handleReturnClick();
     });
   });
   const handleRestoreClick = useListener(async (evt) => {
     run(async () => {
       await confirm(t('user-summary-confirm-reactivate'));
-      await UserSaver.restoreUser(database, user);
+      await restoreUser(database, user);
     });
   });
   const handleRemoveMembershipClick = useListener(async (evt) => {
     run(async () => {
-      await ProjectSaver.removeUsers(database, project, [ user ]);
+      await removeMembers(database, project, [ user ]);
       handleReturnClick();
     });
   });
   const handleRestoreMembershipClick = useListener(async (evt) => {
     run(async () => {
-      await ProjectSaver.addUsers(database, project, [ user ]);
+      await addMembers(database, project, [ user ]);
     });
   });
   const handleSaveClick = useListener(async (evt) => {
@@ -140,12 +140,12 @@ function UserSummaryPageSync(props) {
         }
         setProblems(problems);
         if (_.isEmpty(problems)) {
-          const userAfter = await UserSaver.saveUser(database, draft.current);
+          const userAfter = await saveUser(database, draft.current);
           payloads.dispatch(userAfter);
 
           // add user to member list if he's not there yet
           if (project && !_.includes(project.user_ids, userAfter.id)) {
-            await ProjectSaver.addUsers(database, project, [ userAfter ]);
+            await addMembers(database, project, [ userAfter ]);
           }
 
           warnDataLoss(false);
@@ -224,7 +224,7 @@ function UserSummaryPageSync(props) {
 
   warnDataLoss(draft.changed);
 
-  const name = UserUtils.getDisplayName(draft.current, env);
+  const name = getUserName(draft.current, env);
   return (
     <div className="user-summary-page">
       {renderButtons()}

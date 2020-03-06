@@ -1,13 +1,11 @@
 import _ from 'lodash';
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectUtils from 'common/objects/utils/project-utils.js';
-import * as RestFinder from 'common/objects/finders/rest-finder.js';
-import * as RestSaver from 'common/objects/savers/rest-saver.js';
-import * as RestUtils from 'common/objects/utils/rest-utils.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { findRest } from 'common/objects/finders/rest-finder.js';
+import { disableRest, removeRest, restoreRest, saveRest } from 'common/objects/savers/rest-saver.js';
+import { getRestName } from 'common/objects/utils/rest-utils.js';
 import { RestTypes } from 'common/objects/types/rest-types.js';
-import * as HTTPRequest from 'common/transport/http-request.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -41,9 +39,9 @@ export default async function RestSummaryPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const project = await ProjectFinder.findProject(database, projectID);
+  const project = await findProject(database, projectID);
   const schema = project.name;
-  const rest = !creating ? await RestFinder.findRest(database, schema, restID) : null;
+  const rest = !creating ? await findRest(database, schema, restID) : null;
   render();
 
   function render() {
@@ -86,21 +84,21 @@ function RestSummaryPageSync(props) {
   const handleDisableClick = useListener((evt) => {
     run(async () => {
       await confirm(t('rest-summary-confirm-disable'));
-      await RestSaver.disableRest(database, schema, rest);
+      await disableRest(database, schema, rest);
       handleReturnClick();
     });
   });
   const handleRemoveClick = useListener((evt) => {
     run(async () => {
       await confirm(t('rest-summary-confirm-delete'));
-      await RestSaver.removeRest(database, schema, rest);
+      await removeRest(database, schema, rest);
       handleReturnClick();
     });
   });
   const handleRestoreClick = useListener((evt) => {
     run(async () => {
       await confirm(t('rest-summary-confirm-reactivate'));
-      await RestSaver.restoreRest(database, schema, rest);
+      await restoreRest(database, schema, rest);
     });
   });
   const handleSaveClick = useListener((evt) => {
@@ -113,7 +111,7 @@ function RestSummaryPageSync(props) {
         }
         reportProblems(problems);
 
-        const restAfter = await RestSaver.saveRest(database, schema, draft.current);
+        const restAfter = await saveRest(database, schema, draft.current);
         if (creating) {
           setAdding(true);
         }
@@ -171,7 +169,7 @@ function RestSummaryPageSync(props) {
 
   warnDataLoss(draft.changed);
 
-  const title = RestUtils.getDisplayName(draft.current, env);
+  const title = getRestName(draft.current, env);
   return (
     <div className="rest-summary-page">
       {renderButtons()}

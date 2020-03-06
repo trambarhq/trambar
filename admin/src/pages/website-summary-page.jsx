@@ -4,11 +4,11 @@ import 'moment-timezone';
 import React, { useMemo } from 'react';
 import { useProgress, useListener, useSaveBuffer, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectSaver from 'common/objects/savers/project-saver.js';
-import * as RepoFinder from 'common/objects/finders/repo-finder.js';
-import * as RepoUtils from 'common/objects/utils/repo-utils.js';
-import * as SnapshotFinder from 'common/objects/finders/snapshot-finder.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { saveProject } from 'common/objects/savers/project-saver.js';
+import { findTemplates } from 'common/objects/finders/repo-finder.js';
+import { getRepoName } from 'common/objects/utils/repo-utils.js';
+import { findSnapshots } from 'common/objects/finders/snapshot-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -38,12 +38,12 @@ export default async function WebsiteSummaryPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const project = await ProjectFinder.findProject(database, projectID);
+  const project = await findProject(database, projectID);
   render();
-  const repos = await RepoFinder.findTemplates(database);
+  const repos = await findTemplates(database);
   const template = _.find(repos, { id: project.template_repo_id }) || null;
   render();
-  const snapshots = await SnapshotFinder.findSnapshots(database, template, 100);
+  const snapshots = await findSnapshots(database, template, 100);
   render();
 
   function render() {
@@ -117,7 +117,7 @@ function WebsiteSummaryPageSync(props) {
       }
       reportProblems(problems);
 
-      const projectAfter = await ProjectSaver.saveProject(database, draft.current);
+      const projectAfter = await saveProject(database, draft.current);
 
       warnDataLoss(false);
       route.replace({ editing: undefined });
@@ -264,7 +264,7 @@ function WebsiteSummaryPageSync(props) {
       selected: repoIDCurr === repo.id,
       previous: repoIDPrev === repo.id,
     };
-    const label = RepoUtils.getDisplayName(repo, env);
+    const label = getRepoName(repo, env);
     return <option key={repo.id} {...props}>{label}</option>;
   }
 

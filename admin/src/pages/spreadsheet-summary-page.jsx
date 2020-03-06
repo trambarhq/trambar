@@ -2,12 +2,12 @@ import _ from 'lodash';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { ExcelFile } from 'trambar-www';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectUtils from 'common/objects/utils/project-utils.js';
-import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.js';
-import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.js';
-import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.js';
-import * as HTTPRequest from 'common/transport/http-request.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { getWebsiteAddress } from 'common/objects/utils/project-utils.js';
+import { findSpreadsheet } from 'common/objects/finders/spreadsheet-finder.js';
+import { disableSpreadsheet, removeSpreadsheet, restoreSpreadsheet, saveSpreadsheet } from 'common/objects/savers/spreadsheet-saver.js';
+import { getSpreadsheetName } from 'common/objects/utils/spreadsheet-utils.js';
+import { fetch } from 'common/transport/http-request.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -56,9 +56,9 @@ export default async function SpreadsheetSummaryPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const project = await ProjectFinder.findProject(database, projectID);
+  const project = await findProject(database, projectID);
   const schema = project.name;
-  const spreadsheet = !creating ? await SpreadsheetFinder.findSpreadsheet(database, schema, spreadsheetID) : null;
+  const spreadsheet = !creating ? await findSpreadsheet(database, schema, spreadsheetID) : null;
   render();
 
   if (!updateRequest.current) {
@@ -113,21 +113,21 @@ function SpreadsheetSummaryPageSync(props) {
   const handleDisableClick = useListener((evt) => {
     run(async () => {
       await confirm(t('spreadsheet-summary-confirm-disable'));
-      await SpreadsheetSaver.disableSpreadsheet(database, schema, spreadsheet);
+      await disableSpreadsheet(database, schema, spreadsheet);
       handleReturnClick();
     });
   });
   const handleRemoveClick = useListener((evt) => {
     run(async () => {
       await confirm(t('spreadsheet-summary-confirm-delete'));
-      await SpreadsheetSaver.removeSpreadsheet(database, schema, spreadsheet);
+      await removeSpreadsheet(database, schema, spreadsheet);
       handleReturnClick();
     });
   });
   const handleRestoreClick = useListener((evt) => {
     run(async () => {
       await confirm(t('spreadsheet-summary-confirm-reactivate'));
-      await SpreadsheetSaver.restoreSpreadsheet(database, schema, spreadsheet);
+      await restoreSpreadsheet(database, schema, spreadsheet);
     });
   });
   const handleSaveClick = useListener((evt) => {
@@ -136,7 +136,7 @@ function SpreadsheetSummaryPageSync(props) {
         const problems = {};
         reportProblems(problems);
 
-        const spreadsheetAfter = await SpreadsheetSaver.saveSpreadsheet(database, schema, draft.current);
+        const spreadsheetAfter = await saveSpreadsheet(database, schema, draft.current);
         if (spreadsheet?.url !== spreadsheetAfter.url) {
           requestUpdate(project, spreadsheetAfter, env);
         }
@@ -179,7 +179,7 @@ function SpreadsheetSummaryPageSync(props) {
 
   warnDataLoss(draft.changed);
 
-  const title = SpreadsheetUtils.getDisplayName(draft.current, env);
+  const title = getSpreadsheetName(draft.current, env);
   return (
     <div className="spreadsheet-summary-page">
       {renderButtons()}
@@ -491,11 +491,11 @@ function Sheet(props) {
 
 async function requestUpdate(project, spreadsheet, env) {
   if (spreadsheet.url && spreadsheet.name) {
-    const baseURL = ProjectUtils.getWebsiteAddress(project);
+    const baseURL = getWebsiteAddress(project);
     const relativeURL = ExcelFile.getObjectURL([ spreadsheet.name ]);
     const url = `${baseURL}${relativeURL}`;
     try {
-      await HTTPRequest.fetch('HEAD', url);
+      await fetch('HEAD', url);
     } catch (err) {
       console.error(err);
     }

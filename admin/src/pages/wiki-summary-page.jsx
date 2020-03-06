@@ -2,11 +2,11 @@ import _ from 'lodash';
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { GitlabWiki } from 'trambar-www';
-import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as RepoFinder from 'common/objects/finders/repo-finder.js';
-import * as WikiFinder from 'common/objects/finders/wiki-finder.js';
-import * as WikiSaver from 'common/objects/savers/wiki-saver.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
+import { findWiki, findPublicWikis } from 'common/objects/finders/wiki-finder.js';
+import { selectWiki, deselectWiki, saveWiki } from 'common/objects/savers/wiki-saver.js';
+import { findLinkByRelative } from 'common/objects/utils/external-data-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -39,17 +39,17 @@ export default async function WikiSummaryPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const project = await ProjectFinder.findProject(database, projectID);
+  const project = await findProject(database, projectID);
   const schema = project.name;
-  const wiki = await WikiFinder.findWiki(database, schema, wikiID);
+  const wiki = await findWiki(database, schema, wikiID);
   render();
-  const repos = await RepoFinder.findProjectRepos(database, project);
+  const repos = await findProjectRepos(database, project);
   const repo = _.find(repos, (repo) => {
-    let link = ExternalDataUtils.findLinkByRelative(repo, wiki, 'project');
+    const link = findLinkByRelative(repo, wiki, 'project');
     return !!link;
   });
   render();
-  const wikis = await WikiFinder.findPublicWikis(database, schema);
+  const wikis = await findPublicWikis(database, schema);
   render();
 
   function render() {
@@ -85,13 +85,13 @@ function WikiSummaryPageSync(props) {
   const handleSelectClick = useListener((evt) => {
     run(async () => {
       await confirm(t('wiki-summary-confirm-select'));
-      await WikiSaver.selectWiki(database, schema, wiki);
+      await selectWiki(database, schema, wiki);
     });
   });
   const handleDeselectClick = useListener((evt) => {
     run(async () => {
       await confirm(t('wiki-summary-confirm-deselect'));
-      await WikiSaver.deselectWiki(database, schema, wiki);
+      await deselectWiki(database, schema, wiki);
     });
   });
   const handleSaveClick = useListener((evt) => {
@@ -99,7 +99,7 @@ function WikiSummaryPageSync(props) {
       const problems = {};
       reportProblems(problems);
 
-      const wikiAfter = await WikiSaver.saveWiki(database, schema, draft.current);
+      const wikiAfter = await saveWiki(database, schema, draft.current);
       warnDataLoss(false);
       route.replace({ editing: undefined });
     });

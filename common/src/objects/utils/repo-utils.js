@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import * as ExternalDataUtils from './external-data-utils.js';
 
-function getDisplayName(repo, env) {
+function getRepoName(repo, env) {
   const { p } = env.locale;
   return p(_.get(repo, 'details.title')) || _.get(repo, 'name') || '';
 }
@@ -151,7 +151,8 @@ function isBright(color) {
 }
 
 export {
-  getDisplayName,
+  getRepoName,
+  getRepoName as getDisplayName,
   getURL,
   getMembershipPageURL,
   getIssueNumber,

@@ -3,14 +3,14 @@ import Moment from 'moment';
 import React, { useState, useRef } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectUtils from 'common/objects/utils/project-utils.js';
-import * as RoleFinder from 'common/objects/finders/role-finder.js';
-import * as RoleUtils from 'common/objects/utils/role-utils.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
+import { findProjectsWithMembers } from 'common/objects/finders/project-finder.js';
+import { getProjectName } from 'common/objects/utils/project-utils.js';
+import { findRolesOfUsers } from 'common/objects/finders/role-finder.js';
+import { getRoleName } from 'common/objects/utils/role-utils.js';
+import { findAllUsers } from 'common/objects/finders/user-finder.js';
 import * as UserSaver from 'common/objects/savers/user-saver.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
-import UserTypes from 'common/objects/types/user-types.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
+import { UserTypes } from 'common/objects/types/user-types.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -41,11 +41,11 @@ export default async function UserListPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const users = await UserFinder.findAllUsers(database);
+  const users = await findAllUsers(database);
   render();
-  const projects = await ProjectFinder.findProjectsWithMembers(database, users);
+  const projects = await findProjectsWithMembers(database, users);
   render();
-  const roles = await RoleFinder.findRolesOfUsers(database, users);
+  const roles = await findRolesOfUsers(database, users);
   render();
 
   function render() {
@@ -221,7 +221,7 @@ function UserListPageSync(props) {
     if (!user) {
       return <TH id="name">{t('user-list-column-name')}</TH>;
     } else {
-      const name = UserUtils.getDisplayName(user, env);
+      const name = getUserName(user, env);
       let url, badge;
       if (selection.shown) {
         if (selection.isAdding(user)) {
@@ -343,7 +343,7 @@ const sortUsers = memoizeWeak(null, function(users, roles, projects, env, sort) 
     switch (column) {
       case 'name':
         return (user) => {
-          return _.toLower(UserUtils.getDisplayName(user, env));
+          return _.toLower(getUserName(user, env));
         };
       case 'username':
         return (user) => {
@@ -359,7 +359,7 @@ const sortUsers = memoizeWeak(null, function(users, roles, projects, env, sort) 
           if (!role0) {
             return '';
           }
-          return _.toLower(RoleUtils.getDisplayName(role0, env));
+          return _.toLower(getRoleName(role0, env));
         };
       case 'projects':
         return (user) => {
@@ -367,7 +367,7 @@ const sortUsers = memoizeWeak(null, function(users, roles, projects, env, sort) 
           if (!project0) {
             return '';
           }
-          return _.toLower(ProjectUtils.getDisplayName(project0, env));
+          return _.toLower(getProjectName(project0, env));
         };
       case 'email':
         return 'details.email';

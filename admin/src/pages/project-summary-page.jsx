@@ -1,12 +1,11 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectSaver from 'common/objects/savers/project-saver.js';
-import * as ProjectSettings from 'common/objects/settings/project-settings.js';
-import * as ProjectUtils from 'common/objects/utils/project-utils.js';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
-import * as SystemFinder from 'common/objects/finders/system-finder.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { archiveProject, removeProject, restoreProject, saveProject } from 'common/objects/savers/project-saver.js';
+import { getProjectName } from 'common/objects/utils/project-utils.js';
+import { findDailyActivitiesOfProject } from 'common/objects/finders/statistics-finder.js';
+import { findSystem } from 'common/objects/finders/system-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -40,11 +39,11 @@ export default async function ProjectSummaryPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const system = await SystemFinder.findSystem(database);
+  const system = await findSystem(database);
   render();
-  const project = (!creating) ? await ProjectFinder.findProject(database, projectID) : null;
+  const project = (!creating) ? await findProject(database, projectID) : null;
   render();
-  const statistics = (!creating) ? await StatisticsFinder.findDailyActivitiesOfProject(database, project) : null;
+  const statistics = (!creating) ? await findDailyActivitiesOfProject(database, project) : null;
   render();
 
   function render() {
@@ -88,21 +87,21 @@ function ProjectSummaryPageSync(props) {
   const handleArchiveClick = useListener((evt) => {
     run(async () => {
       await confirm(t('project-summary-confirm-archive'));
-      await ProjectSaver.archiveProject(database, project);
+      await archiveProject(database, project);
       handleReturnClick();
     });
   });
   const handleRemoveClick = useListener((evt) => {
     run(async () => {
       await confirm(t('project-summary-confirm-delete'));
-      await ProjectSaver.removeProject(database, project);
+      await removeProject(database, project);
       handleReturnClick();
     });
   });
   const handleRestoreClick = useListener((evt) => {
     run(async () => {
       await confirm(t('project-summary-confirm-restore'));
-      await ProjectSaver.restoreProject(database, project);
+      await restoreProject(database, project);
     });
   });
   const handleSaveClick = useListener((evt) => {
@@ -118,7 +117,7 @@ function ProjectSummaryPageSync(props) {
         }
         reportProblems(problems);
 
-        const projectAfter = await ProjectSaver.saveProject(database, draft.current);
+        const projectAfter = await saveProject(database, draft.current);
         payloads.dispatch(projectAfter);
         if (creating) {
           setAdding(true);
@@ -159,7 +158,7 @@ function ProjectSummaryPageSync(props) {
 
   warnDataLoss(draft.changed);
 
-  const title = ProjectUtils.getDisplayName(draft.current, env);
+  const title = getProjectName(draft.current, env);
   return (
     <div className="project-summary-page">
       {renderButtons()}

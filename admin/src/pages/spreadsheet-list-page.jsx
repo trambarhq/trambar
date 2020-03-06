@@ -2,10 +2,10 @@ import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.js';
-import * as SpreadsheetSaver from 'common/objects/savers/spreadsheet-saver.js';
-import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { findAllSpreadsheets } from 'common/objects/finders/spreadsheet-finder.js';
+import { disableSpreadsheets, restoreSpreadsheets } from 'common/objects/savers/spreadsheet-saver.js';
+import { getSpreadsheetName } from 'common/objects/utils/spreadsheet-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -34,9 +34,9 @@ export default async function SpreadsheetListPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const project = await ProjectFinder.findProject(database, projectID);
+  const project = await findProject(database, projectID);
   const schema = project.name;
-  const spreadsheets = await SpreadsheetFinder.findAllSpreadsheets(database, schema);
+  const spreadsheets = await findAllSpreadsheets(database, schema);
   render();
 
   function render() {
@@ -83,8 +83,8 @@ function SpreadsheetListPageSync(props) {
       if (adding.length > 0) {
         await confirm(t('spreadsheet-list-confirm-reactivate-$count', adding.length));
       }
-      await SpreadsheetSaver.disableSpreadsheets(database, schema, removing);
-      await SpreadsheetSaver.restoreSpreadsheets(database, schema, adding);
+      await disableSpreadsheets(database, schema, removing);
+      await restoreSpreadsheets(database, schema, adding);
       warnDataLoss(false);
       handleCancelClick();
     });
@@ -209,7 +209,7 @@ function SpreadsheetListPageSync(props) {
     if (!spreadsheet) {
       return <TH id="filename">{t('spreadsheet-list-column-filename')}</TH>;
     } else {
-      const filename = SpreadsheetUtils.getDisplayName(spreadsheet, env) || '-';
+      const filename = getSpreadsheetName(spreadsheet, env) || '-';
       let url, badge;
       if (selection.shown) {
         if (selection.isAdding(spreadsheet)) {
@@ -284,7 +284,7 @@ const sortSpreadsheets = memoizeWeak(null, function(spreadsheets, env, sort) {
     switch (column) {
       case 'title':
         return (spreadsheet) => {
-          return _.toLower(SpreadsheetUtils.getDisplayName(spreadsheet, env));
+          return _.toLower(getSpreadsheetName(spreadsheet, env));
         };
       case 'sheets':
         return 'details.filename';

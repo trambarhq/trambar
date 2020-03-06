@@ -2,14 +2,13 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as RoleFinder from 'common/objects/finders/role-finder.js';
-import * as RoleUtils from 'common/objects/utils/role-utils.js';
-import * as ServerFinder from 'common/objects/finders/server-finder.js';
-import * as ServerSaver from 'common/objects/savers/server-saver.js';
-import * as ServerUtils from 'common/objects/utils/server-utils.js';
+import { findActiveRoles } from 'common/objects/finders/role-finder.js';
+import { getRoleName } from 'common/objects/utils/role-utils.js';
+import { findServer } from 'common/objects/finders/server-finder.js';
+import { disableServer, removeServer, restoreServer, saveServer } from 'common/objects/savers/server-saver.js';
+import { getServerName } from 'common/objects/utils/server-utils.js';
 import { ServerTypes, IntegratedServerTypes } from 'common/objects/types/server-types.js';
-import * as ServerSettings from 'common/objects/settings/server-settings.js';
-import * as SystemFinder from 'common/objects/finders/system-finder.js';
+import { findSystem } from 'common/objects/finders/system-finder.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -43,11 +42,11 @@ export default async function ServerSummaryPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const system = await SystemFinder.findSystem(database);
+  const system = await findSystem(database);
   render();
-  const server = (!creating) ? await ServerFinder.findServer(database, serverID) : null;
+  const server = (!creating) ? await findServer(database, serverID) : null;
   render();
-  const roles = await RoleFinder.findActiveRoles(database);
+  const roles = await findActiveRoles(database);
   render();
 
   function render() {
@@ -93,21 +92,21 @@ function ServerSummaryPageSync(props) {
   const handleDisableClick = useListener((evt) => {
     run(async () => {
       await confirm(t('server-summary-confirm-disable'));
-      await ServerSaver.disableServer(database, server);
+      await disableServer(database, server);
       handleReturnClick();
     });
   });
   const handleDeleteClick = useListener((evt) => {
     run(async () => {
       await confirm(t('server-summary-confirm-delete'));
-      await ServerSaver.removeServer(database, server);
+      await removeServer(database, server);
       handleReturnClick();
     });
   });
   const handleRestoreClick = useListener((evt) => {
     run(async () => {
       await confirm(t('server-summary-confirm-reactivate'));
-      await ServerSaver.restoreServer(database, server);
+      await restoreServer(database, server);
     });
   });
   const handleSaveClick = useListener((evt) => {
@@ -136,7 +135,7 @@ function ServerSummaryPageSync(props) {
         }
         reportProblems(problems);
 
-        const serverAfter = await ServerSaver.saveServer(database, draft.current);
+        const serverAfter = await saveServer(database, draft.current);
         if (creating) {
           setAdding(true);
         }
@@ -255,7 +254,7 @@ function ServerSummaryPageSync(props) {
 
   warnDataLoss(draft.changed);
 
-  const title = ServerUtils.getDisplayName(draft.current, env);
+  const title = getServerName(draft.current, env);
   return (
     <div className="server-summary-page">
       {renderButtons()}
@@ -881,7 +880,7 @@ const oauthImportOptions = [
 function getRoleOptions(roles, env) {
   const sorted = sortRoles(roles, env);
   const options = _.map(sorted, (role) => {
-    const name = RoleUtils.getDisplayName(role, env);
+    const name = getRoleName(role, env);
     return {
       name: `role-${role.id}`,
       value: role.id,
@@ -898,7 +897,7 @@ function getRoleOptions(roles, env) {
 
 const sortRoles = memoizeWeak(null, function(roles, env) {
   const name = (role) => {
-    return RoleUtils.getDisplayName(role, env);
+    return getRoleName(role, env);
   };
   return _.sortBy(roles, name);
 });

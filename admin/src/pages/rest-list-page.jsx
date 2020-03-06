@@ -2,10 +2,10 @@ import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as RestFinder from 'common/objects/finders/rest-finder.js';
-import * as RestSaver from 'common/objects/savers/rest-saver.js';
-import * as RestUtils from 'common/objects/utils/rest-utils.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { findAllRests } from 'common/objects/finders/rest-finder.js';
+import { disableRests, restoreRests } from 'common/objects/savers/rest-saver.js';
+import { saveRepo } from 'common/objects/utils/rest-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -33,7 +33,7 @@ export default async function RestListPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const project = await ProjectFinder.findProject(database, projectID);
+  const project = await findProject(database, projectID);
   const schema = project.name;
   const rests = await RestFinder.findAllRests(database, schema);
   render();
@@ -82,8 +82,8 @@ function RestListPageSync(props) {
       if (adding.length > 0) {
         await confirm(t('rest-list-confirm-reactivate-$count', adding.length));
       }
-      await RestSaver.disableRests(database, schema, removing);
-      await RestSaver.restoreRests(database, schema, adding);
+      await disableRests(database, schema, removing);
+      await restoreRests(database, schema, adding);
       warnDataLoss(false);
       handleCancelClick();
     });
@@ -208,7 +208,7 @@ function RestListPageSync(props) {
     if (!rest) {
       return <TH id="filename">{t('rest-list-column-identifier')}</TH>;
     } else {
-      const name = RestUtils.getDisplayName(rest, env) || '-';
+      const name = getRestName(rest, env) || '-';
       let url, badge;
       if (selection.shown) {
         if (selection.isAdding(rest)) {
@@ -278,7 +278,7 @@ const sortRests = memoizeWeak(null, function(rests, env, sort) {
     switch (column) {
       case 'title':
         return (rest) => {
-          return _.toLower(RestUtils.getDisplayName(rest, env));
+          return _.toLower(getRestName(rest, env));
         };
       case 'sheets':
         return 'details.filename';
