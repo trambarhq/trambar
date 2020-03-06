@@ -48,8 +48,8 @@ export function DevelopmentPanel(props) {
     <SettingsPanel className="diagnostics">
       <header>
         <div className="icon">
-          <i className="fasfa-bug" />
-          <i className="fasfa-search icon-overlay" />
+          <i className="fas fa-bug" />
+          <i className="fas fa-search icon-overlay" />
         </div>
         {' '}
         {t('settings-development')}

@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState, useRef, useEffect } from 'react';
-import Relaks, { useProgress, useListener } from 'relaks';
+import { useProgress, useListener } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as TaskFinder from 'common/objects/finders/task-finder.js';
+import { findServerTasks } from 'common/objects/finders/task-finder.js';
 
 // widgets
-import SmartList from 'common/widgets/smart-list.jsx';
+import { SmartList } from 'common/widgets/smart-list.jsx';
 
 import './task-list.scss';
 
@@ -14,7 +14,7 @@ import './task-list.scss';
  * A list of server tasks that were performed previously or are currently in
  * progress. This is the asynchronous part that retrieves the necessary data.
  */
-async function TaskList(props) {
+export async function TaskList(props) {
   const { database, env, server, scrollToTaskID } = props;
   const { t } = env.locale;
   const [ show ] = useProgress();
@@ -45,7 +45,7 @@ async function TaskList(props) {
 
   render();
   const currentUserID = await database.start();
-  const tasks = await TaskFinder.findServerTasks(database, server);
+  const tasks = await findServerTasks(database, server);
   render();
 
   function render() {
@@ -105,7 +105,7 @@ async function TaskList(props) {
       message = task.action + ' (noop)';
     }
     if (task.failed) {
-      badge = <i className="fasfa-exclamation-triangle" />;
+      badge = <i className="fas fa-exclamation-triangle" />;
     }
     return <div className="message">{message}{badge}</div>;
   }
@@ -269,10 +269,3 @@ function pushItem(list, text, className) {
     </span>
   );
 }
-
-const component = Relaks.memo(TaskList);
-
-export {
-  component as default,
-  component as TaskList,
-};

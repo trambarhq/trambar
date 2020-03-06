@@ -275,7 +275,7 @@ export function UserView(props) {
     return (
       <div className="back-link">
         <a href={url}>
-          <i className="fasfa-chevron-left" />
+          <i className="fas fa-chevron-left" />
           {' '}
           {t('user-activity-back')}
         </a>

@@ -9,15 +9,24 @@ function getDisplayName(server, env) {
   return title || '';
 }
 
-function getIcon(server) {
+function getIconClass(server) {
   const type = _.get(server, 'type', '');
-  if (type === 'facebook') {
-    return 'facebook-official';
+  switch (type) {
+    case 'facebook':
+      return 'fab fa-facebook-square';
+    case 'github':
+      return 'fab fa-github-square';
+    case 'gitlab':
+      return 'fab fa-gitlab';
+    case 'google':
+      return 'fab fa-google';
+    case 'windows':
+      return 'fab fa-windows';
   }
-  return type;
+  return '';
 }
 
 export {
   getDisplayName,
-  getIcon,
+  getIconClass,
 };

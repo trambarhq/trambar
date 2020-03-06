@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
 
-import SortableTable from './sortable-table.jsx';
+import { SortableTable } from './sortable-table.jsx';
 
 import './option-list.scss';
 
@@ -11,7 +11,7 @@ import './option-list.scss';
  * only the selected options will be shown. The box will expand to list all
  * options when switching into read-write mode.
  */
-function OptionList(props) {
+export function OptionList(props) {
   const { readOnly, children, onOptionClick } = props;
 
   const handleClick = useListener((evt) => {
@@ -63,9 +63,9 @@ function OptionList(props) {
     let badge;
     if (!readOnly) {
       if (selected && !previous) {
-        badge = <i className="fasfa-check-circle-o badge add" />;
+        badge = <i className="far fa-check-circle badge add" />;
       } else if (!selected && previous) {
-        badge = <i className="fasfa-times-circle-o badge remove" />;
+        badge = <i className="far fa-times-circle badge remove" />;
       }
     }
     const props = {
@@ -83,8 +83,3 @@ function OptionList(props) {
     );
   }
 }
-
-export {
-  OptionList as default,
-  OptionList,
-};

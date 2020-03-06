@@ -8,7 +8,7 @@ import './combo-button.scss';
 /**
  * A push button with a drop-down menu.
  */
-function ComboButton(props) {
+export function ComboButton(props) {
   const { preselected, alert, children } = props;
   const [ open, setOpen ] = useState(false);
   const [ selected, setSelected ] = useLatest(preselected);
@@ -137,9 +137,4 @@ function isInside(node, container) {
 ComboButton.defaultProps = {
   preselected: undefined,
   alert: false,
-};
-
-export {
-  ComboButton as default,
-  ComboButton,
 };

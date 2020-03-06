@@ -29,7 +29,7 @@ export function EnvironmentMonitorPanel(props) {
   return (
     <SettingsPanel className="env-monitor">
       <header>
-        <i className="fasfa-gear" /> Environment
+        <i className="fas fa-gear" /> Environment
       </header>
       <body>
         <DiagnosticsSection label="Connectivity">

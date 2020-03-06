@@ -5,7 +5,7 @@ import './action-badge.scss'
 /**
  * Stateless component that indicates what action will be performed on an item.
  */
-function ActionBadge(props) {
+export function ActionBadge(props) {
   let { env, type } = props;
   let { t } = env.locale;
   let className = 'text', icon;
@@ -37,8 +37,3 @@ function ActionBadge(props) {
     </div>
   );
 }
-
-export {
-  ActionBadge as default,
-  ActionBadge
-};

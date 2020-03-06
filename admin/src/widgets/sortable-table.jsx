@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useListener } from 'relaks';
 
-import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
+import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 
 import './sortable-table.scss';
 
@@ -10,7 +10,7 @@ import './sortable-table.scss';
  * A table with clickable headers that changes how sorting is performed. The
  * table can expand to show additional rows.
  */
-function SortableTable(props) {
+export const SortableTable = React.memo((props) => {
   const { children, expandable, expanded, selectable,
       className, sortColumns, sortDirections, transitionRowLimit,
       onSort, ...tableProps } = props;
@@ -149,7 +149,7 @@ function SortableTable(props) {
     const newTbody = React.cloneElement(tbody, {}, newTrs);
     return newTbody;
   }
-}
+});
 
 function findChild(children, tagName) {
   children = React.Children.toArray(children);
@@ -166,24 +166,16 @@ function findHeaderNode(node) {
   }
 }
 
-function TH(props) {
+export function TH(props) {
   return (
     <th {...props}>
       {props.children}
-      <i className="fasfa-chevron-down arrow down"/>
-      <i className="fasfa-chevron-up arrow up"/>
+      <i className="fas fa-chevron-down arrow down"/>
+      <i className="fas fa-chevron-up arrow up"/>
     </th>
   );
 }
 
-const component = React.memo(SortableTable);
-
-component.defaultProps = {
+SortableTable.defaultProps = {
   transitionRowLimit: 20
-};
-
-export {
-  component as default,
-  component as SortableTable,
-  TH,
 };

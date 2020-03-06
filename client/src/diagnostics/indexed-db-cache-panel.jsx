@@ -24,7 +24,7 @@ export function IndexedDBCachePanel(props) {
   return (
     <SettingsPanel className="indexed-db-cache">
       <header>
-        <i className="fasfa-gear" /> IndexedDB Cache
+        <i className="fas fa-gear" /> IndexedDB Cache
       </header>
       <body>
         <DiagnosticsSection label="Database details">

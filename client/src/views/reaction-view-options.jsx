@@ -68,7 +68,7 @@ export function ReactionViewOptions(props) {
   return (
     <PopUpMenu {...menuProps}>
       <button>
-        <i className="fasfa-ellipsis-v" />
+        <i className="fas fa-ellipsis-v" />
       </button>
       <menu>
         {renderOptions()}

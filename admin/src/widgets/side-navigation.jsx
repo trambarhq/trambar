@@ -14,7 +14,7 @@ import './side-navigation.scss';
  * The left-side of the user interface, containg the navigation tree, language
  * selection menus, and the sign-off button.
  */
-function SideNavigation(props) {
+export function SideNavigation(props) {
   const { database, route, env, disabled } = props;
   const { t, languageCode, directory, countryCode } = env.locale;
   const [ ready, setReady ] = useState(false);
@@ -80,7 +80,7 @@ function SideNavigation(props) {
       }
       return (
         <div key={i} {...props}>
-          <i className="fasfa-check-circle-o" /> {language.name}
+          <i className="far fa-check-circle" /> {language.name}
         </div>
       )
     });
@@ -88,7 +88,7 @@ function SideNavigation(props) {
       <div className="button language">
         <Tooltip upward>
           <inline>
-            <i className="fasfa-language" />
+            <i className="fas fa-language" />
             {' '}
             {selectedLanguage.name}
           </inline>
@@ -118,7 +118,7 @@ function SideNavigation(props) {
       }
       return (
         <div key={code} {...props}>
-          <i className="fasfa-check-circle-o" /> {name}
+          <i className="far fa-check-circle" /> {name}
         </div>
       )
     });
@@ -142,7 +142,7 @@ function SideNavigation(props) {
       <div className="button user">
         <Tooltip upward leftward disabled={disabled}>
           <inline>
-            <i className="fasfa-user-circle-o" />
+            <i className="fas fa-user-circle" />
           </inline>
           <window>
             <SignOffMenu {...menuProps} />
@@ -200,9 +200,4 @@ function SideNavigation(props) {
 
 SideNavigation.defaultProps = {
   disabled: false
-};
-
-export {
-  SideNavigation as default,
-  SideNavigation,
 };

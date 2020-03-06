@@ -76,7 +76,7 @@ function User(props) {
     <div {...containerProps}>
       <ProfileImage {...imageProps} />
       <span className="name">{name}</span>
-      <i className="fasfa-check-circle" />
+      <i className="fas fa-check-circle" />
     </div>
   );
 }

@@ -21,7 +21,7 @@ export function RemoteDataSourcePanel(props) {
   return (
     <SettingsPanel className="remote-data-source">
       <header>
-        <i className="fasfa-gear" /> Remote Data Source
+        <i className="fas fa-gear" /> Remote Data Source
       </header>
       <body>
         <DiagnosticsSection label="Recent searches">

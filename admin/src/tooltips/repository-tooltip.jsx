@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import * as RepoUtils from 'common/objects/utils/repo-utils.js';
+import { getDisplayName } from 'common/objects/utils/repo-utils.js';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';
@@ -10,7 +10,7 @@ import './repository-tooltip.scss';
 /**
  * Tooltip showing a list of repos.
  */
-function RepositoryTooltip(props) {
+export function RepositoryTooltip(props) {
   const { route, env, repos, project, disabled } = props;
   const { t } = env.locale;
   if (!repos) {
@@ -23,7 +23,7 @@ function RepositoryTooltip(props) {
       repoID: repo.id,
     });
     const iconName = repo.type;
-    const name = RepoUtils.getDisplayName(repo, env);
+    const name = getDisplayName(repo, env);
     return (
       <div className="item" key={repo.id}>
         <a href={url}>
@@ -54,8 +54,3 @@ function RepositoryTooltip(props) {
     </Tooltip>
   );
 }
-
-export {
-  RepositoryTooltip as default,
-  RepositoryTooltip,
-};

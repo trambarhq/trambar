@@ -10,7 +10,7 @@ import './confirmation-dialog-box.scss';
 /**
  * Confirmation dialog box
  */
-function ConfirmationDialogBox(props) {
+export const ConfirmationDialogBox = Overlay.create((props) => {
   const { env, show, dangerous, children, onCancel, onConfirm } = props;
   const { t } = env.locale;
 
@@ -39,11 +39,4 @@ function ConfirmationDialogBox(props) {
       </div>
     </div>
   );
-}
-
-const component = Overlay.create(ConfirmationDialogBox);
-
-export {
-  component as default,
-  component as ConfirmationDialogBox,
-};
+});

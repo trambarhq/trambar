@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useMemo, useEffect } from 'react';
-import Relaks, { useEventTime } from 'relaks';
-import { FrontEndCore } from 'common/front-end-core.js';
+import { useEventTime } from 'relaks';
 import { CORSRewriter } from 'common/routing/cors-rewriter.js';
 
 import { HTTPError } from 'common/errors/http-error.js';
@@ -35,7 +34,7 @@ const widthDefinitions = {
   'ultra-wide': 2000,
 };
 
-function FrontEnd(props) {
+export function FrontEnd(props) {
   const { dataSource, routeManager, payloadManager, envMonitor, localeManager } = props;
   const [ routeChanged, setRouteChanged ] = useEventTime();
   const route = useMemo(() => {
@@ -167,7 +166,7 @@ function FrontEnd(props) {
   }
 }
 
-const coreConfiguration = {
+export const coreConfiguration = {
   area: 'admin',
   routeManager: {
     basePath: '/admin',
@@ -188,13 +187,7 @@ const coreConfiguration = {
     name: 'trambar-admin'
   },
 };
-
-export {
-  FrontEnd as default,
-  FrontEnd,
-  FrontEndCore,
-  coreConfiguration,
-};
+export { FrontEndCore } from 'common/front-end-core.js';
 
 if (process.env.NODE_ENV !== 'production') {
   require('./__PROPTYPES__.js');

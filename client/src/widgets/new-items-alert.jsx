@@ -49,7 +49,7 @@ export function NewItemsAlert(props) {
     };
     const element = (
       <a {...anchorProps}>
-        <i className="fasfa-arrow-up" />
+        <i className="fas fa-arrow-up" />
         {contents}
       </a>
     );

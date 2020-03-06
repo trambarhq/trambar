@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { delay } from 'bluebird';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 import Moment from 'moment';
 
 // widgets
@@ -10,7 +10,7 @@ import { Tooltip } from '../widgets/tooltip.jsx';
 /**
  * Tooltip showing the full timestamp.
  */
-async function ModifiedTimeTooltip(props) {
+export async function ModifiedTimeTooltip(props) {
   const { env, time, disabled } = props;
   const { localeCode } = env.locale;
   const [ show ] = useProgress(0);
@@ -48,10 +48,3 @@ function interval() {
   }
   return intervalPromise;
 }
-
-const component = Relaks.memo(ModifiedTimeTooltip);
-
-export {
-  component as default,
-  component as ModifiedTimeTooltip,
-};

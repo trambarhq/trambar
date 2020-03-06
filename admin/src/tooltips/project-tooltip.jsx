@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import * as ProjectUtils from 'common/objects/utils/project-utils.js';
+import { getDisplayName } from 'common/objects/utils/project-utils.js';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';
@@ -10,14 +10,14 @@ import './project-tooltip.scss';
 /**
  * Tooltip showing a list of projects.
  */
-function ProjectTooltip(props) {
+export function ProjectTooltip(props) {
   const { route, env, projects, disabled } = props;
   const { t, p } = env.locale;
   if (!projects) {
     return null;
   }
   const list = _.map(projects, (project, i) => {
-    const title = ProjectUtils.getDisplayName(project, env);
+    const title = getDisplayName(project, env);
     const url = route.find('project-summary-page', {
       projectID: project.id
     });
@@ -38,7 +38,7 @@ function ProjectTooltip(props) {
         list.splice(max);
         list.push(
           <div className="ellipsis" key={0}>
-            <i className="fasfa-ellipsis-v" />
+            <i className="fas fa-ellipsis-v" />
           </div>
         );
       }
@@ -61,8 +61,3 @@ function ProjectTooltip(props) {
   }
   return <span>{contents}</span>;
 }
-
-export {
-  ProjectTooltip as default,
-  ProjectTooltip,
-};

@@ -99,7 +99,7 @@ export function ProjectPanel(props) {
   return (
     <SettingsPanel className="project">
       <header>
-        <i className="fasfa-database" /> {t('settings-projects')}
+        <i className="fas fa-database" /> {t('settings-projects')}
       </header>
       <body>
         {_.map(projectLinks, renderProject)}
@@ -171,7 +171,7 @@ export function ProjectPanel(props) {
     } else {
       return (
         <div key={i} data-key={link.key} className="project-option-button" onClick={handleProjectOptionClick}>
-          <i className="icon fa fa-circle-o" />
+          <i className="icon far fa-circle" />
           <div className="text">
             <span className="name">{p(link.name)}</span>
           </div>

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.js';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
@@ -28,7 +28,7 @@ import {
 
 import './wiki-list-page.scss';
 
-async function WikiListPage(props) {
+export default async function WikiListPage(props) {
   const { database, route, env, projectID, editing } = props;
   const [ show ] = useProgress();
 
@@ -315,10 +315,3 @@ const findRepo = memoizeWeak(null, function(repos, wiki) {
     return !!link;
   });
 });
-
-const component = Relaks.memo(WikiListPage);
-
-export {
-  component as default,
-  component as WikiListPage,
-};

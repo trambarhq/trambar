@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { getDisplayName } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';
@@ -11,7 +11,7 @@ import './user-tooltip.scss';
 /**
  * Tooltip showing a list of users.
  */
-function UserTooltip(props) {
+export function UserTooltip(props) {
   const { route, env, users, project, disabled } = props;
   const { t } = env.locale;
   if (!users) {
@@ -30,7 +30,7 @@ function UserTooltip(props) {
         userID: user.id,
       });
     }
-    const name = UserUtils.getDisplayName(user, env);
+    const name = getDisplayName(user, env);
     return (
       <div className="item" key={user.id}>
         <a href={url}>
@@ -44,7 +44,7 @@ function UserTooltip(props) {
     list.splice(max);
     list.push(
       <div className="ellipsis" key={0}>
-        <i className="fasfa-ellipsis-v" />
+        <i className="fas fa-ellipsis-v" />
       </div>
     );
   }
@@ -65,10 +65,4 @@ function UserTooltip(props) {
       </window>
     </Tooltip>
   );
-
 }
-
-export {
-  UserTooltip as default,
-  UserTooltip,
-};

@@ -74,10 +74,10 @@ function MembershipRequestDialogBox(props) {
     const you = UserUtils.getDisplayName(currentUser, env);
     const gender = UserUtils.getGender(currentUser);
     g(you, gender);
-    let className = '', icon = '', message = '';
+    let className = '', iconClass = '', message = '';
     if (UserUtils.isMember(currentUser, project)) {
       className = 'accepted';
-      icon = 'user-circle-o';
+      iconClass = 'far fa-user-circle';
       if (userJustJoined) {
         message = t('membership-request-$you-are-now-member', you);
       } else {
@@ -85,13 +85,13 @@ function MembershipRequestDialogBox(props) {
       }
     } else if (UserUtils.isPendingMember(currentUser, project)) {
       className = 'requested';
-      icon = 'clock-o';
+      iconClass = 'far fa-clock';
       message = t('membership-request-$you-have-requested-membership', you);
     }
     return (
       <CollapsibleContainer open={!!icon}>
         <div className={`message ${className}`}>
-          <i className={`fa fa-${icon}`} />
+          <i className={iconClass} />
           {' '}
           {message}
         </div>

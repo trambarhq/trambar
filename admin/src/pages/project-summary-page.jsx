@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
 import * as ProjectSaver from 'common/objects/savers/project-saver.js';
 import * as ProjectSettings from 'common/objects/settings/project-settings.js';
@@ -33,7 +33,7 @@ import {
 
 import './project-summary-page.scss';
 
-async function ProjectSummaryPage(props) {
+export default async function ProjectSummaryPage(props) {
   const { database, route, env, payloads, projectID, editing } = props;
   const creating = (projectID === 'new');
   const [ show ] = useProgress();
@@ -448,10 +448,3 @@ const accessControlOptions = [
     shownIf: 'grant_view_access'
   },
 ];
-
-const component = Relaks.memo(ProjectSummaryPage);
-
-export {
-  component as default,
-  component as ProjectSummaryPage,
-};

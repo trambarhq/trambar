@@ -43,7 +43,7 @@ export function DevicePanel(props) {
   return (
     <SettingsPanel className="device">
       <header>
-        <i className="fasfa-tablet" /> {title}
+        <i className="fas fa-tablet" /> {title}
       </header>
       <body>
         {_.map(devices, renderDevice)}
@@ -62,7 +62,7 @@ export function DevicePanel(props) {
         <div className="text">
           <span className="name">{deviceName}</span>
           <div data-device-id={device.id} className="revoke" onClick={handleRevokeClick}>
-            <i className="fasfa-ban" />
+            <i className="fas fa-ban" />
             {' '}
             <span>{t('mobile-device-revoke')}</span>
           </div>
@@ -82,7 +82,7 @@ function DeviceIcon(props) {
   }
   return (
     <div className="device-icon">
-      <i className="fasfa-tablet background" />
+      <i className="fas fa-tablet background" />
       <i className={`fa fa-${icon} icon-overlay`} />
     </div>
   );

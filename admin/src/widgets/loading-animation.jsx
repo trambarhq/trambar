@@ -2,7 +2,7 @@ import React from 'react';
 
 import './loading-animation.scss';
 
-function LoadingAnimation(props) {
+export function LoadingAnimation(props) {
   return (
     <div className="loading-animation">
       <div className="blocks">
@@ -11,8 +11,3 @@ function LoadingAnimation(props) {
     </div>
   );
 }
-
-export {
-  LoadingAnimation as default,
-  LoadingAnimation,
-};

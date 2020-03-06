@@ -10,7 +10,7 @@ import './tooltip.scss';
  * inline element holds the contents that's rendered inline, while the
  * window element holds the contents that appear in the pop-up window.
  */
-function Tooltip(props) {
+export function Tooltip(props) {
   const { upward, leftward, disabled, className, children } = props;
   const [ open, setOpen ] = useState(false);
   const container = useRef();
@@ -126,19 +126,4 @@ function isInside(element, container) {
     }
   }
   return false;
-}
-
-export {
-  Tooltip as default,
-  Tooltip,
-};
-
-if (process.env.NODE_ENV !== 'production') {
-  const PropTypes = require('prop-types');
-
-  Tooltip.propTypes = {
-    upward: PropTypes.bool,
-    leftward: PropTypes.bool,
-    disabled: PropTypes.bool,
-  };
 }

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import * as MediaLoader from 'common/media/media-loader.js';
 import * as PictureFinder from 'common/objects/finders/picture-finder.js';
@@ -13,7 +13,7 @@ import { ResourceView } from 'common/widgets/resource-view.jsx';
 
 import './image-album-dialog-box.scss';
 
-async function ImageAlbumDialogBox(props) {
+export const ImageAlbumDialogBox = Overlay.create(async (props) => {
   const { database, env, payloads, image, purpose } = props;
   const { onSelect, onCancel } = props;
   const { t } = env.locale;
@@ -215,17 +215,8 @@ async function ImageAlbumDialogBox(props) {
     };
     return <div {...props} />;
   }
-}
+});
 
 const sortPictures = memoizeWeak(null, function(pictures) {
   return _.orderBy(pictures, 'mtime', 'desc');
 });
-
-const component = Overlay.create(
-  Relaks.memo(ImageAlbumDialogBox)
-);
-
-export {
-  component as default,
-  component as ImageAlbumDialogBox,
-};

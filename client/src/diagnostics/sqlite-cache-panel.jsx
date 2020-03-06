@@ -24,7 +24,7 @@ export function SQLiteCachePanel(props) {
   return (
     <SettingsPanel className="sqlite-cache">
       <header>
-        <i className="fasfa-gear" /> SQLite Cache
+        <i className="fas fa-gear" /> SQLite Cache
       </header>
       <body>
         <DiagnosticsSection label="Database details">

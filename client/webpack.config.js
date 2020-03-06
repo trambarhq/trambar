@@ -101,6 +101,7 @@ module.exports = {
         test: /\.(js|jsx|mjs)$/,
         loader: 'babel-loader',
         exclude: /node_modules/,
+        type: 'javascript/auto',
         query: {
           presets: [
             '@babel/env',

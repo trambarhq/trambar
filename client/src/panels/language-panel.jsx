@@ -37,7 +37,7 @@ export function LanguagePanel(props) {
   return (
     <SettingsPanel className="language">
       <header>
-        <i className="fasfa-language" /> {t('settings-language')}
+        <i className="fas fa-language" /> {t('settings-language')}
       </header>
       <body>
         {_.map(languages, renderButton)}

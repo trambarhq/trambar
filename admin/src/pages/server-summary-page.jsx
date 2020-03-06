@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import * as RoleFinder from 'common/objects/finders/role-finder.js';
 import * as RoleUtils from 'common/objects/utils/role-utils.js';
@@ -36,7 +36,7 @@ import {
 
 import './server-summary-page.scss';
 
-async function ServerSummaryPage(props) {
+export default async function ServerSummaryPage(props) {
   const { database, serverID } = props;
   const creating = (serverID === 'new');
   const [ show ] = useProgress();
@@ -921,10 +921,3 @@ function openPopupWindow(url) {
   });
   window.open(url, 'api-access-oauth', pairs.join(','));
 }
-
-const component = Relaks.memo(ServerSummaryPage);
-
-export {
-  component as default,
-  component as ServerSummaryPage,
-};

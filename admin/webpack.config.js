@@ -50,6 +50,8 @@ _.each(env, (value, name) => {
 // get list of external libraries
 const libraries = parseLibraryList(`${folders.context}/libraries.js`);
 
+const otherHOCs = [ 'Overlay.create' ];
+
 module.exports = {
   mode: env.NODE_ENV,
   context: folders.context,
@@ -76,13 +78,8 @@ module.exports = {
       {
         test: /\.(js|jsx|mjs)$/,
         loader: 'babel-loader',
-        exclude: function(path) {
-          if (/node_modules/.test(path)) {
-            if (!/trambar\-www/.test(path)) {
-              return true;
-            }
-          }
-        },
+        exclude: /node_modules/,
+        type: 'javascript/auto',
         query: {
           presets: [
             '@babel/env',
@@ -93,6 +90,7 @@ module.exports = {
             '@babel/proposal-nullish-coalescing-operator',
             '@babel/proposal-optional-chaining',
             '@babel/transform-runtime',
+            [ 'relaks/transform-memo', { otherHOCs } ],
           ].map(resolvePlugin),
         }
       },

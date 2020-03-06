@@ -36,7 +36,7 @@ function AppComponentDialogBox(props) {
       );
     } else {
       const icon = component.icon || {};
-      const iconClassName = icon.class || 'fa-cubes';
+      const iconClass = icon.class || 'fas fa-cubes';
       const style = {
         color: icon.color,
         backgroundColor: icon.backgroundColor,
@@ -44,7 +44,7 @@ function AppComponentDialogBox(props) {
       return (
         <div className="picture">
           <div className="icon" style={style}>
-            <i className={`fa fa-fw ${iconClassName}`} />
+            <i className={`${iconClass} fa-fw`} />
           </div>
         </div>
       );

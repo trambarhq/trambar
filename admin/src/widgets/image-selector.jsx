@@ -16,7 +16,7 @@ import './image-selector.scss';
  * user's computer. When desiredWidth and desiredHeight are specified,
  * it provides the option to crop the selected image.
  */
-function ImageSelector(props, ref) {
+export const ImageSelector = React.forwardRef((props, ref) => {
   const { database, env, payloads, readOnly, children, onChange } = props;
   const { resources, desiredWidth, desiredHeight, purpose } = props;
   const { t } = env.locale;
@@ -127,7 +127,7 @@ function ImageSelector(props, ref) {
       return (
         <div className="image">
           <div className="placeholder" style={{ width, height }}>
-            <i className="fasfa-photo" />
+            <i className="fas fa-photo" />
           </div>
         </div>
       );
@@ -238,7 +238,7 @@ function ImageSelector(props, ref) {
       });
     }
   }
-}
+});
 
 function updateResource(resources, image, desiredWidth, desiredHeight) {
   if (desiredWidth && desiredHeight) {
@@ -295,17 +295,9 @@ function openPopup(url, width, height) {
     `height=${windowHeight}`,
   ];
   window.open(url, '_blank', params.join(','));
-
 }
 
-const component = React.forwardRef(ImageSelector);
-
-component.defaultProps = {
+ImageSelector.defaultProps = {
   resources: [],
   readOnly: false,
-};
-
-export {
-  component as default,
-  component as ImageSelector,
 };

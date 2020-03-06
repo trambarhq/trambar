@@ -153,20 +153,20 @@ function ConnectionIndicator(props) {
     const title = t('upload-progress-uploading-$count-files-$size-remaining', count, size);
     return (
       <span className="connection" title={title}>
-        <i className="fasfa-cloud-upload"/>
+        <i className="fas fa-cloud-upload"/>
       </span>
     );
   } else if (searching) {
     return (
       <span className="connection">
-        <i className="fasfa-refresh"/>
+        <i className="fas fa-refresh"/>
       </span>
     );
   } else if (!env.online) {
     return (
       <span className="connection">
-        <i className="fasfa-wifi" />
-        <i className="fasfa-ban" />
+        <i className="fas fa-wifi" />
+        <i className="fas fa-ban" />
       </span>
     );
   } else {

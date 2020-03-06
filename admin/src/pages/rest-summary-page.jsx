@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useMemo } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
 import * as ProjectUtils from 'common/objects/utils/project-utils.js';
 import * as RestFinder from 'common/objects/finders/rest-finder.js';
@@ -34,7 +34,7 @@ import {
 
 import './rest-summary-page.scss';
 
-async function RestSummaryPage(props) {
+export default async function RestSummaryPage(props) {
   const { database, projectID, restID, env } = props;
   const creating = (restID === 'new');
   const [ show ] = useProgress();
@@ -350,10 +350,3 @@ function RestSummaryPageSync(props) {
     );
   }
 }
-
-const component = Relaks.memo(RestSummaryPage);
-
-export {
-  component as default,
-  component as RestSummaryPage,
-};

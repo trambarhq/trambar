@@ -135,14 +135,32 @@ function Overlay(props) {
 }
 
 Overlay.create = function(Component) {
-  const displayName = Component.displayName || Component.name || 'Component';
   const newComponent = function (props) {
     const { show, onCancel, onClose } = props;
     const overlayProps = { show, onBackgroundClick: onCancel || onClose };
     const contents = (show) ? <Component {...props} /> : undefined;
     return <Overlay {...overlayProps}>{contents}</Overlay>;
   };
-  newComponent.displayName = `Overlay(${displayName})`;
+
+  let componentName = 'Contents';
+  if (typeof(Component) === 'function') {
+    if (Component.name) {
+      componentName = Component.name;
+    } else {
+      Object.defineProperty(Component, 'name', {
+        value: componentName,
+        writable: false
+      });
+    }
+  } else if (Component.displayName) {
+    componentName = Component.displayName;
+  }
+
+  // set display name
+  Object.defineProperty(newComponent, 'name', {
+    value: `Overlay(${componentName})`,
+    writable: false
+  });
   return newComponent;
 };
 

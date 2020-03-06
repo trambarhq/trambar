@@ -62,7 +62,7 @@ export function UserImagePanel(props) {
   return (
     <SettingsPanel className="user-image">
       <header>
-        <i className="fasfa-image" /> {t('settings-profile-image')}
+        <i className="fas fa-image" /> {t('settings-profile-image')}
       </header>
       <body>
         {renderProfilePicture()}

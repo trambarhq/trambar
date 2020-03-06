@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 
-import Environment from 'common/env/environment.js';
+import { Environment } from 'common/env/environment.js';
 
 import { StoryTypes, StoryIcons } from 'common/objects/types/story-types.js';
 
@@ -13,7 +13,7 @@ import './activity-tooltip.scss';
 /**
  * Tooltip listing the number of activities by type.
  */
-function ActivityTooltip(props) {
+export function ActivityTooltip(props) {
   const { env, statistics, disabled } = props;
   const { t } = env.locale;
   if (!statistics) {
@@ -50,8 +50,3 @@ function ActivityTooltip(props) {
     </Tooltip>
   );
 }
-
-export {
-  ActivityTooltip as default,
-  ActivityTooltip,
-};

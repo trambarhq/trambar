@@ -110,7 +110,7 @@ export const ImageEditor = React.forwardRef((props, ref) => {
     }
     return (
       <div className="spinner">
-        <i className="fasfa-refresh fa-spin fa-fw" />
+        <i className="fas fa-refresh fa-spin fa-fw" />
       </div>
     );
   }
@@ -129,34 +129,34 @@ export const ImageEditor = React.forwardRef((props, ref) => {
   }
 
   function renderPlaceholder() {
-    let message, icon;
+    let message, iconClass;
     if (resource.width && resource.height) {
       // when the dimensions are known, then the image was available to
       // the client
       message = t('image-editor-upload-in-progress');
-      icon = 'cloud-upload';
+      iconClass = 'fas fa-cloud-upload';
     } else {
       if (!resource.pending) {
         // not pending locally--we're wait for remote action to complete
         if (resource.type === 'video') {
           // poster is being generated in the backend
           message = t('image-editor-poster-extraction-in-progress');
-          icon = 'film';
+          iconClass = 'fas fa-film';
         } else if (resource.type === 'website') {
           // web-site preview is being generated
           message = t('image-editor-page-rendering-in-progress');
-          icon = 'file-image-o';
+          iconClass = 'far file-image';
         } else if (resource.type === 'image') {
           // image is being copied in the backend
           message = t('image-editor-image-transfer-in-progress');
-          icon = 'file-image-o';
+          iconClass = 'far file-image';
         }
       }
     }
     return (
       <div className="placeholder">
         <div className="icon">
-          <i className={`fa fa-${icon}`} />
+          <i className={iconClass} />
         </div>
         <div className="message">{message}</div>
       </div>

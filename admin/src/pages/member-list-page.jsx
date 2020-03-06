@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
 import * as ProjectSaver from 'common/objects/savers/project-saver.js';
@@ -32,7 +32,7 @@ import {
 
 import './member-list-page.scss';
 
-async function MemberListPage(props) {
+export default async function MemberListPage(props) {
   const { database, route, env, projectID, editing } = props;
   const [ show ] = useProgress();
 
@@ -441,10 +441,3 @@ const findRoles = memoizeWeak(null, function(roles, user) {
     return hash[id];
   }));
 });
-
-const component = Relaks.memo(MemberListPage);
-
-export {
-  component as default,
-  component as MemberListPage,
-};

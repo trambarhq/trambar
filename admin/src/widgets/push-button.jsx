@@ -5,7 +5,7 @@ import './push-button.scss';
 /**
  * Stateless component that renders a standard push button.
  */
-function PushButton(props) {
+export function PushButton(props) {
   props = { ... props };
   if (props.className) {
     props.className = 'push-button ' + props.className;
@@ -17,9 +17,4 @@ function PushButton(props) {
 
 PushButton.defaultProps = {
   className: 'submit'
-};
-
-export {
-  PushButton as default,
-  PushButton,
 };

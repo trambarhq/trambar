@@ -32,8 +32,8 @@ export function MobileAlertPanel(props) {
     <SettingsPanel className="mobile-alert">
       <header>
         <div className="icon">
-          <i className="fasfa-tablet" />
-          <i className="fasfa-exclamation-circle icon-overlay" />
+          <i className="fas fa-tablet" />
+          <i className="fas fa-exclamation-circle icon-overlay" />
         </div>
         {' '}
         {t('settings-mobile-alert')}

@@ -5,7 +5,7 @@ import { detectDirection } from 'common/utils/plain-text.js';
 
 import './excel-preview.scss';
 
-function ExcelPreview(props) {
+export function ExcelPreview(props) {
   const { sheet, env } = props;
   const [ limit, setLimit ] = useState(1000);
   const pt = usePlainText();
@@ -103,7 +103,3 @@ function ExcelPreview(props) {
     );
   }
 }
-
-export {
-  ExcelPreview,
-};

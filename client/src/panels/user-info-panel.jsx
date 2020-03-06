@@ -36,7 +36,7 @@ export function UserInfoPanel(props) {
   return (
     <SettingsPanel className="user-info">
       <header>
-        <i className="fasfa-user-circle" /> {t('settings-user-information')}
+        <i className="fas fa-user-circle" /> {t('settings-user-information')}
       </header>
       <body>
         {renderNameInput()}

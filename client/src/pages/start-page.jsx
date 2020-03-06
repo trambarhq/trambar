@@ -7,6 +7,7 @@ import * as UniversalLink from 'common/routing/universal-link.js';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
 import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.js';
 import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
+import * as ServerUtils from 'common/objects/utils/server-utils.js'
 import * as SystemFinder from 'common/objects/finders/system-finder.js';
 import * as UserFinder from 'common/objects/finders/user-finder.js';
 import * as UserUtils from 'common/objects/utils/user-utils.js';
@@ -343,7 +344,7 @@ export default async function StartPage(props) {
       ),
       mobileSetup: (
         <span key="2" className="ui">
-          <i className="fasfa-qrcode" />
+          <i className="fas fa-qrcode" />
           {' '}
           {t('project-management-mobile-set-up')}
         </span>
@@ -415,7 +416,7 @@ export default async function StartPage(props) {
 
   function renderOAuthButton(server, i) {
     const { title } = server.details;
-    const icon = getServerIcon(server.type);
+    const iconClass = ServerUtils.getIconClass(server);
     const url = database.getOAuthURL(server);
     const classNames = [ 'oauth-button' ];
     const error = errors[`oauth-${server.id}`];
@@ -436,7 +437,7 @@ export default async function StartPage(props) {
     return (
       <a key={i} {...props}>
         <span className="icon">
-          <i className={`fa fa-fw fa-${icon}`}></i>
+          <i className={`${iconClass} fa-fw`}></i>
         </span>
         <span className="label">{label}</span>
       </a>
@@ -483,9 +484,9 @@ export default async function StartPage(props) {
     // add badge to indicate membership status
     let badge;
     if (UserUtils.isMember(currentUser, project)) {
-      badge = <i className="fasfa-user-circle-o badge" />;
+      badge = <i className="far fa-user-circle badge" />;
     } else if (UserUtils.isPendingMember(currentUser, project)) {
-      badge = <i className="fasfa-clock-o badge" />;
+      badge = <i className="far fa-clock badge" />;
     }
 
     // don't show dialog box if user has previously visited the project
@@ -518,7 +519,7 @@ export default async function StartPage(props) {
             <div className="contents">
               {p(description)}
               <div className="ellipsis">
-                <i className="fasfa-ellipsis-h" />
+                <i className="fas fa-ellipsis-h" />
               </div>
             </div>
           </div>
@@ -576,7 +577,7 @@ export default async function StartPage(props) {
     return (
       <li key={key}>
         <a href={url}>
-          <i className="fasfa-home" /> {server}
+          <i className="fas fa-home" /> {server}
         </a>
       </li>
     );
@@ -615,7 +616,7 @@ export default async function StartPage(props) {
       ),
       mobileSetup: (
         <span key="2" className="ui">
-          <i className="fasfa-qrcode" />
+          <i className="fas fa-qrcode" />
           {' '}
           {t('project-management-mobile-set-up')}
         </span>
@@ -722,15 +723,6 @@ async function openPopUpWindow(url) {
       reject(new Error('Unable to open popup'))
     }
   });
-}
-
-function getServerIcon(type) {
-  switch (type) {
-    case 'facebook':
-      return 'facebook-official';
-    default:
-      return type;
-  }
 }
 
 const sortProjects = memoizeWeak(null, function(projects, env) {

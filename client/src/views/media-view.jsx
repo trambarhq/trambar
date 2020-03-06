@@ -157,7 +157,7 @@ export function MediaView(props) {
         {poster}
         <div className="overlay">
           <div className="icon">
-            <i className="fasfa-play-circle-o" />
+            <i className="far fa-play-circle" />
           </div>
           <div className="duration">
             {formatDuration(resource.duration)}
@@ -196,7 +196,7 @@ export function MediaView(props) {
           {renderImageElement()}
           <div className="overlay hidden">
             <div className="icon">
-              <i className="fasfa-external-link" />
+              <i className="fas fa-external-link" />
             </div>
           </div>
         </a>

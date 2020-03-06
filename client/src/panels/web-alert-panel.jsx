@@ -33,7 +33,7 @@ export function WebAlertPanel(props) {
       <header>
         <div className="icon">
           <i className={`fa fa-${browserIcon}`} />
-          <i className="fasfa-exclamation-circle icon-overlay" />
+          <i className="fas fa-exclamation-circle icon-overlay" />
         </div>
         {' '}
         {t('settings-web-alert')}

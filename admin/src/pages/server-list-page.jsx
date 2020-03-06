@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { useRef } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import * as ServerFinder from 'common/objects/finders/server-finder.js';
 import * as ServerSaver from 'common/objects/savers/server-saver.js';
@@ -29,7 +29,7 @@ import {
 
 import './server-list-page.scss';
 
-async function ServerListPage(props) {
+export default async function ServerListPage(props) {
   const { database } = props;
   const [ show ] = useProgress();
 
@@ -363,10 +363,3 @@ const findUsers = memoizeWeak(null, function(users, server) {
     });
   });
 });
-
-const component = Relaks.memo(ServerListPage);
-
-export {
-  component as default,
-  component as ServerListPage,
-};

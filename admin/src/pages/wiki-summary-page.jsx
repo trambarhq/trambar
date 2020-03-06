@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { GitlabWiki } from 'trambar-www';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.js';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
@@ -33,7 +33,7 @@ import {
 
 import './wiki-summary-page.scss';
 
-async function WikiSummaryPage(props) {
+export default async function WikiSummaryPage(props) {
   const { database, projectID, wikiID } = props;
   const [ show ] = useProgress();
 
@@ -409,10 +409,3 @@ function WikiContents(props) {
     return <ImagePreviewDialogBox {...props} />;
   }
 }
-
-const component = Relaks.memo(WikiSummaryPage);
-
-export {
-  component as default,
-  component as WikiSummaryPage,
-};

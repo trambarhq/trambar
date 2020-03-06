@@ -40,12 +40,12 @@ export function CoauthoringButton(props) {
     setSelecting(false);
   });
 
-  let icon, label;
+  let iconClass, label;
   if (coauthoring) {
-    icon = 'minus-square';
+    iconClass = 'fas fa-minus-square';
     label = t('story-remove-yourself');
   } else {
-    icon = 'plus-square';
+    iconClass = 'fas fa-plus-square';
     if (_.size(authors) > 1) {
       label = t('story-add-remove-coauthor');
     } else {
@@ -55,7 +55,7 @@ export function CoauthoringButton(props) {
   return (
     <span className="coauthoring-button">
       <span onClick={handleClick}>
-        <i className={`fa fa-${icon}`} />
+        <i className={iconClass} />
         <span className="label">{label}</span>
       </span>
       {renderDialogBox()}

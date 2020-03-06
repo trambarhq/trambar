@@ -12,7 +12,7 @@ import './task-alert-bar.scss';
  * Bar at the bottom of the screen indicating active task running on the
  * remote server.
  */
-async function TaskAlertBar(props) {
+export async function TaskAlertBar(props) {
   const { database } = props;
   const [ show ] = useProgress();
 
@@ -137,10 +137,3 @@ function TaskAlertBarSync(props) {
     }
   }
 }
-
-const component = Relaks.memo(TaskAlertBar);
-
-export {
-  component as default,
-  component as TaskAlertBar,
-};

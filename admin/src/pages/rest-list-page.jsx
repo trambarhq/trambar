@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
 import * as RestFinder from 'common/objects/finders/rest-finder.js';
@@ -27,7 +27,7 @@ import {
 
 import './rest-list-page.scss';
 
-async function RestListPage(props) {
+export default async function RestListPage(props) {
   const { database, route, env, projectID, editing } = props;
   const [ show ] = useProgress();
 
@@ -296,10 +296,3 @@ const filterRests = memoizeWeak(null, function(rests) {
     return !rest.deleted && !rest.disabled;
   });
 });
-
-const component = Relaks.memo(RestListPage);
-
-export {
-  component as default,
-  component as RestListPage,
-};

@@ -289,7 +289,6 @@ export const coreConfiguration = {
     name: 'trambar'
   },
 };
-
 export { FrontEndCore } from 'common/front-end-core.js';
 
 if (process.env.NODE_ENV !== 'production') {

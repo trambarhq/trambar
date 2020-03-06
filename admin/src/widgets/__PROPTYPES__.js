@@ -24,6 +24,7 @@ import { SortableTable } from './sortable-table.jsx';
 import { TaskAlertBar } from './task-alert-bar.jsx';
 import { TaskList } from './task-list.jsx';
 import { TextField } from './text-field.jsx';
+import { Tooltip } from './tooltip.jsx';
 import { UnexpectedError } from './unexpected-error.jsx';
 
 ActionBadge.propTypes = {
@@ -125,6 +126,11 @@ TaskList.propTypes = {
 };
 TextField.propTypes = {
   env: PropTypes.instanceOf(Environment).isRequired,
+};
+Tooltip.propTypes = {
+  upward: PropTypes.bool,
+  leftward: PropTypes.bool,
+  disabled: PropTypes.bool,
 };
 UnexpectedError.propTypes = {
   type: PropTypes.oneOf([ 'error', 'warning' ]),

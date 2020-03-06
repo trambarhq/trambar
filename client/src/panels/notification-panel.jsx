@@ -49,7 +49,7 @@ export function NotificationPanel(props) {
   return (
     <SettingsPanel className="notification">
       <header>
-        <i className="fasfa-exclamation-circle" /> {t('settings-notification')}
+        <i className="fas fa-exclamation-circle" /> {t('settings-notification')}
       </header>
       <body>
         {_.map(types, renderOption)}

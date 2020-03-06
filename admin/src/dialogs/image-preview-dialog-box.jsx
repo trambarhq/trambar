@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Relaks, { useListener } from 'relaks';
+import { useListener } from 'relaks';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -7,7 +7,7 @@ import { PushButton } from '../widgets/push-button.jsx';
 
 import './image-preview-dialog-box.scss';
 
-function ImagePreviewDialogBox(props) {
+export const ImagePreviewDialogBox = Overlay.create((props) => {
   const { env, image, onClose } = props;
   const { t } = env.locale;
 
@@ -69,7 +69,7 @@ function ImagePreviewDialogBox(props) {
       </a>
     );
   }
-}
+});
 
 const isOneDrive = /^https:\/\/(1drv\.ms|onedrive\.live\.com)\//;
 const isDropbox = /^https:\/\/(www\.dropbox\.com)\//;
@@ -84,10 +84,3 @@ function getImageSource(image) {
     }
   }
 }
-
-const component = Overlay.create(ImagePreviewDialogBox);
-
-export {
-  component as default,
-  component as ImagePreviewDialogBox,
-};

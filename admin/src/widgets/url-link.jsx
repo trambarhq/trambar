@@ -2,7 +2,7 @@ import React from 'react';
 
 import './url-link.scss';
 
-function URLLink(props) {
+export function URLLink(props) {
   const { url } = props;
   if (!/^https?:\/\/\S+/.test(url)) {
     return null;
@@ -13,8 +13,3 @@ function URLLink(props) {
     </a>
   );
 }
-
-export {
-  URLLink as default,
-  URLLink,
-};

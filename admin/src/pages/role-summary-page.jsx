@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import * as RoleFinder from 'common/objects/finders/role-finder.js';
 import * as RoleSaver from 'common/objects/savers/role-saver.js';
@@ -32,7 +32,7 @@ import {
 
 import './role-summary-page.scss';
 
-async function RoleSummaryPage(props) {
+export default async function RoleSummaryPage(props) {
   const { database, roleID } = props;
   const creating = (roleID === 'new');
   const [ show ] = useProgress();
@@ -363,11 +363,4 @@ const messageRatings = {
   'normal': 0,
   'low': -20,
   'very-low': -50,
-};
-
-const component = Relaks.memo(RoleSummaryPage);
-
-export {
-  component as default,
-  component as RoleSummaryPage,
 };

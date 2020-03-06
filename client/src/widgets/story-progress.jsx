@@ -29,7 +29,7 @@ export function StoryProgress(props) {
           <span>
             {t('story-status-storage-pending')}
             {' '}
-            <i className="fasfa-warning" />
+            <i className="fas fa-warning" />
           </span>
         );
       }
@@ -50,7 +50,7 @@ export function StoryProgress(props) {
             {contents}
             {' '}
             <span className="spinner" style={spinnerStyle}>
-              <i className="fasfa-spinner fa-pulse" />
+              <i className="fas fa-spinner fa-pulse" />
             </span>
           </span>
         );

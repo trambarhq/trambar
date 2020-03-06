@@ -20,7 +20,7 @@ export function LocaleManagerPanel(props) {
   return (
     <SettingsPanel className="locale-manager">
       <header>
-        <i className="fasfa-gear" /> Locale Manager
+        <i className="fas fa-gear" /> Locale Manager
       </header>
       <body>
         <DiagnosticsSection label="Locale code">

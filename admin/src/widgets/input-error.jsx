@@ -6,7 +6,7 @@ import './input-error.scss';
  * Stateless component that renders an icon next to an error message, which is
  * provided as its children.
  */
-function InputError(props) {
+export function InputError(props) {
   const { children, type } = props;
   if (!children) {
     return null;
@@ -19,14 +19,9 @@ function InputError(props) {
   }
   return (
     <div className={className}>
-      <i className={`fa fa-${icon}`} />
+      <i className={`fas fa-${icon}`} />
       {' '}
       {props.children}
     </div>
   )
 }
-
-export {
-  InputError as default,
-  InputError,
-};

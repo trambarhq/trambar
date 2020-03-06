@@ -10,7 +10,7 @@ import './role-tooltip.scss';
 /**
  * Tooltip showing a list of roles.
  */
-function RoleTooltip(props) {
+export function RoleTooltip(props) {
   const { route, env, roles, disabled } = props;
   const { t, p } = env.locale;
   if (!roles) {
@@ -38,7 +38,7 @@ function RoleTooltip(props) {
         list.splice(max);
         list.push(
           <div className="ellipsis" key={0}>
-            <i className="fasfa-ellipsis-v" />
+            <i className="fas fa-ellipsis-v" />
           </div>
         );
       }
@@ -61,8 +61,3 @@ function RoleTooltip(props) {
   }
   return <span>{contents}</span>;
 }
-
-export {
-  RoleTooltip as default,
-  RoleTooltip,
-};

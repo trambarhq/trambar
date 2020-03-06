@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
 import * as ProjectSaver from 'common/objects/savers/project-saver.js';
@@ -37,7 +37,7 @@ import {
 
 import './user-summary-page.scss';
 
-async function UserSummaryPage(props) {
+export default async function UserSummaryPage(props) {
   const { database, route, env, payloads, projectID, userID, editing } = props;
   const creating = (userID === 'new');
   const [ show ] = useProgress();
@@ -635,10 +635,3 @@ function extractUsername(text, type) {
   }
   return text;
 }
-
-const component = Relaks.memo(UserSummaryPage);
-
-export {
-  component as default,
-  component as UserSummaryPage,
-};

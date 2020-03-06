@@ -14,7 +14,7 @@ import './image-cropping-dialog-box.scss';
 /**
  * Dialog box for cropping/resizing an image.
  */
-function ImageCroppingDialogBox(props) {
+export const ImageCroppingDialogBox = Overlay.create((props) => {
   const { env, show, image, desiredWidth, desiredHeight } = props;
   const { onCancel, onSelect } = props;
   const { t } = env.locale;
@@ -113,7 +113,7 @@ function ImageCroppingDialogBox(props) {
     const newRect = resize(rect, amount, ratio, image);
     return !_.isEqual(rect, newRect);
   }
-}
+});
 
 function resize(rect, amount, ratio, image) {
   let width = rect.width * amount;
@@ -158,10 +158,3 @@ function getDefault(image) {
   }
   return round(rect);
 }
-
-const component = Overlay.create(ImageCroppingDialogBox);
-
-export {
-  component as default,
-  component as ImageCroppingDialogBox,
-};

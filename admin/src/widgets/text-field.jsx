@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 
 // widgets
-import AutosizeTextArea from 'common/widgets/autosize-text-area.jsx';
+import { AutosizeTextArea } from 'common/widgets/autosize-text-area.jsx';
 
 import './text-field.scss';
 
@@ -10,7 +10,7 @@ import './text-field.scss';
  * Stateless component that renders either a textarea or a single-line
  * text input.
  */
-function TextField(props) {
+export function TextField(props) {
   const { env, children, readOnly, list } = props;
   const { t } = env.locale;
   const classNames = [ 'text-field' ];
@@ -47,9 +47,4 @@ function TextField(props) {
 
 TextField.defaultProps = {
   type: 'text',
-};
-
-export {
-  TextField as default,
-  TextField,
 };

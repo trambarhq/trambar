@@ -34,11 +34,11 @@ function Direction(props) {
   return (
     <div className="media-direction">
       <label className="backward-button" onClick={onBackwardClick}>
-        <i className="fasfa-caret-left"/>
+        <i className="fas fa-caret-left"/>
       </label>
       <span className="position">{text}</span>
       <label className="forward-button" onClick={onForwardClick}>
-        <i className="fasfa-caret-right"/>
+        <i className="fas fa-caret-right"/>
       </label>
     </div>
   );

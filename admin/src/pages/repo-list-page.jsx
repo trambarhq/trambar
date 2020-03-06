@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useRef } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.js';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
@@ -32,7 +32,7 @@ import {
 
 import './repo-list-page.scss';
 
-async function RepoListPage(props) {
+export default async function RepoListPage(props) {
   const { database, projectID } = props;
   const [ show ] = useProgress();
 
@@ -391,10 +391,3 @@ const findRepos = memoizeWeak(null, function(repos, project) {
     }));
   }
 });
-
-const component = Relaks.memo(RepoListPage);
-
-export {
-  component as default,
-  component as RepoListPage,
-};

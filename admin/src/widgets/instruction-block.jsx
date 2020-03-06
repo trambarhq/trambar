@@ -8,7 +8,7 @@ import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
 
 import './instruction-block.scss';
 
-async function InstructionBlock(props) {
+export async function InstructionBlock(props) {
   const { env, topic, folder, hidden } = props;
   const { languageCode } = env.locale;
   const [ show ] = useProgress();
@@ -144,11 +144,4 @@ async function loadImages(element, folder) {
 
 InstructionBlock.defaultProps = {
   hidden: false,
-};
-
-const component = Relaks.memo(InstructionBlock);
-
-export {
-  component as default,
-  component as InstructionBlock,
 };

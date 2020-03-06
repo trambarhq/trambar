@@ -4,21 +4,21 @@ import { Route } from 'common/routing/route.js';
 import { Environment } from 'common/env/environment.js';
 import { Payloads } from 'common/transport/payloads.js';
 
-import { ErrorPage } from './error-page.jsx';
-import { MemberListPage } from './member-list-page.jsx';
-import { ProjectListPage } from './project-list-page.jsx';
-import { ProjectSummaryPage } from './project-summary-page.jsx';
-import { RepoListPage } from './repo-list-page.jsx';
-import { RepoSummaryPage } from './repo-summary-page.jsx';
-import { RoleListPage } from './role-list-page.jsx';
-import { RoleSummaryPage } from './role-summary-page.jsx';
-import { ServerListPage } from './server-list-page.jsx';
-import { ServerSummaryPage } from './server-summary-page.jsx';
-import { StartPage } from './start-page.jsx';
-import { SettingsPage } from './settings-page.jsx';
-import { SignInPage } from './sign-in-page.jsx';
-import { UserListPage } from './user-list-page.jsx';
-import { UserSummaryPage } from './user-summary-page.jsx';
+import ErrorPage from './error-page.jsx';
+import MemberListPage from './member-list-page.jsx';
+import ProjectListPage from './project-list-page.jsx';
+import ProjectSummaryPage from './project-summary-page.jsx';
+import RepoListPage from './repo-list-page.jsx';
+import RepoSummaryPage from './repo-summary-page.jsx';
+import RoleListPage from './role-list-page.jsx';
+import RoleSummaryPage from './role-summary-page.jsx';
+import ServerListPage from './server-list-page.jsx';
+import ServerSummaryPage from './server-summary-page.jsx';
+import StartPage from './start-page.jsx';
+import SettingsPage from './settings-page.jsx';
+import SignInPage from './sign-in-page.jsx';
+import UserListPage from './user-list-page.jsx';
+import UserSummaryPage from './user-summary-page.jsx';
 
 ErrorPage.propTypes = {
   database: PropTypes.instanceOf(Database).isRequired,

@@ -1,17 +1,17 @@
 import React from 'react';
-import Relaks, { useProgress, useListener } from 'relaks';
+import { useProgress, useListener } from 'relaks';
 import * as UserFinder from 'common/objects/finders/user-finder.js';
 import * as UserUtils from 'common/objects/utils/user-utils.js';
 
 // widgets
-import ProfileImage from './profile-image.jsx';
+import { ProfileImage } from './profile-image.jsx';
 
 import './sign-off-menu.scss';
 
 /**
  * Contents of sign-off pop-up menu
  */
-async function SignOffMenu(props) {
+export async function SignOffMenu(props) {
   const { database, route, env } = props;
   const { t } = env.locale;
   const [ show ] = useProgress();
@@ -48,10 +48,3 @@ async function SignOffMenu(props) {
     }
   }
 }
-
-const component = Relaks.memo(SignOffMenu);
-
-export {
-  component as default,
-  component as SignOffMenu,
-};

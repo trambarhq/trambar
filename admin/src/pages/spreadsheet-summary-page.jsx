@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { ExcelFile } from 'trambar-www';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
 import * as ProjectUtils from 'common/objects/utils/project-utils.js';
@@ -35,7 +35,7 @@ import {
 
 import './spreadsheet-summary-page.scss';
 
-async function SpreadsheetSummaryPage(props) {
+export default async function SpreadsheetSummaryPage(props) {
   const { database, projectID, spreadsheetID, env } = props;
   const creating = (spreadsheetID === 'new');
   const [ show ] = useProgress();
@@ -504,10 +504,3 @@ async function requestUpdate(project, spreadsheet, env) {
 
 class ImportError extends Error {
 }
-
-const component = Relaks.memo(SpreadsheetSummaryPage);
-
-export {
-  component as default,
-  component as SpreadsheetSummaryPage,
-};

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as SystemFinder from 'common/objects/finders/system-finder.js';
 import * as SystemSaver from 'common/objects/savers/system-saver.js';
 import * as SystemSettings from 'common/objects/settings/system-settings.js';
@@ -25,7 +25,7 @@ import {
 
 import './settings-page.scss';
 
-async function SettingsPage(props) {
+export default async function SettingsPage(props) {
   const { database } = props;
   const [ show ] = useProgress();
 
@@ -321,10 +321,3 @@ function getDefaultSystem(base) {
     };
   }
 }
-
-const component = Relaks.memo(SettingsPage);
-
-export {
-  component as default,
-  component as SettingsPage,
-};

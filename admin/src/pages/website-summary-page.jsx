@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import 'moment-timezone';
 import React, { useMemo } from 'react';
-import Relaks, { useProgress, useListener, useSaveBuffer, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useSaveBuffer, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
 import * as ProjectSaver from 'common/objects/savers/project-saver.js';
@@ -32,7 +32,7 @@ import {
 
 import './website-summary-page.scss';
 
-async function WebsiteSummaryPage(props) {
+export default async function WebsiteSummaryPage(props) {
   const { database, route, env, projectID, editing } = props;
   const [ show ] = useProgress();
 
@@ -275,7 +275,7 @@ function WebsiteSummaryPageSync(props) {
     }
     return (
       <a className="link" href={url} target="_blank">
-        <i className="fasfa-external-link" />
+        <i className="fas fa-external-link" />
       </a>
     );
   }
@@ -361,10 +361,3 @@ function WebsiteSummaryPageSync(props) {
 const sortSnapshots = memoizeWeak(null, function(snapshots) {
   return _.orderBy(snapshots, 'ptime', 'desc');
 });
-
-const component = Relaks.memo(WebsiteSummaryPage);
-
-export {
-  component as default,
-  component as WebsiteSummaryPage,
-};

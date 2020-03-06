@@ -1,5 +1,5 @@
-let _ = require('lodash');
-let Diff = require('diff');
+import _ from 'lodash';
+import { diffSentences } from 'diff';
 
 function mergeObjects(a, b, c, resolveFns) {
   let d = {};
@@ -51,7 +51,7 @@ function mergeStrings(a, b, c) {
   if (typeof(c) !== 'string') {
     c = '';
   }
-  let diff = Diff.diffSentences(a, b);
+  let diff = diffSentences(a, b);
   let unchangedB = getUnchangedRanges(c, b);
   let segments = [];
   for (let i = 0; i < diff.length; i++) {
@@ -97,7 +97,7 @@ function mergeStrings(a, b, c) {
 
 function getUnchangedRanges(before, after) {
   let ranges = [];
-  let diff = Diff.diffSentences(before, after);
+  let diff = diffSentences(before, after);
   let indexAfter = 0;
   let indexBefore = 0;
   for (let i = 0; i < diff.length; i++) {

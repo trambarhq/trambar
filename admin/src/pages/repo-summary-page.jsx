@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
 import * as RepoFinder from 'common/objects/finders/repo-finder.js';
 import * as RepoSaver from 'common/objects/savers/repo-saver.js';
@@ -30,7 +30,7 @@ import {
 
 import './repo-summary-page.scss';
 
-async function RepoSummaryPage(props) {
+export default async function RepoSummaryPage(props) {
   const { database, projectID, repoID } = props;
   const [ show ] = useProgress();
 
@@ -237,10 +237,3 @@ function RepoSummaryPageSync(props) {
     );
   }
 }
-
-const component = Relaks.memo(RepoSummaryPage);
-
-export {
-  component as default,
-  component as RepoSummaryPage,
-};

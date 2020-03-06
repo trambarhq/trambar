@@ -3,14 +3,14 @@ import React, { useState, useMemo, useImperativeHandle, useEffect } from 'react'
 import { useListener } from 'relaks';
 
 // widgets
-import AutosizeTextArea from 'common/widgets/autosize-text-area.jsx';
+import { AutosizeTextArea } from 'common/widgets/autosize-text-area.jsx';
 
 import './multilingual-text-field.scss';
 
 /**
  * A text field that accepts text in multiple languages.
  */
-function MultilingualTextField(props, ref) {
+export const MultilingualTextField = React.forwardRef((props, ref) => {
   const { env, type, id, readOnly, value, availableLanguageCodes, children, onChange, ...otherProps } = props;
   const { t, languageCode, directory } = env.locale;
   const [ selectedLanguageCode, setSelectedLanguageCode ] = useState();
@@ -202,17 +202,10 @@ function MultilingualTextField(props, ref) {
       </div>
     );
   }
-}
+});
 
-const component = React.forwardRef(MultilingualTextField);
-
-component.defaultProps = {
+MultilingualTextField.defaultProps = {
   type: 'text',
   value: {},
   availableLanguageCodes: [],
-};
-
-export {
-  component as default,
-  component as MultilingualTextField,
 };

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import * as ProjectFinder from 'common/objects/finders/project-finder.js';
 import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.js';
@@ -28,7 +28,7 @@ import {
 
 import './spreadsheet-list-page.scss';
 
-async function SpreadsheetListPage(props) {
+export default async function SpreadsheetListPage(props) {
   const { database, route, env, projectID, editing } = props;
   const [ show ] = useProgress();
 
@@ -302,10 +302,3 @@ const filterSpreadsheets = memoizeWeak(null, function(spreadsheets) {
     return !spreadsheet.deleted && !spreadsheet.disabled;
   });
 });
-
-const component = Relaks.memo(SpreadsheetListPage);
-
-export {
-  component as default,
-  component as SpreadsheetListPage,
-};

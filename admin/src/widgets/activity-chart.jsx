@@ -11,7 +11,7 @@ import './activity-chart.scss';
 /**
  * Bar chart showing daily activities.
  */
-function ActivityChart(props) {
+export function ActivityChart(props) {
   const { env, statistics, children } = props;
   const { t } = env.locale;
 
@@ -221,7 +221,5 @@ function getDay(date) {
 const component = React.memo(ActivityChart);
 
 export {
-  component as default,
-  component as ActivityChart,
   LegendItem,
 };

@@ -1,17 +1,17 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
+import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import Moment from 'moment';
-import * as ServerUtils from 'common/objects/utils/server-utils.js';
+import { getDisplayName, getIconClass } from 'common/objects/utils/server-utils.js';
 import * as HTTPRequest from 'common/transport/http-request.js';
 
 // widgets
-import PushButton from '../widgets/push-button.jsx';
-import TextField from '../widgets/text-field.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { TextField } from '../widgets/text-field.jsx';
 
 import './sign-in-page.scss';
 
-async function SignInPage(props) {
+export default async function SignInPage(props) {
   const { database } = props;
   const [ show ] = useProgress();
 
@@ -152,7 +152,7 @@ function SignInPageSync(props) {
     }
     return (
       <div className="error">
-        <i className="fasfa-exclamation-circle" />
+        <i className="fas fa-exclamation-circle" />
         {' '}
         {t(`sign-in-problem-${problem}`)}
       </div>
@@ -175,8 +175,8 @@ function SignInPageSync(props) {
   }
 
   function renderOAuthButton(server, i) {
-    const name = ServerUtils.getDisplayName(server, env);
-    const icon = ServerUtils.getIcon(server);
+    const name = getDisplayName(server, env);
+    const iconClass = getIconClass(server);
     const url = database.getOAuthURL(server);
     const props = {
       className: 'oauth-button',
@@ -193,7 +193,7 @@ function SignInPageSync(props) {
     return (
       <a key={server.id} {...props}>
         <span className="icon">
-          <i className={`fa fa-fw fa-${icon}`}></i>
+          <i className={iconClass}></i>
         </span>
         <span className="label">{text}</span>
       </a>
@@ -232,10 +232,3 @@ function openPopUpWindow(url) {
     }
   });
 }
-
-const component = Relaks.memo(SignInPage);
-
-export {
-  component as default,
-  component as SignInPage,
-};

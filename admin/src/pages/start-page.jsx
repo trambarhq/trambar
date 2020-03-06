@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress, useListener } from 'relaks';
+import { useProgress, useListener } from 'relaks';
 import * as SystemFinder from 'common/objects/finders/system-finder.js';
 
 import './start-page.scss';
 
-async function StartPage(props) {
+export default async function StartPage(props) {
   const { database, route, env } = props;
   const { t } = env.locale;
   const [ show ] = useProgress();
@@ -35,10 +35,3 @@ async function StartPage(props) {
     }
   }
 }
-
-const component = Relaks.memo(StartPage);
-
-export {
-  component as default,
-  component as StartPage,
-};

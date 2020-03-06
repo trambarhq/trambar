@@ -7,7 +7,7 @@ import { detectDirection } from 'common/utils/plain-text.js';
 import 'prismjs/themes/prism.css';
 import './markdown-preview.scss';
 
-function MarkdownPreview(props) {
+export function MarkdownPreview(props) {
   const { page, env, onReference } = props;
   const { localeCode } = env.locale;
   const adjustFunc = (node) => {
@@ -64,7 +64,3 @@ function MarkdownPreview(props) {
     return <span className="language">{lang}</span>;
   }
 }
-
-export {
-  MarkdownPreview,
-};

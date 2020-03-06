@@ -18,14 +18,14 @@ import * as UserUtils from 'common/objects/utils/user-utils.js';
 import * as WikiFinder from 'common/objects/finders/wiki-finder.js';
 
 // widgets
-import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
+import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 
 import './navigation-tree.scss';
 
 /**
  * Navigation tree that sits in the side nav
  */
-async function NavigationTree(props) {
+export async function NavigationTree(props) {
   const { database, route, env, disabled } = props;
   const { t, p } = env.locale;
   const container = useRef();
@@ -126,11 +126,11 @@ async function NavigationTree(props) {
     };
     return (
       <div {...arrowProps}>
-        <i className="fasfa-play first" />
-        <i className="fasfa-play second" />
-        <i className="fasfa-play third" />
-        <i className="fasfa-play fourth" />
-        <i className="fasfa-play fifth" />
+        <i className="fas fa-play first" />
+        <i className="fas fa-play second" />
+        <i className="fas fa-play third" />
+        <i className="fas fa-play fourth" />
+        <i className="fas fa-play fifth" />
       </div>
     );
   }
@@ -426,10 +426,3 @@ function calculateArrowPosition(arrow, container, link) {
   }
   return position;
 }
-
-const component = Relaks.memo(NavigationTree);
-
-export {
-  component as default,
-  component as NavigationTree,
-};

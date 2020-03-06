@@ -9,7 +9,7 @@ import './spreadsheet-count-tooltip.scss';
 /**
  * Tooltip showing the number of sheets in an Excel file
  */
-function SpreadsheetCountTooltip(props) {
+export function SpreadsheetCountTooltip(props) {
   const { route, env, spreadsheet, disabled } = props;
   if (!spreadsheet) {
     return null;
@@ -31,7 +31,7 @@ function SpreadsheetCountTooltip(props) {
       list.splice(max);
       list.push(
         <div className="ellipsis" key={0}>
-          <i className="fasfa-ellipsis-v" />
+          <i className="fas fa-ellipsis-v" />
         </div>
       );
     }
@@ -45,8 +45,3 @@ function SpreadsheetCountTooltip(props) {
   }
   return <span>{contents}</span>;
 }
-
-export {
-  SpreadsheetCountTooltip as default,
-  SpreadsheetCountTooltip,
-};
