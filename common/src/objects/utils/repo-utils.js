@@ -75,7 +75,7 @@ function getBranchURL(repo, story) {
   }
 }
 
-function getLabelStyle(repo, label) {
+function getIssueLabelStyle(repo, label) {
   if (repo) {
     const labels = _.get(repo, 'details.labels');
     const colors = _.get(repo, 'details.label_colors');
@@ -161,7 +161,7 @@ export {
   getMergeRequestURL,
   getPushURL,
   getBranchURL,
-  getLabelStyle,
+  getIssueLabelStyle,
   getCommitNoteURL,
   getIssueNoteURL,
   getMergeRequestNoteURL,

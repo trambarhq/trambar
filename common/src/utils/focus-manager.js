@@ -1,41 +1,36 @@
 import _ from 'lodash';
 
-let entries = [];
-let requests = [];
+export class FocusManager {
+  static entries = [];
+  static requests = [];
 
-function register(component, props) {
-  entries.unshift({ component, props });
+  static register(component, props) {
+    entries.unshift({ component, props });
 
-  // see if a request for focus has been made
-  requests = _.filter(requests, (request) => {
-    if (_.isMatch(props, request)) {
-      component.focus();
-      return false;
+    // see if a request for focus has been made
+    _.remove(this.requests, (request) => {
+      if (_.isMatch(props, request)) {
+        component.focus();
+        return true;
+      }
+    });
+  }
+
+  static unregister(component) {
+    _.remove(this.entries, { component });
+  }
+
+  static focus(props) {
+    const entry = _.find(this.entries, { props });
+    if (entry) {
+      entry.component.focus()
     } else {
-      return true;
+      // store the request and set focus when component registers itself
+      requests.push(props);
     }
-  });
-}
-
-function unregister(component) {
-  entries = _.filter(entries, (entry) => {
-    return (entry.component !== component);
-  });
-}
-
-function focus(props) {
-  let entry = _.find(entries, { props });
-  if (entry) {
-    debugger;
-    entry.component.focus()
-  } else {
-    // store the request and set focus when component registers itself
-    requests.push(props);
   }
 }
 
 export {
-  register,
-  unregister,
-  focus,
+  FocusManager,
 };

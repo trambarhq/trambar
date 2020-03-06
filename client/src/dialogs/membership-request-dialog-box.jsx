@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { getUserName, getGender, isMember, isPendingMember, canViewProject, canJoinProject } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -71,8 +71,8 @@ export const MembershipRequestDialogBox = Overlay.create((props) => {
     if (!project || !currentUser) {
       return null;
     }
-    const you = UserUtils.getDisplayName(currentUser, env);
-    const gender = UserUtils.getGender(currentUser);
+    const you = getUserName(currentUser, env);
+    const gender = getGender(currentUser);
     g(you, gender);
     let className = '', iconClass = '', message = '';
     if (UserUtils.isMember(currentUser, project)) {
@@ -83,7 +83,7 @@ export const MembershipRequestDialogBox = Overlay.create((props) => {
       } else {
         message = t('membership-request-$you-are-member', you);
       }
-    } else if (UserUtils.isPendingMember(currentUser, project)) {
+    } else if (isPendingMember(currentUser, project)) {
       className = 'requested';
       iconClass = 'far fa-clock';
       message = t('membership-request-$you-have-requested-membership', you);
@@ -100,7 +100,7 @@ export const MembershipRequestDialogBox = Overlay.create((props) => {
   }
 
   function renderButtons() {
-    if (UserUtils.isMember(currentUser, project)) {
+    if (isMember(currentUser, project)) {
       const cancelButtonProps = {
         label: t('membership-request-cancel'),
         onClick: onClose,
@@ -116,7 +116,7 @@ export const MembershipRequestDialogBox = Overlay.create((props) => {
           <PushButton {...proceedButtonProps} />
         </div>
       );
-    } else if (UserUtils.isPendingMember(currentUser, project)) {
+    } else if (isPendingMember(currentUser, project)) {
       const cancelButtonProps = {
         label: t('membership-request-cancel'),
         onClick: onClose,
@@ -128,7 +128,7 @@ export const MembershipRequestDialogBox = Overlay.create((props) => {
       const browseButtonProps = {
         label: t('membership-request-browse'),
         onClick: handleProceedClick,
-        hidden: !UserUtils.canViewProject(currentUser, project),
+        hidden: !canViewProject(currentUser, project),
         emphasized: true,
       };
       return (
@@ -146,13 +146,13 @@ export const MembershipRequestDialogBox = Overlay.create((props) => {
       const browseButtonProps = {
         label: t('membership-request-browse'),
         onClick: handleProceedClick,
-        hidden: !UserUtils.canViewProject(currentUser, project),
-        emphasized: !UserUtils.canJoinProject(currentUser, project),
+        hidden: !canViewProject(currentUser, project),
+        emphasized: !canJoinProject(currentUser, project),
       };
       const joinButtonProps = {
         label: t('membership-request-join'),
         onClick: handleJoinClick,
-        hidden: !UserUtils.canJoinProject(currentUser, project),
+        hidden: !canJoinProject(currentUser, project),
         emphasized: true,
       };
       return (

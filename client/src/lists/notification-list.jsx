@@ -2,9 +2,8 @@ import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import Merger from 'common/data/merger.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as StoryFinder from 'common/objects/finders/story-finder.js';
+import { findNotificationTriggerers } from 'common/objects/finders/user-finder.js';
+import { findStoriesOfNotifications } from 'common/objects/finders/story-finder.js';
 
 // widgets
 import { SmartList } from 'common/widgets/smart-list.jsx';
@@ -58,9 +57,9 @@ export async function NotificationList(props) {
   }, []);
 
   render();
-  const users = await UserFinder.findNotificationTriggerers(database, notifications);
+  const users = await findNotificationTriggerers(database, notifications);
   render();
-  const stories = await StoryFinder.findStoriesOfNotifications(database, notifications, currentUser);
+  const stories = await findStoriesOfNotifications(database, notifications, currentUser);
   render();
 
   function render() {

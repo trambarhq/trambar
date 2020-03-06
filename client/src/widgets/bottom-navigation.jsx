@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 import HTTPError from 'common/errors/http-error.js';
-import * as NotificationFinder from 'common/objects/finders/notification-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
+import { findNotificationsUnseenByUser } from 'common/objects/finders/notification-finder.js';
+import { findUser } from 'common/objects/finders/user-finder.js';
 import { setApplicationIconBadgeNumber } from 'common/transport/push-notifier.js';
 
 // widgets
@@ -161,7 +161,7 @@ async function NewNotificationsBadge(props) {
 
   render();
   const currentUserID = await db.start();
-  const currentUser = (active) ? await UserFinder.findUser(db, currentUserID) : null;
+  const currentUser = (active) ? await findUser(db, currentUserID) : null;
   const notifications = (active) ? await NotificationFinder.findNotificationsUnseenByUser(db, currentUser) : [];
   const count = _.size(notifications);
   render();

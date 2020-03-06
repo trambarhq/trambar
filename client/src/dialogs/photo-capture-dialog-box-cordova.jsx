@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import { useAsyncEffect } from 'relaks';
-import * as MediaLoader from 'common/media/media-loader.js';
-import CordovaFile from 'common/transport/cordova-file.js';
+import { getImageMetadata } from 'common/media/media-loader.js';
+import { CordovaFile } from 'common/transport/cordova-file.js';
 
 /**
  * Non-visual component that uses the Camera Cordova plugin to take a photo.
@@ -23,7 +23,7 @@ export function PhotoCaptureDialogBoxCordova(props) {
         }
         try {
           await file.obtainMetadata();
-          const meta = await MediaLoader.getImageMetadata(file);
+          const meta = await getImageMetadata(file);
           const payload = payloads.add('image').attachFile(file);
           const res = {
             type: 'image',

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -128,7 +128,7 @@ function User(props) {
   const { env, user } = props;
   const classNames = [ 'user' ];
   const imageProps = { user, env, size: 'small' };
-  let name = UserUtils.getDisplayName(user, env);
+  let name = getUserName(user, env);
   return (
     <div className={classNames.join(' ')}>
       <ProfileImage {...imageProps} />

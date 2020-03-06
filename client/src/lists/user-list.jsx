@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { SmartList } from 'common/widgets/smart-list.jsx';
@@ -110,7 +110,7 @@ let savedViewOptions = {};
 
 const sortUsers = memoizeWeak(null, function(users, env) {
   const name = (user) => {
-    return UserUtils.getDisplayName(user, env);
+    return getUserName(user, env);
   };
   return _.orderBy(users, [ name ], [ 'asc' ]);
 });

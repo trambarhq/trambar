@@ -1,12 +1,11 @@
 import _ from 'lodash';
-import Moment from 'moment';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as FocusManager from 'common/utils/focus-manager.js';
-import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.js';
-import * as ReactionSaver from 'common/objects/savers/reaction-saver.js';
-import * as StoryUtils from 'common/objects/utils/story-utils.js';
+import { FocusManager }  from 'common/utils/focus-manager.js';
+import { addLike, removeReaction, startComment } from 'common/objects/savers/reaction-saver.js';
+import { findRobot, isSaved } from 'common/objects/utils/story-utils.js';
+import { findLinkByRelative } from 'common/objects/utils/external-data-utils.js';
 
 // widgets
 import { ProfileImage } from '../widgets/profile-image.jsx';
@@ -39,7 +38,7 @@ export function StoryView(props) {
   const [ openMenu, setOpenMenu ] = useState('');
   const [ error, run ] = useErrorCatcher(true);
   const reactionContainerRef = useRef();
-  const robot = StoryUtils.findRobot(story);
+  const robot = findRobot(story);
 
   const handleExpansionClick = useListener((evt) => {
     showComments(true);
@@ -57,10 +56,10 @@ export function StoryView(props) {
     run(async () => {
       switch (evt.action) {
         case 'like-add':
-          await ReactionSaver.addLike(database, story, currentUser);
+          await addLike(database, story, currentUser);
           break;
          case 'like-remove':
-          await ReactionSaver.removeReaction(database, evt.like);
+          await removeReaction(database, evt.like);
           break;
          case 'reaction-add':
           showComments(true);
@@ -69,7 +68,7 @@ export function StoryView(props) {
             published: false,
           });
           if (!existing) {
-            await ReactionSaver.startComment(database, story, currentUser);
+            await startComment(database, story, currentUser);
           }
           FocusManager.focus({
             type: 'ReactionEditor',
@@ -257,7 +256,7 @@ export function StoryView(props) {
       reactions,
       respondents,
       env,
-      disabled: !StoryUtils.isSaved(story),
+      disabled: !isSaved(story),
       onAction: handleAction,
     };
     return <ReactionToolbar {...props} />;
@@ -428,7 +427,7 @@ const defaultOptions = {
 
 const findRepo = memoizeWeak(null, function(repos, story) {
   return _.find(repos, (repo) => {
-    const link = ExternalDataUtils.findLinkByRelative(story, repo, 'project');
+    const link = findLinkByRelative(story, repo, 'project');
     return !!link;
   });
 });

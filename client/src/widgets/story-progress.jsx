@@ -1,6 +1,6 @@
 import React from 'react';
 import Moment from 'moment';
-import * as StoryUtils from 'common/objects/utils/story-utils.js';
+import { isActuallyPublished } from 'common/objects/utils/story-utils.js';
 
 // widgets
 import { Time } from './time.jsx';
@@ -17,7 +17,7 @@ export function StoryProgress(props) {
   const { t } = env.locale;
   let contents;
 
-  if (!StoryUtils.isActuallyPublished(story)) {
+  if (!isActuallyPublished(story)) {
     // not saved yet
     contents = t('story-status-storage-pending');
   } else {

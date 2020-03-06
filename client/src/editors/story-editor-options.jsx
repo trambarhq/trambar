@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { canCreateBookmark, canSendBookmarks, canAddIssue, canHideStory } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { HeaderButton } from '../widgets/header-button.jsx';
@@ -95,7 +95,7 @@ export function StoryEditorOptions(props) {
       const bookmarkProps = {
         label: t('option-add-bookmark'),
         selected: !!self,
-        hidden: !UserUtils.canCreateBookmark(currentUser, story, access),
+        hidden: !canCreateBookmark(currentUser, story, access),
         onClick: handleAddBookmarkClick,
       };
       const otherRecipients = _.reject(recipients, { id: currentUser.id });
@@ -103,19 +103,19 @@ export function StoryEditorOptions(props) {
         label: _.isEmpty(otherRecipients)
           ? t('option-send-bookmarks')
           : t('option-send-bookmarks-to-$count-users', otherRecipients.length),
-        hidden: !UserUtils.canSendBookmarks(currentUser, story, access),
+        hidden: !canSendBookmarks(currentUser, story, access),
         selected: !_.isEmpty(otherRecipients) || selectingRecipients,
         onClick: handleSendBookmarkClick,
       };
       const addIssueProps = {
         label: t('option-add-issue'),
-        hidden: !UserUtils.canAddIssue(currentUser, story, repos, access),
+        hidden: !canAddIssue(currentUser, story, repos, access),
         selected: !!options.get('issue') || enteringIssueDetails,
         onClick: handleAddIssueClick,
       };
       const hidePostProps = {
         label: t('option-hide-story'),
-        hidden: !UserUtils.canHideStory(currentUser, story, access),
+        hidden: !canHideStory(currentUser, story, access),
         selected: options.get('hidden'),
         onClick: handleHideClick,
       };

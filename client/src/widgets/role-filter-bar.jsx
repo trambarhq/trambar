@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as RoleFinder from 'common/objects/finders/role-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
+import { findCurrentProject } from 'common/objects/finders/project-finder.js';
+import { findRolesOfUsers } from 'common/objects/finders/role-finder.js';
+import { findProjectMembers } from 'common/objects/finders/user-finder.js';
 
 // widgets
 import { RoleFilterButton } from './role-filter-button.jsx';
@@ -23,9 +23,9 @@ export async function RoleFilterBar(props) {
   // don't let the component be empty initially
   render();
   const currentUserID = await db.start();
-  const project = await ProjectFinder.findCurrentProject(db);
-  const users = await UserFinder.findProjectMembers(db, project);
-  const roles = await RoleFinder.findRolesOfUsers(db, users);
+  const project = await findCurrentProject(db);
+  const users = await findProjectMembers(db, project);
+  const roles = await findRolesOfUsers(db, users);
   render();
 
   function render() {

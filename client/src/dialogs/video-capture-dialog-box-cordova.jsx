@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import { useAsyncEffect } from 'relaks';
-import * as MediaLoader from 'common/media/media-loader.js';
-import CordovaFile from 'common/transport/cordova-file.js';
+import { getFormatData, extractFileFormat, getImageMetadata } from 'common/media/media-loader.js';
+import { CordovaFile } from 'common/transport/cordova-file.js';
 
 /**
  * Non-visual component that uses the Media Capture Cordiva plug-in to capture
@@ -24,7 +24,7 @@ export function VideoCaptureDialogBoxCordova(props) {
             onCapturePending({ resourceType: 'video' });
           }
           try {
-            const mediaFileData = await MediaLoader.getFormatData(mediaFile);
+            const mediaFileData = await getFormatData(mediaFile);
             let fullPath;
             if (cordova.platformId === 'windows') {
               fullPath = mediaFile.localURL;
@@ -38,14 +38,14 @@ export function VideoCaptureDialogBoxCordova(props) {
             const res = {
               type: 'video',
               payload_token: payload.id,
-              format: MediaLoader.extractFileFormat(mediaFile.type),
+              format: extractFileFormat(mediaFile.type),
               filename: mediaFile.name,
               duration: mediaFileData.duration * 1000,
             };
             try {
               const thumbnailURL = await createThumbnail(file);
               const posterFile = new CordovaFile(thumbnailURL);
-              const poster = await MediaLoader.getImageMetadata(posterFile);
+              const poster = await getImageMetadata(posterFile);
               payload.attachFile(posterFile, 'poster');
               // use the poster's width and height, as they're
               // corrected for camera orientation

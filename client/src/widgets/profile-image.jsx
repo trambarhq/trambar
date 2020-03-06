@@ -1,8 +1,9 @@
 import _ from 'lodash';
 import React from 'react';
-import * as BlobManager from 'common/transport/blob-manager.js';
-import { ResourceView }  from 'common/widgets/resource-view.jsx';
+import { BlobManager } from 'common/transport/blob-manager.js';
 
+// widgets
+import { ResourceView }  from 'common/widgets/resource-view.jsx';
 import ProfileIcon from 'octicons/build/svg/person.svg';
 import InternetIcon from '../../assets/internet.svg';
 
@@ -23,6 +24,11 @@ export function ProfileImage(props) {
   };
   let image;
   if (profileImage) {
+    const imageResolutions = {
+      small: 24,
+      medium: 48,
+      large: 96,
+    };
     const width = imageResolutions[size];
     const props = {
       resource: profileImage,

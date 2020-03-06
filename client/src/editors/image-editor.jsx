@@ -1,11 +1,10 @@
 import _ from 'lodash';
 import React, { useState, useMemo, useRef, useImperativeHandle, useEffect } from 'react';
 import { useListener, useAsyncEffect } from 'relaks';
-import * as BlobManager from 'common/transport/blob-manager.js';
-import Payload from 'common/transport/payload.js';
-import * as ImageCropping from 'common/media/image-cropping.js';
-import * as FocusManager from 'common/utils/focus-manager.js';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
+import { BlobManager } from 'common/transport/blob-manager.js';
+import { Payload } from 'common/transport/payload.js';
+import { FocusManager } from 'common/utils/focus-manager.js';
+import { getImageURL, getClippingRect } from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { ImageCropper } from 'common/widgets/image-cropper.jsx';

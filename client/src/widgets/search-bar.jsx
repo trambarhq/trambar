@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import Relaks, { useProgress, useListener } from 'relaks';
-import * as TagScanner from 'common/utils/tag-scanner.js';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
+import { useProgress, useListener } from 'relaks';
+import { findTags } from 'common/utils/tag-scanner.js';
+import { findStatistics } from 'common/objects/finders/statistics-finder.js';
+import { findUser } from 'common/objects/finders/user-finder.js';
 
 import './search-bar.scss';
 
@@ -17,7 +17,7 @@ export async function SearchBar(props) {
 
   render();
   const currentUserID = await database.start();
-  const currentUser = await UserFinder.findUser(database, currentUserID);
+  const currentUser = await findUser(database, currentUserID);
   const params = { ...settings.statistics };
   if (params.user_id === 'current') {
     params.user_id = currentUser.id;
@@ -25,7 +25,7 @@ export async function SearchBar(props) {
   if (params.public === 'guest') {
     params.public = (currentUser.type === 'guest');
   }
-  const dailyActivities = await StatisticsFinder.find(database, params);
+  const dailyActivities = await findStatistics(database, params);
   render();
 
   function render() {
@@ -51,7 +51,8 @@ function SearchBarSync(props) {
     return extractTags(dailyActivities, env);
   }, [ dailyActivities, env ]);
   const [ selectedHashTags ] = useMemo(() => {
-    return findTags(route.params.search);
+    const tags = findTags(route.params.search);
+    return _.map(tags, _.toLower);
   }, [ route ]);
   const [ search, setSearch ] = useState(null);
 
@@ -180,10 +181,6 @@ function normalize(s) {
   s = _.replace(s, /\s+/g, ' ')
   let words = _.split(s);
   return words.join(' ');
-}
-
-function findTags(s) {
-  return _.map(TagScanner.findTags(s), _.toLower);
 }
 
 function isWrapping(nodes) {

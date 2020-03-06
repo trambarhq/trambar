@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { isCoauthor } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { HeaderButton } from './header-button.jsx';
@@ -19,7 +19,7 @@ export function CoauthoringButton(props) {
   const { onRemove, onSelect } = props;
   const { t } = env.locale;
   const [ selecting, setSelecting ] = useState(false);
-  const coauthoring = UserUtils.isCoauthor(authors, currentUser);
+  const coauthoring = isCoauthor(authors, currentUser);
 
   const handleClick = useListener((evt) => {
     if (coauthoring) {

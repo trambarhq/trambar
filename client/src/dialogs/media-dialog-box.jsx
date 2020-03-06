@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { useListener } from 'relaks';
 import Hammer from 'hammerjs';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
+import { getURL, getVideoURL, getDimensions, getImageURL } from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -28,7 +28,7 @@ export const MediaDialogBox = Overlay.create((props) => {
     if (resource) {
       // create a link then simulate a click
       const link = document.createElement('A');
-      const url = ResourceUtils.getURL(resource, { original: true }, env);
+      const url = getURL(resource, { original: true }, env);
       const pageAddress = `${location.protocol}//${location.host}`;
       link.href = url;
       // download only works when it's same origin
@@ -119,7 +119,7 @@ export const MediaDialogBox = Overlay.create((props) => {
     const viewportAspect = viewportWidth / viewportHeight;
     let maxWidth, maxHeight;
     for (let res of resources) {
-      const { width, height } = ResourceUtils.getDimensions(res, { clip: null }, env);
+      const { width, height } = getDimensions(res, { clip: null }, env);
       if (!(maxWidth >= width)) {
         maxWidth = width;
       }
@@ -178,9 +178,9 @@ export const MediaDialogBox = Overlay.create((props) => {
   }
 
   function renderVideo(resource) {
-    const url = ResourceUtils.getVideoURL(resource, {}, env);
-    const { width, height } = ResourceUtils.getDimensions(resource, { clip: null }, env);
-    const posterURL = ResourceUtils.getImageURL(resource, {
+    const url = getVideoURL(resource, {}, env);
+    const { width, height } = getDimensions(resource, { clip: null }, env);
+    const posterURL = getImageURL(resource, {
       width,
       height,
       clip: null,

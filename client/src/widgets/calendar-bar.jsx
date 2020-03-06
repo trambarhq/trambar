@@ -2,8 +2,8 @@ import _ from 'lodash';
 import React from 'react';
 import Relaks, { useProgress } from 'relaks';
 import Moment from 'moment';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
+import { findStatistics } from 'common/objects/finders/statistics-finder.js';
+import { findUser } from 'common/objects/finders/user-finder.js';
 
 // widgets
 import { Calendar } from './calendar.jsx';
@@ -22,7 +22,7 @@ export async function CalendarBar(props) {
 
   render();
   const currentUserID = await db.start();
-  const currentUser = await UserFinder.findUser(db, currentUserID);
+  const currentUser = await findUser(db, currentUserID);
   const params = { ...settings.statistics };
   if (params.user_id === 'current') {
     params.user_id = currentUser.id;
@@ -30,7 +30,7 @@ export async function CalendarBar(props) {
   if (params.public === 'guest') {
     params.public = (currentUser.type === 'guest');
   }
-  const dailyActivities = await StatisticsFinder.find(db, params);
+  const dailyActivities = await findStatistics(db, params);
   render();
 
   function render() {

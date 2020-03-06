@@ -3,12 +3,22 @@ import Moment from 'moment';
 import React from 'react';
 import { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectUtils from 'common/objects/utils/project-utils.js';
-import * as StatisticsFinder from 'common/objects/finders/statistics-finder.js';
-import * as StoryFinder from 'common/objects/finders/story-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as TagScanner from 'common/utils/tag-scanner.js';
+import { findCurrentProject } from 'common/objects/finders/project-finder.js';
+import { getUserAccessLevel } from 'common/objects/utils/project-utils.js';
+import { findDailyActivitiesOfUser, findDailyActivitiesOfUsers } from 'common/objects/finders/statistics-finder.js';
+import {
+  findStory,
+  findStoriesWithTags,
+  findStoriesMatchingText,
+  findStoriesOnDate,
+  findStoriesByUsersInListings,
+  findStoriesByUserWithTags,
+  findStoriesByUserMatchingText,
+  findStoriesByUserOnDate,
+  findStoriesByUserInListing,
+} from 'common/objects/finders/story-finder.js';
+import { findUser, findUsers, findProjectMembers } from 'common/objects/finders/user-finder.js';
+import { removeTags, findTags } from 'common/utils/tag-scanner.js';
 
 // widgets
 import { PageContainer } from '../widgets/page-container.jsx';
@@ -31,23 +41,23 @@ export default async function PeoplePage(props) {
 
   let tags;
   if (search) {
-    if (!TagScanner.removeTags(search)) {
-      tags = TagScanner.findTags(search);
+    if (!removeTags(search)) {
+      tags = findTags(search);
     }
   }
 
   render();
   const currentUserID = await database.start();
-  const currentUser = await UserFinder.findUser(database, currentUserID);
-  const project = await ProjectFinder.findCurrentProject(database);
-  const members = await UserFinder.findProjectMembers(database, project);
+  const currentUser = await findUser(database, currentUserID);
+  const project = await findCurrentProject(database);
+  const members = await findProjectMembers(database, project);
   let selectedUser, visibleUsers;
   if (selectedUserID) {
     // find the selected user
     let user = _.find(members, { id: selectedUserID });
     if (!user) {
       // not on the member list
-      user = await UserFinder.findUser(database, selectedUserID);
+      user = await findUser(database, selectedUserID);
     }
     selectedUser = user;
     visibleUsers = [ user ];
@@ -71,7 +81,7 @@ export default async function PeoplePage(props) {
   }
 
   const publicOnly = (currentUser.type === 'guest');
-  let dailyActivities = await StatisticsFinder.findDailyActivitiesOfUsers(database, project, members, publicOnly);
+  let dailyActivities = await findDailyActivitiesOfUsers(database, project, members, publicOnly);
   if (!visibleUsers) {
     // find users with stories using stats
     let users;
@@ -92,7 +102,7 @@ export default async function PeoplePage(props) {
   } else if (selectedUser) {
     // load statistics of selected user if he's not a member
     if (!_.includes(members, selectedUser)) {
-      let selectedUserStats = await StatisticsFinder.findDailyActivitiesOfUser(database, project, selectedUser, publicOnly);
+      const selectedUserStats = await findDailyActivitiesOfUser(database, project, selectedUser, publicOnly);
       dailyActivities = { ...dailyActivities };
       dailyActivities[selectedUser.id] = selectedUserStats;
     }
@@ -102,12 +112,12 @@ export default async function PeoplePage(props) {
   let stories;
   if (search) {
     if (tags) {
-      stories = await StoryFinder.findStoriesWithTags(database, tags, 5);
+      stories = await findStoriesWithTags(database, tags, 5);
     } else {
-      stories = await StoryFinder.findStoriesMatchingText(database, search, env, 5);
+      stories = await findStoriesMatchingText(database, search, env, 5);
     }
   } else if (date) {
-    stories = await StoryFinder.findStoriesOnDate(database, date, 5);
+    stories = await findStoriesOnDate(database, date, 5);
     if (!selectedUser) {
       // we have used stats to narrow down the user list earlier; do
       // it again based on the story list in case we got an incomplete
@@ -115,7 +125,7 @@ export default async function PeoplePage(props) {
       visibleUsers = null;
     }
   } else {
-    stories = await StoryFinder.findStoriesByUsersInListings(database, 'news', visibleUsers, currentUser, 5, freshListing);
+    stories = await findStoriesByUsersInListings(database, 'news', visibleUsers, currentUser, 5, freshListing);
   }
   if (!visibleUsers) {
     // now that we have the stories, we can see whom should be shown
@@ -128,14 +138,14 @@ export default async function PeoplePage(props) {
     // load stories of selected user
     if (search) {
       if (tags) {
-        selectedUserStories = await StoryFinder.findStoriesByUserWithTags(database, selectedUser, tags);
+        selectedUserStories = await findStoriesByUserWithTags(database, selectedUser, tags);
       } else {
-        selectedUserStories = await StoryFinder.findStoriesByUserMatchingText(database, selectedUser, search, env);
+        selectedUserStories = await findStoriesByUserMatchingText(database, selectedUser, search, env);
       }
     } else if (date) {
-      selectedUserStories = await StoryFinder.findStoriesByUserOnDate(database, selectedUser, date);
+      selectedUserStories = await findStoriesByUserOnDate(database, selectedUser, date);
     } else {
-      selectedUserStories = await StoryFinder.findStoriesByUserInListing(database, 'news', selectedUser, currentUser, freshListing);
+      selectedUserStories = await findStoriesByUserInListing(database, 'news', selectedUser, currentUser, freshListing);
     }
   } else {
     // deal with situation where we're showing stories by someone
@@ -146,7 +156,7 @@ export default async function PeoplePage(props) {
       const nonMemberUserIDs = _.difference(authorIDs, memberIDs);
       const publicOnly = (currentUser.type === 'guest');
       if (!_.isEmpty(nonMemberUserIDs)) {
-        const users = await UserFinder.findUsers(database, nonMemberUserIDs);
+        const users = await findUsers(database, nonMemberUserIDs);
         // add non-members
         if (visibleUsers) {
           visibleUsers = _.concat(visibleUsers, users);
@@ -154,7 +164,7 @@ export default async function PeoplePage(props) {
           visibleUsers = users;
         }
         render();
-        const nonMemberStats = await StatisticsFinder.findDailyActivitiesOfUsers(database, project, users, publicOnly);
+        const nonMemberStats = await findDailyActivitiesOfUsers(database, project, users, publicOnly);
         dailyActivities = { ...dailyActivities, ...nonMemberStats };
       }
     }
@@ -167,7 +177,7 @@ export default async function PeoplePage(props) {
       const allStories = selectedUserStories;
       if (!_.find(allStories, { id: highlightStoryID })) {
         try {
-          let story = await StoryFinder.findStory(database, highlightStoryID);
+          let story = await findStory(database, highlightStoryID);
           await redirectToStory(story);
         } catch (err) {
         }
@@ -206,7 +216,7 @@ export default async function PeoplePage(props) {
       return null;
     }
     const listProps = {
-      access: ProjectUtils.getUserAccessLevel(project, currentUser) || 'read-only',
+      access: getUserAccessLevel(project, currentUser) || 'read-only',
       stories: selectedUserStories,
       currentUser,
       project,

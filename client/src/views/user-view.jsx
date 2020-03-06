@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
-import * as RoleUtils from 'common/objects/utils/role-utils.js';
-import * as TagScanner from 'common/utils/tag-scanner.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { getRoleName } from 'common/objects/utils/role-utils.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
+import { removeTags, findTags } from 'common/utils/tag-scanner.js';
 
 // widgets
 import { ProfileImage } from '../widgets/profile-image.jsx';
@@ -173,7 +173,7 @@ export function UserView(props) {
 
   function renderRoles() {
     const names = _.map(roles, (role) => {
-      return RoleUtils.getDisplayName(role, env);
+      return getRoleName(role, env);
     });
     return (
       <span className="roles">
@@ -188,7 +188,7 @@ export function UserView(props) {
   }
 
   function renderName() {
-    const name = UserUtils.getDisplayName(user, env);
+    const name = getUserName(user, env);
     let url;
     if (user) {
       const params = _.pick(route.params, 'date', 'search');
@@ -228,11 +228,11 @@ export function UserView(props) {
         list = _.values(dailyActivities.daily);
       }
       if (search) {
-        if (TagScanner.removeTags(search)) {
+        if (removeTags(search)) {
           // text search no estimate
           list = null;
         } else {
-          tags = TagScanner.findTags(search);
+          tags = findTags(search);
         }
       }
       if (list) {

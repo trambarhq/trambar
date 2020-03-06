@@ -1,5 +1,5 @@
 import React from 'react';
-import * as ReactionUtils from 'common/objects/utils/reaction-utils.js';
+import { isActuallyPublished } from 'common/objects/utils/reaction-utils.js';
 
 // widgets
 import { Time } from './time.jsx';
@@ -15,7 +15,7 @@ export function ReactionProgress(props) {
   const { env, reaction, status } = props;
   const { t } = env.locale;
   let contents;
-  if (!ReactionUtils.isActuallyPublished(reaction)) {
+  if (!isActuallyPublished(reaction)) {
     // not saved yet
     contents = t('reaction-status-storage-pending');
   } else {

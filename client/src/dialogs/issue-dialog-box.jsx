@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { useRef, useMemo } from 'react';
 import { useListener } from 'relaks';
-import * as TagScanner from 'common/utils/tag-scanner.js';
-import * as RepoUtils from 'common/objects/utils/repo-utils.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { removeTags } from 'common/utils/tag-scanner.js';
+import { getRepoName, getIssueLabelStyle } from 'common/objects/utils/repo-utils.js';
+import { canAddIssue } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -28,7 +28,7 @@ export const IssueDialogBox = Overlay.create((props) => {
   const textFieldRef = useRef();
   const availableRepos = useMemo(() => {
     const accessible = _.filter(repos, (repo) => {
-      return UserUtils.canAddIssue(currentUser, story, repo, 'read-write');
+      return canAddIssue(currentUser, story, repo, 'read-write');
     });
     const sorted = _.sortBy(repos, (repo) => {
       return _.toLower(p(repo.details.title) || repo.name);
@@ -121,7 +121,7 @@ export const IssueDialogBox = Overlay.create((props) => {
   }
 
   function renderRepoOption(repo, i) {
-    const title = RepoUtils.getDisplayName(repo, env);
+    const title = getRepoName(repo, env);
     return <option key={i} value={repo.id}>{title}</option>;
   }
 
@@ -145,7 +145,7 @@ export const IssueDialogBox = Overlay.create((props) => {
     }
     const props = {
       className: classNames.join(' '),
-      style: RepoUtils.getLabelStyle(selectedRepo, label),
+      style: getIssueLabelStyle(selectedRepo, label),
       'data-label': label,
       onClick: handleTagClick,
     };

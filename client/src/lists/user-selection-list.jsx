@@ -2,9 +2,9 @@ import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { findCurrentProject } from 'common/objects/finders/project-finder.js';
+import { findProjectMembers } from 'common/objects/finders/user-finder.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { ProfileImage } from '../widgets/profile-image.jsx';
@@ -31,8 +31,8 @@ export async function UserSelectionList(props) {
   });
 
   render();
-  const project = await ProjectFinder.findCurrentProject(database);
-  const users = await UserFinder.findProjectMembers(database, project);
+  const project = await findCurrentProject(database);
+  const users = await findProjectMembers(database, project);
   render();
 
   function render() {
@@ -65,7 +65,7 @@ function User(props) {
   if (props.disabled) {
     classNames.push('disabled');
   }
-  const name = UserUtils.getDisplayName(user, env);
+  const name = getUserName(user, env);
   let containerProps = {
     className: classNames.join(' '),
     'data-id': user.id,

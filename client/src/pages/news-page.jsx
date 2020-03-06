@@ -2,11 +2,20 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
 import { useProgress } from 'relaks';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as StoryFinder from 'common/objects/finders/story-finder.js';
-import * as ProjectUtils from 'common/objects/utils/project-utils.js';
-import * as TagScanner from 'common/utils/tag-scanner.js';
+import { findUser } from 'common/objects/finders/user-finder.js';
+import { findCurrentProject } from 'common/objects/finders/project-finder.js';
+import { getUserAccessLevel } from 'common/objects/utils/project-utils.js';
+import { removeTags, findTags } from 'common/utils/tag-scanner.js';
+import {
+  findStory,
+  findStoriesWithTags,
+  findStoriesMatchingText,
+  findStoriesOnDate,
+  findStoriesWithRolesInListing,
+  findStoriesInListing,
+  findDraftStories,
+  findUnlistedStories,
+} from 'common/objects/finders/story-finder.js';
 
 // widgets
 import { PageContainer } from '../widgets/page-container.jsx';
@@ -23,8 +32,8 @@ export default async function NewsPage(props) {
   let filtering = false;
   let tags;
   if (search) {
-    if (!TagScanner.removeTags(search)) {
-      tags = TagScanner.findTags(search);
+    if (!removeTags(search)) {
+      tags = findTags(search);
     }
     filtering = true;
   }
@@ -35,24 +44,24 @@ export default async function NewsPage(props) {
   render();
   const currentUserID = await database.start();
   const currentUser = await UserFinder.findUser(database, currentUserID);
-  const project = await ProjectFinder.findCurrentProject(database);
+  const project = await findCurrentProject(database);
   render();
   let stories, draftStories, pendingStories;
   if (tags) {
-    stories = await StoryFinder.findStoriesWithTags(database, tags, currentUser);
+    stories = await findStoriesWithTags(database, tags, currentUser);
   } else if (search) {
-    stories = await StoryFinder.findStoriesMatchingText(database, search, env, currentUser);
+    stories = await findStoriesMatchingText(database, search, env, currentUser);
   } else if (date) {
-    stories = await StoryFinder.findStoriesOnDate(database, date, currentUser);
+    stories = await findStoriesOnDate(database, date, currentUser);
   } else if (!_.isEmpty(roleIDs)) {
-    stories = await StoryFinder.findStoriesWithRolesInListing(database, 'news', roleIDs, currentUser);
+    stories = await findStoriesWithRolesInListing(database, 'news', roleIDs, currentUser);
   } else {
-    stories = await StoryFinder.findStoriesInListing(database, 'news', currentUser);
+    stories = await findStoriesInListing(database, 'news', currentUser);
     render();
-    draftStories = await StoryFinder.findDraftStories(database, currentUser);
+    draftStories = await findDraftStories(database, currentUser);
     render();
     const limit = env.getRelativeDate(-1, 'date');
-    pendingStories = await StoryFinder.findUnlistedStories(database, currentUser, stories, limit);
+    pendingStories = await findUnlistedStories(database, currentUser, stories, limit);
   }
   render();
 
@@ -63,7 +72,7 @@ export default async function NewsPage(props) {
       const allStories = _.concat(stories, draftStories, pendingStories);
       if (!_.find(allStories, { id: storyID })) {
         try {
-          const story = await StoryFinder.findStory(database, storyID);
+          const story = await findStory(database, storyID);
           await redirectToStory(route.params.schema, story);
         } catch (err) {
         }
@@ -85,7 +94,7 @@ export default async function NewsPage(props) {
     if (!stories) {
       return null;
     }
-    const access = ProjectUtils.getUserAccessLevel(project, currentUser) || 'read-only';
+    const access = getUserAccessLevel(project, currentUser) || 'read-only';
     const listProps = {
       access,
       acceptNewStory: !filtering && access === 'read-write',

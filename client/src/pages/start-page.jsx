@@ -1,16 +1,14 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener } from 'relaks';
-import HTTPRequest from 'common/transport/http-request.js';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as UniversalLink from 'common/routing/universal-link.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.js';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
-import * as ServerUtils from 'common/objects/utils/server-utils.js'
-import * as SystemFinder from 'common/objects/finders/system-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { parseActivationURL } from 'common/routing/universal-link.js';
+import { findActiveProjects } from 'common/objects/finders/project-finder.js';
+import { findActiveLinks } from 'common/objects/finders/project-link-finder.js';
+import { getImageURL } from 'common/objects/utils/resource-utils.js';
+import { findSystem } from 'common/objects/finders/system-finder.js';
+import { findUser } from 'common/objects/finders/user-finder.js';
+import { findUser, isMember, isPendingMember } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { Scrollable } from '../widgets/scrollable.jsx';
@@ -86,7 +84,7 @@ export default async function StartPage(props) {
     setErrors({});
   });
   const handleScanResult = useListener((evt) => {
-    const params = UniversalLink.parseActivationURL(evt.result);
+    const params = parseActivationURL(evt.result);
     activateMobileSession(params)
   });
   const handleActivationCancel = useListener((evt) => {
@@ -134,7 +132,7 @@ export default async function StartPage(props) {
       servers = info.servers;
     } else if (env.platform === 'cordova') {
       sessionStart.system = {};
-      projectLinks = await ProjectLinkFinder.findActiveLinks(db);
+      projectLinks = await findActiveLinks(db);
     }
   } else {
     // handle things normally after we've gained authorization
@@ -148,13 +146,13 @@ export default async function StartPage(props) {
       }
       render();
       const currentUserID = await db.start();
-      currentUser = await UserFinder.findUser(db, currentUserID);
+      currentUser = await findUser(db, currentUserID);
       render();
-      system = await SystemFinder.findSystem(db);
+      system = await findSystem(db);
       render();
-      projects = await ProjectFinder.findActiveProjects(db, 1);
+      projects = await findActiveProjects(db, 1);
       render();
-      projectLinks = await ProjectLinkFinder.findActiveLinks(db);
+      projectLinks = await findActiveLinks(db);
     } else if (env.platform === 'cordova') {
       if (sessionStart.system) {
         // save reason as above; we can let the QR scanner screen
@@ -163,15 +161,15 @@ export default async function StartPage(props) {
       }
       render();
       const currentUserID = await db.start();
-      currentUser = await UserFinder.findUser(db, currentUserID);
+      currentUser = await findUser(db, currentUserID);
       // we don't need the rest when we're transitioning out
       if (!transitionOut) {
         render();
-        system = await SystemFinder.findSystem(db);
+        system = await findSystem(db);
         render();
-        projects = await ProjectFinder.findActiveProjects(db, 1);
+        projects = await findActiveProjects(db, 1);
         render();
-        projectLinks = await ProjectLinkFinder.findActiveLinks(db);
+        projectLinks = await findActiveLinks(db);
       }
     }
   }
@@ -190,7 +188,7 @@ export default async function StartPage(props) {
     const style = {};
     const backgroundImage = _.find(system?.details?.resources, { type: 'image' });
     if (backgroundImage) {
-      const imageURL = ResourceUtils.getImageURL(backgroundImage, { width: 1024, quality: 40 }, env);
+      const imageURL = getImageURL(backgroundImage, { width: 1024, quality: 40 }, env);
       style.backgroundImage = `url(${imageURL})`;
     }
     let onTransitionEnd;
@@ -293,7 +291,7 @@ export default async function StartPage(props) {
     if (scanningQRCode || enteringManually) {
       let name;
       if (currentUser) {
-        name = UserUtils.getDisplayName(currentUser, env);
+        name = getUserName(currentUser, env);
         classNames.push('user');
       } else {
         name = '\u00a0';
@@ -483,10 +481,10 @@ export default async function StartPage(props) {
 
     // add badge to indicate membership status
     let badge;
-    if (UserUtils.isMember(currentUser, project)) {
-      badge = <i className="far fa-user-circle badge" />;
-    } else if (UserUtils.isPendingMember(currentUser, project)) {
-      badge = <i className="far fa-clock badge" />;
+    if (isMember(currentUser, project)) {
+      badge = <i className="fa fa-user-circle-o badge" />;
+    } else if (isPendingMember(currentUser, project)) {
+      badge = <i className="fa fa-clock-o badge" />;
     }
 
     // don't show dialog box if user has previously visited the project

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { MultipleUserNames } from './multiple-user-names.jsx';
@@ -13,10 +13,10 @@ import './author-names.scss';
  * will appear while the rests are given in a pop-up (MultipleUserNames).
  */
 export function AuthorNames(props) {
-  let { env, authors, robot } = props;
-  let { t } = env.locale;
-  let names = _.map(authors, (author) => {
-    return UserUtils.getDisplayName(author, env);
+  const { env, authors, robot } = props;
+  const { t } = env.locale;
+  const names = _.map(authors, (author) => {
+    return getUserName(author, env);
   });
   let contents;
   if (!authors || authors.length === 0) {
@@ -29,19 +29,19 @@ export function AuthorNames(props) {
   } else if (authors.length === 1) {
     contents = <span key={1} className="sole author">{names[0]}</span>;
   } else if (authors.length === 2) {
-    let name1 = <span key={1} className="lead author">{names[0]}</span>;
-    let name2 = <span key={3} className="co author">{names[1]}</span>
+    const name1 = <span key={1} className="lead author">{names[0]}</span>;
+    const name2 = <span key={3} className="co author">{names[1]}</span>
     contents = t('story-author-$name1-and-$name2', name1, name2);
   } else {
-    let name1 = <span key={1} className="lead author">{names[0]}</span>;
-    let coauthors = _.slice(authors, 1);
-    let props = {
+    const name1 = <span key={1} className="lead author">{names[0]}</span>;
+    const coauthors = _.slice(authors, 1);
+    const props = {
       users: coauthors,
       label: t('story-author-$count-others', coauthors.length),
       title: t('story-coauthors'),
       env,
     };
-    let others = <MultipleUserNames key={3} {...props} />
+    const others = <MultipleUserNames key={3} {...props} />
     contents = t('story-author-$name1-and-$name2', name1, others);
   }
   return <span className="author-names selectable">{contents}</span>;

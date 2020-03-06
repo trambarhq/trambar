@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import { useAsyncEffect } from 'relaks';
-import * as MediaLoader from 'common/media/media-loader.js';
-import CordovaFile from 'common/transport/cordova-file.js';
+import { isActuallyPublished } from 'common/media/media-loader.js';
+import { CordovaFile } from 'common/transport/cordova-file.js';
 
 /**
  * Non-visual component that uses the Media Capture Cordiva plug-in to capture
@@ -24,7 +24,7 @@ export function AudioCaptureDialogBoxCordova(props) {
             onCapturePending({ resourceType: 'audio' });
           }
           try {
-            const mediaFileData = await MediaLoader.getFormatData(mediaFile);
+            const mediaFileData = await getFormatData(mediaFile);
             const file = new CordovaFile(mediaFile.fullPath);
             const [ type, format ] = _.split(mediaFile.type, '/');
             const payload = payloads.add('audio');

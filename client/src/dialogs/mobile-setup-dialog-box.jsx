@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import Relaks, { useProgress } from 'relaks';
-import * as UniversalLink from 'common/routing/universal-link.js';
-import * as DeviceFinder from 'common/objects/finders/device-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
+import { useProgress } from 'relaks';
+import { createActivationURL } from 'common/routing/universal-link.js';
+import { findUserDevices } from 'common/objects/finders/device-finder.js';
+import { findUser } from 'common/objects/finders/user-finder.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -11,7 +11,7 @@ import { QRCode } from '../widgets/qr-code.jsx';
 
 import './mobile-setup-dialog-box.scss';
 
-export const MobileSetupDialogBox = Overlay.create(async (props) =>{
+export const MobileSetupDialogBox = Overlay.create(async (props) => {
   const { database, env, system, onClose } = props;
   const { t } = env.locale;
   const [ show ] = useProgress();
@@ -24,10 +24,10 @@ export const MobileSetupDialogBox = Overlay.create(async (props) =>{
 
   render();
   const currentUserID = await database.start();
-  const currentUser = await UserFinder.findUser(database, currentUserID);
+  const currentUser = await findUser(database, currentUserID);
   const activationCode = await database.beginMobileSession('client')
   render();
-  const devices = await DeviceFinder.findUserDevices(database, currentUser);
+  const devices = await findUserDevices(database, currentUser);
   render();
 
   if (_.some(devices, { session_handle: activationCode })) {
@@ -44,7 +44,7 @@ export const MobileSetupDialogBox = Overlay.create(async (props) =>{
       // use the address in the system object if there's one
       address = systemAddress;
     }
-    const url = UniversalLink.createActivationURL(address, schema, activationCode);
+    const url = createActivationURL(address, schema, activationCode);
     const closeButtonProps = {
       label: t('mobile-setup-close'),
       emphasized: true,

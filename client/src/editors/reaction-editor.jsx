@@ -2,12 +2,12 @@ import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as TagScanner from 'common/utils/tag-scanner.js';
+import { findTags } from 'common/utils/tag-scanner.js';
 import * as Markdown from 'common/utils/markdown.js';
-import * as FocusManager from 'common/utils/focus-manager.js';
-import * as ReactionSaver from 'common/objects/savers/reaction-saver.js';
-import * as ReactionUtils from 'common/objects/utils/reaction-utils.js';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
+import { FocusManager } from 'common/utils/focus-manager.js';
+import { saveReaction, republishReaction, removeReaction } from 'common/objects/savers/reaction-saver.js';
+import { hasContents, removeSuperfluousDetails } from 'common/objects/utils/reaction-utils.js';
+import { attachMosaic } from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { AutosizeTextArea } from 'common/widgets/autosize-text-area.jsx';
@@ -68,8 +68,8 @@ export function ReactionEditor(props) {
       draft.set('published', true);
       done();
       const resources = draft.get('details.resources');
-      await ResourceUtils.attachMosaic(resources, env);
-      await ReactionSaver.saveReaction(database, draft.current);
+      await attachMosaic(resources, env);
+      await saveReaction(database, draft.current);
     });
   });
   const handleCancelClick = useListener((evt) => {
@@ -78,10 +78,10 @@ export function ReactionEditor(props) {
       if (reaction) {
         if (reaction.ptime) {
           // reaction was published before--publish it again
-          await ReactionSaver.republishReaction(database, reaction);
+          await republishReaction(database, reaction);
         } else {
           // delete saved unpublished reaction
-          await ReactionSaver.removeReaction(database, reaction);
+          await removeReaction(database, reaction);
         }
       }
     });
@@ -119,7 +119,7 @@ export function ReactionEditor(props) {
   useAutoSave(draft, autoSaveDuration, async () => {
     // don't save when editing previously published comment
     if (!reaction.ptime) {
-      const reactionAfter = await ReactionSaver.saveReaction(database, draft.current);
+      const reactionAfter = await saveReaction(database, draft.current);
       payloads.dispatch(reactionAfter);
     }
   });
@@ -207,7 +207,7 @@ export function ReactionEditor(props) {
       label: t('story-post'),
       onClick: handlePublishClick,
       emphasized: true,
-      disabled: !ReactionUtils.hasContents(draft.current),
+      disabled: !hasContents(draft.current),
     };
     return (
       <div className="action-buttons">
@@ -256,7 +256,7 @@ function createBlankComment(story, currentUser) {
 }
 
 function adjustReaction(reaction) {
-  reaction = ReactionUtils.removeSuperfluousDetails(reaction);
+  reaction = removeSuperfluousDetails(reaction);
 
   if (reaction.details.markdown === undefined) {
     for (let [ lang, langText ] of _.entries(reaction.details.text)) {
@@ -268,7 +268,7 @@ function adjustReaction(reaction) {
   }
 
   // look for tags
-  reaction.tags = TagScanner.findTags(reaction.details.text);
+  reaction.tags = findTags(reaction.details.text);
 
   return reaction
 }
