@@ -11,7 +11,7 @@ import _ from 'lodash';
  *
  * @return {Boolean}
  */
-function match(table, object, criteria) {
+function matchSearchCriteria(table, object, criteria) {
   let matching = true;
   for (let name in criteria) {
     let desiredValue = criteria[name];
@@ -107,7 +107,7 @@ function match(table, object, criteria) {
   return matching;
 }
 
-function limit(table, objects, criteria) {
+function limitSearchResults(table, objects, criteria) {
   if (criteria) {
     if (criteria.limit) {
       // apply limit--trimming off objects with smaller ids
@@ -149,6 +149,6 @@ function limit(table, objects, criteria) {
 }
 
 export {
-  match,
-  limit,
+  matchSearchCriteria,
+  limitSearchResults,
 };

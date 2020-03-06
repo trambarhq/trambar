@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import * as LocalSearch from './local-search.js';
+import { matchSearchCriteria, limitSearchResults } from './local-search.js';
 
 const defaultOptions = {
   databaseName: 'database'
@@ -71,12 +71,12 @@ class IndexedDBCache {
       }
     } else {
       for (let object of objects) {
-        if (LocalSearch.match(table, object, criteria)) {
+        if (matchSearchCriteria(table, object, criteria)) {
           results.push(object);
         }
       }
     }
-    LocalSearch.limit(table, results, query.criteria);
+    limitSearchResults(table, results, query.criteria);
     this.readCount += results.length;
     return results;
   }

@@ -7,7 +7,7 @@ import _ from 'lodash';
  *
  * @return {Promise<Blob|null>}
  */
-async function process(file) {
+async function optimizeVideo(file) {
   try {
     let preambles = await loadPreambles(file);
     let ftypIndex = _.findIndex(preambles, { name: 'ftyp' });
@@ -243,5 +243,5 @@ function NAME(b, i) {
 }
 
 export {
-  process,
+  optimizeVideo,
 };

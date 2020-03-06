@@ -1,7 +1,6 @@
-import _ from 'lodash';
 import Operation from './operation.js';
 
-class Storage extends Operation {
+export class Storage extends Operation {
   constructor(location, objects, options) {
     super(location);
     this.objects = objects;
@@ -19,8 +18,3 @@ class Storage extends Operation {
     }
   }
 }
-
-export {
-  Storage as default,
-  Storage,
-};

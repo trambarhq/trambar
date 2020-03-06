@@ -1,7 +1,7 @@
 import { BlobManager } from '../transport/blob-manager.js';
 import { loadText, loadUint8Array } from '../transport/blob-reader.js';
 import { getDimensions, getOrientation } from './jpeg-analyser.js';
-import * as FrameGrabber from './frame-grabber.js';
+import { captureFrame } from './frame-grabber.js';
 import { getOrientationMatrix, invertMatrix, transformRect } from './image-orientation.js';
 import { CordovaFile } from '../transport/cordova-file.js';
 
@@ -195,8 +195,8 @@ async function getVideoMetadata(blob) {
     } catch (err) {
       // we might not be able to fetch the file as a blob
       // due to cross-site restriction
-      let video = await loadVideo(blob);
-      let posterBlob = await FrameGrabber.capture(video);
+      const video = await loadVideo(blob);
+      const posterBlob = await captureFrame(video);
       return {
         width: video.videoWidth,
         height: video.videoHeight,
@@ -206,8 +206,8 @@ async function getVideoMetadata(blob) {
       };
     }
   }
-  let video = await loadVideo(blob);
-  let posterBlob = await FrameGrabber.capture(video);
+  const video = await loadVideo(blob);
+  const posterBlob = await captureFrame(video);
   return {
     width: video.videoWidth,
     height: video.videoHeight,

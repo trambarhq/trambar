@@ -1,6 +1,5 @@
 import _ from 'lodash';
-import Bluebird from 'bluebird';
-import * as LocalSearch from './local-search.js';
+import { matchSearchCriteria, limitSearchResults } from './local-search.js';
 
 let openDatabase = window.openDatabase;
 if (window.sqlitePlugin) {
@@ -76,13 +75,13 @@ class SQLiteCache {
       return results;
     } else {
       _.each(objects, (object) => {
-        if (LocalSearch.match(table, object, criteria)) {
+        if (matchSearchCriteria(table, object, criteria)) {
           results.push(object);
         }
       });
     }
 
-    LocalSearch.limit(table, results, query.criteria);
+    limitSearchResults(table, results, query.criteria);
     this.readCount += results.length;
     return results;
   }

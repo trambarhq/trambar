@@ -1,7 +1,6 @@
-import _ from 'lodash';
-import ManualPromise from '../../utils/manual-promise.js';
+import { ManualPromise } from '../../utils/manual-promise.js';
 
-class CacheSignature {
+export class CacheSignature {
   constructor(address, schema, table, id) {
     this.address = address;
     this.schema = schema;
@@ -52,8 +51,3 @@ class CacheSignature {
     }
   }
 }
-
-export {
-  CacheSignature as default,
-  CacheSignature,
-};

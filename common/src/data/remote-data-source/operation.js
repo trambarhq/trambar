@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-class Operation {
+export class Operation {
   constructor(location) {
     let byComponent = _.get(location, 'by.constructor.displayName')
     if (location.schema !== 'local') {
@@ -103,8 +103,3 @@ class Operation {
     return (now - then) * (1 / 1000);
   }
 }
-
-export {
-  Operation as default,
-  Operation,
-};

@@ -1,4 +1,4 @@
-import * as RandomToken from 'common/utils/random-token.js';
+import { generateToken } from 'common/utils/random-token.js';
 
 const table = 'task';
 
@@ -7,7 +7,7 @@ async function createTask(db, action, user, options) {
     action,
     options,
     user_id: user.id,
-    token: RandomToken.generate(),
+    token: generateToken(),
   };
   return db.saveOne({ table }, task);
 }

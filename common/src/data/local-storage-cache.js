@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import * as LocalSearch from './local-search.js';
+import { matchSearchCriteria, limitSearchResults } from './local-search.js';
 
 const defaultOptions = {
   databaseName: 'database'

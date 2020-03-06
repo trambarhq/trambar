@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState, useImperativeHandle } from 'react';
 import { useListener } from 'relaks';
-import * as QuickStart from 'common/media/quick-start.js';
+import { optimizeVideo } from 'common/media/quick-start.js';
 import ResourceTypes from 'common/objects/types/resource-types.js';
 import {
   extractFileCategory,
@@ -173,7 +173,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
     // if file is in a QuickTime container, make sure metadata is
     // at the beginning of the file; if video wasn't processed,
     // use the original file
-    const blob = await QuickStart.process(file) || file;
+    const blob = await optimizeVideo(file) || file;
     const payload = payloads.add('video');
     // upload file in small chunks
     const stream = payloads.stream().pipe(blob);

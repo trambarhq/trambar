@@ -12,5 +12,5 @@ function allocate() {
 let lastTemporaryID = 0;
 
 export {
-  allocate,
+  allocateTempoaryID,
 };

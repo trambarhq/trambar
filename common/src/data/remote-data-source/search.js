@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Operation from './operation.js';
 
-class Search extends Operation {
+export class Search extends Operation {
   constructor(query) {
     super(query);
     this.criteria = query.criteria || {};
@@ -360,8 +360,3 @@ function removeTemporaryIDs(criteria) {
     return value;
   });
 }
-
-export {
-  Search as default,
-  Search,
-};

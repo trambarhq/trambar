@@ -1,6 +1,9 @@
 import { expect } from 'chai';
 
-import * as LocalSearch from '../local-search.js';
+import {
+  matchSearchCriteria,
+  limitSearchResults
+} from './local-search.js';
 
 describe('LocalSearch', function() {
   describe('#match()', function() {
@@ -14,8 +17,8 @@ describe('LocalSearch', function() {
       let criteria = {
         a: 1,
       };
-      let result1 = LocalSearch.match('table', object1, criteria);
-      let result2 = LocalSearch.match('table', object2, criteria);
+      let result1 = matchSearchCriteria('table', object1, criteria);
+      let result2 = matchSearchCriteria('table', object2, criteria);
       expect(result1).to.be.true;
       expect(result2).to.be.false;
     })
@@ -29,8 +32,8 @@ describe('LocalSearch', function() {
       let criteria = {
         a: [ 1, 2, 3, 4 ]
       };
-      let result1 = LocalSearch.match('table', object1, criteria);
-      let result2 = LocalSearch.match('table', object2, criteria);
+      let result1 = matchSearchCriteria('table', object1, criteria);
+      let result2 = matchSearchCriteria('table', object2, criteria);
       expect(result1).to.be.true;
       expect(result2).to.be.true;
     })
@@ -44,8 +47,8 @@ describe('LocalSearch', function() {
       let criteria = {
         a: [ 1, 2, 3, 4 ]
       };
-      let result1 = LocalSearch.match('table', object1, criteria);
-      let result2 = LocalSearch.match('table', object2, criteria);
+      let result1 = matchSearchCriteria('table', object1, criteria);
+      let result2 = matchSearchCriteria('table', object2, criteria);
       expect(result1).to.be.true;
       expect(result2).to.be.false;
     })
@@ -68,8 +71,8 @@ describe('LocalSearch', function() {
           dog: 'stinky'
         },
       };
-      let result1 = LocalSearch.match('table', object1, criteria);
-      let result2 = LocalSearch.match('table', object2, criteria);
+      let result1 = matchSearchCriteria('table', object1, criteria);
+      let result2 = matchSearchCriteria('table', object2, criteria);
       expect(result1).to.be.true;
       expect(result2).to.be.false;
     })
@@ -83,8 +86,8 @@ describe('LocalSearch', function() {
       let criteria = {
         b: 'turkey'
       };
-      let result1 = LocalSearch.match('table', object1, criteria);
-      let result2 = LocalSearch.match('table', object2, criteria);
+      let result1 = matchSearchCriteria('table', object1, criteria);
+      let result2 = matchSearchCriteria('table', object2, criteria);
       expect(result1).to.be.true;
       expect(result2).to.be.true;
     })
@@ -98,8 +101,8 @@ describe('LocalSearch', function() {
       let criteria = {
         exclude: [ 1, 3, 5, 7, 9 ]
       };
-      let result1 = LocalSearch.match('table', object1, criteria);
-      let result2 = LocalSearch.match('table', object2, criteria);
+      let result1 = matchSearchCriteria('table', object1, criteria);
+      let result2 = matchSearchCriteria('table', object2, criteria);
       expect(result1).to.be.false;
       expect(result2).to.be.true;
     })
@@ -116,9 +119,9 @@ describe('LocalSearch', function() {
       let criteria = {
         time_range: '[2002-01-01T00:00:00.000Z,2006-01-01T00:00:00.000Z]'
       };
-      let result1 = LocalSearch.match('table', object1, criteria);
-      let result2 = LocalSearch.match('table', object2, criteria);
-      let result3 = LocalSearch.match('table', object3, criteria);
+      let result1 = matchSearchCriteria('table', object1, criteria);
+      let result2 = matchSearchCriteria('table', object2, criteria);
+      let result3 = matchSearchCriteria('table', object3, criteria);
       expect(result1).to.be.false;
       expect(result2).to.be.true;
       expect(result3).to.be.false;
@@ -136,9 +139,9 @@ describe('LocalSearch', function() {
       let criteria = {
         newer_than: '2002-01-01T00:00:00.000Z'
       };
-      let result1 = LocalSearch.match('table', object1, criteria);
-      let result2 = LocalSearch.match('table', object2, criteria);
-      let result3 = LocalSearch.match('table', object3, criteria);
+      let result1 = matchSearchCriteria('table', object1, criteria);
+      let result2 = matchSearchCriteria('table', object2, criteria);
+      let result3 = matchSearchCriteria('table', object3, criteria);
       expect(result1).to.be.false;
       expect(result2).to.be.true;
       expect(result3).to.be.true;
@@ -156,9 +159,9 @@ describe('LocalSearch', function() {
       let criteria = {
         older_than: '2002-01-01T00:00:00.000Z'
       };
-      let result1 = LocalSearch.match('table', object1, criteria);
-      let result2 = LocalSearch.match('table', object2, criteria);
-      let result3 = LocalSearch.match('table', object3, criteria);
+      let result1 = matchSearchCriteria('table', object1, criteria);
+      let result2 = matchSearchCriteria('table', object2, criteria);
+      let result3 = matchSearchCriteria('table', object3, criteria);
       expect(result1).to.be.true;
       expect(result2).to.be.false;
       expect(result3).to.be.false;
@@ -176,8 +179,8 @@ describe('LocalSearch', function() {
         a: [ 1, 2, 3 ],
         b: 'taco',
       };
-      let result1 = LocalSearch.match('table', object1, criteria);
-      let result2 = LocalSearch.match('table', object2, criteria);
+      let result1 = matchSearchCriteria('table', object1, criteria);
+      let result2 = matchSearchCriteria('table', object2, criteria);
       expect(result1).to.be.true;
       expect(result2).to.be.false;
     })
@@ -186,7 +189,7 @@ describe('LocalSearch', function() {
     it('should do nothing when no limit is set', function() {
       let list = [ { id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 } ];
       let criteria = {};
-      LocalSearch.limit('table', list, criteria);
+      limitSearchResults('table', list, criteria);
       expect(list.length).to.equal(5);
     })
     it('should do nothing when no limit is not exceeded', function() {
@@ -194,7 +197,7 @@ describe('LocalSearch', function() {
       let criteria = {
         limit: 10
       };
-      LocalSearch.limit('table', list, criteria);
+      limitSearchResults('table', list, criteria);
       expect(list.length).to.equal(5);
     })
     it('should reduce size of array from the front to fit limit', function() {
@@ -202,7 +205,7 @@ describe('LocalSearch', function() {
       let criteria = {
         limit: 3
       };
-      LocalSearch.limit('table', list, criteria);
+      limitSearchResults('table', list, criteria);
       expect(list.length).to.equal(3);
       expect(list[0]).to.have.property('id', 3);
     })
@@ -221,7 +224,7 @@ describe('LocalSearch', function() {
       let criteria = {
         per_user_limit: 2
       };
-      LocalSearch.limit('table', list, criteria);
+      limitSearchResults('table', list, criteria);
       expect(list.length).to.equal(6);
       expect(list[0]).to.have.property('id', 2);
       expect(list[5]).to.have.property('id', 9);
@@ -241,7 +244,7 @@ describe('LocalSearch', function() {
       let criteria = {
         per_user_limit: 2
       };
-      LocalSearch.limit('table', list, criteria);
+      limitSearchResults('table', list, criteria);
       expect(list.length).to.equal(8);
       expect(list[0]).to.have.property('id', 2);
       expect(list[7]).to.have.property('id', 9);

@@ -7,7 +7,7 @@ import Payload from './payload.js';
 import * as HTTPRequest from './http-request.js';
 import CordovaFile from './cordova-file.js';
 import * as BackgroundFileTransfer from './background-file-transfer.js';
-import * as RandomToken from '../utils/random-token.js';
+import { generateToken } from '../utils/random-token.js';
 import HTTPError from '../errors/http-error.js';
 import FileError from '../errors/file-error.js';
 
@@ -64,7 +64,7 @@ class PayloadManager extends EventEmitter {
    * @return {Payload}
    */
   add(destination, type) {
-    let id = RandomToken.generate();
+    let id = generateToken();
     let payload = new Payload(id, destination, type);
     payload.onAttachment = this.handleAttachment;
     this.payloads.push(payload);
@@ -77,7 +77,7 @@ class PayloadManager extends EventEmitter {
    * @return {BlobStream}
    */
   stream(destination, options) {
-    let id = RandomToken.generate();
+    let id = generateToken();
     let url = this.getStreamURL(destination, id);
     let stream = new BlobStream(id, url);
     if (!this.active) {

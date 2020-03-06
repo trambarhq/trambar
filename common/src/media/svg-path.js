@@ -1,4 +1,4 @@
-function create(path, w, h) {
+function createSVGPath(path, w, h) {
 	let commands = [];
 	for(let j = 0; j < path.length; j++) {
 		let s = path[j];
@@ -19,5 +19,5 @@ function create(path, w, h) {
 };
 
 export {
-	create,
+	createSVGPath,
 };

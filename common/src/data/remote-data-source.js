@@ -5,13 +5,13 @@ import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 import ManualPromise from '../utils/manual-promise.js';
 import * as HTTPRequest from '../transport/http-request.js';
 import HTTPError from '../errors/http-error.js';
-import * as LocalSearch from './local-search.js';
-import Search from './remote-data-source/search.js';
-import Change from './remote-data-source/change.js';
-import Storage from './remote-data-source/storage.js';
-import Removal from './remote-data-source/removal.js';
-import CacheSignature from './remote-data-source/cache-signature.js';
-import ChangeMonitor from './remote-data-source/change-monitor.js';
+import { matchSearchCriteria, limitSearchResults } from './local-search.js';
+import { Search } from './remote-data-source/search.js';
+import { Change } from './remote-data-source/change.js';
+import { Storage } from './remote-data-source/storage.js';
+import { Removal } from './remote-data-source/removal.js';
+import { CacheSignature } from './remote-data-source/cache-signature.js';
+import { ChangeMonitor } from './remote-data-source/change-monitor.js';
 
 const defaultOptions = {
   basePath: '/srv/data',
@@ -29,7 +29,7 @@ const signatureLocation = {
   table: 'remote_schema',
 };
 
-class RemoteDataSource extends EventEmitter {
+export class RemoteDataSource extends EventEmitter {
   constructor(options) {
     super();
     this.active = false;
@@ -1444,7 +1444,7 @@ class RemoteDataSource extends EventEmitter {
             resultsAfter.splice(index, 1);
           }
         } else if (op instanceof Storage) {
-          let match = LocalSearch.match(search.table, object, search.criteria);
+          const match = matchSearchCriteria(search.table, object, search.criteria);
           if (object.deleted) {
             if (!_.get(this.options.discoveryFlags, 'include_deleted')) {
               match = false;
@@ -1461,7 +1461,7 @@ class RemoteDataSource extends EventEmitter {
             } else if (match && !present) {
               // insert a new object
               resultsAfter.splice(index, 0, object);
-              LocalSearch.limit(search.table, resultsAfter, search.criteria)
+              limitSearchResults(search.table, resultsAfter, search.criteria)
             } else if (!match && present) {
               // remove object from the list as it no longer
               // meets the criteria
@@ -1753,8 +1753,3 @@ function insertObjects(objects, newObjects) {
 
 class RemoteDataSourceEvent extends GenericEvent {
 }
-
-export {
-  RemoteDataSource as default,
-  RemoteDataSource,
-};

@@ -1,6 +1,4 @@
-import _ from 'lodash';
-
-class CacheSignature {
+export class CacheSignature {
   constructor(address, schema) {
     this.address = address;
     this.schema = schema;
@@ -8,8 +6,3 @@ class CacheSignature {
     this.promise = null;
   }
 }
-
-export {
-  CacheSignature as default,
-  CacheSignature,
-};

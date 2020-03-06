@@ -1,6 +1,6 @@
 import Storage from './storage.js';
 
-class Removal extends Storage {
+export class Removal extends Storage {
   constructor(location, objects) {
     super(location, objects, { onConflict: false });
     if (!this.local) {
@@ -14,8 +14,3 @@ class Removal extends Storage {
     }
   }
 }
-
-export {
-  Removal as default,
-  Removal,
-};

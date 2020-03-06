@@ -8,7 +8,7 @@ import _ from 'lodash';
  *
  * @return {Promise<Blob>}
  */
-function capture(video, options) {
+function captureFrame(video, options) {
   return new Promise((resolve, reject) => {
     let width = video.videoWidth;
     let height = video.videoHeight;
@@ -124,5 +124,5 @@ function saveCanvasContents(canvas, mimeType, quality, cb) {
 }
 
 export {
-  capture,
+  captureFrame,
 };

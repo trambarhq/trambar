@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import Bluebird from 'bluebird';
 
-import * as LocalSearch from '../local-search.js';
-import * as TemporaryID from './temporary-id.js';
+import { matchSearchCriteria } from './local-search.js';
+import { allocateTempoaryID } from './temporary-id.js';
 
-class Change {
+export class Change {
   constructor(location, objects, options) {
     this.location = location;
     this.objects = _.map(objects, (object) => {
@@ -12,7 +12,7 @@ class Change {
         object = _.clone(object);
         if (!object.id) {
           // assign a temporary id so we can find the object again
-          object.id = TemporaryID.allocate();
+          object.id = allocateTempoaryID();
         }
         object.uncommitted = true;
       }
@@ -232,7 +232,7 @@ class Change {
         if (uncommittedObject.deleted && !includeDeleted) {
           search.results.splice(index, 1);
         } else {
-          let match = LocalSearch.match(search.table, uncommittedObject, search.criteria);
+          let match = matchSearchCriteria(search.table, uncommittedObject, search.criteria);
           if (match) {
             // merge the new object with the original if the new one
             // doesn't have everything
@@ -255,7 +255,7 @@ class Change {
         }
       } else {
         if (!(uncommittedObject.deleted && !includeDeleted)) {
-          let match = LocalSearch.match(search.table, uncommittedObject, search.criteria);
+          let match = matchSearchCriteria(search.table, uncommittedObject, search.criteria);
           if (match) {
             search.results.push(uncommittedObject);
           }
@@ -317,8 +317,3 @@ class Change {
     return true;
   }
 }
-
-export {
-  Change as default,
-  Change
-};

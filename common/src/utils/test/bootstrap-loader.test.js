@@ -1,6 +1,8 @@
 import { expect } from 'chai';
 
-import * as BootstrapLoader from '../bootstrap-loader.js';
+import {
+  preload
+} from '../bootstrap-loader.js';
 
 describe('BootstrapLoader', function() {
   it('should load the modules, reporting progress as each becomes available', async function() {
@@ -17,7 +19,7 @@ describe('BootstrapLoader', function() {
     let progress = (loaded, total, key) => {
       ready[key] = true;
     };
-    let modules = await BootstrapLoader.load(funcs, progress);
+    let modules = await preload(funcs, progress);
     for (let state of Object.values(ready)) {
       expect(state).to.be.true;
     }

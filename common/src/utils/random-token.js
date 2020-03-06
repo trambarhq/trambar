@@ -1,4 +1,4 @@
-function generate() {
+function generateToken() {
   let arr = new Uint32Array(4)
   window.crypto.getRandomValues(arr)
   let hexes = [];
@@ -13,5 +13,5 @@ function generate() {
 }
 
 export {
-  generate,
+  generateToken,
 };
