@@ -1,6 +1,9 @@
 import { expect } from 'chai';
 
-import * as Merger from '../merger.js';
+import {
+  mergeStrings,
+  mergeObjects,
+} from '../merger.js';
 
 describe('Merger', function() {
   describe('#mergeStrings()', function() {
@@ -9,7 +12,7 @@ describe('Merger', function() {
       let a = 'Well, this is a test. This is only a test.';
       let b = 'This is a test. This is only a test, you bozo!';
       let expected = 'Well, this is a test. This is only a test, you bozo!';
-      let actual = Merger.mergeStrings(a, b, c);
+      let actual = mergeStrings(a, b, c);
       expect(actual).to.equal(expected);
     })
   })
@@ -22,7 +25,7 @@ describe('Merger', function() {
       let a = _.cloneDeep(c);
       let b = _.cloneDeep(c);
       a.hello = 456;
-      let d = Merger.mergeObjects(a, b, c);
+      let d = mergeObjects(a, b, c);
       expect(d).to.have.property('hello', a.hello);
     })
     it('should take changes from B when A is unchanged', function() {
@@ -33,7 +36,7 @@ describe('Merger', function() {
       let a = _.cloneDeep(c);
       let b = _.cloneDeep(c);
       b.hello = 789;
-      let d = Merger.mergeObjects(a, b, c);
+      let d = mergeObjects(a, b, c);
       expect(d).to.have.property('hello', b.hello);
     })
     it('should take changes from B when both A and B were changed', function() {
@@ -45,7 +48,7 @@ describe('Merger', function() {
       let b = _.cloneDeep(c);
       a.hello = 456;
       b.hello = 789;
-      let d = Merger.mergeObjects(a, b, c);
+      let d = mergeObjects(a, b, c);
       expect(d).to.have.property('hello', b.hello);
     })
     it('should take changes from both A and B', function() {
@@ -58,7 +61,7 @@ describe('Merger', function() {
       let b = _.cloneDeep(c);
       a.hello = 456;
       b.world = 500;
-      let d = Merger.mergeObjects(a, b, c);
+      let d = mergeObjects(a, b, c);
       expect(d).to.have.property('hello', a.hello);
       expect(d).to.have.property('world', b.world);
     })
@@ -72,7 +75,7 @@ describe('Merger', function() {
       a.text = `It's totally awesome! It's the worst of time.`;
       b.text = `It's the best of time. It's a complete shitshow!`;
       let expected = `It's totally awesome! It's a complete shitshow!`;
-      let d = Merger.mergeObjects(a, b, c);
+      let d = mergeObjects(a, b, c);
       expect(d).to.have.property('text', expected);
     })
   })

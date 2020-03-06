@@ -1,16 +1,15 @@
 import _ from 'lodash';
-import Moment from 'moment';
-import EnvironmentMonitor from './env/environment-monitor.js';
-import LocaleManager from './locale/locale-manager.js';
-import RouteManager from 'relaks-route-manager';
-import PayloadManager from './transport/payload-manager.js';
-import PushNotifier from './transport/push-notifier.js';
-import WebsocketNotifier from './transport/websocket-notifier.js';
-import CodePush from './transport/code-push.js';
-import RemoteDataSource from './data/remote-data-source.js';
-import IndexedDBCache from './data/indexed-db-cache.js';
-import LocalStorageCache from './data/local-storage-cache.js';
-import * as BlobManager from './transport/blob-manager.js';
+import { EnvironmentMonitor } from './env/environment-monitor.js';
+import { LocaleManager } from './locale/locale-manager.js';
+import { RouteManager } from 'relaks-route-manager';
+import { PayloadManager } from './transport/payload-manager.js';
+import { PushNotifier } from './transport/push-notifier.js';
+import { WebsocketNotifier } from './transport/websocket-notifier.js';
+import { CodePush } from './transport/code-push.js';
+import { RemoteDataSource } from './data/remote-data-source.js';
+import { IndexedDBCache } from './data/indexed-db-cache.js';
+import { LocalStorageCache } from './data/local-storage-cache.js';
+import { BlobManager } from './transport/blob-manager.js';
 
 import languages from './languages.js';
 
@@ -318,10 +317,10 @@ async function removeSetting(key) {
  * @return {Promise<Object|undefined>}
  */
 async function loadSession(address) {
-  let criteria = { key: address };
-  let query = Object.assign({ criteria }, sessionLocation);
-  let records = await dataSource.find(query);
-  let record = records[0];
+  const criteria = { key: address };
+  const query = Object.assign({ criteria }, sessionLocation);
+  const records = await dataSource.find(query);
+  const record = records[0];
   if (record) {
     return {
       address: record.key,
@@ -343,8 +342,8 @@ async function loadSession(address) {
  * @return {Promise}
  */
 async function saveSession(session) {
-  let now = Moment().toISOString();
-  let record = {
+  const now = (new Date).toISOString();
+  const record = {
     key: session.address,
     area: session.area,
     handle: session.handle,
@@ -364,7 +363,7 @@ async function saveSession(session) {
  * @return {Promise}
  */
 async function removeSession(session) {
-  let record = {
+  const record = {
     key: session.address,
   };
   await dataSource.remove(sessionLocation, [ record ]);
@@ -374,7 +373,7 @@ async function removeSession(session) {
  * Ask notifier to listen to the current location after that has changed
  */
 async function changeNotification() {
-  let { address } = currentLocation;
+  const { address } = currentLocation;
   if (currentConnection.address === address) {
     return;
   }
@@ -402,10 +401,10 @@ async function changeNotification() {
  * that has changed
  */
 async function changeSubscription() {
-  let { address, schema } = currentLocation;
-  let watch = (applicationArea === 'admin') ? '*' : (schema || 'global');
-  let { localeCode } = localeManager;
-  let { method, token, relay, details } = currentConnection;
+  const { address, schema } = currentLocation;
+  const watch = (applicationArea === 'admin') ? '*' : (schema || 'global');
+  const { localeCode } = localeManager;
+  const { method, token, relay, details } = currentConnection;
   if (!token) {
     // notifier hasn't establshed a connection yet
     return;
@@ -418,8 +417,8 @@ async function changeSubscription() {
     // not watching anything
     return;
   }
-  let currentUserID = await dataSource.start(currentLocation);
-  let record = {
+  const currentUserID = await dataSource.start(currentLocation);
+  const record = {
     user_id: currentUserID,
     area: applicationArea,
     locale: localeCode,
@@ -441,12 +440,12 @@ async function changeSubscription() {
   if (process.env.NODE_ENV !== 'production') {
     console.log(`Updating data-change subscription -> ${address}/${watch}`);
   }
-  let subscriptionLocation = {
+  const subscriptionLocation = {
     address,
     schema: 'global',
     table: 'subscription'
   };
-  let recordsSaved = await dataSource.save(subscriptionLocation, [ record ]);
+  const recordsSaved = await dataSource.save(subscriptionLocation, [ record ]);
   if (recordsSaved[0]) {
     currentSubscription = { address, record: recordsSaved[0] };
 
@@ -468,7 +467,7 @@ async function changeSubscription() {
  * @return {String}
  */
 function getUploadURL(destination, id, type, part) {
-  let { address, schema } = destination;
+  const { address, schema } = destination;
   let uri;
   switch (type) {
     case 'image':
@@ -503,7 +502,7 @@ function getUploadURL(destination, id, type, part) {
  * @return {String}
  */
 function getStreamURL(destination, id) {
-  let { address, schema } = destination;
+  const { address, schema } = destination;
   return `${address}/srv/media/stream/?id=${id}`;
 }
 
@@ -516,16 +515,16 @@ function getStreamURL(destination, id) {
  * @return {Promise}
  */
 async function addPayloadTasks(destination, payloads) {
-  let { address, schema } = destination;
-  let currentUserID = await dataSource.start(destination);
-  let location = { address, schema, table: 'task' };
+  const { address, schema } = destination;
+  const currentUserID = await dataSource.start(destination);
+  const location = { address, schema, table: 'task' };
   for (let payload of payloads) {
     try {
-      let status = {}
+      const status = {}
       for (let part of payload.parts) {
         status[part.name] = false;
       }
-      let task = {
+      const task = {
         token: payload.id,
         action: `add-${payload.type}`,
         options: status,
@@ -553,7 +552,7 @@ async function addPayloadTasks(destination, payloads) {
  * @return {Promise<Boolean>}
  */
 async function updateBackendProgress(destination, payloads) {
-  let query = {
+  const query = {
     address: destination.address,
     schema: destination.schema,
     table: 'task',
@@ -561,7 +560,7 @@ async function updateBackendProgress(destination, payloads) {
       token: _.map(payloads, 'id'),
     }
   };
-  let tasks = await dataSource.find(query);
+  const tasks = await dataSource.find(query);
   let changed = false;
   for (let task of tasks) {
     let payload = _.find(payloads, { id: task.token });

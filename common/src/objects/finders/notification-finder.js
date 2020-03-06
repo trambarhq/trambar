@@ -1,5 +1,4 @@
-import _ from 'lodash';
-import * as DateUtils from '../../utils/date-utils.js';
+import { getDayRange } from '../../utils/date-utils.js';
 
 const table = 'notification';
 const emptyArray = [];
@@ -46,7 +45,7 @@ async function findNotificationsForUserOnDate(db, user, date, minimum) {
     table,
     criteria: {
       target_user_id: user.id,
-      time_range: DateUtils.getDayRange(date),
+      time_range: getDayRange(date),
     },
     minimum,
   });

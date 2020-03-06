@@ -1,6 +1,9 @@
 import { expect } from 'chai';
 
-import * as SlugGenerator from '../slug-generator.js';
+import {
+  fromTitle,
+  fromPersonalName,
+} from '../slug-generator.js';
 
 describe('SlugGenerator', function() {
   describe('#fromTitle()', function() {

@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import * as LocalSearch from './local-search.js';
 
 const defaultOptions = {

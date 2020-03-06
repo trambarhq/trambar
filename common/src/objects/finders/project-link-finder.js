@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import * as ProjectFinder from './project-finder.js';
+import { findAllProjects } from './project-finder.js';
 
 const schema = 'local';
 const table = 'project_link';
@@ -86,7 +86,7 @@ async function findActiveLinks(db) {
 async function findDefunctLinks(db) {
   let results = [];
   let { address } = db.context;
-  let projects = await ProjectFinder.findAllProjects(db);
+  let projects = await findAllProjects(db);
   let links = await findLinksToServer(db, address);
   for (let link of links) {
     if (!_.some(projects, { name: link.schema })) {

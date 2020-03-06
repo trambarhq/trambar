@@ -1,10 +1,9 @@
-import _ from 'lodash';
 import React, { useState, useRef, useImperativeHandle, useEffect } from 'react';
-import * as BlobManager from '../transport/blob-manager.js';
-import * as BlobReader from '../transport/blob-reader.js';
-import * as MediaLoader from '../media/media-loader.js';
-import * as JPEGAnalyser from '../media/jpeg-analyser.js';
-import * as ImageOrientation from '../media/image-orientation.js';
+import { BlobManager } from '../transport/blob-manager.js';
+import { loadUint8Array } from '../transport/blob-reader.js';
+import { loadImage } from '../media/media-loader.js';
+import { getOrientation } from '../media/jpeg-analyser.js';
+import { getOrientationMatrix, invertMatrix, transformRect } from '../media/image-orientation.js';
 
 /**
  * A component that displays a bitmap image file (JPEG, PNG, etc.), with
@@ -29,9 +28,9 @@ export const BitmapView = React.forwardRef((props, ref) => {
     const load = async function() {
       // load the image and its bytes
       const blob = await BlobManager.fetch(url);
-      const image = await MediaLoader.loadImage(blob);
-      const bytes = await BlobReader.loadUint8Array(blob);
-      const orientation = JPEGAnalyser.getOrientation(bytes) || 1;
+      const image = await loadImage(blob);
+      const bytes = await loadUint8Array(blob);
+      const orientation = getOrientation(bytes) || 1;
       image.orientation = orientation;
       return image;
     };
@@ -61,10 +60,10 @@ export const BitmapView = React.forwardRef((props, ref) => {
       const { width, height } = clip;
       canvas.width = width;
     	canvas.height = height;
-      const matrix = ImageOrientation.getOrientationMatrix(orientation, naturalWidth, naturalHeight);
-      const inverse = ImageOrientation.invertMatrix(matrix);
-    	const src = ImageOrientation.transformRect(inverse, clip);
-    	const dst = ImageOrientation.transformRect(inverse, { left: 0, top: 0, width, height });
+      const matrix = getOrientationMatrix(orientation, naturalWidth, naturalHeight);
+      const inverse = invertMatrix(matrix);
+    	const src = transformRect(inverse, clip);
+    	const dst = transformRect(inverse, { left: 0, top: 0, width, height });
     	const context = canvas.getContext('2d');
     	context.transform.apply(context, matrix);
       context.drawImage(image, src.left, src.top, src.width, src.height, dst.left, dst.top, dst.width, dst.height);

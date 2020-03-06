@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import { memoizeStrong } from '../utils/memoize.js';
-import * as ResourceUtils from '../objects/utils/resource-utils.js';
 
 class Environment {
   constructor(envMonitor, extra) {

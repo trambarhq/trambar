@@ -1,15 +1,18 @@
 import { expect } from 'chai';
 
-import * as TagScanner from '../tag-scanner.js';
+import {
+  findTags,
+  isTag,
+} as TagScanner from '../tag-scanner.js';
 
 describe('TagScanner', function() {
   describe('#findTags()', function() {
     it('should find a tag in text', function() {
-      let result = TagScanner.findTags('Hello #world');
+      let result = findTags('Hello #world');
       expect(result).to.deep.equal([ '#world' ]);
     })
     it('should find multiple tags in text', function() {
-      let result = TagScanner.findTags('#hello #world');
+      let result = findTags('#hello #world');
       expect(result).to.deep.equal([ '#hello', '#world' ]);
     })
     it('should find tags in multilingual text object', function() {
@@ -17,35 +20,35 @@ describe('TagScanner', function() {
         en: '#hello #world',
         pl: 'Cześć'
       };
-      let result = TagScanner.findTags(text);
+      let result = findTags(text);
       expect(result).to.deep.equal([ '#hello', '#world' ]);
     })
     it('ignore the hash portion of URL', function() {
       let url = `Here's a URL: https://en.wikipedia.org/wiki/Iron_Man_in_other_media#Live-action from Wikipedia`;
-      let result = TagScanner.findTags(url);
+      let result = findTags(url);
       expect(result).to.deep.equal([]);
     });
     it('ignore e-mail address', function() {
       let url = `Here's an email address: someone@somewhere.net. It's bogus`;
-      let result = TagScanner.findTags(url);
+      let result = findTags(url);
       expect(result).to.deep.equal([]);
     });
   })
   describe('#isTag()', function() {
     it('should return true when given a tag', function() {
-      let result = TagScanner.isTag('#hello');
+      let result = isTag('#hello');
       expect(result).to.be.true;
     })
     it('should return false when given something that is not a tag', function() {
-      let result = TagScanner.isTag('hello world');
+      let result = isTag('hello world');
       expect(result).to.be.false;
     })
     it('should return false when the text contains a tag somewhere', function() {
-      let result = TagScanner.isTag('hello #world');
+      let result = isTag('hello #world');
       expect(result).to.be.false;
     })
     it('should return false when the text contains a tag at the beginning', function() {
-      let result = TagScanner.isTag('#hello world');
+      let result = isTag('#hello world');
       expect(result).to.be.false;
     })
   });

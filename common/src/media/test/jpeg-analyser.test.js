@@ -1,6 +1,10 @@
 import { expect } from 'chai';
 
-import * as JPEGAnalyser from '../jpeg-analyser.js';
+import {
+  getDimensions,
+  getOrientation,
+  extractPaths,
+} from '../jpeg-analyser.js';
 
 import imageWithPaths from './images/malgorzata-socha.jpg';
 let imagesWithOrientation = [
@@ -17,7 +21,7 @@ let imagesWithOrientation = [
 describe('JPEGAnalyser', function() {
   describe('#getDimensions()', function() {
     it('should find dimensions of a JPEG file', function() {
-      let dimensions = JPEGAnalyser.getDimensions(imageWithPaths);
+      let dimensions = getDimensions(imageWithPaths);
       expect(dimensions).to.have.property('width', 640);
       expect(dimensions).to.have.property('height', 463);
     })
@@ -25,14 +29,14 @@ describe('JPEGAnalyser', function() {
   describe('#getOrientation()', function() {
     it('should find orientation of JPEG files', function() {
       let orientations = imagesWithOrientation.map((image) => {
-        return JPEGAnalyser.getOrientation(image);
+        return getOrientation(image);
       });
       expect(orientations).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8]);
     })
   })
   describe('#extractPaths()', function() {
     it('should extract paths from a JPEG file', function() {
-      let paths = JPEGAnalyser.extractPaths(imageWithPaths);
+      let paths = extractPaths(imageWithPaths);
       expect(paths).to.not.be.empty;
       for(let name in paths) {
         expect(paths[name]).to.not.be.empty;

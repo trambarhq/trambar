@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import * as DateUtils from '../../utils/date-utils.js';
+import { getDayRange } from '../../utils/date-utils.js';
 
 const table = 'story';
 const emptyArray = [];
@@ -191,7 +191,7 @@ async function findStoriesOnDate(db, date, currentUser, perUserLimit, minimum) {
   return db.find({
     table,
     criteria: {
-      time_range: DateUtils.getDayRange(date),
+      time_range: getDayRange(date),
       published: true,
       ready: true,
       public: publicOnly(currentUser),
@@ -318,7 +318,7 @@ async function findStoriesByUserOnDate(db, user, date, currentUser, minimum) {
     table,
     criteria: {
       user_ids: [ user.id ],
-      time_range: DateUtils.getDayRange(date),
+      time_range: getDayRange(date),
       published: true,
       ready: true,
       public: publicOnly(currentUser),

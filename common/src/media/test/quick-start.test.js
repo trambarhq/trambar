@@ -1,7 +1,9 @@
 import Chai, { expect } from 'chai';
 
 import * as QuickStart from '../quick-start.js';
-import * as MediaLoader from '../media-loader.js';
+import {
+  loadVideo,
+} from '../media-loader.js';
 
 import videoData from './videos/small.mp4';
 
@@ -12,7 +14,7 @@ describe('QuickStart', function() {
       let processed = await QuickStart.process(blob);
       expect(processed).to.not.be.null;
 
-      let video = await MediaLoader.loadVideo(processed);
+      let video = await loadVideo(processed);
       expect(video).to.have.property('videoWidth').that.is.above(0);
       expect(video).to.have.property('videoHeight').that.is.above(0);
     })

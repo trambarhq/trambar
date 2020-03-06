@@ -3,7 +3,7 @@ import React from 'react';
 import { Parser, InlineLexer, ReactRenderer } from 'mark-gor';
 import * as ListParser from './list-parser.js';
 import * as PlainText from './plain-text.js';
-import * as ResourceUtils from '../objects/utils/resource-utils.js';
+import { parseJSONEncodedURL } from '../objects/utils/resource-utils.js';
 
 // widgets
 import { ResourceView } from '../widgets/resource-view.jsx';
@@ -328,7 +328,7 @@ function renderImage(token, key) {
   const url = token.href;
   const title = token.title;
   const text = token.text;
-  const resource = ResourceUtils.parseJSONEncodedURL(url);
+  const resource = parseJSONEncodedURL(url);
   if (resource) {
     return <ResourceView key={key} resource={resource} alt={text} title={title} />;
   } else {

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import * as ExternalDataUtils from './external-data-utils.js';
+import { findLinkByRelations } from './external-data-utils.js';
 
 function getRepoName(repo, env) {
   const { p } = env.locale;
@@ -19,7 +19,7 @@ function getMembershipPageURL(repo) {
 }
 
 function getIssueNumber(repo, story) {
-  const issueLink = ExternalDataUtils.findLinkByRelations(story, 'issue');
+  const issueLink = findLinkByRelations(story, 'issue');
   const number = _.get(issueLink, 'issue.number');
   return number || '';
 }
@@ -34,7 +34,7 @@ function getIssueURL(repo, story) {
 
 function getMilestoneURL(repo, story) {
   const repoURL = getURL(repo);
-  const milestoneLink = ExternalDataUtils.findLinkByRelations(story, 'milestone');
+  const milestoneLink = findLinkByRelations(story, 'milestone');
   const milestoneID = _.get(milestoneLink, 'milestone.id');
   if (repoURL && milestoneID) {
     return `${repo.details.web_url}/milestones/${milestoneID}`;
@@ -43,7 +43,7 @@ function getMilestoneURL(repo, story) {
 
 function getMergeRequestURL(repo, story) {
   const repoURL = getURL(repo);
-  const mergeRequestLink = ExternalDataUtils.findLinkByRelations(story, 'merge_request');
+  const mergeRequestLink = findLinkByRelations(story, 'merge_request');
   const mergeRequestID = _.get(mergeRequestLink, 'merge_request.number');
   if (repoURL && mergeRequestID) {
     return `${repo.details.web_url}/merge_requests/${mergeRequestID}`;
@@ -98,7 +98,7 @@ function getNoteHash(noteLink) {
 
 function getCommitNoteURL(repo, reaction) {
   const repoURL = getURL(repo);
-  const noteLink = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'commit');
+  const noteLink = findLinkByRelations(reaction, 'note', 'commit');
   if (repoURL && noteLink) {
     let commitID = noteLink.commit.id;
     if (!commitID) {
@@ -117,7 +117,7 @@ function getCommitNoteURL(repo, reaction) {
 
 function getIssueNoteURL(repo, reaction) {
   const repoURL = getURL(repo);
-  const noteLink = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'issue');
+  const noteLink = findLinkByRelations(reaction, 'note', 'issue');
   const issueNumber = _.get(noteLink, 'issue.number');
   if (repoURL && issueNumber) {
     const hash = getNoteHash(noteLink);
@@ -127,7 +127,7 @@ function getIssueNoteURL(repo, reaction) {
 
 function getMergeRequestNoteURL(repo, reaction) {
   const repoURL = getURL(repo);
-  const noteLink = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'merge_request');
+  const noteLink = findLinkByRelations(reaction, 'note', 'merge_request');
   const mergeRequestNumber = _.get(noteLink, 'merge_request.number');
   if (repoURL && mergeRequestNumber) {
     const hash = getNoteHash(noteLink);

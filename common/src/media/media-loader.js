@@ -1,9 +1,9 @@
-import * as BlobManager from '../transport/blob-manager.js';
-import * as BlobReader from '../transport/blob-reader.js';
-import * as JPEGAnalyser from './jpeg-analyser.js';
+import { BlobManager } from '../transport/blob-manager.js';
+import { loadText, loadUint8Array } from '../transport/blob-reader.js';
+import { getDimensions, getOrientation } from './jpeg-analyser.js';
 import * as FrameGrabber from './frame-grabber.js';
-import * as ImageOrientation from './image-orientation.js';
-import CordovaFile from '../transport/cordova-file.js';
+import { getOrientationMatrix, invertMatrix, transformRect } from './image-orientation.js';
+import { CordovaFile } from '../transport/cordova-file.js';
 
 /**
  * Load an image
@@ -102,7 +102,7 @@ async function loadAudio(blob) {
  * @return {Promise<HTMLImageElement}
  */
 async function loadSVG(blob) {
-  let xml = await BlobReader.loadText(blob);
+  let xml = await loadText(blob);
   let parser = new DOMParser;
   let doc = parser.parseFromString(xml, 'text/xml');
   let svg = doc.getElementsByTagName('svg')[0];
@@ -156,9 +156,9 @@ async function getImageMetadata(blob) {
     }
     return { width, height, format };
   } else if (format === 'jpeg') {
-    let bytes = await BlobReader.loadUint8Array(blob);
-    let dimensions = JPEGAnalyser.getDimensions(bytes);
-    let orientation = JPEGAnalyser.getOrientation(bytes);
+    let bytes = await loadUint8Array(blob);
+    let dimensions = getDimensions(bytes);
+    let orientation = getOrientation(bytes);
     if (!dimensions) {
       throw new Error('Invalid JPEG file');
     }
@@ -317,17 +317,17 @@ async function extractMosaic(blob, rect) {
     }
     // load the image and its bytes
     let image = await loadImage(blob);
-    let bytes = await BlobReader.loadUint8Array(blob);
+    let bytes = await loadUint8Array(blob);
     let orientation = JPEGAnalyser.getOrientation(bytes) || 1;
 
     // correct for orientation and apply clipping
     let fullCanvas = document.createElement('CANVAS');
     fullCanvas.width = rect.width;
     fullCanvas.height = rect.height;
-    let matrix = ImageOrientation.getOrientationMatrix(orientation, image.naturalWidth, image.naturalHeight);
-    let inverse = ImageOrientation.invertMatrix(matrix);
-    let src = ImageOrientation.transformRect(inverse, rect);
-    let dst = ImageOrientation.transformRect(inverse, { left: 0, top: 0, width: fullCanvas.width, height: fullCanvas.height });
+    let matrix = getOrientationMatrix(orientation, image.naturalWidth, image.naturalHeight);
+    let inverse = invertMatrix(matrix);
+    let src = transformRect(inverse, rect);
+    let dst = transformRect(inverse, { left: 0, top: 0, width: fullCanvas.width, height: fullCanvas.height });
     let fullContext = fullCanvas.getContext('2d');
     fullContext.transform.apply(fullContext, matrix);
     fullContext.drawImage(image, src.left, src.top, src.width, src.height, dst.left, dst.top, dst.width, dst.height);

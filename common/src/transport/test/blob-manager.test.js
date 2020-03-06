@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
-import * as BlobManager from '../blob-manager.js';
-import CordovaFile from '../cordova-file.js';
+import { BlobManager } from '../blob-manager.js';
+import { CordovaFile } from '../cordova-file.js';
 import * as HTTPRequest from '../http-request.js';
 
 describe('BlobManager', function() {

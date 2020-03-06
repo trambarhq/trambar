@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import * as BlobManager from '../../transport/blob-manager.js';
+import { BlobManager } from '../../transport/blob-manager.js';
 import * as ImageCropping from '../../media/image-cropping.js';
-import * as MediaLoader from '../../media/media-loader.js';
+import { extractMosaic } from '../../media/media-loader.js';
 
 import { mergeObjects } from '../../data/merger.js';
 
@@ -480,7 +480,7 @@ async function attachMosaic(resources, env) {
     let url = getLocalImageURL(res, { original: true }, env);
     if (url) {
       let clippingRect = getClippingRect(res);
-      let mosaic = await MediaLoader.extractMosaic(url, clippingRect);
+      let mosaic = await extractMosaic(url, clippingRect);
       if (mosaic) {
         res.mosaic = mosaic;
       }

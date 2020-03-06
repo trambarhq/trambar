@@ -1,7 +1,15 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import * as ReactionUtils from './reaction-utils.js';
-import * as StoryUtils from './story-utils.js';
+import {
+  isEditable as isReactionEditable,
+  wasPublishedWithin as wasReactionPublishedWithin,
+} from './reaction-utils.js';
+import {
+  isEditable as isStoryEditable,
+  isTrackable as isStoryTrackable,
+  wasPublishedWithin as wasStoryPublishedWithin,
+  wasBumpedWithin as wasStoryBumpedWithin,
+} from './story-utils.js';
 import { mergeRemoteChanges } from './story-utils.js';
 import {
   GitNotificationTypes,
@@ -160,16 +168,16 @@ function canEditStory(user, story, access) {
   if (access !== 'read-write') {
     return false;
   }
-  if (StoryUtils.isEditable(story)) {
+  if (isStoryEditable(story)) {
     if (canModerate(story)) {
       // allow editing for two weeks
-      if (StoryUtils.wasPublishedWithin(story, 14, 'day')) {
+      if (wasStoryPublishedWithin(story, 14, 'day')) {
         return true;
       }
     }
     if (isAuthor(user, story)) {
       // allow editing for 3 days
-      if (StoryUtils.wasPublishedWithin(story, 3, 'day')) {
+      if (wasStoryPublishedWithin(story, 3, 'day')) {
         return true;
       }
     }
@@ -216,12 +224,12 @@ function canRemoveStory(user, story, access) {
   }
   if (canModerate(user)) {
     // allow removal for ttwo weeks
-    if (StoryUtils.wasPublishedWithin(story, 14, 'day')) {
+    if (wasStoryPublishedWithin(story, 14, 'day')) {
       return true;
     }
   } else if (isAuthor(user, story)) {
     // allow removal for 3 days
-    if (StoryUtils.wasPublishedWithin(story, 3, 'day')) {
+    if (wasStoryPublishedWithin(story, 3, 'day')) {
       return true;
     }
   }
@@ -243,7 +251,7 @@ function canBumpStory(user, story, access) {
   }
   if (canModerate(user) || isAuthor(user, story)) {
     // allow bumping after a day
-    if (!StoryUtils.wasBumpedWithin(story, 1, 'day')) {
+    if (!wasStoryBumpedWithin(story, 1, 'day')) {
       return true;
     }
   }
@@ -274,7 +282,7 @@ function canAddIssue(user, story, repo, access) {
   if (access !== 'read-write') {
     return false;
   }
-  if (StoryUtils.isTrackable(story)) {
+  if (isTrackable(story)) {
     // see if user is a member of one of the repos
     if (_.includes(repo.user_ids, user.id)) {
       if (repo.details.issues_enabled) {
@@ -372,11 +380,11 @@ function canEditReaction(user, story, reaction, access) {
   if (!user) {
     return false;
   }
-  if (ReactionUtils.isEditable(reaction)) {
+  if (isReactionEditable(reaction)) {
     if (isRespondent(user, reaction)) {
       if (access === 'read-write' || access === 'read-comment') {
         // allow editing for 3 days
-        if (ReactionUtils.wasPublishedWithin(reaction, 3, 'day')) {
+        if (wasReactionPublishedWithin(reaction, 3, 'day')) {
           return true;
         }
       }
@@ -404,7 +412,7 @@ function canRemoveReaction(user, story, reaction, access) {
   if (isRespondent(user, reaction)) {
     if (access === 'read-write' || access === 'read-comment') {
       // allow hide for 3 days
-      if (ReactionUtils.wasPublishedWithin(reaction, 3, 'day')) {
+      if (wasReactionPublishedWithin(reaction, 3, 'day')) {
         return true;
       }
     }
@@ -412,7 +420,7 @@ function canRemoveReaction(user, story, reaction, access) {
   if (isAuthor(user, story)) {
     if (access === 'read-write') {
       // allow hidding by authors for 7 days
-      if (ReactionUtils.wasPublishedWithin(reaction, 7, 'day')) {
+      if (wasReactionPublishedWithin(reaction, 7, 'day')) {
         return true;
       }
     }

@@ -1,6 +1,4 @@
-import _ from 'lodash';
-import * as ExternalDataUtils from './external-data-utils.js';
-import * as TagScanner from '../../utils/tag-scanner.js';
+import { findLinkByRelative } from './external-data-utils.js';
 
 /**
  * Extract information concerning an issue issue from a story and
@@ -18,7 +16,7 @@ function extractIssueDetails(story, repos) {
   // find the repo in whose tracker the issue resides
   let issueRepo, issueLink;
   for (let repo of repos) {
-    let link = ExternalDataUtils.findLinkByRelative(story, repo, 'project');
+    let link = findLinkByRelative(story, repo, 'project');
     if (link && link.issue) {
       issueRepo = repo;
       issueLink = link;
