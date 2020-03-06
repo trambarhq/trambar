@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import { getDisplayName } from 'common/objects/utils/user-utils.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';
@@ -30,7 +30,7 @@ export function UserTooltip(props) {
         userID: user.id,
       });
     }
-    const name = getDisplayName(user, env);
+    const name = getUserName(user, env);
     return (
       <div className="item" key={user.id}>
         <a href={url}>

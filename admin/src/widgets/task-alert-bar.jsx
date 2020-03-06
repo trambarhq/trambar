@@ -1,10 +1,9 @@
 import _ from 'lodash';
-import { delay } from 'bluebird';
 import Moment from 'moment';
 import React, { useEffect } from 'react';
 import { useProgress, useListener } from 'relaks';
-import * as TaskFinder from 'common/objects/finders/task-finder.js';
-import * as TaskSaver from 'common/objects/savers/task-saver.js';
+import { findActiveTasks, findFailedTasks } from 'common/objects/finders/task-finder.js';
+import { markTasksAsSeen } from 'common/objects/savers/task-saver.js';
 
 import './task-alert-bar.scss';
 
@@ -19,9 +18,9 @@ export async function TaskAlertBar(props) {
   try {
     render();
     const currentUserID = await database.start();
-    const activeTasks = await TaskFinder.findActiveTasks(database);
+    const activeTasks = await findActiveTasks(database);
     render();
-    const failedTasks = await TaskFinder.findFailedTasks(database);
+    const failedTasks = await findFailedTasks(database);
     render();
 
     function render() {
@@ -45,14 +44,14 @@ function TaskAlertBarSync(props) {
 
   const handleClick = useListener(async () => {
     if (!_.isEmpty(failedTasks)) {
-      await TaskSaver.markTasksAsSeen(database, failedTasks);
+      await markTasksAsSeen(database, failedTasks);
     }
   });
 
   useEffect(() => {
     if (selectedTask?.failed && env.focus) {
       const timeout = setTimeout(async () => {
-        await TaskSaver.markTaskAsSeen(database, selectedTask);
+        await markTaskAsSeen(database, selectedTask);
       }, 10 * 1000);
       return () => {
         clearTimeout(timeout);

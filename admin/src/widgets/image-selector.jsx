@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React, { useState, useImperativeHandle } from 'react';
 import { useListener } from 'relaks';
-import * as MediaLoader from 'common/media/media-loader.js';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
+import { getImageMetadata } from 'common/media/media-loader.js';
+import { getImageURL } from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { ImageCroppingDialogBox } from '../dialogs/image-cropping-dialog-box.jsx';
@@ -55,7 +55,7 @@ export const ImageSelector = React.forwardRef((props, ref) => {
     const file = evt.target.files[0];
     if (file) {
       const payload = payloads.add('image').attachFile(file);
-      const meta = await MediaLoader.getImageMetadata(file);
+      const meta = await getImageMetadata(file);
       const newImage = {
         payload_token: payload.id,
         width: meta.width,
@@ -96,7 +96,7 @@ export const ImageSelector = React.forwardRef((props, ref) => {
   function renderImage() {
     const height = 120;
     if (image) {
-      const fullResURL = ResourceUtils.getImageURL(image, { clip: null, remote: true }, env);
+      const fullResURL = getImageURL(image, { clip: null, remote: true }, env);
       const linkProps = {
         href: fullResURL,
         target: '_blank',

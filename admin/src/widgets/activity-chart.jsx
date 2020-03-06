@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 import Moment from 'moment';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import StoryTypes from 'common/objects/types/story-types.js';
+import { StoryTypes } from 'common/objects/types/story-types.js';
 
 // widgets
 import { Chartist } from 'common/widgets/chartist.jsx';

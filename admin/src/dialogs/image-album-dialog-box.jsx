@@ -2,9 +2,8 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as MediaLoader from 'common/media/media-loader.js';
-import * as PictureFinder from 'common/objects/finders/picture-finder.js';
-import * as PictureSaver from 'common/objects/savers/picture-saver.js';
+import { findPictures } from 'common/objects/finders/picture-finder.js';
+import { uploadPictures, removePictures } from 'common/objects/savers/picture-saver.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -45,7 +44,7 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
   const handleUploadChange = useListener((evt) => {
     // make copy of array since it'll disappear when event handler exits
     run(async () => {
-      await PictureSaver.uploadPictures(database, payloads, evt.target.files);
+      await uploadPictures(database, payloads, evt.target.files);
     });
   });
   const handleDragEnter = useListener((evt) => {
@@ -61,7 +60,7 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
   const handleDrop = useListener((evt) => {
     run(async () => {
       evt.preventDefault();
-      await PictureSaver.uploadPictures(database, payloads, evt.dataTransfer.files);
+      await uploadPictures(database, payloads, evt.dataTransfer.files);
     });
     setIsDropTarget(false);
   });
@@ -70,7 +69,7 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
       const removal = _.filter(pictures, (picture) => {
         return _.includes(deletionCandidateIDs, picture.id);
       });
-      await PictureSaver.removePictures(database, removal);
+      await removePictures(database, removal);
       setDeletionCandidateIDs([]);
     });
   });
@@ -90,7 +89,7 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
   });
 
   render();
-  const pictures = await PictureFinder.findPictures(database, purpose);
+  const pictures = await findPictures(database, purpose);
   render();
 
   function render() {

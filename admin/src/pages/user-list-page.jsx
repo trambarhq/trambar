@@ -8,7 +8,7 @@ import { getProjectName } from 'common/objects/utils/project-utils.js';
 import { findRolesOfUsers } from 'common/objects/finders/role-finder.js';
 import { getRoleName } from 'common/objects/utils/role-utils.js';
 import { findAllUsers } from 'common/objects/finders/user-finder.js';
-import * as UserSaver from 'common/objects/savers/user-saver.js';
+import { disableUsers, restoreUsers } from 'common/objects/savers/user-saver.js';
 import { getUserName } from 'common/objects/utils/user-utils.js';
 import { UserTypes } from 'common/objects/types/user-types.js';
 
@@ -89,8 +89,8 @@ function UserListPageSync(props) {
       if (adding.length > 0) {
         await confirm(t('user-list-confirm-reactivate-$count', adding.length));
       }
-      await UserSaver.disableUsers(database, removing);
-      await UserSaver.restoreUsers(database, adding);
+      await disableUsers(database, removing);
+      await restoreUsers(database, adding);
       warnDataLoss(false);
       handleCancelClick();
     });

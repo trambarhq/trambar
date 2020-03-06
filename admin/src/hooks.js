@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { useState, useCallback, useEffect } from 'react';
 import { useListener } from 'relaks';
 import { useLatest, useAfterglow, useConfirmation, useSelectionBuffer, useDraftBuffer } from 'common/hooks.js';
-import * as SlugGenerator from 'common/utils/slug-generator.js';
+import { fromPersonalName, fromTitle } from 'common/utils/slug-generator.js';
 import Cancellation from 'common/errors/cancellation.js';
 
 function useDataLossWarning(route, env, confirm) {
@@ -63,8 +63,7 @@ function useRowToggle(selection, objects) {
 
 function useAutogenID(draft, params) {
   const { titleKey, nameKey, personal } = params;
-  const method = (personal) ? 'fromPersonalName' : 'fromTitle';
-  const f = SlugGenerator[method];
+  const f = (personal) ? fromPersonalName : fromTitle;
   const handleTitleChange = useCallback((evt) => {
     const title = evt.target.value;
     let after = _.decoupleSet(draft.current, titleKey, title);

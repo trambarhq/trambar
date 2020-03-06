@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import * as RoleUtils from 'common/objects/utils/role-utils.js';
+import { getRoleName } from 'common/objects/utils/role-utils.js';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';
@@ -17,7 +17,7 @@ export function RoleTooltip(props) {
     return null;
   }
   const list = _.map(roles, (role, i) => {
-    const name = RoleUtils.getDisplayName(role, env);
+    const name = getRoleName(role, env);
     const url = route.find('role-summary-page', {
       roleID: role.id,
     });

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import { getDisplayName } from 'common/objects/utils/project-utils.js';
+import { getProjectName } from 'common/objects/utils/project-utils.js';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';
@@ -17,7 +17,7 @@ export function ProjectTooltip(props) {
     return null;
   }
   const list = _.map(projects, (project, i) => {
-    const title = getDisplayName(project, env);
+    const title = getProjectName(project, env);
     const url = route.find('project-summary-page', {
       projectID: project.id
     });

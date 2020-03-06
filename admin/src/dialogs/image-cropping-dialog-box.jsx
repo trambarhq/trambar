@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
-import * as ImageCropping from 'common/media/image-cropping.js';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
+import { centerSquare } from 'common/media/image-cropping.js';
+import { getImageURL } from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -55,7 +55,7 @@ export const ImageCroppingDialogBox = Overlay.create((props) => {
   );
 
   function renderImage() {
-    const url = ResourceUtils.getImageURL(image, { original: true }, env);
+    const url = getImageURL(image, { original: true }, env);
     const props = {
       url,
       clippingRect: clippingRect.current,
@@ -151,10 +151,10 @@ function getDefault(image) {
     if (image.clip) {
       rect = image.clip;
     } else {
-      rect = ImageCropping.centerSquare(image.width, image.height);
+      rect = centerSquare(image.width, image.height);
     }
   } else {
-    rect = ImageCropping.centerSquare(0, 0);
+    rect = centerSquare(0, 0);
   }
   return round(rect);
 }

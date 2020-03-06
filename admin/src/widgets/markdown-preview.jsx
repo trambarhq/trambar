@@ -1,7 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useEffect, useMemo } from 'react';
+import React from 'react';
 import { usePlainText, useRichText } from 'trambar-www';
-import { chooseLanguageVersion } from 'trambar-www/src/text.mjs';
 import { detectDirection } from 'common/utils/plain-text.js';
 
 import 'prismjs/themes/prism.css';

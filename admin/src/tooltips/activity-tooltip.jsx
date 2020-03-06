@@ -1,8 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
 
-import { Environment } from 'common/env/environment.js';
-
 import { StoryTypes, StoryIcons } from 'common/objects/types/story-types.js';
 
 // widgets

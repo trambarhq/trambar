@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import { getDisplayName } from 'common/objects/utils/repo-utils.js';
+import { getRepoName } from 'common/objects/utils/repo-utils.js';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';
@@ -23,7 +23,7 @@ export function RepositoryTooltip(props) {
       repoID: repo.id,
     });
     const iconName = repo.type;
-    const name = getDisplayName(repo, env);
+    const name = getRepoName(repo, env);
     return (
       <div className="item" key={repo.id}>
         <a href={url}>

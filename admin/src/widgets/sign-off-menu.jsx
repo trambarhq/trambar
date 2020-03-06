@@ -1,7 +1,7 @@
 import React from 'react';
 import { useProgress, useListener } from 'relaks';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { findUser } from 'common/objects/finders/user-finder.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { ProfileImage } from './profile-image.jsx';
@@ -24,7 +24,7 @@ export async function SignOffMenu(props) {
   let user;
   if (database.authorized) {
     const currentUserID = await database.start();
-    user = await UserFinder.findUser(database, currentUserID);
+    user = await findUser(database, currentUserID);
     render();
   }
 
@@ -33,7 +33,7 @@ export async function SignOffMenu(props) {
       show(null);
     } else {
       const url = (user) ? route.find('user-summary-page', { userID: user.id }) : undefined;
-      const name = UserUtils.getDisplayName(user, env);
+      const name = getUserName(user, env);
       show(
         <div className="sign-off-menu">
           <a href={url}>

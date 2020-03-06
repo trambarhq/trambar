@@ -14,13 +14,6 @@ export async function ModifiedTimeTooltip(props) {
   const { env, time, disabled } = props;
   const { localeCode } = env.locale;
   const [ show ] = useProgress(0);
-  let relativeTime = null;
-  let absoluteTime = null;
-  if (time) {
-    const m = Moment(time).locale(localeCode);
-    relativeTime = m.fromNow();
-    absoluteTime = m.format('lll');
-  };
 
   for (;;) {
     render();
@@ -28,6 +21,13 @@ export async function ModifiedTimeTooltip(props) {
   }
 
   function render() {
+    let relativeTime = null;
+    let absoluteTime = null;
+    if (time) {
+      const m = Moment(time).locale(localeCode);
+      relativeTime = m.fromNow();
+      absoluteTime = m.format('lll');
+    };
     show(
       <Tooltip disabled={disabled}>
         <inline>{relativeTime}</inline>

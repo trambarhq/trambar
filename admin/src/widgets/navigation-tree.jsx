@@ -1,21 +1,21 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useProgress } from 'relaks';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectUtils from 'common/objects/utils/project-utils.js';
-import * as RepoFinder from 'common/objects/finders/repo-finder.js';
-import * as RepoUtils from 'common/objects/utils/repo-utils.js';
-import * as RoleFinder from 'common/objects/finders/role-finder.js';
-import * as RoleUtils from 'common/objects/utils/role-utils.js';
-import * as ServerFinder from 'common/objects/finders/server-finder.js';
-import * as ServerUtils from 'common/objects/utils/server-utils.js';
-import * as SpreadsheetFinder from 'common/objects/finders/spreadsheet-finder.js';
-import * as SpreadsheetUtils from 'common/objects/utils/spreadsheet-utils.js';
-import * as RestFinder from 'common/objects/finders/rest-finder.js';
-import * as RestUtils from 'common/objects/utils/rest-utils.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
-import * as WikiFinder from 'common/objects/finders/wiki-finder.js';
+import { findProject } from 'common/objects/finders/project-finder.js';
+import { getProjectName } from 'common/objects/utils/project-utils.js';
+import { findRepo } from 'common/objects/finders/repo-finder.js';
+import { getRepoName } from 'common/objects/utils/repo-utils.js';
+import { findRole } from 'common/objects/finders/role-finder.js';
+import { getRoleName } from 'common/objects/utils/role-utils.js';
+import { findServer } from 'common/objects/finders/server-finder.js';
+import { getServerName } from 'common/objects/utils/server-utils.js';
+import { findSpreadsheet } from 'common/objects/finders/spreadsheet-finder.js';
+import { getSpreadsheetName } from 'common/objects/utils/spreadsheet-utils.js';
+import { findRest } from 'common/objects/finders/rest-finder.js';
+import { getRestName } from 'common/objects/utils/rest-utils.js';
+import { findUser } from 'common/objects/finders/user-finder.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
+import { findWiki } from 'common/objects/finders/wiki-finder.js';
 
 // widgets
 import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
@@ -51,28 +51,28 @@ export async function NavigationTree(props) {
   if (database.authorized) {
     const currentUserID = await database.start();
     if (_.isFinite(projectID)) {
-      project =  await ProjectFinder.findProject(database, projectID);
+      project =  await findProject(database, projectID);
     }
     if (_.isFinite(userID)) {
-      user = await UserFinder.findUser(database, userID);
+      user = await findUser(database, userID);
     }
     if (_.isFinite(roleID)) {
-      role = await RoleFinder.findRole(database, roleID);
+      role = await findRole(database, roleID);
     };
     if (_.isFinite(repoID)) {
-      repo = await RepoFinder.findRepo(database, repoID);
+      repo = await findRepo(database, repoID);
     }
     if (_.isFinite(serverID)) {
-      server = await ServerFinder.findServer(database, serverID);
+      server = await findServer(database, serverID);
     }
     if (_.isFinite(spreadsheetID) && project) {
-      spreadsheet = await SpreadsheetFinder.findSpreadsheet(database, project.name, spreadsheetID);
+      spreadsheet = await findSpreadsheet(database, project.name, spreadsheetID);
     }
     if (_.isFinite(wikiID) && project) {
-      wiki = await WikiFinder.findWiki(database, project.name, wikiID);
+      wiki = await findWiki(database, project.name, wikiID);
     }
     if (_.isFinite(restID) && project) {
-      rest = await RestFinder.findRest(database, project.name, restID);
+      rest = await findRest(database, project.name, restID);
     }
   }
   render();
@@ -158,7 +158,7 @@ export async function NavigationTree(props) {
     const page = 'project-summary-page';
     let label, children;
     if (project) {
-      label = ProjectUtils.getDisplayName(project, env) || '-';
+      label = getProjectName(project, env) || '-';
       children = [
         getMemberListNode(level + 1),
         getRepoListNode(level + 1),
@@ -185,7 +185,7 @@ export async function NavigationTree(props) {
     const page = 'member-summary-page';
     let label
     if (user) {
-      label = UserUtils.getDisplayName(user, env) ||  '-';
+      label = getUserName(user, env) ||  '-';
     } else if (userID === 'new') {
       label = <i>{t('nav-member-new')}</i>;
     } else {
@@ -207,7 +207,7 @@ export async function NavigationTree(props) {
     const page = 'repo-summary-page';
     let label;
     if (repo) {
-      label = RepoUtils.getDisplayName(repo, env) || '-';
+      label = getRepoName(repo, env) || '-';
     } else {
       return null;
     }
@@ -258,7 +258,7 @@ export async function NavigationTree(props) {
     const page = 'spreadsheet-summary-page';
     let label;
     if (spreadsheet) {
-      label = SpreadsheetUtils.getDisplayName(spreadsheet, env) || '-';
+      label = getSpreadsheetName(spreadsheet, env) || '-';
     } else if (spreadsheetID === 'new') {
       label = <i>{t('nav-spreadsheet-new')}</i>;
     } else {
@@ -280,7 +280,7 @@ export async function NavigationTree(props) {
     const page = 'rest-summary-page';
     let label;
     if (rest) {
-      label = RestUtils.getDisplayName(rest, env) || '-';
+      label = getRestName(rest, env) || '-';
     } else if (restID === 'new') {
       label = <i>{t('nav-rest-source-new')}</i>;
     } else {
@@ -302,7 +302,7 @@ export async function NavigationTree(props) {
     const page = 'user-summary-page';
     let label;
     if (user && !project) {
-      label = UserUtils.getDisplayName(user, env) ||  '-';
+      label = getUserName(user, env) ||  '-';
     } else if (userID === 'new' && !project) {
       label = <i>{t('nav-user-new')}</i>;
     } else {
@@ -324,7 +324,7 @@ export async function NavigationTree(props) {
     const page = 'role-summary-page';
     let label;
     if (role) {
-      label = RoleUtils.getDisplayName(role, env) || '-';
+      label = getRoleName(role, env) || '-';
     } else if (roleID === 'new') {
       label = <i>{t('nav-role-new')}</i>;
     } else {
@@ -346,7 +346,7 @@ export async function NavigationTree(props) {
     const page = 'server-summary-page';
     let label;
     if (server) {
-      label = ServerUtils.getDisplayName(server, env);
+      label = getServerName(server, env);
     } else if (serverID === 'new') {
       label = <i>{t('nav-server-new')}</i>;
     } else {
