@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
+import { getAudioURL, getImageURL } from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { MediaButton } from '../widgets/media-button.jsx';
@@ -48,7 +48,7 @@ export function MediaView(props) {
   const handleAudioClick = useListener((evt) => {
     if (!audioURL) {
       const version = _.first(_.keys(resource.versions)) || null;
-      const audioURL = ResourceUtils.getAudioURL(resource, { version }, env);
+      const audioURL = getAudioURL(resource, { version }, env);
       setAudioURL(audioURL);
     } else {
       setAudioURL(null);
@@ -205,7 +205,7 @@ export function MediaView(props) {
   }
 
   function renderImageElement() {
-    const url = ResourceUtils.getImageURL(resource, { original: true }, env);
+    const url = getImageURL(resource, { original: true }, env);
     if (!url) {
       return null;
     }

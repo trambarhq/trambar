@@ -1,9 +1,11 @@
 import _ from 'lodash';
-import Moment from 'moment';
 import React from 'react';
 import { useProgress } from 'relaks';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as NotificationFinder from 'common/objects/finders/notification-finder.js';
+import { findUser } from 'common/objects/finders/user-finder.js';
+import {
+  findNotificationsForUserOnDate,
+  findNotificationsForUser
+} from 'common/objects/finders/notification-finder.js';
 
 // widgets
 import { PageContainer } from '../widgets/page-container.jsx';
@@ -22,12 +24,12 @@ export default async function NotificationsPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const currentUser = await UserFinder.findUser(database, currentUserID);
+  const currentUser = await findUser(database, currentUserID);
   let notifications;
   if (date) {
-    notifications = await NotificationFinder.findNotificationsForUserOnDate(database, currentUser, date);
+    notifications = await findNotificationsForUserOnDate(database, currentUser, date);
   } else {
-    notifications = await NotificationFinder.findNotificationsForUser(database, currentUser);
+    notifications = await findNotificationsForUser(database, currentUser);
   }
   render();
 

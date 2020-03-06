@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useState, useRef } from 'react';
 import { useListener } from 'relaks';
-import * as FocusManager from 'common/utils/focus-manager.js';
+import { FocusManager } from 'common/utils/focus-manager.js';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';

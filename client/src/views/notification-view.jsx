@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
-import * as NotificationSaver from 'common/objects/savers/notification-saver.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { markNotificationAsSeen } from 'common/objects/savers/notification-saver.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { Time } from '../widgets/time.jsx';
@@ -66,7 +66,7 @@ export function NotificationView(props) {
   }
 }
 
-async function processMobileAlert(alert, database, route) {
+export async function processMobileAlert(alert, database, route) {
   // create an object take has some of Notification's properties
   const notification = {
     id: alert.notification_id,
@@ -90,7 +90,7 @@ async function processMobileAlert(alert, database, route) {
   }
 
   // make as seen
-  await NotificationSaver.markNotificationAsSeen(database, notification);
+  await markNotificationAsSeen(database, notification);
 }
 
 function getNotificationURL(notification, route) {
@@ -136,7 +136,7 @@ function getNotificationText(notification, user, env) {
     branch,
     reaction_type: reactionType
   } = notification.details;
-  const name = UserUtils.getDisplayName(user, env);
+  const name = getUserName(user, env);
   g(name, user.details.gender);
   switch (notification.type) {
     case 'like':
@@ -196,7 +196,3 @@ function getNotificationIcon(notification) {
     case 'join-request': return 'user-circle';
   }
 }
-
-export {
-  processMobileAlert,
-};

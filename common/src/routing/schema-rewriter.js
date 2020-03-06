@@ -1,4 +1,4 @@
-const SchemaRewriter = {
+export const SchemaRewriter = {
   from: (urlParts, context) => {
     let regExp = /^(\/([\w\-]+))(\/|$)/;
     let m = regExp.exec(urlParts.path);
@@ -13,8 +13,4 @@ const SchemaRewriter = {
       urlParts.path = `/${schema}` + urlParts.path;
     }
   }
-};
-
-export {
-  SchemaRewriter as default,
 };

@@ -2,20 +2,18 @@ import _ from 'lodash';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useListener, useEventTime } from 'relaks';
 import { routes } from './routing.js';
-import CORSRewriter from 'common/routing/cors-rewriter.js';
-import SchemaRewriter from 'common/routing/schema-rewriter.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.js';
-import * as ProjectLinkSaver from 'common/objects/savers/project-link-saver.js';
-import TopLevelMouseTrap from 'common/utils/top-level-mouse-trap.js';
+import { CORSRewriter } from 'common/routing/cors-rewriter.js';
+import { SchemaRewriter } from 'common/routing/schema-rewriter.js';
+import { createLink, removeDefunctLinks } from 'common/objects/savers/project-link-saver.js';
+import { TopLevelMouseTrap } from 'common/utils/top-level-mouse-trap.js';
 import { codePushDeploymentKeys } from './keys.js';
 
 // non-visual components
-import Database from 'common/data/database.js';
-import Route from 'common/routing/route.js';
-import Payloads from 'common/transport/payloads.js';
-import Locale from 'common/locale/locale.js';
-import Environment from 'common/env/environment.js';
+import { Database } from 'common/data/database.js';
+import { Route } from 'common/routing/route.js';
+import { Payloads } from 'common/transport/payloads.js';
+import { Locale } from 'common/locale/locale.js';
+import { Environment } from 'common/env/environment.js';
 
 // widgets
 import { TopNavigation } from './widgets/top-navigation.jsx';
@@ -165,12 +163,12 @@ export function FrontEnd(props) {
   }, [ locale ]);
   useEffect(() => {
     if (database.authorized && schema) {
-      ProjectLinkSaver.createLink(database, address, schema);
+      createLink(database, address, schema);
     }
   }, [ database.authorized, schema, address ]);
   useEffect(() => {
     if (database.authorized) {
-      ProjectLinkSaver.removeDefunctLinks(database, address);
+      removeDefunctLinks(database, address);
     }
   }, [ database.authorized, address ]);
 

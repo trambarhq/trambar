@@ -30,7 +30,7 @@ export function DurationIndicator(props) {
   }
 }
 
-function formatDuration(ms) {
+export function formatDuration(ms) {
   if (typeof(ms) !== 'number') {
     return '';
   }
@@ -43,8 +43,4 @@ function formatDuration(ms) {
 
 DurationIndicator.defaultProps = {
   recording: false,
-};
-
-export {
-  formatDuration,
 };

@@ -3,15 +3,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
 import * as ListParser from 'common/utils/list-parser.js';
 import * as Markdown from 'common/utils/markdown.js';
-import * as TagScanner from 'common/utils/tag-scanner.js';
-import * as PlainText from 'common/utils/plain-text.js';
-import * as FocusManager from 'common/utils/focus-manager.js';
-import * as StorySaver from 'common/objects/savers/story-saver.js';
-import * as StoryUtils from 'common/objects/utils/story-utils.js';
-import * as IssueUtils from 'common/objects/utils/issue-utils.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
-import * as TemporaryID from 'common/data/remote-data-source/temporary-id.js';
+import { findTags } from 'common/utils/tag-scanner.js';
+import { renderTaskList, renderSurvey, renderEmoji } from 'common/utils/plain-text.js';
+import { FocusManager } from 'common/utils/focus-manager.js';
+import { saveStory, removeStory } from 'common/objects/savers/story-saver.js';
+import { isCancelable, hasContents, removeSuperfluousDetails } from 'common/objects/utils/story-utils.js';
+import { isCoauthor } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { AuthorNames } from '../widgets/author-names.jsx';
@@ -73,7 +70,7 @@ export function StoryEditor(props) {
 
   useAutoSave(draft, autoSaveDuration, async () => {
     if (!draft.get('published')) {
-      const storyAfter = await StorySaver.saveStory(database, draft.current);
+      const storyAfter = await saveStory(database, draft.current);
       payloads.dispatch(storyAfter);
     }
   });
@@ -81,30 +78,30 @@ export function StoryEditor(props) {
   const handlePublishClick = useListener((evt) => {
     run(async () => {
       draft.set('published', true);
-      const storyAfter = await StorySaver.saveStory(database, draft.current);
+      const storyAfter = await saveStory(database, draft.current);
       payloads.dispatch(storyAfter);
       draft.reset();
     });
   });
   const handleCancelClick = useListener((evt) => {
     run(async () => {
-      const coauthoring = UserUtils.isCoauthor(authors, currentUser);
+      const coauthoring = isCoauthor(authors, currentUser);
       if (coauthoring) {
         await confirm(t('story-remove-yourself-are-you-sure'));
         const list = options.get('authors');
         const newList = _.reject(list, { id: currentUser.id });
         options.set('authors', newList);
         draft.set('user_ids', _.map(newList, 'id'));
-        await StorySaver.saveStory(database, draft.current);
+        await saveStory(database, draft.current);
       } else if (isStationary) {
         await confirm(t('story-cancel-are-you-sure'));
         if (draft.current.id) {
-          await StorySaver.removeStory(database, draft.current);
+          await removeStory(database, draft.current);
         }
         draft.reset();
       } else {
         await confirm(t('story-cancel-edit-are-you-sure'));
-        await StorySaver.removeStory(database, draft.current);
+        await removeStory(database, draft.current);
       }
     });
   });
@@ -381,12 +378,12 @@ export function StoryEditor(props) {
     const cancelButtonProps = {
       label: t('story-cancel'),
       onClick: handleCancelClick,
-      disabled: !StoryUtils.isCancelable(draft.current),
+      disabled: !isCancelable(draft.current),
     };
     const postButtonProps = {
       label: t('story-post'),
       emphasized: true,
-      disabled: !StoryUtils.hasContents(draft.current),
+      disabled: !hasContents(draft.current),
       onClick: handlePublishClick,
     };
     return (
@@ -445,21 +442,21 @@ export function StoryEditor(props) {
         // provide user answers to Markdown.renderTaskList()
         contents = Markdown.renderTaskList(langText, null, handleItemChange, markdown.onReference);
       } else {
-        contents = <p>{PlainText.renderTaskList(langText, null, handleItemChange)}</p>;
+        contents = <p>{renderTaskList(langText, null, handleItemChange)}</p>;
       }
     } else if (type === 'survey') {
       classNames.join('survey');
       if (isMarkdown) {
         contents = Markdown.renderSurvey(langText, null, handleItemChange, markdown.onReference);
       } else {
-        contents = <p>{PlainText.renderSurvey(langText, null, handleItemChange)}</p>;
+        contents = <p>{renderSurvey(langText, null, handleItemChange)}</p>;
       }
     } else {
       classNames.join('story');
       if (isMarkdown) {
         contents = Markdown.render(langText, markdown.onReference);
       } else {
-        contents = <p>{PlainText.renderEmoji(langText)}</p>;
+        contents = <p>{renderEmoji(langText)}</p>;
       }
     }
     classNames.push((isMarkdown) ? 'markdown' : 'plain-text');
@@ -556,7 +553,7 @@ function createBlankStory(currentUser) {
 }
 
 function adjustStory(story) {
-  story = StoryUtils.removeSuperfluousDetails(story);
+  story = removeSuperfluousDetails(story);
 
   if (story.published && !story.type) {
     story.type = 'post';
@@ -594,7 +591,7 @@ function adjustStory(story) {
   }
 
   // look for tags
-  story.tags = TagScanner.findTags(story.details.text);
+  story.tags = findTags(story.details.text);
 
   return story;
 }

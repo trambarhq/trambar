@@ -2,11 +2,10 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
 import * as Markdown from 'common/utils/markdown.js';
-import * as PlainText from 'common/utils/plain-text.js';
+import { renderEmoji } from 'common/utils/plain-text.js';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
-import * as RepoUtils from 'common/objects/utils/repo-utils.js';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
+import { getUserName, getGender, canAccessRepo } from 'common/objects/utils/user-utils.js';
+import { getCommitNoteURL, getIssueNoteURL, getMergeRequestNoteURL } from 'common/objects/utils/repo-utils.js';
 
 // widgets
 import { ProfileImage } from '../widgets/profile-image.jsx';
@@ -85,8 +84,8 @@ export function ReactionView(props) {
 
   function renderText() {
     const { text, markdown } = reaction.details;
-    const name = UserUtils.getDisplayName(respondent, env);
-    const gender = UserUtils.getGender(respondent);
+    const name = getUserName(respondent, env);
+    const gender = getGender(respondent);
     g(name, gender);
     if (reaction.published && reaction.ready !== false) {
       let url, target;
@@ -114,7 +113,7 @@ export function ReactionView(props) {
           } else {
             return (
               <span className="comment">
-                {name}: {PlainText.renderEmoji(langText)}
+                {name}: {renderEmoji(langText)}
               </span>
             );
           }
@@ -131,18 +130,18 @@ export function ReactionView(props) {
             </span>
           );
         case 'note':
-          if (UserUtils.canAccessRepo(currentUser, repo)) {
+          if (canAccessRepo(currentUser, repo)) {
             switch (story.type) {
               case 'branch':
               case 'push':
               case 'merge':
-                url = RepoUtils.getCommitNoteURL(repo, reaction);
+                url = getCommitNoteURL(repo, reaction);
                 break;
               case 'issue':
-                url = RepoUtils.getIssueNoteURL(repo, reaction);
+                url = getIssueNoteURL(repo, reaction);
                 break;
               case 'merge-request':
-                url = RepoUtils.getMergeRequestNoteURL(repo, reaction);
+                url = getMergeRequestNoteURL(repo, reaction);
                 break;
             }
             target = repo.type;
@@ -154,8 +153,8 @@ export function ReactionView(props) {
           );
         case 'assignment':
           if (story.type === 'issue' || story.type === 'post') {
-            if (UserUtils.canAccessRepo(currentUser, repo)) {
-              url = RepoUtils.getIssueNoteURL(repo, reaction);
+            if (canAccessRepo(currentUser, repo)) {
+              url = getIssueNoteURL(repo, reaction);
               target = repo.type;
             }
             return (
@@ -164,8 +163,8 @@ export function ReactionView(props) {
               </a>
             );
           } else if (story.type === 'merge-request') {
-            if (UserUtils.canAccessRepo(currentUser, repo)) {
-              url = RepoUtils.getMergeRequestNoteURL(repo, reaction);
+            if (canAccessRepo(currentUser, repo)) {
+              url = getMergeRequestNoteURL(repo, reaction);
               target = repo.type;
             }
             return (
@@ -175,8 +174,8 @@ export function ReactionView(props) {
             );
           }
         case 'tracking':
-          if (UserUtils.canAccessRepo(currentUser, repo)) {
-            url = RepoUtils.getIssueNoteURL(repo, reaction);
+          if (canAccessRepo(currentUser, repo)) {
+            url = getIssueNoteURL(repo, reaction);
             target = repo.type;
           }
           return (

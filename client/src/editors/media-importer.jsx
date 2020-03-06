@@ -2,11 +2,16 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState, useImperativeHandle } from 'react';
 import { useListener } from 'relaks';
-import * as MediaLoader from 'common/media/media-loader.js';
-import * as MediaTagReader from 'common/media/media-tag-reader.js';
 import * as QuickStart from 'common/media/quick-start.js';
-import * as BlobReader from 'common/transport/blob-reader.js';
 import ResourceTypes from 'common/objects/types/resource-types.js';
+import {
+  extractFileCategory,
+  extractFileFormat,
+  getVideoMetadata,
+  getAudioMetadata,
+  getImageMetadata,
+} from 'common/media/media-loader.js';
+import { extractAlbumArt } from 'common/media/media-tag-reader.js';
 
 // widgets
 import { PhotoCaptureDialogBoxBrowser } from '../dialogs/photo-capture-dialog-box-browser.jsx';
@@ -78,7 +83,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
   async function importFiles(files) {
     // filter for acceptable files
     const acceptable = _.filter(files, (file) => {
-      const type = MediaLoader.extractFileCategory(file.type);
+      const type = extractFileCategory(file.type);
       return _.includes(types, type);
     });
     if (_.isEmpty(acceptable)) {
@@ -87,7 +92,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
     // add placeholders first
     const placeholders = _.map(acceptable, (file) => {
       return {
-        type: MediaLoader.extractFileCategory(file.type),
+        type: extractFileCategory(file.type),
         pending: `import-${++importCount}`,
         imported: true,
       };
@@ -126,7 +131,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
   }
 
   async function importFile(file) {
-    const type = MediaLoader.extractFileCategory(file.type);
+    const type = extractFileCategory(file.type);
     if (_.includes(types, type)) {
       switch (type) {
         case 'image':
@@ -142,7 +147,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
   async function importImageFile(file) {
     const payload = payloads.add('image').attachFile(file);
     try {
-      const meta = await MediaLoader.getImageMetadata(file);
+      const meta = await getImageMetadata(file);
       return {
         type: 'image',
         payload_token: payload.id,
@@ -157,7 +162,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
       return {
         type: 'image',
         payload_token: payload.id,
-        format: MediaLoader.extractFileFormat(file.type),
+        format: extractFileFormat(file.type),
         filename: file.name,
         imported: true,
       };
@@ -174,7 +179,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
     const stream = payloads.stream().pipe(blob);
     payload.attachStream(stream);
     try {
-      const meta = await MediaLoader.getVideoMetadata(blob);
+      const meta = await getVideoMetadata(blob);
       payload.attachFile(meta.poster, 'poster')
       return {
         type: 'video',
@@ -192,7 +197,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
       return {
         type: 'video',
         payload_token: payload.id,
-        format: MediaLoader.extractFileFormat(file.type),
+        format: extractFileFormat(file.type),
         filename: file.name,
         imported: true,
       };
@@ -204,7 +209,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
     const stream = payloads.stream().pipe(file);
     payload.attachStream(stream);
     try {
-      const meta = await MediaLoader.getAudioMetadata(file);
+      const meta = await getAudioMetadata(file);
       const audio = {
         type: 'audio',
         payload_token: payload.id,
@@ -213,9 +218,9 @@ export const MediaImporter = React.forwardRef((props, ref) => {
         filename: file.name,
         imported: true,
       };
-      const imageBlob = await MediaTagReader.extractAlbumArt(file);
+      const imageBlob = await extractAlbumArt(file);
       if (imageBlob) {
-        const meta = await MediaLoader.getImageMetadata(imageBlob);
+        const meta = await getImageMetadata(imageBlob);
         audio.width = meta.width;
         audio.height = meta.height;
       }

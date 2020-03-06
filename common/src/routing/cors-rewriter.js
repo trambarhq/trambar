@@ -1,4 +1,4 @@
-const CORSRewriter = {
+export const CORSRewriter = {
   from: (urlParts, context) => {
     let regExp = new RegExp('^/(https?)/([^/]*)');
     let m = regExp.exec(urlParts.path);
@@ -41,9 +41,4 @@ const CORSRewriter = {
       }
     }
   }
-};
-
-export {
-  CORSRewriter as default,
-  CORSRewriter as CORSRewriter,
 };

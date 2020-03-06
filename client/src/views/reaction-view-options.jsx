@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { canHideReaction, canEditReaction, canRemoveReaction } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { PopUpMenu } from '../widgets/pop-up-menu.jsx';
@@ -48,13 +48,13 @@ export function ReactionViewOptions(props) {
   });
 
   let active = false;
-  if (UserUtils.canHideReaction(currentUser, story, reaction, access)) {
+  if (canHideReaction(currentUser, story, reaction, access)) {
     active = true;
   }
-  if (UserUtils.canEditReaction(currentUser, story, reaction, access)) {
+  if (canEditReaction(currentUser, story, reaction, access)) {
     active = true;
   }
-  if (UserUtils.canRemoveReaction(currentUser, story, reaction, access)) {
+  if (canRemoveReaction(currentUser, story, reaction, access)) {
     active = true;
   }
   const menuProps = {
@@ -79,19 +79,19 @@ export function ReactionViewOptions(props) {
   function renderOptions() {
     const hideProps = {
       label: t('option-hide-comment'),
-      hidden: !UserUtils.canHideReaction(currentUser, story, reaction, access),
+      hidden: !canHideReaction(currentUser, story, reaction, access),
       selected: options.hideReaction,
       onClick: handleHideClick,
     };
     const editProps = {
       label: t('option-edit-comment'),
-      hidden: !UserUtils.canEditReaction(currentUser, story, reaction, access),
+      hidden: !canEditReaction(currentUser, story, reaction, access),
       selected: options.editReaction,
       onClick: handleEditClick,
     };
     const removeProps = {
       label: t('option-remove-comment'),
-      hidden: !UserUtils.canRemoveReaction(currentUser, story, reaction, access),
+      hidden: !canRemoveReaction(currentUser, story, reaction, access),
       selected: options.removeReaction,
       onClick: handleRemoveClick,
     };

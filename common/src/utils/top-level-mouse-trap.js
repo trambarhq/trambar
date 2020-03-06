@@ -1,19 +1,17 @@
 import _ from 'lodash';
 
-class TopLevelMouseTrap {
-  constructor() {
-    this.listeners = [];
-  }
+export class TopLevelMouseTrap {
+  static listeners = [];
 
-  addEventListener(type, handle) {
+  static addEventListener(type, handle) {
     this.listeners.push({ type, handle });
   }
 
-  removeEventListener(type, handle) {
+  static removeEventListener(type, handle) {
     _.remove(this.listeners, { type, handle });
   }
 
-  dispatchEvent(evt) {
+  static dispatchEvent(evt) {
     for (let { type, handle } of this.listeners) {
       if (type === evt.type) {
         handle(evt);
@@ -21,14 +19,11 @@ class TopLevelMouseTrap {
     }
   }
 
-  handleMouseDown = (evt) => {
-    this.dispatchEvent(evt);
+  static handleMouseDown = (evt) => {
+    TopLevelMouseTrap.dispatchEvent(evt);
   }
 
-  handleMouseUp = (evt) => {
-    this.dispatchEvent(evt);
+  static handleMouseUp = (evt) => {
+    TopLevelMouseTrap.dispatchEvent(evt);
   }
 }
-
-const instance = new TopLevelMouseTrap;
-export default instance;

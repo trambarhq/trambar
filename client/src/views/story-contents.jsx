@@ -1,18 +1,16 @@
 import _ from 'lodash';
-import Moment from 'moment';
 import React, { useState, useMemo, useRef } from 'react';
 import { useListener, useSaveBuffer, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import * as Markdown from 'common/utils/markdown.js';
-import * as PlainText from 'common/utils/plain-text.js';
-import * as ProjectUtils from 'common/objects/utils/project-utils.js';
-import * as ReactionSaver from 'common/objects/savers/reaction-saver.js';
-import * as RepoUtils from 'common/objects/utils/repo-utils.js';
-import * as ResourceUtils from 'common/objects/utils/resource-utils.js';
-import * as StorySaver from 'common/objects/savers/story-saver.js';
-import * as StoryUtils from 'common/objects/utils/story-utils.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
-import Payload from 'common/transport/payload.js';
+import { findEmoji, renderEmoji, renderTaskList, renderSurvey, renderSurveyResults } from 'common/utils/plain-text.js';
+import { getWebsiteAddress } from 'common/objects/utils/project-utils.js';
+import { updateTaskStatuses, saveSurveyResults } from 'common/objects/savers/reaction-saver.js';
+import { getRepoName } from 'common/objects/utils/repo-utils.js';
+import { saveStory } from 'common/objects/savers/story-saver.js';
+import { extractUserAnswers, insertUserAnswers } from 'common/objects/utils/story-utils.js';
+import { getUserName, getGender, canAccessRepo } from 'common/objects/utils/user-utils.js';
+import { Payload } from 'common/transport/payload.js';
 
 // widgets
 import { MediaView } from '../views/media-view.jsx';
@@ -41,7 +39,7 @@ export function StoryContents(props) {
   const [ selectedComponent, setSelectedComponent ] = useState('');
   const [ error, run ] = useErrorCatcher();
   const originalAnswers = useMemo(() => {
-    return StoryUtils.extractUserAnswers(story, env.locale);
+    return extractUserAnswers(story, env.locale);
   }, [ story, env.locale ]);
   const userAnswers = useDraftBuffer({
     original: originalAnswers,
@@ -55,9 +53,9 @@ export function StoryContents(props) {
       const { name, value, checked } = target;
       userAnswers.set([ name, value ], checked);
 
-      const storyUpdated = StoryUtils.insertUserAnswers(story, userAnswers.current);
-      const storyAfter = await StorySaver.saveStory(database, storyUpdated);
-      await ReactionSaver.updateTaskStatuses(database, reactions, storyAfter, currentUser, userAnswers.current);
+      const storyUpdated = insertUserAnswers(story, userAnswers.current);
+      const storyAfter = await saveStory(database, storyUpdated);
+      await updateTaskStatuses(database, reactions, storyAfter, currentUser, userAnswers.current);
     });
   });
   const handleSurveyItemChange = useListener((evt) => {
@@ -67,7 +65,7 @@ export function StoryContents(props) {
   });
   const handleVoteSubmitClick = useListener((evt) => {
     run(async () => {
-      await ReactionSaver.saveSurveyResults(database, story, currentUser, userAnswers.current);
+      await saveSurveyResults(database, story, currentUser, userAnswers.current);
     });
   });
   const handleComponentSelect = useListener((evt) => {
@@ -77,11 +75,11 @@ export function StoryContents(props) {
     setSelectedComponent(null);
   });
 
-  const authorName = UserUtils.getDisplayName(authors ? authors[0] : null, env);
-  const authorGender = UserUtils.getGender(authors ? authors[0] : null);
+  const authorName = getUserName(authors ? authors[0] : null, env);
+  const authorGender = getGender(authors ? authors[0] : null);
   g(authorName, authorGender);
-  const repoName = RepoUtils.getDisplayName(repo, env);
-  const repoAccess = UserUtils.canAccessRepo(currentUser, repo);
+  const repoName = getRepoName(repo, env);
+  const repoAccess = canAccessRepo(currentUser, repo);
 
   const userCanVote = (story.type === 'survey') && (access === 'read-write');
   const userVoted = (reactions) ? getUserVote(reactions, currentUser) : undefined;
@@ -156,14 +154,14 @@ export function StoryContents(props) {
 
       // if all we have are emojis, make them bigger depending on
       // how many there are
-      const emoji = PlainText.findEmoji(langText);
+      const emoji = findEmoji(langText);
       const chars = _.replace(langText, /\s+/g, '');
       if (emoji) {
         if (_.join(emoji, '') === chars) {
           className.join('emoji-${emoji.length}');
         }
       }
-      contents = <p>{PlainText.renderEmoji(langText)}</p>;
+      contents = <p>{renderEmoji(langText)}</p>;
     }
     return (
       <div className={classNames.join(' ')} onClick={onClick}>
@@ -190,7 +188,7 @@ export function StoryContents(props) {
       onClick = markdownResources.onClick;
     } else {
       classNames.push('plain-text');
-      contents = <p>{PlainText.renderTaskList(langText, answers, onChange)}</p>;
+      contents = <p>{renderTaskList(langText, answers, onChange)}</p>;
     }
     return (
       <div className={classNames.join(' ')} onClick={onClick}>
@@ -221,9 +219,9 @@ export function StoryContents(props) {
     } else {
       classNames.push('plain-text');
       if (showingResult) {
-        contents = PlainText.renderSurveyResults(langText, voteCounts);
+        contents = renderSurveyResults(langText, voteCounts);
       } else {
-        contents = PlainText.renderSurvey(langText, answers, handleSurveyItemChange);
+        contents = renderSurvey(langText, answers, handleSurveyItemChange);
       }
       contents = <p>{contents}</p>;
     }
@@ -380,7 +378,7 @@ export function StoryContents(props) {
       branch,
       commit_after: commitID,
     } = story.details;
-    let url = ProjectUtils.getWebsiteAddress(project)
+    let url = getWebsiteAddress(project)
     let text;
     if (branch === 'master') {
       text = t(`story-$name-changed-production-website`, authorName);

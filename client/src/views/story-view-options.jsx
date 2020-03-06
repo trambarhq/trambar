@@ -1,11 +1,19 @@
 import _ from 'lodash';
 import React, { useState, useMemo } from 'react';
 import { useListener, useErrorCatcher } from 'relaks';
-import * as BookmarkSaver from 'common/objects/savers/bookmark-saver.js';
-import * as IssueUtils from 'common/objects/utils/issue-utils.js';
-import * as StorySaver from 'common/objects/savers/story-saver.js';
-import * as TaskSaver from 'common/objects/savers/task-saver.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { syncBookmarks } from 'common/objects/savers/bookmark-saver.js';
+import { extractIssueDetails } from 'common/objects/utils/issue-utils.js';
+import { hideStory, unpublishStory, removeStory, bumpStory } from 'common/objects/savers/story-saver.js';
+import { createTask } from 'common/objects/savers/task-saver.js';
+import {
+  canCreateBookmark,
+  canSendBookmarks,
+  canAddIssue,
+  canHideStory,
+  canEditStory,
+  canRemoveStory,
+  canBumpStory,
+} from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { OptionButton } from '../widgets/option-button.jsx';
@@ -37,7 +45,7 @@ export function StoryViewOptions(props) {
       editable: !story.published,
       removed: story.deleted,
       bumped: false,
-      issue: IssueUtils.extractIssueDetails(story, repos),
+      issue: extractIssueDetails(story, repos),
     };
   }, [ story, bookmarks, repos ]);
   const options = useDraftBuffer({
@@ -52,7 +60,7 @@ export function StoryViewOptions(props) {
       const newList = (self) ? _.without(list, self) : _.concat(list, currentUser);
       options.set('recipients', newList);
       done();
-      await BookmarkSaver.syncBookmarks(database, story, bookmarks, currentUser, newList);
+      await syncBookmarks(database, story, bookmarks, currentUser, newList);
     });
   });
   const handleHideClick = useListener((evt) => {
@@ -60,7 +68,7 @@ export function StoryViewOptions(props) {
       const hidding = !options.get('hidden');
       options.set('hidden', hidding);
       done();
-      await StorySaver.hideStory(database, story, hidding);
+      await hideStory(database, story, hidding);
     });
   });
   const handleEditClick = useListener((evt) => {
@@ -68,7 +76,7 @@ export function StoryViewOptions(props) {
       if (!options.get('editable')) {
         options.set('editable', true);
         done();
-        await StorySaver.unpublishStory(database, story);
+        await unpublishStory(database, story);
       }
     });
   });
@@ -77,7 +85,7 @@ export function StoryViewOptions(props) {
       if (!options.get('removed')) {
         options.set('removed', true);
         done();
-        await StorySaver.removeStory(database, story);
+        await removeStory(database, story);
       }
     });
   });
@@ -86,7 +94,7 @@ export function StoryViewOptions(props) {
       if (!options.get('removed')) {
         options.set('bumped', true);
         done();
-        await StorySaver.bumpStory(database, story);
+        await bumpStory(database, story);
       }
     });
   });
@@ -114,7 +122,7 @@ export function StoryViewOptions(props) {
       options.set('issue', issue);
       enterIssueDetails(false);
       done();
-      await TaskSaver.createTask(database, 'export-issue', currentUser, {
+      await createTask(database, 'export-issue', currentUser, {
         story_id: story.id,
         ...evt.issue
       });
@@ -143,7 +151,7 @@ export function StoryViewOptions(props) {
       const bookmarkProps = {
          label: t(bookmarkExpected ? 'option-keep-bookmark' : 'option-add-bookmark'),
          selected: !!self,
-         hidden: !bookmarkExpected && !UserUtils.canCreateBookmark(currentUser, story, access),
+         hidden: !bookmarkExpected && !canCreateBookmark(currentUser, story, access),
          onClick: handleAddBookmarkClick,
       };
       const otherRecipients = _.reject(recipients, { id: currentUser.id });
@@ -151,37 +159,37 @@ export function StoryViewOptions(props) {
         label: _.isEmpty(otherRecipients)
           ? t('option-send-bookmarks')
           : t('option-send-bookmarks-to-$count-users', otherRecipients.length),
-        hidden: !UserUtils.canSendBookmarks(currentUser, story, access),
+        hidden: !canSendBookmarks(currentUser, story, access),
         selected: !_.isEmpty(otherRecipients) || selectingRecipients,
         onClick: handleSendBookmarkClick,
       };
       const addIssueProps = {
         label: t('option-add-issue'),
-        hidden: !UserUtils.canAddIssue(currentUser, story, repos, access),
+        hidden: !canAddIssue(currentUser, story, repos, access),
         selected: !!options.get('issue') || enteringIssueDetails,
         onClick: handleAddIssueClick,
       };
       const hideProps = {
         label: t('option-hide-story'),
-        hidden: !UserUtils.canHideStory(currentUser, story, access),
+        hidden: !canHideStory(currentUser, story, access),
         selected: options.get('hidden'),
         onClick: handleHideClick,
       };
       const editProps = {
         label: t('option-edit-post'),
-        hidden: !UserUtils.canEditStory(currentUser, story, access),
+        hidden: !canEditStory(currentUser, story, access),
         selected: options.get('editable'),
         onClick: handleEditClick,
       };
       const removeProps = {
         label: t('option-remove-story'),
-        hidden: !UserUtils.canRemoveStory(currentUser, story, access),
+        hidden: !canRemoveStory(currentUser, story, access),
         selected: options.get('removed'),
         onClick: handleRemoveClick,
       };
       const bumpProps = {
         label: t('option-bump-story'),
-        hidden: !UserUtils.canBumpStory(currentUser, story, access),
+        hidden: !canBumpStory(currentUser, story, access),
         selected: options.get('bumped'),
         onClick: handleBumpClick,
       };

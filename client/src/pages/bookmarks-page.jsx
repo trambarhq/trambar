@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import React from 'react';
 import { useProgress } from 'relaks';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as BookmarkFinder from 'common/objects/finders/bookmark-finder.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectUtils from 'common/objects/utils/project-utils.js';
+import { findUser } from 'common/objects/finders/user-finder.js';
+import { findBookmarksForUser } from 'common/objects/finders/bookmark-finder.js';
+import { findCurrentProject } from 'common/objects/finders/project-finder.js';
+import { getUserAccessLevel } from 'common/objects/utils/project-utils.js';
 
 // widgets
 import { PageContainer } from '../widgets/page-container.jsx';
@@ -23,9 +23,9 @@ export default async function BookmarksPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const currentUser = await UserFinder.findUser(database, currentUserID)
-  const project = await ProjectFinder.findCurrentProject(database)
-  const bookmarks = await BookmarkFinder.findBookmarksForUser(database, currentUser)
+  const currentUser = await findUser(database, currentUserID)
+  const project = await findCurrentProject(database)
+  const bookmarks = await findBookmarksForUser(database, currentUser)
   render();
 
   function render() {
@@ -39,7 +39,7 @@ export default async function BookmarksPage(props) {
 
   function renderList() {
     const listProps = {
-      access: ProjectUtils.getUserAccessLevel(project, currentUser) || 'read-only',
+      access: getUserAccessLevel(project, currentUser) || 'read-only',
       bookmarks,
       currentUser,
       project,

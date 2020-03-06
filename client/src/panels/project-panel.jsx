@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { useListener, useErrorCatcher } from 'relaks';
-import * as ProjectLinkSaver from 'common/objects/savers/project-link-saver.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { removeLinks } from 'common/objects/savers/project-link-saver.js';
+import { isMember } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -26,7 +26,7 @@ import './project-panel.scss';
 export function ProjectPanel(props) {
   const { database, route, env, userDraft, system, project, projectLinks } = props;
   const { t, p } = env.locale;
-  const isMember = UserUtils.isMember(userDraft.current, project);
+  const isMember = isMember(userDraft.current, project);
   const [ wasMember, setWasMember ] = useState(isMember);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
@@ -67,7 +67,7 @@ export function ProjectPanel(props) {
 
       // delete links of all projects on server
       const serverLinks = _.filter(projectLinks, { address });
-      await ProjectLinkSaver.removeLinks(database, serverLinks);
+      await removeLinks(database, serverLinks);
     });
   });
   const handleProjectDelete = useListener(async (evt) => {

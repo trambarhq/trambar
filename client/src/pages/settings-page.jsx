@@ -1,15 +1,14 @@
 import _ from 'lodash';
 import React, { useEffect } from 'react';
 import { useProgress, useListener, useSaveBuffer, useAutoSave } from 'relaks';
-import * as KonamiCode from 'common/utils/konami-code.js';
-import * as DeviceFinder from 'common/objects/finders/device-finder.js';
-import * as ProjectFinder from 'common/objects/finders/project-finder.js';
-import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.js';
-import * as RepoFinder from 'common/objects/finders/repo-finder.js';
-import * as SystemFinder from 'common/objects/finders/system-finder.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as UserSaver from 'common/objects/savers/user-saver.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { KonamiCode } from 'common/utils/konami-code.js';
+import { findUserDevices } from 'common/objects/finders/device-finder.js';
+import { findCurrentProject } from 'common/objects/finders/project-finder.js';
+import { findActiveLinks } from 'common/objects/finders/project-link-finder.js';
+import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
+import { findSystem } from 'common/objects/finders/system-finder.js';
+import { findUser } from 'common/objects/finders/user-finder.js';
+import { saveUser } from 'common/objects/savers/user-saver.js';
 
 // widgets
 import { PageContainer } from '../widgets/page-container.jsx';
@@ -40,15 +39,15 @@ export default async function SettingsPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const currentUser = await UserFinder.findUser(database, currentUserID);
-  const projectLinks = await ProjectLinkFinder.findActiveLinks(database);
-  const currentProject = await ProjectFinder.findCurrentProject(database);
+  const currentUser = await findUser(database, currentUserID);
+  const projectLinks = await findActiveLinks(database);
+  const currentProject = await findCurrentProject(database);
   render();
-  const devices = await DeviceFinder.findUserDevices(database, currentUser, 1);
+  const devices = await findUserDevices(database, currentUser, 1);
   render();
-  const repos = await RepoFinder.findProjectRepos(database, currentProject);
+  const repos = await findProjectRepos(database, currentProject);
   render();
-  const system = await SystemFinder.findSystem(database);
+  const system = await findSystem(database);
   render();
 
   function render() {
@@ -73,7 +72,7 @@ function SettingsPageSync(props) {
   });
 
   useAutoSave(userDraft, autosave, () => {
-    const userAfter = UserSaver.saveUser(database, userDraft.current);
+    const userAfter = saveUser(database, userDraft.current);
     payloads.dispatch(userAfter);
   });
   useEffect(() => {

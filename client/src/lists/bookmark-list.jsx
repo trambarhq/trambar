@@ -2,12 +2,11 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import Merger from 'common/data/merger.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as StoryFinder from 'common/objects/finders/story-finder.js';
-import * as RepoFinder from 'common/objects/finders/repo-finder.js';
-import * as BookmarkFinder from 'common/objects/finders/bookmark-finder.js';
-import * as ReactionFinder from 'common/objects/finders/reaction-finder.js';
+import { findStoryAuthors, findBookmarkSenders, findBookmarksByUser, findBookmarkRecipients } from 'common/objects/finders/user-finder.js';
+import { findStoriesOfBookmarks, findDraftStories } from 'common/objects/finders/story-finder.js';
+import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
+import { findBookmarksByUser } from 'common/objects/finders/bookmark-finder.js';
+import { findReactionsToStories } from 'common/objects/finders/reaction-finder.js';
 
 // widgets
 import { SmartList } from 'common/widgets/smart-list.jsx';
@@ -51,23 +50,23 @@ export async function BookmarkList(props) {
   };
 
   render();
-  const repos = await RepoFinder.findProjectRepos(database, project);
-  const stories = await StoryFinder.findStoriesOfBookmarks(database, bookmarks, currentUser)
+  const repos = await findProjectRepos(database, project);
+  const stories = await findStoriesOfBookmarks(database, bookmarks, currentUser)
   render();
-  const draftStories = await StoryFinder.findDraftStories(database, currentUser)
+  const draftStories = await findDraftStories(database, currentUser)
   render();
   const allStories = _.filter(_.concat(draftStories, stories));
-  const authors = await UserFinder.findStoryAuthors(database, allStories);
+  const authors = await findStoryAuthors(database, allStories);
   render();
-  const senders = await UserFinder.findBookmarkSenders(database, bookmarks);
+  const senders = await findBookmarkSenders(database, bookmarks);
   render();
-  const reactions = await ReactionFinder.findReactionsToStories(database, allStories, currentUser);
+  const reactions = await findReactionsToStories(database, allStories, currentUser);
   render();
-  const respondents = await UserFinder.findReactionAuthors(database, reactions);
+  const respondents = await findReactionAuthors(database, reactions);
   render();
-  const bookmarksSent = await BookmarkFinder.findBookmarksByUser(database, currentUser);
+  const bookmarksSent = await findBookmarksByUser(database, currentUser);
   render();
-  const recipients = await UserFinder.findBookmarkRecipients(database, bookmarksSent);
+  const recipients = await findBookmarkRecipients(database, bookmarksSent);
   render();
 
   function render() {

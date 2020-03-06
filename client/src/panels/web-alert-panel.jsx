@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
-import NotificationTypes, { AdminNotificationTypes } from 'common/objects/types/notification-types.js';
-import * as UserUtils from 'common/objects/utils/user-utils.js';
+import { NotificationTypes, AdminNotificationTypes } from 'common/objects/types/notification-types.js';
+import { canReceiveNotification } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -48,7 +48,7 @@ export function WebAlertPanel(props) {
     const optionName = _.snakeCase(type);
     const notificationEnabled = userDraft.get(`settings.notification.${optionName}`, false);
     const alertEnabled = userDraft.get(`settings.web_alert.${optionName}`, false);
-    const canReceive = UserUtils.canReceiveNotification(userDraft.current, repos, type);
+    const canReceive = canReceiveNotification(userDraft.current, repos, type);
     const buttonProps = {
       label: t(`notification-option-${type}`),
       selected: alertEnabled && notificationEnabled,

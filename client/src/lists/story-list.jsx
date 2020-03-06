@@ -2,10 +2,10 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import * as UserFinder from 'common/objects/finders/user-finder.js';
-import * as RepoFinder from 'common/objects/finders/repo-finder.js';
-import * as BookmarkFinder from 'common/objects/finders/bookmark-finder.js';
-import * as ReactionFinder from 'common/objects/finders/reaction-finder.js';
+import { findStoryAuthors, findReactionAuthors, findBookmarkRecipients } from 'common/objects/finders/user-finder.js';
+import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
+import { findBookmarksByUser } from 'common/objects/finders/bookmark-finder.js';
+import { findReactionsToStories } from 'common/objects/finders/reaction-finder.js';
 
 // widgets
 import { SmartList } from 'common/widgets/smart-list.jsx';
@@ -81,17 +81,17 @@ export async function StoryList(props) {
   render();
   // load repos first, so "add to issue tracker" option doesn't pop in
   // suddenly in triple-column mode
-  const repos = await RepoFinder.findProjectRepos(database, project);
+  const repos = await findProjectRepos(database, project);
   render();
-  const authors = await UserFinder.findStoryAuthors(database, allStories);
+  const authors = await findStoryAuthors(database, allStories);
   render();
-  const reactions = await ReactionFinder.findReactionsToStories(database, allStories, currentUser)
+  const reactions = await findReactionsToStories(database, allStories, currentUser)
   render();
-  const respondents = await UserFinder.findReactionAuthors(database, reactions);
+  const respondents = await findReactionAuthors(database, reactions);
   render();
-  const bookmarks = await BookmarkFinder.findBookmarksByUser(database, currentUser, allStories);
+  const bookmarks = await findBookmarksByUser(database, currentUser, allStories);
   render();
-  const recipients = await UserFinder.findBookmarkRecipients(database, bookmarks);
+  const recipients = await findBookmarkRecipients(database, bookmarks);
   render();
 
   function render() {
