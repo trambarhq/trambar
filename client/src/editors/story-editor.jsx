@@ -2,9 +2,9 @@ import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
 import * as ListParser from 'common/utils/list-parser.js';
-import * as Markdown from 'common/utils/markdown.js';
+import { renderPlainText } from 'common/utils/plain-text.js';
+import { renderMarkdown } from 'common/utils/markdown.js';
 import { findTags } from 'common/utils/tag-scanner.js';
-import { renderTaskList, renderSurvey, renderEmoji } from 'common/utils/plain-text.js';
 import { FocusManager } from 'common/utils/focus-manager.js';
 import { saveStory, removeStory } from 'common/objects/savers/story-saver.js';
 import { isCancelable, hasContents, removeSuperfluousDetails } from 'common/objects/utils/story-utils.js';
@@ -430,43 +430,23 @@ export function StoryEditor(props) {
   }
 
   function renderTextPreview() {
-    const classNames = [ 'text' ];
     const langText = draft.get(`details.text.${languageCode}`, '');
     const isMarkdown = draft.get('details.markdown');
     const type = draft.get('type');
-    let contents;
-    if (type === 'task-list') {
-      classNames.join('task-list');
-      if (isMarkdown) {
-        // answers are written to the text itself, so there's no need to
-        // provide user answers to Markdown.renderTaskList()
-        contents = Markdown.renderTaskList(langText, null, handleItemChange, markdown.onReference);
-      } else {
-        contents = <p>{renderTaskList(langText, null, handleItemChange)}</p>;
-      }
-    } else if (type === 'survey') {
-      classNames.join('survey');
-      if (isMarkdown) {
-        contents = Markdown.renderSurvey(langText, null, handleItemChange, markdown.onReference);
-      } else {
-        contents = <p>{renderSurvey(langText, null, handleItemChange)}</p>;
-      }
-    } else {
-      classNames.join('story');
-      if (isMarkdown) {
-        contents = Markdown.render(langText, markdown.onReference);
-      } else {
-        contents = <p>{renderEmoji(langText)}</p>;
-      }
+    const classNames = [
+      'text',
+      type || 'post',
+      (isMarkdown) ? 'markdown' : 'plain-text',
+    ];
+    const answers = null; // answers are written to the text itself
+    const f = (isMarkdown) ? renderMarkdown : renderPlainText;
+    let contents = f({ type, answers, onChange: handleItemChange });
+    if (!isMarkdown) {
+      contents = <p>{contents}</p>;
     }
-    classNames.push((isMarkdown) ? 'markdown' : 'plain-text');
-    const textProps = {
-      className: classNames.join(' '),
-      onClick: markdown.onClick,
-    };
     return (
       <div className="story-contents">
-        <div {...textProps}>{contents}</div>
+        <div className={classNames.join(' ')}>{contents}</div>
       </div>
     );
   }

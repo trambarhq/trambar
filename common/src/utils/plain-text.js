@@ -4,6 +4,22 @@ import EmojiRegex from 'emoji-regex';
 import ReactEasyEmoji from 'react-easy-emoji';
 import * as ListParser from './list-parser.js';
 
+function renderPlainText(props) {
+  const { type, text } = props;
+  if (type === 'survey') {
+    const { answers, results, onChange } = props;
+    if (results) {
+      return renderSurveyResults(text, results);
+    } else {
+      return renderSurvey(text, answers, onChange);
+    }
+  } else if (type === 'task-list') {
+    return renderTaskList(text, answers, onChange);
+  } else {
+    return renderEmoji(text);
+  }
+}
+
 /**
  * Render text containing a survey
  *
@@ -170,7 +186,7 @@ function renderEmoji(text, options) {
     return [ text ];
   }
   // use custom function so we can add prefix to key
-  let parentKey = _.get(options, 'key');
+  const parentKey = _.get(options, 'key');
   return ReactEasyEmoji(text, renderEmojiImage.bind(null, parentKey));
 }
 
@@ -276,9 +292,7 @@ function detectDirection(text) {
 }
 
 export {
-  renderSurvey,
-  renderSurveyResults,
-  renderTaskList,
+  renderPlainText,
   renderEmoji,
   findEmoji,
   hasEmojiSupport,
