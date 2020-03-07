@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import ManualPromise from '../../utils/manual-promise.js';
+import { promiseSelf } from '../../utils/promise-self.js';
 
 import EnvironmentMonitor from '../environment-monitor.js';
 
@@ -26,7 +26,7 @@ describe('EnvironmentMonitor', function() {
   })
   it ('should emit change event when the window is resized', async function() {
     this.timeout(250);
-    let changeEventPromise = ManualPromise();
+    let changeEventPromise = promiseSelf();
     let envMonitor = new EnvironmentMonitor;
     envMonitor.activate();
     envMonitor.addEventListener('change', changeEventPromise.resolve);
@@ -37,7 +37,7 @@ describe('EnvironmentMonitor', function() {
   })
   it ('should emit change event when visibility state changes', async function() {
     this.timeout(250);
-    let changeEventPromise = ManualPromise();
+    let changeEventPromise = promiseSelf();
     let envMonitor = new EnvironmentMonitor;
     envMonitor.activate();
     envMonitor.addEventListener('change', changeEventPromise.resolve);
@@ -48,7 +48,7 @@ describe('EnvironmentMonitor', function() {
   })
   it ('should indicate a touch screen is the pointing device when a touch event occurs', async function() {
     this.timeout(250);
-    let changeEventPromise = ManualPromise();
+    let changeEventPromise = promiseSelf();
     let envMonitor = new EnvironmentMonitor;
     envMonitor.activate();
     envMonitor.addEventListener('change', changeEventPromise.resolve);

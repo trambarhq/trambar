@@ -1,4 +1,4 @@
-import { ManualPromise } from '../../utils/manual-promise.js';
+import { promiseSelf } from '../../utils/promise-self.js';
 
 export class CacheSignature {
   constructor(address, schema, table, id) {
@@ -7,7 +7,7 @@ export class CacheSignature {
     this.table = table;
     this.id = id;
     this.resolved = false;
-    this.promise = ManualPromise();
+    this.promise = promiseSelf();
   }
 
   /**

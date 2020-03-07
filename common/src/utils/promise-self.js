@@ -1,6 +1,6 @@
-function create() {
+function promiseSelf() {
   let resolve, reject;
-  let promise = new Promise((f1, f2) => {
+  const promise = new Promise((f1, f2) => {
     resolve = f1;
     reject = f2;
   });
@@ -10,6 +10,5 @@ function create() {
 }
 
 export {
-  create as default,
-  create,
+  promiseSelf,
 };

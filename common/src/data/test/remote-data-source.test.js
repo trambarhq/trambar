@@ -9,7 +9,7 @@ Chai.use(ChaiAsPromised);
 import { RemoteDataSource } from '../remote-data-source.js';
 import { IndexedDBCache } from '../indexed-db-cache.js';
 import { HTTPError } from '../../errors.js';
-import { ManualPromise } from '../../utils/manual-promise.js';
+import { promiseSelf } from '../../utils/promise-self.js';
 import { performHTTPRequest } from '../../transport/http-request.js';
 
 describe('RemoteDataSource', function() {
@@ -70,7 +70,7 @@ describe('RemoteDataSource', function() {
   })
   describe('#checkAuthorization()', function() {
     it('should fire authorization event when remote server indicates session is authorized', async function() {
-      let authorizationEventPromise = ManualPromise();
+      let authorizationEventPromise = promiseSelf();
       dataSource.addEventListener('authorization', authorizationEventPromise.resolve);
       let location = { address: 'http://isengard.me' };
       let session = { handle: 'abcdefg' };
@@ -101,8 +101,8 @@ describe('RemoteDataSource', function() {
       expect(evt.session).to.have.property('etime');
     })
     it('should simply return false when session is not authorized', async function() {
-      let expirationEventPromise = ManualPromise();
-      let violationEventPromise = ManualPromise();
+      let expirationEventPromise = promiseSelf();
+      let violationEventPromise = promiseSelf();
       dataSource.addEventListener('expiration', expirationEventPromise.resolve);
       dataSource.addEventListener('violation', violationEventPromise.resolve);
       let location = { address: 'http://dunland.me' };
@@ -130,7 +130,7 @@ describe('RemoteDataSource', function() {
   })
   describe('#authenticate()', function() {
     it('should trigger authorization event when server accepts username/password', async function() {
-      let authorizationEventPromise = ManualPromise();
+      let authorizationEventPromise = promiseSelf();
       dataSource.addEventListener('authorization', authorizationEventPromise.resolve);
       let location = { address: 'http://mdoom.mordor.me' };
       let session = { handle: 'abcdefg' };
@@ -169,9 +169,9 @@ describe('RemoteDataSource', function() {
       expect(evt.session).to.have.property('etime');
     })
     it('should reject when username/password are wrong, with error object containing information sent by server', async function() {
-      let changeEventPromise = ManualPromise();
-      let expirationEventPromise = ManualPromise();
-      let violationEventPromise = ManualPromise();
+      let changeEventPromise = promiseSelf();
+      let expirationEventPromise = promiseSelf();
+      let violationEventPromise = promiseSelf();
       dataSource.addEventListener('change', changeEventPromise.resolve);
       dataSource.addEventListener('expiration', expirationEventPromise.resolve);
       dataSource.addEventListener('violation', violationEventPromise.resolve)
@@ -212,9 +212,9 @@ describe('RemoteDataSource', function() {
       expect(result).to.equal('no event');
     })
     it('should trigger change event to restart session when failure is other than 401 Unauthorized', async function() {
-      let changeEventPromise = ManualPromise();
-      let expirationEventPromise = ManualPromise();
-      let violationEventPromise = ManualPromise();
+      let changeEventPromise = promiseSelf();
+      let expirationEventPromise = promiseSelf();
+      let violationEventPromise = promiseSelf();
       dataSource.addEventListener('change', changeEventPromise.resolve);
       dataSource.addEventListener('expiration', expirationEventPromise.resolve);
       dataSource.addEventListener('violation', violationEventPromise.resolve)
@@ -505,7 +505,7 @@ describe('RemoteDataSource', function() {
       expect(users[1]).to.have.property('id', objects[1].id);
     })
     it('should update object whose gn has changed', async function() {
-      let changeEventPromise = ManualPromise();
+      let changeEventPromise = promiseSelf();
       dataSource.addEventListener('change', changeEventPromise.resolve);
       let location = { address: 'http://level3.moria.me', schema: 'global', table: 'user' };
       let rtime = Moment().subtract(1, 'day').toISOString();
@@ -562,7 +562,7 @@ describe('RemoteDataSource', function() {
       expect(users2[1]).to.have.property('gn', objects[1].gn);
     })
     it('should return objects from cache on an open-ended search, perform discovery, then conclude that the initial result set was correct', async function() {
-      let changeEventPromise = ManualPromise();
+      let changeEventPromise = promiseSelf();
       dataSource.addEventListener('change', changeEventPromise.resolve);
       let location = { address: 'http://level4.moria.me', schema: 'global', table: 'user' };
       let rtime = Moment().toISOString();
@@ -611,7 +611,7 @@ describe('RemoteDataSource', function() {
       expect(result).to.equal('no event');
     })
     it('should return objects from cache, perform discovery, then retrieve an additional object', async function() {
-      let changeEventPromise = ManualPromise();
+      let changeEventPromise = promiseSelf();
       dataSource.addEventListener('change', changeEventPromise.resolve);
       let location = { address: 'http://level5.moria.me', schema: 'global', table: 'user' };
       let rtime = Moment().toISOString();
@@ -657,7 +657,7 @@ describe('RemoteDataSource', function() {
       expect(users2).to.have.property('length', 3);
     })
     it('should not perform remote search when there is no connection', async function() {
-      let changeEventPromise = ManualPromise();
+      let changeEventPromise = promiseSelf();
       dataSource.addEventListener('change', changeEventPromise.resolve);
       dataSource.deactivate();
       let location = { address: 'http://level6.moria.me', schema: 'global', table: 'user' };
@@ -706,7 +706,7 @@ describe('RemoteDataSource', function() {
   })
   describe('#save()', function() {
     it('should send an object to remote server and save result to cache', async function() {
-      let changeEventPromise = ManualPromise();
+      let changeEventPromise = promiseSelf();
       dataSource.addEventListener('change', changeEventPromise.resolve);
       let location = { address: 'http://level1.misty-mountain.me', schema: 'global', table: 'project' };
       let newObject = { name: 'anduril' };
@@ -735,7 +735,7 @@ describe('RemoteDataSource', function() {
       expect(evt).to.have.property('type', 'change');
     })
     it('should update an existing object', async function() {
-      let changeEventPromise = ManualPromise();
+      let changeEventPromise = promiseSelf();
       dataSource.addEventListener('change', changeEventPromise.resolve);
       let location = { address: 'http://level2.misty-mountain.me', schema: 'global', table: 'project' };
       let objects = [
@@ -824,7 +824,7 @@ describe('RemoteDataSource', function() {
       // 8. save() returns and we can check the results from step 4 now
       //  that we're inside the promise-chain given to Chai
       // 9. then we run the query again and check that the result of step 7
-      let changeEventPromise = ManualPromise();
+      let changeEventPromise = promiseSelf();
       dataSource.addEventListener('change', changeEventPromise.resolve);
       let presaveSearch = async () => {
         await changeEventPromise;
@@ -925,7 +925,7 @@ describe('RemoteDataSource', function() {
     it('should merge multiple deferred saves', async function() {
       let event = null;
       let additionalSavePromises = [];
-      let additionalSavesTriggeredPromise = ManualPromise();
+      let additionalSavesTriggeredPromise = promiseSelf();
       dataSource.addEventListener('change', () => {
         let num = additionalSavePromises.length + 1;
         if (num <= 4) {
@@ -1012,7 +1012,7 @@ describe('RemoteDataSource', function() {
   })
   describe('#remove()', function() {
     it('should try to remove an object', async function() {
-      let changeEventPromise = ManualPromise();
+      let changeEventPromise = promiseSelf();
       dataSource.addEventListener('change', changeEventPromise.resolve);
       let location = { address: 'http://level1.lonely-mountain.me', schema: 'global', table: 'project' };
       let existingObject = { id: 1, name: 'smaug' };
@@ -1177,7 +1177,7 @@ describe('RemoteDataSource', function() {
       ];
       await dataSource.invalidate(changes);
 
-      let changeEventPromise = ManualPromise();
+      let changeEventPromise = promiseSelf();
       dataSource.addEventListener('change', changeEventPromise.resolve);
 
       let found2 = await dataSource.find(query);

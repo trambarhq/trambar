@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import { EventEmitter, GenericEvent } from 'relaks-event-emitter';
-import { ManualPromise } from '../utils/manual-promise.js';
+import { promiseSelf } from '../utils/promise-self.js';
 import { performHTTPRequest } from '../transport/http-request.js';
 import { HTTPError } from '../errors.js';
 import { matchSearchCriteria, limitSearchResults } from './local-search.js';
@@ -1022,7 +1022,7 @@ export class RemoteDataSource extends EventEmitter {
    */
   waitForAuthorization(session) {
     if (!session.authorizationPromise) {
-      session.authorizationPromise = ManualPromise();
+      session.authorizationPromise = promiseSelf();
     }
     return session.authorizationPromise;
   }

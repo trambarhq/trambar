@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import { ManualPromise } from '../utils/manual-promise.js';
 import { Notifier, NotifierEvent } from './notifier.js';
 import { performHTTPRequest } from './http-request.js';
+import { promiseSelf } from '../utils/promise-self.js';
 import { delay } from '../utils/delay.js';
 
 const defaultOptions = {
@@ -26,7 +26,7 @@ class PushNotifier extends Notifier {
     this.registrationType = null;
     this.relayAddress = '';
     this.relayToken = '';
-    this.networkRegistrationPromise = ManualPromise();
+    this.networkRegistrationPromise = promiseSelf();
   }
 
   activate() {

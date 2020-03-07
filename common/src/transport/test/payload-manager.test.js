@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import Chai, { expect } from 'chai';
 import ChaiAsPromised from 'chai-as-promised';
-import ManualPromise from '../../utils/manual-promise';
 import TestServer from './lib/test-server.js';
+import { promiseSelf } from '../../utils/promise-self.js';
 
 import { performHTTPRequest } from '../http-request.js';
 import { PayloadManager } from '../payload-manager.js';
@@ -52,7 +52,7 @@ describe('PayloadManager', function() {
       payloadManager.activate();
       let payload = payloadManager.add(null, 'image');
       payload.attachFile(testBlob1);
-      let completeEventPromise = ManualPromise();
+      let completeEventPromise = promiseSelf();
       payload.onComplete = completeEventPromise.resolve;
       payloadManager.dispatch([ payload.id ]);
       await completeEventPromise
@@ -66,7 +66,7 @@ describe('PayloadManager', function() {
       let payload = payloadManager.add(null, 'image');
       payload.attachFile(testBlob1);
       payload.attachFile(testBlob2, 'second');
-      let completeEventPromise = ManualPromise();
+      let completeEventPromise = promiseSelf();
       payload.onComplete = completeEventPromise.resolve;
       payloadManager.dispatch([ payload.id ]);
       await completeEventPromise;
@@ -81,7 +81,7 @@ describe('PayloadManager', function() {
       let payloadManager = new PayloadManager(options);
       let payload = payloadManager.add(null, 'image');
       payload.attachFile(testBlob1);
-      let completeEventPromise = ManualPromise();
+      let completeEventPromise = promiseSelf();
       payload.onComplete = completeEventPromise.resolve;
       payloadManager.dispatch([ payload.id ]);
       let result = await Promise.race([
@@ -94,7 +94,7 @@ describe('PayloadManager', function() {
       let payloadManager = new PayloadManager(options);
       let payload = payloadManager.add(null, 'image');
       payload.attachFile(testBlob1);
-      let completeEventPromise = ManualPromise();
+      let completeEventPromise = promiseSelf();
       payload.onComplete = completeEventPromise.resolve;
       payloadManager.dispatch([ payload.id ]);
       setTimeout(() => {
@@ -114,7 +114,7 @@ describe('PayloadManager', function() {
       let payload = payloadManager.add(null, 'text');
       payload.attachStream(stream);
 
-      let streamCompleteEventPromise = ManualPromise();
+      let streamCompleteEventPromise = promiseSelf();
       stream.onComplete = streamCompleteEventPromise.resolve;
       let chunks = chunkBlob(testBlob2, 1000);
       let interval = setInterval(() => {
@@ -127,7 +127,7 @@ describe('PayloadManager', function() {
         }
       }, 50);
 
-      let payloadCompleteEventPromise = ManualPromise();
+      let payloadCompleteEventPromise = promiseSelf();
       payload.onComplete = payloadCompleteEventPromise.resolve;
       payloadManager.dispatch([ payload.id ]);
 
@@ -143,7 +143,7 @@ describe('PayloadManager', function() {
       let payload = payloadManager.add(null, 'text');
       payload.attachStream(stream);
 
-      let completeEventPromise = ManualPromise();
+      let completeEventPromise = promiseSelf();
       stream.onComplete = completeEventPromise.resolve;
 
       let result = await Promise.race([
@@ -158,10 +158,10 @@ describe('PayloadManager', function() {
       let payload = payloadManager.add(null, 'text');
       payload.attachStream(stream);
 
-      let streamCompleteEventPromise = ManualPromise();
+      let streamCompleteEventPromise = promiseSelf();
       stream.onComplete = streamCompleteEventPromise.resolve;
 
-      let payloadCompleteEventPromise = ManualPromise();
+      let payloadCompleteEventPromise = promiseSelf();
       payload.onComplete = payloadCompleteEventPromise.resolve;
       payloadManager.dispatch([ payload.id ]);
 

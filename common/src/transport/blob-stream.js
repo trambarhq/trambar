@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { performHTTPRequest } from './http-request.js';
-import { ManualPromise } from '../utils/manual-promise.js';
+import { promiseSelf } from '../utils/promise-self.js';
 import { delay } from '../utils/delay.js';
 
 class BlobStream {
@@ -190,7 +190,7 @@ class BlobStream {
   suspend() {
     if (!this.suspended) {
       this.suspended = true;
-      this.resumptionPromise = ManualPromise();
+      this.resumptionPromise = promiseSelf();
     }
   }
 
