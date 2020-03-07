@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import HTTPError from '../errors/http-error.js';
+import { HTTPError } from '../errors.js';
 
 function fetch(method, url, payload, options) {
   let xhr = new XMLHttpRequest();

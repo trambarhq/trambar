@@ -1,9 +1,9 @@
 import Bluebird from 'bluebird';
 import Chai, { expect } from 'chai';
 
-import BlobStream from '../blob-stream.js';
+import { BlobStream } from '../blob-stream.js';
 import * as HTTPRequest from '../http-request.js';
-import HTTPError from  '../../errors/http-error.js';
+import { HTTPError } from  '../../errors.js';
 
 describe('BlobStream', function() {
   let fetchOriginal = HTTPRequest.fetch;

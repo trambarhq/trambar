@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import Bluebird from 'bluebird';
 import Moment from 'moment';
-import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
-import ManualPromise from '../utils/manual-promise.js';
+import { EventEmitter, GenericEvent } from 'relaks-event-emitter';
+import { ManualPromise } from '../utils/manual-promise.js';
 import * as HTTPRequest from '../transport/http-request.js';
-import HTTPError from '../errors/http-error.js';
+import { HTTPError } from '../errors.js';
 import { matchSearchCriteria, limitSearchResults } from './local-search.js';
 import { Search } from './remote-data-source/search.js';
 import { Change } from './remote-data-source/change.js';

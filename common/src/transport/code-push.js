@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import FileError from '../errors/file-error.js';
-import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
+import { EventEmitter, GenericEvent } from 'relaks-event-emitter';
+import { FileError } from '../errors.js';
 
 const defaultOptions = {
 };

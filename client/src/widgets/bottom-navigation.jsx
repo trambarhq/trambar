@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useProgress } from 'relaks';
-import HTTPError from 'common/errors/http-error.js';
 import { findNotificationsUnseenByUser } from 'common/objects/finders/notification-finder.js';
 import { findUser } from 'common/objects/finders/user-finder.js';
 import { setApplicationIconBadgeNumber } from 'common/transport/push-notifier.js';

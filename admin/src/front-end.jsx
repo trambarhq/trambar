@@ -3,8 +3,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useEventTime } from 'relaks';
 import { CORSRewriter } from 'common/routing/cors-rewriter.js';
 
-import { HTTPError } from 'common/errors/http-error.js';
-
 import { routes } from './routing.js';
 
 // proxy objects

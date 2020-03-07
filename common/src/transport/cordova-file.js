@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import FileError from '../errors/file-error.js';
+import { FileError } from '../errors.js';
 
 class CordovaFile {
   constructor(fullPath, type, size) {

@@ -5,11 +5,11 @@ class FileError extends Error {
       code = code.code;
     }
     this.code = code;
-    this.message = errorMessages[code];
+    this.message = fileErrorMessages[code];
   }
 }
 
-const errorMessages = {
+const fileErrorMessages = {
   1: 'A required file or directory could not be found at the time an operation was processed',
   2: 'Access to the file was denied',
   3: 'Operation was aborted',
@@ -24,7 +24,15 @@ const errorMessages = {
   12: 'The file or directory with the same path already exists'
 };
 
+class Cancellation extends Error {
+  constructor() {
+    super('Operation cancelled');
+    this.cancellation = true;
+  };
+}
+
 export {
-  FileError as default,
   FileError,
+  Cancellation,
 };
+export { HTTPError } from '../../backend/src/lib/errors.mjs';

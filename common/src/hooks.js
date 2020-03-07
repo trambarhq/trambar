@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { useSaveBuffer, AsyncSaveBuffer } from 'relaks';
-import Cancellation from './errors/cancellation.js';
+import { Cancellation } from './errors.js';
 
 const { useState, useMemo, useRef, useCallback } = React;
 
