@@ -2,7 +2,8 @@ import _ from 'lodash';
 import RelaksMediaCapture from 'relaks-media-capture';
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
-import * as Markdown from 'common/utils/markdown.js';
+import { findReferencedResource } from 'common/utils/markdown.js';
+import { getMarkdownIconURL, getAudioURL } from 'common/objects/utils/resource-utils.js';
 import { useLatest, useAfterglow, useConfirmation, useSelectionBuffer, useDraftBuffer } from 'common/hooks.js';
 import { AsyncDraftBuffer } from 'common/hooks.js';
 
@@ -82,12 +83,12 @@ function useMarkdownResources(resources, env) {
   });
 
   const onReference = useListener((evt) => {
-    const res = Markdown.findReferencedResource(resources, evt.name);
+    const res = findReferencedResource(resources, evt.name);
     if (res) {
       referenced.push(res);
       _.pull(unreferenced, res);
       _.pull(zoomable, res);
-      const url = ResourceUtils.getMarkdownIconURL(res, evt.forImage, env);
+      const url = getMarkdownIconURL(res, evt.forImage, env);
       return { href: url, title: evt.name };
     }
   });
@@ -120,7 +121,7 @@ function useMarkdownResources(resources, env) {
           window.open(res.url, '_blank');
         } else if (res.type === 'audio') {
           const version = _.first(_.keys(res.versions));
-          const selected = ResourceUtils.getAudioURL(res, { version }, env);
+          const selected = getAudioURL(res, { version }, env);
           setAudioURL((selected === audioURL) ? null : selected);
         }
       }

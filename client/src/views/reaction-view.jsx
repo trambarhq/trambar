@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
-import * as Markdown from 'common/utils/markdown.js';
-import { renderEmoji } from 'common/utils/plain-text.js';
+import { renderPlainText } from 'common/utils/plain-text.js';
+import { renderMarkdown } from 'common/utils/markdown.js';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import { getUserName, getGender, canAccessRepo } from 'common/objects/utils/user-utils.js';
 import { getCommitNoteURL, getIssueNoteURL, getMergeRequestNoteURL } from 'common/objects/utils/repo-utils.js';
@@ -97,10 +97,14 @@ export function ReactionView(props) {
             </span>
           );
         case 'comment':
-          let langText = p(text);
+          let langText = ;
+          const textProps = {
+            text: p(text),
+            type: 'comment',
+            onReference: markdownResources.onReference
+          };
           if (markdown) {
-            // parse the Markdown text
-            const paragraphs = Markdown.render(langText, markdownResources.onReference);
+            const paragraphs = renderMarkdown(textProps);
             // if there first paragraph is a P tag, turn it into a SPAN
             if (paragraphs[0] && paragraphs[0].type === 'p') {
               paragraphs[0] = <span key={0}>{paragraphs[0].props.children}</span>;
@@ -113,7 +117,7 @@ export function ReactionView(props) {
           } else {
             return (
               <span className="comment">
-                {name}: {renderEmoji(langText)}
+                {name}: {renderPlainText(textProps)}
               </span>
             );
           }

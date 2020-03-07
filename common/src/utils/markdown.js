@@ -2,11 +2,27 @@ import _ from 'lodash';
 import React from 'react';
 import { Parser, InlineLexer, ReactRenderer } from 'mark-gor';
 import * as ListParser from './list-parser.js';
-import * as PlainText from './plain-text.js';
+import { renderEmoji } from './plain-text.js';
 import { parseJSONEncodedURL } from '../objects/utils/resource-utils.js';
 
 // widgets
 import { ResourceView } from '../widgets/resource-view.jsx';
+
+function renderMarkdown(props) {
+  const { type, text, onReference } = props;
+  if (type === 'survey') {
+    const { answers, results, onChange } = props;
+    if (results) {
+      return renderSurveyResults(text, results);
+    } else {
+      return renderSurvey(text, answers, onChange, onReference);
+    }
+  } else if (type === 'task-list') {
+    return renderTaskList(text, answers, onChange, onReference);
+  } else {
+    return render(text);
+  }
+}
 
 /**
  * Detect whether text appears to be Markdown
@@ -16,7 +32,7 @@ import { ResourceView } from '../widgets/resource-view.jsx';
  *
  * @return {Boolean}
  */
-function detect(text, onReference) {
+function isMarkdown(text, onReference) {
   if (typeof(text) === 'object') {
     return _.some(text, detect);
   }
@@ -345,7 +361,7 @@ function renderImage(token, key) {
  * @return {Array<String|ReactElement>}
  */
 function renderText(token, key) {
-  return PlainText.renderEmoji(token.text, { key });
+  return renderEmoji(token.text, { key });
 }
 
 function findReferencedResource(resources, name) {
@@ -376,12 +392,7 @@ function handleClick(evt) {
 }
 
 export {
-  detect,
-  render,
-  renderSurvey,
-  renderSurveyResults,
-  renderTaskList,
-  createParser,
-  createRenderer,
+  renderMarkdown,
+  isMarkdown,
   findReferencedResource,
 };

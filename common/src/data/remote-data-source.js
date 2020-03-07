@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import { EventEmitter, GenericEvent } from 'relaks-event-emitter';
 import { ManualPromise } from '../utils/manual-promise.js';
-import * as HTTPRequest from '../transport/http-request.js';
+import { performHTTPRequest } from '../transport/http-request.js';
 import { HTTPError } from '../errors.js';
 import { matchSearchCriteria, limitSearchResults } from './local-search.js';
 import { Search } from './remote-data-source/search.js';
@@ -404,7 +404,7 @@ export class RemoteDataSource extends EventEmitter {
     let url = `${address}/srv/session/`;
     let options = { responseType: 'json', contentType: 'json' };
     let payload = { handle };
-    await HTTPRequest.fetch('DELETE', url, payload, options);
+    await performHTTPRequest('DELETE', url, payload, options);
   }
 
   /**
@@ -802,7 +802,7 @@ export class RemoteDataSource extends EventEmitter {
         let url = `${session.address}/srv/session/`;
         let options = { responseType: 'json', contentType: 'json' };
         let payload = { area: session.area };
-        let res = await HTTPRequest.fetch('POST', url, payload, options);
+        let res = await performHTTPRequest('POST', url, payload, options);
         session.handle = res.session.handle;
         session.info  = {
           system: res.system,
@@ -825,7 +825,7 @@ export class RemoteDataSource extends EventEmitter {
       let payload = {
         handle: session.handle
       };
-      let res = await HTTPRequest.fetch('GET', url, payload, options);
+      let res = await performHTTPRequest('GET', url, payload, options);
       if (res && res.session) {
         this.grantAuthorization(session, res.session);
         return true;
@@ -857,7 +857,7 @@ export class RemoteDataSource extends EventEmitter {
         };
       }
       let options = { responseType: 'json', contentType: 'json' };
-      let res = await HTTPRequest.fetch('POST', url, payload, options);
+      let res = await performHTTPRequest('POST', url, payload, options);
       this.grantAuthorization(session, res.session);
     } catch (err) {
       if (err.statusCode === 401) {
@@ -879,7 +879,7 @@ export class RemoteDataSource extends EventEmitter {
       let payload = {
         handle: session.handle
       };
-      await HTTPRequest.fetch('DELETE', url, payload, options);
+      await performHTTPRequest('DELETE', url, payload, options);
     } catch(err) {
       // clean cached information anyway, even through we failed to
       // remove the session in the backend
@@ -905,7 +905,7 @@ export class RemoteDataSource extends EventEmitter {
         handle: parentSession.handle,
         area,
       };
-      let res = await HTTPRequest.fetch('POST', url, payload, options);
+      let res = await performHTTPRequest('POST', url, payload, options);
       mobileSession.handle = res.session.handle;
       return mobileSession.handle;
     } catch (err) {
@@ -918,7 +918,7 @@ export class RemoteDataSource extends EventEmitter {
     let url = `${session.address}/srv/session/`;
     let options = { responseType: 'json', contentType: 'json' };
     let payload = { handle: session.handle };
-    let res = await HTTPRequest.fetch('GET', url, payload, options);
+    let res = await performHTTPRequest('GET', url, payload, options);
     if (!res) {
       throw new HTTPError(400);
     }
@@ -1540,7 +1540,7 @@ export class RemoteDataSource extends EventEmitter {
     this.triggerEvent(new RemoteDataSourceEvent('requeststart', this));
     let result;
     try {
-      result = await HTTPRequest.fetch('POST', url, req, options);
+      result = await performHTTPRequest('POST', url, req, options);
     } catch (err) {
       if (process.env.NODE_ENV !== 'production') {
         console.log(err.message)

@@ -8,9 +8,9 @@ Chai.use(ChaiAsPromised);
 
 import { RemoteDataSource } from '../remote-data-source.js';
 import { IndexedDBCache } from '../indexed-db-cache.js';
-import * as HTTPRequest from '../../transport/http-request.js';
 import { HTTPError } from '../../errors.js';
 import { ManualPromise } from '../../utils/manual-promise.js';
+import { performHTTPRequest } from '../../transport/http-request.js';
 
 describe('RemoteDataSource', function() {
   before(function() {

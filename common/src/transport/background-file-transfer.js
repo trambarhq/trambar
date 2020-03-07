@@ -2,10 +2,10 @@ import _ from 'lodash';
 
 const FileTransferManager = window.FileTransferManager;
 
-let transfers = [];
+const transfers = [];
 let uploader;
 
-function initialize() {
+function initializeBackgroundTransfer() {
   try {
     uploader = FileTransferManager.init();
     uploader.on('success', function(upload) {
@@ -40,7 +40,7 @@ function initialize() {
  * @param  {String} url
  * @param  {Object|undefined} options
  */
-function send(token, path, url, options) {
+function performBackgroundTransfer(token, path, url, options) {
   let payload = {
      id: token,
      filePath: path,
@@ -66,7 +66,7 @@ function send(token, path, url, options) {
  *
  * @return {Promise}
  */
-function cancel(token) {
+function cancelBackgroundTransfer(token) {
   return new Promise((resolve, reject) => {
     let success = (res) => {
       resolve(res);
@@ -79,7 +79,7 @@ function cancel(token) {
 }
 
 export {
-  initialize,
-  send,
-  cancel,
+  initializeBackgroundTransfer,
+  performBackgroundTransfer,
+  cancelBackgroundTransfer,
 };

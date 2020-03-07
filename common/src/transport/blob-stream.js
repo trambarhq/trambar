@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import * as HTTPRequest from './http-request.js';
+import { performHTTPRequest } from './http-request.js';
 import { ManualPromise } from '../utils/manual-promise.js';
 import { delay } from '../utils/delay.js';
 
@@ -246,7 +246,7 @@ class BlobStream {
       let formData = new FormData;
       formData.append('abort', 1);
       try {
-        await HTTPRequest.fetch('POST', this.url, formData);
+        await performHTTPRequest('POST', this.url, formData);
       } catch (err) {
         // ignore error
       }
@@ -316,7 +316,7 @@ class BlobStream {
           more = false;
         }
         // save the promise so we can cancel
-        this.chunkPromise = HTTPRequest.fetch('POST', this.url, formData, options);
+        this.chunkPromise = performHTTPRequest('POST', this.url, formData, options);
         result = await this.chunkPromise;
         this.finalize(blob);
         successful = true;

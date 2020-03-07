@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { HTTPError } from '../errors.js';
 
-function fetch(method, url, payload, options) {
+function performHTTPRequest(method, url, payload, options) {
   let xhr = new XMLHttpRequest();
   let promise = new Promise((resolve, reject) => {
     let username = _.get(options, 'username', null);
@@ -94,5 +94,6 @@ function omitBlob(key, value) {
 }
 
 export {
-  fetch,
+  performHTTPRequest,
+  performHTTPRequest as fetch,
 };

@@ -2,9 +2,9 @@ import _ from 'lodash';
 import { EventEmitter, GenericEvent } from 'relaks-event-emitter';
 import { BlobStream } from './blob-stream.js';
 import { Payload } from './payload.js';
-import * as HTTPRequest from './http-request.js';
+import { performHTTPRequest } from './http-request.js';
 import { CordovaFile } from './cordova-file.js';
-import * as BackgroundFileTransfer from './background-file-transfer.js';
+import { initializeBackgroundTransfer, } from './background-file-transfer.js';
 import { generateToken } from '../utils/random-token.js';
 import { HTTPError, FileError } from '../errors.js';
 import { delay } from '../utils/delay.js';
@@ -28,7 +28,7 @@ class PayloadManager extends EventEmitter {
   activate() {
     if (!this.active) {
       if (!this.initialized) {
-        BackgroundFileTransfer.initialize();
+        initializeBackgroundTransfer();
         this.initialized = true;
       }
       this.active = true;
@@ -491,7 +491,7 @@ class PayloadManager extends EventEmitter {
       },
     };
     part.uploaded = 0;
-    part.promise = HTTPRequest.fetch('POST', url, formData, options);
+    part.promise = performHTTPRequest('POST', url, formData, options);
     let res = await part.promise;
     return res;
   }
@@ -523,10 +523,10 @@ class PayloadManager extends EventEmitter {
           this.updatePayloadProgress(payload, part, upload.progress / 100);
         },
       };
-      BackgroundFileTransfer.send(token, file.fullPath, url, options);
+      performBackgroundTransfer(token, file.fullPath, url, options);
     });
     part.promise.cancel = () => {
-      BackgroundFileTransfer.cancel(token);
+      cancelBackgroundTransfer(token);
     };
     let res = await part.promise;
     if (!(res instanceof Object)) {
@@ -561,7 +561,7 @@ class PayloadManager extends EventEmitter {
       responseType: 'json',
       contentType: 'json',
     };
-    return HTTPRequest.fetch('POST', url, { stream: stream.id }, options);
+    return performHTTPRequest('POST', url, { stream: stream.id }, options);
   }
 
   /**
@@ -579,7 +579,7 @@ class PayloadManager extends EventEmitter {
       contentType: 'json',
     };
     let body = _.extend({ url: part.url }, part.options);
-    part.promise = HTTPRequest.fetch('POST', url, body, options);
+    part.promise = performHTTPRequest('POST', url, body, options);
     return part.promise;
   }
 
@@ -670,7 +670,7 @@ class PayloadManager extends EventEmitter {
     try {
       let index = _.indexOf(this.parts, part);
       let token = `${payload.id}-${index + 1}`;
-      BackgroundFileTransfer.cancel(token)
+      cancelBackgroundTransfer(token)
     } catch (err) {
     }
   }

@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import Chai, { expect } from 'chai';
 import ChaiAsPromised from 'chai-as-promised';
-import * as HTTPRequest from '../http-request.js';
 import ManualPromise from '../../utils/manual-promise';
 import TestServer from './lib/test-server.js';
 
-import PayloadManager from '../payload-manager.js';
+import { performHTTPRequest } from '../http-request.js';
+import { PayloadManager } from '../payload-manager.js';
 
 let port = 7777;
 let baseURL = `http://localhost:${port}`;
@@ -57,7 +57,7 @@ describe('PayloadManager', function() {
       payloadManager.dispatch([ payload.id ]);
       await completeEventPromise
       let url = `${baseURL}/download/${payload.id}/main`;
-      let result = await HTTPRequest.fetch('GET', url);
+      let result = await performHTTPRequest('GET', url);
       expect(result).to.equal(testJSON);
     })
     it('should send payload with two files', async function() {
@@ -71,10 +71,10 @@ describe('PayloadManager', function() {
       payloadManager.dispatch([ payload.id ]);
       await completeEventPromise;
       let url1 = `${baseURL}/download/${payload.id}/main`;
-      let result1 = await HTTPRequest.fetch('GET', url1);
+      let result1 = await performHTTPRequest('GET', url1);
       expect(result1).to.equal(testJSON);
       let url2 = `${baseURL}/download/${payload.id}/second`;
-      let result2 = await HTTPRequest.fetch('GET', url2);
+      let result2 = await performHTTPRequest('GET', url2);
       expect(result2).to.equal(testString);
     })
     it('should not send payload when payload manager is inactive', async function() {
@@ -102,7 +102,7 @@ describe('PayloadManager', function() {
       }, 100);
       await completeEventPromise;
       let url = `${baseURL}/download/${payload.id}/main`;
-      let result = await HTTPRequest.fetch('GET', url);
+      let result = await performHTTPRequest('GET', url);
       expect(result).to.equal(testJSON);
     })
   })
@@ -134,7 +134,7 @@ describe('PayloadManager', function() {
       await payloadCompleteEventPromise;
       await streamCompleteEventPromise;
       let url = `${baseURL}/download/${payload.id}/main`;
-      let result = await HTTPRequest.fetch('GET', url);
+      let result = await performHTTPRequest('GET', url);
       expect(result).to.equal(testString);
     })
     it ('should keep a stream suspend when PayloadManager is inactive', async function() {
@@ -172,7 +172,7 @@ describe('PayloadManager', function() {
       await payloadCompleteEventPromise;
       await streamCompleteEventPromise;
       let url = `${baseURL}/download/${payload.id}/main`;
-      let result = await HTTPRequest.fetch('GET', url);
+      let result = await performHTTPRequest('GET', url);
       expect(result).to.equal(testString);
     })
   })

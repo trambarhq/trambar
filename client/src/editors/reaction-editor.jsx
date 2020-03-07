@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import { findTags } from 'common/utils/tag-scanner.js';
-import * as Markdown from 'common/utils/markdown.js';
+import { isMarkdown } from 'common/utils/markdown.js';
 import { FocusManager } from 'common/utils/focus-manager.js';
 import { saveReaction, republishReaction, removeReaction } from 'common/objects/savers/reaction-saver.js';
 import { hasContents, removeSuperfluousDetails } from 'common/objects/utils/reaction-utils.js';
@@ -260,7 +260,7 @@ function adjustReaction(reaction) {
 
   if (reaction.details.markdown === undefined) {
     for (let [ lang, langText ] of _.entries(reaction.details.text)) {
-      if (Markdown.detect(langText)) {
+      if (isMarkdown(langText)) {
         reaction.details.markdown = true;
         break;
       }

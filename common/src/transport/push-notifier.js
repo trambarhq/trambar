@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { ManualPromise } from '../utils/manual-promise.js';
-import Notifier, { NotifierEvent } from './notifier.js';
-import * as HTTPRequest from './http-request.js';
+import { Notifier, NotifierEvent } from './notifier.js';
+import { performHTTPRequest } from './http-request.js';
 import { delay } from '../utils/delay.js';
 
 const defaultOptions = {
@@ -160,7 +160,7 @@ class PushNotifier extends Notifier {
       responseType: 'json',
       contentType: 'json',
     };
-    return HTTPRequest.fetch('POST', url, payload, options);
+    return performHTTPRequest('POST', url, payload, options);
   }
 
   /**
