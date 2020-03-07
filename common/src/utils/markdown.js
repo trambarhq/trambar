@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { Parser, InlineLexer, ReactRenderer } from 'mark-gor';
-import * as ListParser from './list-parser.js';
+import { extractListItems } from './list-parser.js';
 import { renderEmoji } from './plain-text.js';
 import { parseJSONEncodedURL } from '../objects/utils/resource-utils.js';
 
@@ -106,7 +106,7 @@ function render(text, onReference) {
  * @return {Array<String|ReactElement>}
  */
 function renderSurvey(text, answers, onChange, onReference) {
-  const listTokens = ListParser.extract(text);
+  const listTokens = extractListItems(text);
   const markdownTexts = renderListTokens(listTokens, onReference);
 
   // create text nodes and list items
@@ -152,7 +152,7 @@ function renderSurvey(text, answers, onChange, onReference) {
  * @return {Array<String|ReactElement>}
  */
 function renderSurveyResults(text, voteCounts, onReference) {
-  const listTokens = ListParser.extract(text);
+  const listTokens = extractListItems(text);
   const markdownTexts = renderListTokens(listTokens, onReference);
 
   // create text nodes and list items
@@ -199,7 +199,7 @@ function renderSurveyResults(text, voteCounts, onReference) {
  * @return {Array<String|ReactElement>}
  */
 function renderTaskList(text, answers, onChange, onReference) {
-  const listTokens = ListParser.extract(text);
+  const listTokens = extractListItems(text);
   const markdownTexts = renderListTokens(listTokens, onReference);
 
   // create text nodes and list items
@@ -238,7 +238,7 @@ function renderTaskList(text, answers, onChange, onReference) {
 }
 
 /**
- * Parse results from ListParser.parse() as Markdown. The result will retain the
+ * Parse results from extractListItems() as Markdown. The result will retain the
  * same structure, with arrays of ReactElement replacing plain text.
  *
  * @param  {Array<String|Array<Object>>} listTokens

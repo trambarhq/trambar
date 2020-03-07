@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 import EmojiRegex from 'emoji-regex';
 import ReactEasyEmoji from 'react-easy-emoji';
-import * as ListParser from './list-parser.js';
+import { extractListItems } from './list-parser.js';
 
 function renderPlainText(props) {
   const { type, text } = props;
@@ -30,7 +30,7 @@ function renderPlainText(props) {
  * @return {Array<String|ReactElement>}
  */
 function renderSurvey(text, answers, onChange) {
-  let listTokens = ListParser.extract(text);
+  const listTokens = extractListItems(text);
   return _.map(listTokens, (listToken, index) => {
     if (listToken instanceof Array) {
       return _.map(listToken, (item, key) => {
@@ -79,7 +79,7 @@ function renderSurvey(text, answers, onChange) {
  * @return {Array<String|ReactElement>}
  */
 function renderSurveyResults(text, voteCounts) {
-  let listTokens = ListParser.extract(text);
+  const listTokens = extractListItems(text);
   return _.map(listTokens, (listToken, index) => {
     if (listToken instanceof Array) {
       return _.map(listToken, (item, key) => {
@@ -124,7 +124,7 @@ function renderSurveyResults(text, voteCounts) {
  * @return {Array<String|ReactElement>}
  */
 function renderTaskList(text, answers, onChange) {
-  let listTokens = ListParser.extract(text);
+  const listTokens = extractListItems(text);
   return _.map(listTokens, (listToken, index) => {
     if (listToken instanceof Array) {
       return _.map(listToken, (item, key) => {

@@ -1,6 +1,8 @@
 import { expect } from 'chai';
 
-import * as ListParser from '../list-parser.js';
+import {
+  extractListItems,
+} from '../list-parser.js';
 
 describe('ListParser', function() {
   describe('#extract()', function() {
@@ -12,7 +14,7 @@ Pick an item:
 * [ ] item 2
 * [ ] item 3
       `
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       expect(tokens[0]).to.be.a('string');
       expect(tokens[1]).to.be.an('array').that.has.lengthOf(3);
       for (let item of tokens[1]) {
@@ -28,7 +30,7 @@ Pick an item:
         * [ ] item 2
         * [ ] item 3
       `
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       expect(tokens[0]).to.be.a('string');
       expect(tokens[1]).to.be.an('array').that.has.lengthOf(3);
       for (let item of tokens[1]) {
@@ -43,7 +45,7 @@ Pick an item:
         * [x] item 2
         * [x] item 3
       `
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       expect(tokens[0]).to.be.a('string');
       expect(tokens[1]).to.be.an('array').that.has.lengthOf(3);
       for (let item of tokens[1]) {
@@ -63,7 +65,7 @@ Pick an item:
         * [ ] item 4
         * [ ] item 5
       `
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       expect(tokens[0]).to.be.a('string');
       expect(tokens[1]).to.be.an('array').that.has.lengthOf(3);
       expect(tokens[2]).to.be.a('string');
@@ -71,13 +73,13 @@ Pick an item:
     })
     it('should capture text before and after an item', function() {
       let text = 'start\n* [ ] item 1\nend';
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       expect(tokens[0]).to.be.a('string').that.equals('start\n');
       expect(tokens[2]).to.be.a('string').that.equals('\nend');
     })
     it('should just return the text when there is no list', function() {
       let text = 'This is a test and this is only a test\n\nHello world';
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       expect(tokens).to.be.an('array').that.that.has.lengthOf(1);
       expect(tokens[0]).to.be.a('string').that.equals(text);
     })
@@ -96,7 +98,7 @@ Pick an item:
         * [ ] item 4
         * [ ] item 5
       `
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       let output = ListParser.join(tokens);
       expect(output).to.be.a('string').that.equals(text);
     })
@@ -115,7 +117,7 @@ Pick an item:
         * [ ] item 4
         * [ ] item 5
       `
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       let item2 = ListParser.find(tokens, 1, 2);
       let item5 = ListParser.find(tokens, 2, 5);
       expect(item2).to.have.property('label', 'item 2');
@@ -136,7 +138,7 @@ Pick an item:
         * [x] item 4
         * [ ] item 5
       `
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       let count = ListParser.count(tokens);
       expect(count).to.equal(5);
     })
@@ -153,7 +155,7 @@ Pick an item:
         * [x] item 4
         * [ ] item 5
       `
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       let count1 = ListParser.count(tokens, true);
       let count2 = ListParser.count(tokens, false);
       expect(count1).to.equal(3);
@@ -174,7 +176,7 @@ Pick an item:
         * [ ] item 4
         * [ ] item 5
       `
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       ListParser.set(tokens, 1, 1, true);
       ListParser.set(tokens, 2, 4, true);
       let item1 = ListParser.find(tokens, 1, 1);
@@ -197,7 +199,7 @@ Pick an item:
         * [X] item 4
         * [ ] item 5
       `
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       ListParser.set(tokens, 1, 1, false);
       ListParser.set(tokens, 2, 4, false);
       let item1 = ListParser.find(tokens, 1, 1);
@@ -220,7 +222,7 @@ Pick an item:
         * [X] item 4
         * [ ] item 5
       `
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       ListParser.set(tokens, 1, 1, true, true);
       ListParser.set(tokens, 2, 5, true, true);
       let item1 = ListParser.find(tokens, 1, 1);
@@ -240,7 +242,7 @@ Pick an item:
         * [ ] пункт 2
         * [ ] пункт 3
       `;
-      let tokens = ListParser.extract(text);
+      let tokens = extractListItems(text);
       ListParser.set(tokens, 1, 1, true);
       let item1 = ListParser.find(tokens, 1, 1);
       expect(item1).to.have.property('answer', '\u0445');

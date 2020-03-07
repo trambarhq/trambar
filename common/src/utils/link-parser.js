@@ -7,7 +7,7 @@ import _ from 'lodash';
  *
  * @return {Object|null}
  */
-function parse(text) {
+function parseLink(text) {
   let props = {};
   let re = /^(\w+)=(.*)/g;
   let lines = _.split(text, /[\r\n]+/);
@@ -23,5 +23,5 @@ function parse(text) {
 }
 
 export {
-  parse,
+  parseLink,
 };

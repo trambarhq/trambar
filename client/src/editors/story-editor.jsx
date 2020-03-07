@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
-import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
-import * as ListParser from 'common/utils/list-parser.js';
-import { renderPlainText } from 'common/utils/plain-text.js';
-import { renderMarkdown } from 'common/utils/markdown.js';
-import { findTags } from 'common/utils/tag-scanner.js';
 import { FocusManager } from 'common/utils/focus-manager.js';
+import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
+import { isList, extractListItems, countListItems } from 'common/utils/list-parser.js';
+import { renderPlainText } from 'common/utils/plain-text.js';
+import { renderMarkdown, isMarkdown } from 'common/utils/markdown.js';
+import { findTags } from 'common/utils/tag-scanner.js';
 import { saveStory, removeStory } from 'common/objects/savers/story-saver.js';
 import { isCancelable, hasContents, removeSuperfluousDetails } from 'common/objects/utils/story-utils.js';
 import { isCoauthor } from 'common/objects/utils/user-utils.js';
@@ -541,20 +541,19 @@ function adjustStory(story) {
 
   // automatically set story type to task list
   if (!story.type) {
-    if (ListParser.detect(story.details.text)) {
+    if (isList(story.details.text)) {
       story.type = 'task-list';
       if (story.details.markdown === undefined) {
         story.details.markdown = false;
       }
     }
   }
-
   if (story.type === 'task-list') {
     // update unfinished_tasks
     const counts = [];
     for (let [ lang, langText ] of _.entries(story.details.text)) {
-      const tokens = ListParser.extract(langText);
-      const unfinished = ListParser.count(tokens, false);
+      const tokens = extractListItems(langText);
+      const unfinished = countListItems(tokens, false);
       counts.push(unfinished);
     }
     story.unfinished_tasks = _.max(counts);
@@ -563,7 +562,7 @@ function adjustStory(story) {
   // automatically enable Markdown formatting
   if (story.details.markdown === undefined) {
     for (let [ lang, langText ] of _.entries(story.details.text)) {
-      if (Markdown.detect(langText)) {
+      if (isMarkdown(langText)) {
         story.details.markdown = true;
         break;
       }
@@ -578,7 +577,7 @@ function adjustStory(story) {
 
 function insertListTemplate(textArea) {
   textArea.focus();
-  if (!ListParser.detect(textArea.value)) {
+  if (!isList(textArea.value)) {
     setTimeout(() => {
       const value = textArea.value;
       const selStart = textArea.selectionStart;
@@ -609,7 +608,7 @@ function appendListItem(textArea) {
   const textInFront = value.substr(0, selStart);
   const lineFeedIndex = _.lastIndexOf(textInFront.substr(0, textInFront.length - 1), '\n');
   const lineInFront = textInFront.substr(lineFeedIndex + 1);
-  const tokens = ListParser.extract(lineInFront);
+  const tokens = extractListItems(lineInFront);
   const item = tokens?.[0]?.[0];
   if (item instanceof Object) {
     if (item.label) {

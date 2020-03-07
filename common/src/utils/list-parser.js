@@ -10,7 +10,7 @@ const regExp = /^([ \t]*)\*\s+\[([ xхχ])\]([ \t]*)(.*?)([ \t]*?)$/mig;
  *
  * @return {Array}
  */
-function extract(text) {
+function extractListItems(text) {
   text = (text) ? text : '';
 
   let tokens = [];
@@ -67,7 +67,7 @@ function extract(text) {
  *
  * @return {Boolean}
  */
-function detect(text) {
+function isList(text) {
   if (typeof(text) === 'object') {
     return _.some(text, detect);
   }
@@ -87,7 +87,7 @@ function detect(text) {
  * @param  {Boolean} checked
  * @param  {Boolean} clearOthers
  */
-function set(tokens, list, key, checked, clearOthers) {
+function setListItem(tokens, list, key, checked, clearOthers) {
   for (let token of tokens) {
     if (token instanceof Array) {
       for (let item of token) {
@@ -106,7 +106,7 @@ function set(tokens, list, key, checked, clearOthers) {
   }
 }
 
-function update(item, checked) {
+function updateListItem(item, checked) {
   item.checked = checked;
   if (checked) {
     let x;
@@ -132,7 +132,7 @@ function update(item, checked) {
  *
  * @return {Object|null}
  */
-function find(tokens, list, key) {
+function findListItem(tokens, list, key) {
   for (let token of tokens) {
     if (token instanceof Array) {
       let result = _.find(token, (item) => {
@@ -156,7 +156,7 @@ function find(tokens, list, key) {
  *
  * @return {Number}
  */
-function count(tokens, checked) {
+function countListItems(tokens, checked) {
   let total = 0;
   for (let token of tokens) {
     if (token instanceof Array) {
@@ -177,7 +177,7 @@ function count(tokens, checked) {
  *
  * @return {String}
  */
-function join(tokens) {
+function stringifyList(tokens) {
   // concatenate tokens into a string again
   tokens = _.flattenDeep(tokens);
   let lines = [];
@@ -192,11 +192,11 @@ function join(tokens) {
 }
 
 export {
-  extract,
-  detect,
-  set,
-  update,
-  find,
-  count,
-  join,
+  extractListItems,
+  setListItem,
+  updateListItem,
+  findListItem,
+  countListItems,
+  isList,
+  stringifyList,
 };

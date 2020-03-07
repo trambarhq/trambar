@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import * as ListParser from 'common/utils/list-parser.js';
+import { extractListItems, updateListItem, stringifyList } from 'common/utils/list-parser.js';
 import { mergeObjects } from '../../data/merger.js';
 import { mergeLists } from './resource-utils.js';
 import {
@@ -207,7 +207,7 @@ function mergeRemoteChanges(local, remote, common) {
 function extractUserAnswers(story, locale) {
   const { p } = locale;
   const langText = p(story.details.text);
-  const tokens = ListParser.extract(langText);
+  const tokens = extractListItems(langText);
   const answers = {};
   for (let token of tokens) {
     for (let item of token) {
@@ -229,7 +229,7 @@ function insertUserAnswers(story, answers) {
   const storyUpdated = _.cloneDeep(story);
   const taskCounts = [];
   storyUpdated.details.text = _.mapValues(story.details.text, (langText) => {
-    const tokens = ListParser.extract(langText);
+    const tokens = extractListItems(langText);
     for (let token of tokens) {
       for (let item of token) {
         let checked;
@@ -238,14 +238,14 @@ function insertUserAnswers(story, answers) {
         } else if (story.type === 'survey') {
           checked = (_.get(answers, item.list) === item.key);
         }
-        ListParser.update(item, checked);
+        updateListItem(item, checked);
       }
     }
     if (story.type === 'task-list') {
-      const unfinished = ListParser.count(tokens, false);
+      const unfinished = countListItems(tokens, false);
       taskCounts.push(unfinished);
     }
-    return ListParser.join(tokens);
+    return stringifyList(tokens);
   });
   if (story.type === 'task-list') {
     storyUpdated.unfinished_tasks = _.max(taskCounts);
