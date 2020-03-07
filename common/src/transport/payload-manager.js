@@ -1,6 +1,4 @@
 import _ from 'lodash';
-import Bluebird from 'bluebird';
-import Moment from 'moment';
 import { EventEmitter, GenericEvent } from 'relaks-event-emitter';
 import { BlobStream } from './blob-stream.js';
 import { Payload } from './payload.js';
@@ -9,6 +7,7 @@ import { CordovaFile } from './cordova-file.js';
 import * as BackgroundFileTransfer from './background-file-transfer.js';
 import { generateToken } from '../utils/random-token.js';
 import { HTTPError, FileError } from '../errors.js';
+import { delay } from '../utils/delay.js';
 
 const defaultOptions = {
   uploadURL: null,
@@ -409,9 +408,9 @@ class PayloadManager extends EventEmitter {
       throw new HTTPError(403);
     }
     payload.started = true;
-    payload.uploadStartTime = Moment().toISOString();
+    payload.uploadStartTime = (new Date).toISOString();
     for (let part of payload.parts) {
-      let delay = 1000;
+      let retryInterval = 1000;
       while (!part.sent && !payload.canceled) {
         try {
           await this.waitForConnectivity();
@@ -428,13 +427,13 @@ class PayloadManager extends EventEmitter {
             throw err;
           }
           // wait a bit then try again
-          delay = Math.min(delay * 2, 10 * 1000);
-          await Bluebird.delay(delay);
+          retryInterval = Math.min(retryInterval * 2, 10 * 1000);
+          await delay(retryInterval);
         }
       }
     }
     payload.sent = true;
-    payload.uploadEndTime = Moment().toISOString();
+    payload.uploadEndTime = (new Date).toISOString();
     if (payload.onComplete) {
       payload.onComplete(new PayloadManagerEvent('complete', payload, {
         destination: payload.destination,

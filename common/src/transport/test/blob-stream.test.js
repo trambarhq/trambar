@@ -1,5 +1,5 @@
-import Bluebird from 'bluebird';
 import Chai, { expect } from 'chai';
+import { delay } from '../utils/delay.js';
 
 import { BlobStream } from '../blob-stream.js';
 import * as HTTPRequest from '../http-request.js';
@@ -23,7 +23,7 @@ describe('BlobStream', function() {
       let stream = new BlobStream('http://somewhere/2', {});
       let result = await Promise.race([
         stream.pull(),
-        Bluebird.resolve('timeout').delay(250)
+        delay(250).then(() => 'timeout')
       ]);
       expect(result).to.equal('timeout');
     })
@@ -37,7 +37,7 @@ describe('BlobStream', function() {
       }, 100);
       let result = await Promise.race([
         stream.pull(),
-        Bluebird.resolve('timeout').delay(1000)
+        delay(1000).then(() => 'timeout')
       ]);
       expect(result).to.equal(blob);
     })
@@ -50,7 +50,7 @@ describe('BlobStream', function() {
       }, 100);
       let result = await Promise.race([
         stream.pull(),
-        Bluebird.resolve('timeout').delay(1000)
+        delay(1000).then(() => 'timeout')
       ]);
       expect(result).to.be.null;
     })
@@ -119,7 +119,7 @@ describe('BlobStream', function() {
       let sent = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
         let onUploadProgress = options.onUploadProgress;
-        await Bluebird.delay(20);
+        await delay(20);
         sent++;
         if (onUploadProgress) {
           onUploadProgress({
@@ -153,7 +153,7 @@ describe('BlobStream', function() {
       let sentBeforeResuming = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
         let onUploadProgress = options.onUploadProgress;
-        await Bluebird.delay(20);
+        await delay(20);
         sent++;
 
         if (sent === sentBeforeSuspending) {

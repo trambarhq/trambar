@@ -1,8 +1,8 @@
 import _ from 'lodash';
-import { delay } from 'bluebird';
 import React from 'react';
 import { useProgress } from 'relaks';
 import Moment from 'moment';
+import { delay } from 'common/utils/delay.js';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';

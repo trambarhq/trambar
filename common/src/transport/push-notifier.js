@@ -1,10 +1,10 @@
 import _ from 'lodash';
-import Bluebird from 'bluebird';
-import ManualPromise from '../utils/manual-promise.js';
+import { ManualPromise } from '../utils/manual-promise.js';
 import Notifier, { NotifierEvent } from './notifier.js';
 import * as HTTPRequest from './http-request.js';
+import { delay } from '../utils/delay.js';
 
-let defaultOptions = {
+const defaultOptions = {
   initialReconnectionDelay: 500,
   maximumReconnectionDelay: 30000,
   platforms: {
@@ -97,7 +97,7 @@ class PushNotifier extends Notifier {
    * @return {Promise<Boolean>}
    */
   async registerAtPushRelay(address, relayAddress) {
-    let delay = this.options.initialReconnectionDelay;
+    let reconnectionDelay = this.options.initialReconnectionDelay;
     let maximumDelay = this.options.maximumReconnectionDelay;
 
     this.address = address;
@@ -134,12 +134,12 @@ class PushNotifier extends Notifier {
         return true;
       } catch (err) {
         console.error(err);
-        delay *= 2;
-        if (delay > maximumDelay) {
-          delay = maximumDelay;
+        reconnectionDelay *= 2;
+        if (reconnectionDelay > maximumDelay) {
+          reconnectionDelay = maximumDelay;
         }
         console.log(`Connection attempt in ${delay}ms: ${relayAddress}`);
-        await Bluebird.delay(delay, null);
+        await delay(reconnectionDelay);
         if (this.address !== address || this.relayAddress !== relayAddress) {
           return false;
         }

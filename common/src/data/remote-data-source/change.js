@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Bluebird from 'bluebird';
+import { delay } from '../../utils/delay.js';
 
 import { matchSearchCriteria } from './local-search.js';
 import { allocateTempoaryID } from './temporary-id.js';
@@ -70,7 +70,7 @@ export class Change {
     if (!_.isEmpty(this.dependentPromises)) {
       await Promise.all(this.dependentPromises);
     }
-    let delay = 1000;
+    let retryInterval = 1000;
     while (!this.canceled) {
       this.dispatched = true;
 
@@ -94,8 +94,8 @@ export class Change {
         } else {
           this.dispatched = false;
           // wait a bit then try again
-          delay = Math.min(delay * 2, 10 * 1000);
-          await Bluebird.delay(delay);
+          retryInterval = Math.min(retryInterval * 2, 10 * 1000);
+          await delay(retryInterval);
           if (this.canceled) {
             this.resolvePromise([]);
             return;

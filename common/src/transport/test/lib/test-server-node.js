@@ -1,11 +1,13 @@
 const _ = require('lodash');
-const Bluebird = require('bluebird');
 const Express = require('express');
 const BodyParser = require('body-parser');
 const Multer = require('multer');
 const CORS = require('cors');
 const SockJS = require('sockjs');
-const Crypto = Bluebird.promisifyAll(require('crypto'));
+const Util = require('util');
+const Crypto = require('crypto');
+
+const randomBytes = Util.promisify(Crypto.randomBytes);
 
 module.exports = {
   start,
@@ -49,7 +51,7 @@ async function start(port, options) {
       });
 
       // assign a random id to socket
-      let buffer = await Crypto.randomBytesAsync(16);
+      const buffer = await randomBytes(16);
       socket.token = buffer.toString('hex');
       socket.write(JSON.stringify({ socket: socket.token }));
     }

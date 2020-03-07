@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import Bluebird from 'bluebird';
 import SockJS from 'sockjs-client';
-import Notifier, { NotifierEvent } from './notifier.js';
+import { Notifier, NotifierEvent } from './notifier.js';
+import { delay } from '../utils/delay.js';
 
 const defaultOptions = {
   reconnectionDelay: 1000,
@@ -102,7 +102,7 @@ class WebsocketNotifier extends Notifier {
         return true;
       } catch (err) {
         //console.error(err);
-        await Bluebird.delay(reconnectionDelay);
+        await delay(reconnectionDelay);
         if (this.address !== address) {
           return false;
         }

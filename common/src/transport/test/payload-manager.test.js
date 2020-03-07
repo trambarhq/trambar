@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Bluebird from 'bluebird';
 import Chai, { expect } from 'chai';
 import ChaiAsPromised from 'chai-as-promised';
 import * as HTTPRequest from '../http-request.js';
@@ -87,7 +86,7 @@ describe('PayloadManager', function() {
       payloadManager.dispatch([ payload.id ]);
       let result = await Promise.race([
         completeEventPromise,
-        Bluebird.resolve('timeout').delay(100)
+        delay(100).then(() => 'timeout')
       ]);
       expect(result).to.equal('timeout');
     })
@@ -149,7 +148,7 @@ describe('PayloadManager', function() {
 
       let result = await Promise.race([
         completeEventPromise,
-        Bluebird.resolve('timeout').delay(350),
+        delay(350).then(() => 'timeout')
       ]);
       expect(result).to.equal('timeout');
     })

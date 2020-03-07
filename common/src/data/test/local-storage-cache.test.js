@@ -1,4 +1,3 @@
-import Promise from 'bluebird';
 import { expect } from 'chai';
 
 import LocalStorageCache from '../local-storage-cache.js';

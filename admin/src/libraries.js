@@ -1,7 +1,4 @@
 const libraries = {
-  'bluebird': async () => {
-    await import('bluebird');
-  },
   'chartist': async () => {
     await import('chartist');
   },

@@ -1,8 +1,8 @@
 import _ from 'lodash';
-import Bluebird from 'bluebird';
 import Moment from 'moment';
 import Chai, { expect } from 'chai';
 import ChaiAsPromised from 'chai-as-promised';
+import { delay } from '../../utils/delay.js';
 
 Chai.use(ChaiAsPromised);
 
@@ -120,10 +120,10 @@ describe('RemoteDataSource', function() {
       let authorized = await dataSource.checkAuthorization(location);
       expect(dataSource.hasAuthorization(location)).to.be.false;
       expect(authorized).to.be.false;
-      let result = await Bluebird.race([
+      let result = await Promise.race([
         expirationEventPromise,
         violationEventPromise,
-        Bluebird.resolve('no event').delay(200)
+        delay(200).then(() => 'no event')
       ]);
       expect(result).to.equal('no event');
     })
@@ -207,7 +207,7 @@ describe('RemoteDataSource', function() {
         changeEventPromise,
         expirationEventPromise,
         violationEventPromise,
-        Bluebird.resolve('no event').delay(100)
+        delay(200).then(() => 'no event')
       ]);
       expect(result).to.equal('no event');
     })
@@ -528,7 +528,7 @@ describe('RemoteDataSource', function() {
       let discovery = 0;
       let retrieval = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/discovery/.test(url)) {
           discovery++;
           return {
@@ -582,7 +582,7 @@ describe('RemoteDataSource', function() {
       let retrieval = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
         if (/discovery/.test(url)) {
-          await Bluebird.delay(50);
+          await delay(50);
           discovery++;
           return {
             ids: _.map(objects, 'id'),
@@ -600,13 +600,13 @@ describe('RemoteDataSource', function() {
       expect(retrieval).to.equal(0);
       expect(users1).to.have.property('length', 2);
 
-      await Bluebird.delay(100);
+      await delay(100);
       expect(discovery).to.equal(1);
       expect(retrieval).to.equal(0);
 
       let result = await Promise.race([
         changeEventPromise,
-        Bluebird.resolve('no event').delay(500)
+        delay(500).then(() => 'no event')
       ]);
       expect(result).to.equal('no event');
     })
@@ -631,7 +631,7 @@ describe('RemoteDataSource', function() {
       let discovery = 0;
       let retrieval = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/discovery/.test(url)) {
           discovery++;
           return {
@@ -677,7 +677,7 @@ describe('RemoteDataSource', function() {
       let discovery = 0;
       let retrieval = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/discovery/.test(url)) {
           discovery++;
           return {
@@ -698,7 +698,7 @@ describe('RemoteDataSource', function() {
 
       let result = await Promise.race([
         changeEventPromise,
-        Bluebird.resolve('no event').delay(200)
+        delay(200).then(() => 'no event')
       ]);
       expect(result).to.equal('no event');
       dataSource.activate();
@@ -712,7 +712,7 @@ describe('RemoteDataSource', function() {
       let newObject = { name: 'anduril' };
       let storage = 0, id = 1;
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/storage/.test(url)) {
           storage++;
           expect(method).to.match(/post/i);
@@ -747,7 +747,7 @@ describe('RemoteDataSource', function() {
       let updatedObject = _.clone(objects[0]);
       updatedObject.name = 'gollum';
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/storage/.test(url)) {
           storage++;
           expect(method).to.match(/post/i);
@@ -862,7 +862,7 @@ describe('RemoteDataSource', function() {
       updatedObject.name = 'gollum';
       updatedObject.evil = true;
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/discovery/.test(url)) {
           return {
             ids: _.map(objects, 'id'),
@@ -902,7 +902,7 @@ describe('RemoteDataSource', function() {
           object.id = id++;
           object.gn = 1;
           objects.push(object);
-          await Bluebird.delay(100);
+          await delay(100);
           return [ object ];
         } else if (/discovery/.test(url)) {
           discovery++;
@@ -1018,7 +1018,7 @@ describe('RemoteDataSource', function() {
       let existingObject = { id: 1, name: 'smaug' };
       let storage = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/storage/.test(url)) {
           storage++;
           expect(method).to.match(/post/i);
@@ -1042,7 +1042,7 @@ describe('RemoteDataSource', function() {
       let objects = [ { id: 1, gn: 2, name: 'smaug' } ];
       let storage = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/storage/.test(url)) {
           storage++;
           return _.map(payload.objects, (object) => {
@@ -1069,7 +1069,7 @@ describe('RemoteDataSource', function() {
       let removalPromise = dataSource.remove(location, [ objects[0] ]);
       let result = await Promise.race([
         removalPromise,
-        Bluebird.resolve('stalled').delay(100)
+        delay(100).then(() => 'stalled')
       ]);
       expect(result).to.equal('stalled');
 
@@ -1108,7 +1108,7 @@ describe('RemoteDataSource', function() {
       let objects = [ { id: 1, gn: 2, name: 'fart' } ];
       let discovery = 0, retrieval = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/discovery/.test(url)) {
           discovery++;
           return {
@@ -1127,7 +1127,7 @@ describe('RemoteDataSource', function() {
       expect(retrieval).to.equal(1);
 
       // wait for cache write to complete
-      await Bluebird.delay(500);
+      await delay(500);
       let found2 = await cache.find(query);
       expect(found2).to.have.lengthOf(1);
 
@@ -1147,7 +1147,7 @@ describe('RemoteDataSource', function() {
       let objects = [ { id: 1, gn: 2, name: 'milk' } ];
       let discovery = 0, retrieval = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/discovery/.test(url)) {
           discovery++;
           return {
@@ -1231,7 +1231,7 @@ describe('RemoteDataSource', function() {
       };
       let discovery = 0, retrieval = 0, storage = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/discovery/.test(url)) {
           discovery++;
           return {
@@ -1275,7 +1275,7 @@ describe('RemoteDataSource', function() {
       let changedObject = { id: 7, gn: 1, name: 'lizard' };
       let discovery = 0, retrieval = 0, storage = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/discovery/.test(url)) {
           discovery++;
           return {
@@ -1320,7 +1320,7 @@ describe('RemoteDataSource', function() {
       };
       let discovery = 0, retrieval = 0, storage = 0;
       HTTPRequest.fetch = async (method, url, payload, options) => {
-        await Bluebird.delay(50);
+        await delay(50);
         if (/discovery/.test(url)) {
           discovery++;
           return {

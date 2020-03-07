@@ -1,8 +1,8 @@
-import Bluebird from 'bluebird';
 import { expect } from 'chai';
 import TestServer from './lib/test-server.js';
+import { delay } from '../../utils/delay.js';
 
-import WebsocketNotifier from '../websocket-notifier.js';
+import { WebsocketNotifier } from '../websocket-notifier.js';
 
 let port = 7979;
 let baseURL = `http://localhost:${port}`;
@@ -25,7 +25,7 @@ describe('WebsocketNotifier', function() {
     })
     let result = await component.connect(baseURL);
     expect(result).to.be.true;
-    await Bluebird.delay(50);
+    await delay(50);
     expect(token).to.be.a('string');
     component.disconnect();
   })
@@ -40,7 +40,7 @@ describe('WebsocketNotifier', function() {
       changes = evt.changes;
     })
     let result = await component.connect(baseURL);
-    await Bluebird.delay(50);
+    await delay(50);
     let payload = {
       changes: {
         'global.user': {
@@ -50,7 +50,7 @@ describe('WebsocketNotifier', function() {
       }
     };
     await TestServer.send(token, payload);
-    await Bluebird.delay(50);
+    await delay(50);
     expect(changes).to.be.an('array');
     component.disconnect();
   })
@@ -74,7 +74,7 @@ describe('WebsocketNotifier', function() {
     expect(result).to.be.true;
     await TestServer.stop();
     await TestServer.start(port);
-    await Bluebird.delay(50);
+    await delay(50);
     expect(disconnected).to.be.true;
     expect(component.reconnectionCount).to.be.above(0);
     expect(component.socket).to.not.be.null;

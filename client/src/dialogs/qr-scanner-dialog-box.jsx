@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Bluebird from 'bluebird';
 import React, { PureComponent, Children } from 'react';
 import ReactDOM from 'react-dom';
 

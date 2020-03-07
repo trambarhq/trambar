@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import Bluebird from 'bluebird';
 import * as HTTPRequest from './http-request.js';
-import ManualPromise from '../utils/manual-promise.js';
+import { ManualPromise } from '../utils/manual-promise.js';
+import { delay } from '../utils/delay.js';
 
 class BlobStream {
   constructor(id, url, options) {
@@ -269,7 +269,7 @@ class BlobStream {
     let successful = false;
     let unrecoverable = false;
     let more = true;
-    let delay = 1000;
+    let retryInterval = 1000;
     let result;
     for (let attempt = 0; attempt < 10 && !successful && !unrecoverable; attempt++) {
       try {
@@ -330,8 +330,8 @@ class BlobStream {
           unrecoverable = true;
         } else {
           // try again after a delay
-          delay = Math.min(delay * 2, 30 * 1000);
-          await Bluebird.delay(delay);
+          retryInterval = Math.min(retryInterval * 2, 30 * 1000);
+          await delay(retryInterval);
         }
       }
       this.chunkPromise = null;

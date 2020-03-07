@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Bluebird from 'bluebird';
 import Moment from 'moment';
 import { EventEmitter, GenericEvent } from 'relaks-event-emitter';
 import { ManualPromise } from '../utils/manual-promise.js';
@@ -12,6 +11,7 @@ import { Storage } from './remote-data-source/storage.js';
 import { Removal } from './remote-data-source/removal.js';
 import { CacheSignature } from './remote-data-source/cache-signature.js';
 import { ChangeMonitor } from './remote-data-source/change-monitor.js';
+import { delay } from '../utils/delay.js';
 
 const defaultOptions = {
   basePath: '/srv/data',
@@ -811,7 +811,7 @@ export class RemoteDataSource extends EventEmitter {
         return session.info;
       } catch (err) {
         console.error(err.message);
-        await Bluebird.delay(sessionRetryInterval);
+        await delay(sessionRetryInterval);
       }
     }
   }
