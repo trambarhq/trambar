@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useListener } from 'relaks';
 import { useLatest, useAfterglow, useConfirmation, useSelectionBuffer, useDraftBuffer } from 'common/hooks.js';
 import { fromPersonalName, fromTitle } from 'common/utils/slug-generator.js';
-import Cancellation from 'common/errors.js';
+import { Cancellation } from 'common/errors.js';
 
 function useDataLossWarning(route, env, confirm) {
   const { t } = env.locale;

@@ -11,5 +11,4 @@ function getSpreadsheetName(spreadsheet, env) {
 
 export {
   getSpreadsheetName,
-  getSpreadsheetName as getDisplayName,
 };

@@ -26,8 +26,8 @@ import './project-panel.scss';
 export function ProjectPanel(props) {
   const { database, route, env, userDraft, system, project, projectLinks } = props;
   const { t, p } = env.locale;
-  const isMember = isMember(userDraft.current, project);
-  const [ wasMember, setWasMember ] = useState(isMember);
+  const memberNow = isMember(userDraft.current, project);
+  const [ memberBefore, setMemberBefore ] = useState(memberNow);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
 
@@ -90,11 +90,11 @@ export function ProjectPanel(props) {
   useEffect(() => {
     // Check if current user has gained membership and if so, bring up a
     // dialog box with a message
-    if (!wasMember && isMember) {
+    if (!memberBefore && memberNow) {
       confirm(t('membership-request-$you-are-now-member', name), true);
-      setWasMember(true);
+      setMemberBefore(true);
     }
-  }, [ wasMember, isMember ]);
+  }, [ memberBefore, memberNow ]);
 
   return (
     <SettingsPanel className="project">
@@ -114,13 +114,13 @@ export function ProjectPanel(props) {
   function renderProject(link, i) {
     const { schema, address } = route.context;
     if (link.schema === schema && link.address == address) {
-      let isMember = true;
+      let isMemberOf = true;
       let isApplying = false;
       if (project) {
         const userID = userDraft.get('id');
         const projectIDs = userDraft.get('requested_project_ids');
         if (!_.includes(project.user_ids, userID)) {
-          isMember = false;
+          isMemberOf = false;
           if (_.includes(projectIDs, project.id)) {
             isApplying = true;
           }
@@ -145,7 +145,7 @@ export function ProjectPanel(props) {
       const membershipProps = {
         icon: isApplying ? 'clock-o' : 'user-circle-o',
         label: t(`project-management-${isApplying ? 'withdraw-request' : 'join-project'}`),
-        hidden: isMember,
+        hidden: isMemberOf,
         onClick: (isApplying) ? handleCancelJoinClick : handleJoinClick,
       };
       const signOutProps = {

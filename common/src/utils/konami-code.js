@@ -9,27 +9,27 @@ export class KonamiCode {
   static addListener(listener) {
     this.listeners.push(listener);
     if (this.listeners.length === 1) {
-      window.addEventListener('keydown', handleKeydown);
+      window.addEventListener('keydown', this.handleKeydown);
     }
   }
 
   static removeListener(listener) {
     _.pull(this.listeners, listener);
     if (this.listeners.length === 0) {
-      window.removeEventListener('keydown', handleKeydown);
+      window.removeEventListener('keydown', this.handleKeydown);
     }
   }
 
-  static handleKeydown(evt) {
-    currentSequence.push(evt.keyCode);
-    if (currentSequence.length > correctSequence.length) {
-      currentSequence.splice(0, currentSequence.length - correctSequence.length);
+  static handleKeydown = (evt) => {
+    this.currentSequence.push(evt.keyCode);
+    if (this.currentSequence.length > correctSequence.length) {
+      this.currentSequence.splice(0, this.currentSequence.length - correctSequence.length);
     }
-    if (_.isEqual(currentSequence, correctSequence)) {
-      for (let f of KonamiCode.listeners) {
+    if (_.isEqual(this.currentSequence, correctSequence)) {
+      for (let f of this.listeners) {
         f({
           type: 'cheat',
-          target: KonamiCode,
+          target: this,
         });
       }
     }

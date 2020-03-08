@@ -75,7 +75,7 @@ export const MembershipRequestDialogBox = Overlay.create((props) => {
     const gender = getGender(currentUser);
     g(you, gender);
     let className = '', iconClass = '', message = '';
-    if (UserUtils.isMember(currentUser, project)) {
+    if (isMember(currentUser, project)) {
       className = 'accepted';
       iconClass = 'far fa-user-circle';
       if (userJustJoined) {

@@ -97,7 +97,6 @@ export function ReactionView(props) {
             </span>
           );
         case 'comment':
-          let langText = ;
           const textProps = {
             text: p(text),
             type: 'comment',

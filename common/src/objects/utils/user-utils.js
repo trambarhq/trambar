@@ -541,7 +541,6 @@ export {
   canRemoveReaction,
   canReceiveNotification,
   getUserName,
-  getUserName as getDisplayName,
   getGender,
   mergeRemoteChanges,
 };

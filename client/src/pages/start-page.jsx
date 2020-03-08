@@ -6,9 +6,10 @@ import { parseActivationURL } from 'common/routing/universal-link.js';
 import { findActiveProjects } from 'common/objects/finders/project-finder.js';
 import { findActiveLinks } from 'common/objects/finders/project-link-finder.js';
 import { getImageURL } from 'common/objects/utils/resource-utils.js';
+import { getServerIconClass } from 'common/objects/utils/server-utils.js';
 import { findSystem } from 'common/objects/finders/system-finder.js';
 import { findUser } from 'common/objects/finders/user-finder.js';
-import { findUser, isMember, isPendingMember } from 'common/objects/utils/user-utils.js';
+import { isMember, isPendingMember } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { Scrollable } from '../widgets/scrollable.jsx';
@@ -414,7 +415,7 @@ export default async function StartPage(props) {
 
   function renderOAuthButton(server, i) {
     const { title } = server.details;
-    const iconClass = ServerUtils.getIconClass(server);
+    const iconClass = getServerIconClass(server);
     const url = database.getOAuthURL(server);
     const classNames = [ 'oauth-button' ];
     const error = errors[`oauth-${server.id}`];

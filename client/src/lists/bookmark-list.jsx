@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import { findStoryAuthors, findBookmarkSenders, findBookmarksByUser, findBookmarkRecipients } from 'common/objects/finders/user-finder.js';
+import { findStoryAuthors, findReactionAuthors, findBookmarkSenders, findBookmarkRecipients } from 'common/objects/finders/user-finder.js';
 import { findStoriesOfBookmarks, findDraftStories } from 'common/objects/finders/story-finder.js';
 import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
 import { findBookmarksByUser } from 'common/objects/finders/bookmark-finder.js';

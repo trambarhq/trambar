@@ -4,7 +4,7 @@ import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import { findAllServers } from 'common/objects/finders/server-finder.js';
 import { disableServers, restoreServers } from 'common/objects/savers/server-saver.js';
-import { getDisplayName, getIconClass } from 'common/objects/utils/server-utils.js';
+import { getServerName, getServerIconClass } from 'common/objects/utils/server-utils.js';
 import { findActiveUsers } from 'common/objects/finders/user-finder.js';
 
 // widgets
@@ -212,7 +212,7 @@ function ServerListPageSync(props) {
     if (!server) {
       return <TH id="title">{t('server-list-column-title')}</TH>;
     } else {
-      const title = getDisplayName(server, env);
+      const title = getServerName(server, env);
       let url, badge;
       if (selection.shown) {
         if (selection.isAdding(server)) {
@@ -236,7 +236,7 @@ function ServerListPageSync(props) {
     if (!server) {
       return <TH id="type">{t('server-list-column-type')}</TH>;
     } else {
-      const iconClass = getIconClass(server);
+      const iconClass = getServerIconClass(server);
       return (
         <td>
           <i className={iconClass} />
@@ -316,7 +316,7 @@ const sortServers = memoizeWeak(null, function(servers, users, env, sort) {
     switch (column) {
       case 'title':
         return (server) => {
-          return _.toLower(getDisplayName(server, env));
+          return _.toLower(getServerName(server, env));
         };
       case 'type':
         return (server) => {

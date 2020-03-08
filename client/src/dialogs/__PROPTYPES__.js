@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
-import Database from 'common/data/database.js';
-import Route from 'common/routing/route.js';
-import Environment from 'common/env/environment.js';
-import Payloads from 'common/transport/payloads.js';
+import { Database } from 'common/data/database.js';
+import { Route } from 'common/routing/route.js';
+import { Environment } from 'common/env/environment.js';
+import { Payloads } from 'common/transport/payloads.js';
 
 import { ActivationDialogBox } from './activation-dialog-box.jsx';
 import { AppComponentDialogBox } from './app-component-dialog-box.jsx';

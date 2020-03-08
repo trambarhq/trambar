@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
-import Database from 'common/data/database.js';
-import Payloads from 'common/transport/payloads.js';
-import Route from 'common/routing/route.js';
-import Environment from 'common/env/environment.js';
-import ResourceTypes from 'common/objects/types/resource-types.js'
+import { Database } from 'common/data/database.js';
+import { Payloads } from 'common/transport/payloads.js';
+import { Route } from 'common/routing/route.js';
+import { Environment } from 'common/env/environment.js';
+import { ResourceTypes } from 'common/objects/types/resource-types.js'
 
 import { AudioEditor } from './audio-editor.jsx';
 import { ImageEditor } from './image-editor.jsx';

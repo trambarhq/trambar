@@ -1,16 +1,16 @@
 import PropTypes from 'prop-types';
-import Database from 'common/data/database.js';
-import Payloads from 'common/transport/payloads.js';
-import Route from 'common/routing/route.js';
-import Environment from 'common/env/environment.js';
+import { Database } from 'common/data/database.js';
+import { Payloads } from 'common/transport/payloads.js';
+import { Route } from 'common/routing/route.js';
+import { Environment } from 'common/env/environment.js';
 
-import EnvironmentMonitor from 'common/env/environment-monitor.js';
-import RouteManager from 'relaks-route-manager';
-import RemoteDataSource from 'common/data/remote-data-source.js';
-import PayloadManager from 'common/transport/payload-manager.js';
-import LocaleManager from 'common/locale/locale-manager.js';
-import Notifier from 'common/transport/notifier.js';
-import CodePush from 'common/transport/code-push.js';
+import { EnvironmentMonitor } from 'common/env/environment-monitor.js';
+import { RouteManager } from 'relaks-route-manager';
+import { RemoteDataSource } from 'common/data/remote-data-source.js';
+import { PayloadManager } from 'common/transport/payload-manager.js';
+import { LocaleManager } from 'common/locale/locale-manager.js';
+import { Notifier } from 'common/transport/notifier.js';
+import { CodePush } from 'common/transport/code-push.js';
 
 import BookmarksPage from './bookmarks-page.jsx';
 import DiagnosticsPage from './diagnostics-page.jsx';

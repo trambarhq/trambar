@@ -11,5 +11,4 @@ function getRestName(rest, env) {
 
 export {
   getRestName,
-  getRestName as getDisplayName,
 };

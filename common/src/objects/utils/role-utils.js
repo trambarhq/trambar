@@ -7,5 +7,4 @@ function getRoleName(role, env) {
 
 export {
   getRoleName,
-  getRoleName as getDisplayName,
 };

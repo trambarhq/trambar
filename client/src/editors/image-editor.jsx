@@ -23,15 +23,15 @@ export const ImageEditor = React.forwardRef((props, ref) => {
   const { t } = env.locale;
   const remoteURL = useMemo(() => {
     const params = { remote: true, original: true };
-    return ResourceUtils.getImageURL(resource, params, env);
+    return getImageURL(resource, params, env);
   }, [ env, resource ]);
   const localURL = useMemo(() => {
     const params = { local: true, original: true };
-    return ResourceUtils.getImageURL(resource, params, env);
+    return getImageURL(resource, params, env);
   }, [ env, resource ]);
   const previewURL = useMemo(() => {
     const params = { remote: true, width: previewWidth, height: previewHeight };
-    return ResourceUtils.getImageURL(resource, params, env);
+    return getImageURL(resource, params, env);
   }, [ env, resource, previewWidth, previewHeight ])
   const [ pendingURL, setPendingURL ] = useState('');
   const [ loadedURL, setLoadedURL ] = useState('');
@@ -115,7 +115,7 @@ export const ImageEditor = React.forwardRef((props, ref) => {
   }
 
   function renderImageCropper() {
-    const clippingRect = ResourceUtils.getClippingRect(resource, {});
+    const clippingRect = getClippingRect(resource, {});
     let props = {
       url: localURL,
       clippingRect,

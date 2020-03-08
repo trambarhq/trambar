@@ -1,13 +1,13 @@
 import PropTypes from 'prop-types';
-import EnvironmentMonitor from 'common/env/environment-monitor.js';
-import RemoteDataSource from 'common/data/remote-data-source.js';
-import IndexedDBCache from 'common/data/indexed-db-cache.js';
-import SQLiteCache from 'common/data/sqlite-cache.js';
-import LocaleManager from 'common/locale/locale-manager.js';
-import PayloadManager from 'common/transport/payload-manager.js';
-import PushNotifier from 'common/transport/push-notifier.js';
-import CodePush from 'common/transport/code-push.js';
-import WebsocketNotifier from 'common/transport/websocket-notifier.js';
+import { EnvironmentMonitor } from 'common/env/environment-monitor.js';
+import { RemoteDataSource } from 'common/data/remote-data-source.js';
+import { IndexedDBCache } from 'common/data/indexed-db-cache.js';
+import { SQLiteCache } from 'common/data/sqlite-cache.js';
+import { LocaleManager } from 'common/locale/locale-manager.js';
+import { PayloadManager } from 'common/transport/payload-manager.js';
+import { PushNotifier } from 'common/transport/push-notifier.js';
+import { CodePush } from 'common/transport/code-push.js';
+import { WebsocketNotifier } from 'common/transport/websocket-notifier.js';
 
 import { CodePushPanel } from './code-push-panel.jsx';
 import { EnvironmentMonitorPanel } from './environment-monitor-panel.jsx';

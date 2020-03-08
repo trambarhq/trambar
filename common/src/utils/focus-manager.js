@@ -5,7 +5,7 @@ export class FocusManager {
   static requests = [];
 
   static register(component, props) {
-    entries.unshift({ component, props });
+    this.entries.unshift({ component, props });
 
     // see if a request for focus has been made
     _.remove(this.requests, (request) => {
@@ -30,7 +30,3 @@ export class FocusManager {
     }
   }
 }
-
-export {
-  FocusManager,
-};

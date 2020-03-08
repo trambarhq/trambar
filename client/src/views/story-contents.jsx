@@ -6,7 +6,18 @@ import { renderPlainText, findEmoji } from 'common/utils/plain-text.js';
 import { renderMarkdown } from 'common/utils/markdown.js';
 import { getWebsiteAddress } from 'common/objects/utils/project-utils.js';
 import { updateTaskStatuses, saveSurveyResults } from 'common/objects/savers/reaction-saver.js';
-import { getRepoName } from 'common/objects/utils/repo-utils.js';
+import {
+  getRepoName,
+  getRepoURL,
+  getMembershipPageURL,
+  getIssueNumber,
+  getIssueURL,
+  getMilestoneURL,
+  getMergeRequestURL,
+  getPushURL,
+  getBranchURL,
+  getIssueLabelStyle
+} from 'common/objects/utils/repo-utils.js';
 import { saveStory } from 'common/objects/savers/story-saver.js';
 import { extractUserAnswers, insertUserAnswers } from 'common/objects/utils/story-utils.js';
 import { getUserName, getGender, canAccessRepo } from 'common/objects/utils/user-utils.js';
@@ -234,7 +245,7 @@ export function StoryContents(props) {
 
   function renderRepoText() {
     const { action } = story.details;
-    const url = (repoAccess) ? RepoUtils.getURL(repo) : undefined;
+    const url = (repoAccess) ? getRepoURL(repo) : undefined;
     const target = (repoAccess) ? repo.type : undefined;
     return (
       <div className="text repo">
@@ -248,7 +259,7 @@ export function StoryContents(props) {
   }
 
   function renderMemberText() {
-    const url = (repoAccess) ? RepoUtils.getMembershipPageURL(repo) : undefined
+    const url = (repoAccess) ? getMembershipPageURL(repo) : undefined
     const target = (repoAccess) ? repo.type : undefined;
     return (
       <div className="text member">
@@ -263,8 +274,8 @@ export function StoryContents(props) {
 
   function renderIssueText() {
     const { title } = story.details;
-    const number = RepoUtils.getIssueNumber(repo, story);
-    const url = (repoAccess) ? RepoUtils.getIssueURL(repo, story) : undefined;
+    const number = getIssueNumber(repo, story);
+    const url = (repoAccess) ? getIssueURL(repo, story) : undefined;
     const target = (repoAccess) ? repo.type : undefined;
     return (
       <div className="text issue">
@@ -281,7 +292,7 @@ export function StoryContents(props) {
 
   function renderMilestoneText() {
     const { title } = story.details;
-    const url = (repoAccess) ? RepoUtils.getMilestoneURL(repo, story) : undefined;
+    const url = (repoAccess) ? getMilestoneURL(repo, story) : undefined;
     const target = (repoAccess) ? repo.type : undefined;
     return (
       <div className="text milestone">
@@ -299,7 +310,7 @@ export function StoryContents(props) {
       source_branch: branch1,
       branch: branch2
     } = story.details;
-    const url = (repoAccess) ? RepoUtils.getMergeRequestURL(repo, story) : undefined;
+    const url = (repoAccess) ? getMergeRequestURL(repo, story) : undefined;
     const target = (repoAccess) ? repo.type : undefined;
     return (
       <div className="text merge-request">
@@ -335,7 +346,7 @@ export function StoryContents(props) {
       branch,
       from_branches: sourceBranches
     } = story.details;
-    const url = (repoAccess) ? RepoUtils.getPushURL(repo, story) : undefined;
+    const url = (repoAccess) ? getPushURL(repo, story) : undefined;
     const target = (repoAccess) ? repo.type : undefined;
     let text;
     if (story.type === 'push') {
@@ -355,7 +366,7 @@ export function StoryContents(props) {
 
   function renderBranchText() {
     const { branch } = story.details;
-    const url = (repoAccess) ? RepoUtils.getBranchURL(repo, story) : undefined;
+    const url = (repoAccess) ? getBranchURL(repo, story) : undefined;
     const target = (repoAccess) ? repo.type : undefined;
     let text;
     if (story.type === 'branch') {
@@ -519,7 +530,7 @@ export function StoryContents(props) {
   }
 
   function renderLabel(label, i) {
-    const style = RepoUtils.getLabelStyle(repo, label);
+    const style = getIssueLabelStyle(repo, label);
     return <span key={i} className="tag" style={style}>{label}</span>;
   }
 

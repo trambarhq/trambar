@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types';
-import RouteManager from 'relaks-route-manager';
-import EnvironmentMonitor from 'common/env/environment-monitor.js';
-import RemoteDataSource from 'common/data/remote-data-source.js';
-import PayloadManager from 'common/transport/payload-manager.js';
-import LocaleManager from 'common/locale/locale-manager.js';
-import Notifier from 'common/transport/notifier.js';
+import { RouteManager } from 'relaks-route-manager';
+import { EnvironmentMonitor } from 'common/env/environment-monitor.js';
+import { RemoteDataSource } from 'common/data/remote-data-source.js';
+import { PayloadManager } from 'common/transport/payload-manager.js';
+import { LocaleManager } from 'common/locale/locale-manager.js';
+import { Notifier } from 'common/transport/notifier.js';
 
 import { FrontEnd } from './front-end.jsx';
 

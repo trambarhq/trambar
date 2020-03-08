@@ -35,7 +35,7 @@ export default async function RestListPage(props) {
   const currentUserID = await database.start();
   const project = await findProject(database, projectID);
   const schema = project.name;
-  const rests = await RestFinder.findAllRests(database, schema);
+  const rests = await findAllRests(database, schema);
   render();
 
   function render() {

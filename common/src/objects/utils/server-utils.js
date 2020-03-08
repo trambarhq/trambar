@@ -9,7 +9,7 @@ function getServerName(server, env) {
   return title || '';
 }
 
-function getIconClass(server) {
+function getServerIconClass(server) {
   const type = _.get(server, 'type', '');
   switch (type) {
     case 'facebook':
@@ -28,6 +28,5 @@ function getIconClass(server) {
 
 export {
   getServerName,
-  getServerName as getDisplayName,
-  getIconClass,
+  getServerIconClass,
 };

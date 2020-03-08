@@ -43,7 +43,7 @@ export default async function NewsPage(props) {
 
   render();
   const currentUserID = await database.start();
-  const currentUser = await UserFinder.findUser(database, currentUserID);
+  const currentUser = await findUser(database, currentUserID);
   const project = await findCurrentProject(database);
   render();
   let stories, draftStories, pendingStories;

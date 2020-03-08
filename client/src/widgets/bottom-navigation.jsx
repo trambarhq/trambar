@@ -161,7 +161,7 @@ async function NewNotificationsBadge(props) {
   render();
   const currentUserID = await db.start();
   const currentUser = (active) ? await findUser(db, currentUserID) : null;
-  const notifications = (active) ? await NotificationFinder.findNotificationsUnseenByUser(db, currentUser) : [];
+  const notifications = (active) ? await findNotificationsUnseenByUser(db, currentUser) : [];
   const count = _.size(notifications);
   render();
 

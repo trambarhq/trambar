@@ -6,7 +6,7 @@ function getRepoName(repo, env) {
   return p(_.get(repo, 'details.title')) || _.get(repo, 'name') || '';
 }
 
-function getURL(repo) {
+function getRepoURL(repo) {
   return _.get(repo, 'details.web_url', '');
 }
 
@@ -152,8 +152,7 @@ function isBright(color) {
 
 export {
   getRepoName,
-  getRepoName as getDisplayName,
-  getURL,
+  getRepoURL,
   getMembershipPageURL,
   getIssueNumber,
   getIssueURL,

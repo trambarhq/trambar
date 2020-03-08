@@ -7,7 +7,6 @@ function getProjectName(project, env) {
 
 export {
   getProjectName,
-  getProjectName as getDisplayName,
 };
 
 // use code from backend

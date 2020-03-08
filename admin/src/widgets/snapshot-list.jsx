@@ -5,7 +5,7 @@ import { useProgress, useListener } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import { getWebsiteAddress } from 'common/objects/utils/project-utils.js';
 import { findSnapshotAuthors } from 'common/objects/finders/user-finder.js';
-import { getDisplayName } from 'common/objects/utils/user-utils.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
 
 import './snapshot-list.scss';
 
@@ -57,7 +57,7 @@ export async function SnapshotList(props) {
     }
 
     const author = _.find(authors, { id: snapshot.user_id });
-    const authorName = getDisplayName(author, env);
+    const authorName = getUserName(author, env);
 
     const classNames = [ 'snapshot' ];
     if (head) {
