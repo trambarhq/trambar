@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import LocaleManager from '../locale-manager.js';
 
 describe('LocaleManager', function() {
-  let directory = [
+  const directory = [
     {
       code: 'pl',
       defaultCountry: 'pl',
@@ -15,11 +15,11 @@ describe('LocaleManager', function() {
       module: () => import('./locales/ru'),
     }
   ];
-  let options = {
+  const options = {
     defaultLocale: 'pl-PL',
     directory,
   };
-  let manager = new LocaleManager(options);
+  const manager = new LocaleManager(options);
   before(() => {
     return manager.start('en-US');
   })
@@ -62,15 +62,15 @@ describe('LocaleManager', function() {
     })
     it('should correct detect that common Polish first names are feminine', async function() {
       await manager.change('pl-pl');
-      let names = [ 'Ewa', 'Maria', 'Agnieszka' ];
-      for (let name of names) {
-        let phrase = manager.translate('$name drank too much and died', name);
+      const names = [ 'Ewa', 'Maria', 'Agnieszka' ];
+      for (const name of names) {
+        const phrase = manager.translate('$name drank too much and died', name);
         expect(phrase).to.equal(`${name} wypiła za dużo i umarła`);
       }
     })
     it('should realize that Kuba is a dude', async function() {
       await manager.change('pl-pl');
-      let phrase = manager.translate('$name drank too much and died', 'Kuba');
+      const phrase = manager.translate('$name drank too much and died', 'Kuba');
       expect(phrase).to.equal(`Kuba wypił za dużo i umarł`);
     })
     it('should produce the test phrase in Russian', async function() {
@@ -85,37 +85,37 @@ describe('LocaleManager', function() {
     })
     it('should correct detect that common Russian first names are feminine', async function() {
       await manager.change('ru-ru');
-      let names = [ 'Анна', 'Ольга', 'Светлана' ];
+      const names = [ 'Анна', 'Ольга', 'Светлана' ];
       for (let name of names) {
-        let phrase = manager.translate('$name drank too much and died', name);
+        const phrase = manager.translate('$name drank too much and died', name);
         expect(phrase).to.equal(`${name} выпила слишком много и умерла`);
       }
     })
     it('should correct detect that transliterated Russian names as feminine', async function() {
       await manager.change('ru-ru');
-      let names = [ 'Anna', 'Olga', 'Svetlana' ];
+      const names = [ 'Anna', 'Olga', 'Svetlana' ];
       for (let name of names) {
-        let phrase = manager.translate('$name drank too much and died', name);
+        const phrase = manager.translate('$name drank too much and died', name);
         expect(phrase).to.equal(`${name} выпила слишком много и умерла`);
       }
     })
     it('should assume that Sasha is a dude', async function() {
       await manager.change('ru-ru');
-      let phrase1 = manager.translate('$name drank too much and died', 'Sasha');
-      let phrase2 = manager.translate('$name drank too much and died', 'Саша');
+      const phrase1 = manager.translate('$name drank too much and died', 'Sasha');
+      const phrase2 = manager.translate('$name drank too much and died', 'Саша');
       expect(phrase1).to.equal(`Sasha выпил слишком много и умер`);
       expect(phrase2).to.equal(`Саша выпил слишком много и умер`);
     })
     it('should use patronymic to determine that a name is feminine', async function() {
       await manager.change('ru-ka');
-      let name = 'Ani Ivanovna Sparsiashvili';
-      let phrase = manager.translate('$name drank too much and died', name);
+      const name = 'Ani Ivanovna Sparsiashvili';
+      const phrase = manager.translate('$name drank too much and died', name);
       expect(phrase).to.equal(`${name} выпила слишком много и умерла`);
     })
   });
   describe('#pick()', function() {
     it('should pick the Polish version when the language is set to Polish', async function() {
-      let phrase = {
+      const phrase = {
         en: 'I love the smell of napalm in the morning',
         pl: 'Kobieta mnie bije. Poddaję się!',
       };
@@ -123,7 +123,7 @@ describe('LocaleManager', function() {
       expect(manager.pick(phrase)).to.contain('Kobieta');
     })
     it('should pick the Polish version when the language is set to Russian', async function() {
-      let phrase = {
+      const phrase = {
         en: 'I love the smell of napalm in the morning',
         pl: 'Kobieta mnie bije. Poddaję się!',
       };
@@ -131,7 +131,7 @@ describe('LocaleManager', function() {
       expect(manager.pick(phrase)).to.contain('Kobieta');
     })
     it('should pick the English version when the language is set to Polish', async function() {
-      let phrase = {
+      const phrase = {
         en: 'I love the smell of napalm in the morning',
         ru: 'Доброе утро последний герой',
       };
@@ -142,10 +142,10 @@ describe('LocaleManager', function() {
   describe('#genderize()', function() {
     it('should permit generation of grammatically correct sentence', async function() {
       await manager.change('pl-pl');
-      let name = 'Cleo';
-      let phrase1 = manager.translate('$name drank too much and died', name);
+      const name = 'Cleo';
+      const phrase1 = manager.translate('$name drank too much and died', name);
       manager.genderize(name, 'female');
-      let phrase2 = manager.translate('$name drank too much and died', name);
+      const phrase2 = manager.translate('$name drank too much and died', name);
       expect(phrase1).to.equal('Cleo wypił za dużo i umarł');
       expect(phrase2).to.equal('Cleo wypiła za dużo i umarła');
     })

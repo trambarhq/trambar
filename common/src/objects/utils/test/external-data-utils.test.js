@@ -139,7 +139,7 @@ describe('ExternalDataUtils', function() {
           }
         ]
       };
-      const link = ExternalDataUtils.findLink(repo, server);
+      const link = findLink(repo, server);
       expect(link).to.equal(repo.external[0]);
     })
     it('should find a link with a particular key', function() {
@@ -158,7 +158,7 @@ describe('ExternalDataUtils', function() {
           }
         ]
       };
-      const link = ExternalDataUtils.findLink(repo, server, {
+      const link = findLink(repo, server, {
         project: { id: 1 }
       });
       expect(link).to.equal(repo.external[0]);
@@ -179,7 +179,7 @@ describe('ExternalDataUtils', function() {
           }
         ]
       };
-      const link = ExternalDataUtils.findLink(repo, server, {
+      const link = findLink(repo, server, {
         project: { id: 3 }
       });
       expect(link).to.be.null;

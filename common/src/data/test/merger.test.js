@@ -65,7 +65,7 @@ describe('Merger', function() {
       expect(d).to.have.property('hello', a.hello);
       expect(d).to.have.property('world', b.world);
     })
-    it('should take merge text difference between A and B', function() {
+    it('should merge text difference between A and B', function() {
       let c = {
         id: 5,
         text: `It's the best of time. It's the worst of time.`

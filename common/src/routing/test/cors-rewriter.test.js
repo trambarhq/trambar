@@ -21,7 +21,7 @@ describe('CORSRewriter', function() {
       let params = {};
       CORSRewriter.from(urlParts, params);
       expect(urlParts.path).to.equal('/somewhere/info');
-      expect(params.address).to.equal(`${location.protocol}//${location.host}`);
+      expect(params.address).to.equal(`http://localhost`);
       expect(params.cors).to.be.false;
     })
   })

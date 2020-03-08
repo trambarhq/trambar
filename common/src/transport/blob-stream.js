@@ -371,7 +371,7 @@ class BlobStream {
  * @return {Object}
  */
 function deferResult() {
-  let props = {};
+  const props = {};
   props.promise = new Promise((resolve, reject) => {
     props.resolve = resolve;
     props.reject = reject;

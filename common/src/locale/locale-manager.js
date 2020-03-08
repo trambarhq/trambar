@@ -39,7 +39,9 @@ class LocaleManager extends EventEmitter {
     try {
       await this.change(locale);
     } catch (err) {
-      await this.change(defaultLocale);
+      if (locale !== defaultLocale) {
+        await this.change(defaultLocale);
+      }
     }
   }
 
@@ -145,21 +147,24 @@ class LocaleManager extends EventEmitter {
           }
         }
       } else if (lc !== 'en') {
-        const eng = await this.loadModule('en');
-        const engTable = this.getPhraseTable(eng, 'us');
-        const engKeys = _.keys(engTable);
-        const missing = _.difference(engKeys, targetKeys);
-        const extra = _.difference(targetKeys, engKeys);
-        if (!_.isEmpty(missing)) {
-          console.log(`The following phrases are missing [${localeCode}]:`);
-          for (let name of missing) {
-            console.log(name);
+        try {
+          const eng = await this.loadModule('en');
+          const engTable = this.getPhraseTable(eng, 'us');
+          const engKeys = _.keys(engTable);
+          const missing = _.difference(engKeys, targetKeys);
+          const extra = _.difference(targetKeys, engKeys);
+          if (!_.isEmpty(missing)) {
+            console.log(`The following phrases are missing [${localeCode}]:`);
+            for (let name of missing) {
+              console.log(name);
+            }
+          } else if (!_.isEmpty(extra)) {
+            console.log(`The following phrases are extraneous [${localeCode}]:`);
+            for (let name of extra) {
+              console.log(name);
+            }
           }
-        } else if (!_.isEmpty(extra)) {
-          console.log(`The following phrases are extraneous [${localeCode}]:`);
-          for (let name of extra) {
-            console.log(name);
-          }
+        } catch (err) {
         }
       }
     }
