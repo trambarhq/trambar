@@ -10,29 +10,28 @@ import { promiseSelf } from '../../utils/promise-self.js';
 import { mockHTTPRequest, performHTTPRequest } from '../../transport/http-request.js';
 
 describe('RemoteDataSource', function() {
+  let dataSource, cache;
   before(function() {
-    indexedDB.deconsteDatabase('rds-test');
+    indexedDB.deleteDatabase('rds-test');
+
+    cache = new IndexedDBCache({ databaseName: 'rds-test' });
+  })
+  beforeEach(() => {
+    dataSource = new RemoteDataSource({
+      discoveryFlags: {
+        include_uncommitted: true
+      },
+      retrievalFlags: {
+      },
+      prefetching: false,
+      sessionRetryInterval: 100,
+      cacheValidation: true,
+      cache,
+    });
+    dataSource.activate();
   })
   after(function() {
     mockHTTPRequest(false);
-  })
-
-  const cache = new IndexedDBCache({ databaseName: 'rds-test' });
-  const dataSourceOptions = {
-    discoveryFlags: {
-      include_uncommitted: true
-    },
-    retrievalFlags: {
-    },
-    prefetching: false,
-    sessionRetryInterval: 100,
-    cacheValidation: true,
-    cache,
-  };
-  const dataSource = new RemoteDataSource(dataSourceOptions);
-  dataSource.activate();
-  afterEach(() => {
-    dataSource.listeners = [];
   })
 
   describe('#beginSession()', function() {
@@ -258,7 +257,7 @@ describe('RemoteDataSource', function() {
       });
       await dataSource.beginSession(location, 'client');
       mockHTTPRequest(async (method, url, payload, options) => {
-        expect(method).to.match(/deconste/i);
+        expect(method).to.match(/delete/i);
         expect(payload).to.property('handle', session.handle);
         return {};
       });
@@ -883,7 +882,7 @@ describe('RemoteDataSource', function() {
       const results2 = await dataSource.find(query);
       expect(results2).to.have.lengthOf(0);
     })
-    it('should block search on a table until saving is compconste', async function() {
+    it('should block search on a table until saving is complete', async function() {
       const location = { address: 'http://level4.misty-mountain.me', schema: 'global', table: 'project' };
       const newObject = { name: 'anduril' };
       let storage = 0, id = 1;
@@ -1020,7 +1019,7 @@ describe('RemoteDataSource', function() {
           expect(method).to.match(/post/i);
           expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
           return _.map(payload.objects, (object) => {
-            expect(object.deconsted).to.be.true;
+            expect(object.deleted).to.be.true;
             return _.clone(object);
           });
         }
@@ -1030,7 +1029,7 @@ describe('RemoteDataSource', function() {
       const evt = await changeEventPromise;
       expect(evt).to.have.property('type', 'change');
     })
-    it('should keep a deconste request in the change queue when there is no connection and send it when connection is restored', async function() {
+    it('should keep a delete request in the change queue when there is no connection and send it when connection is restored', async function() {
       dataSource.options.discoveryFlags = {
         include_uncommitted: true
       };
@@ -1071,7 +1070,7 @@ describe('RemoteDataSource', function() {
 
       expect(storage).to.equal(0);
       const found2 = await dataSource.find(query);
-      // merging uncommitted deconste into result
+      // merging uncommitted delete into result
       expect(found2).to.have.lengthOf(0);
 
       // reactivate data source
@@ -1100,7 +1099,7 @@ describe('RemoteDataSource', function() {
   })
   describe('#abandon()', function() {
     it('should make searches at a given server dirty', async function() {
-      const location = { address: 'http://toiconst.helms-deep.me', schema: 'global', table: 'project' };
+      const location = { address: 'http://toilet.helms-deep.me', schema: 'global', table: 'project' };
       const objects = [ { id: 1, gn: 2, name: 'fart' } ];
       let discovery = 0, retrieval = 0;
       mockHTTPRequest(async (method, url, payload, options) => {
@@ -1122,7 +1121,7 @@ describe('RemoteDataSource', function() {
       expect(discovery).to.equal(1);
       expect(retrieval).to.equal(1);
 
-      // wait for cache write to compconste
+      // wait for cache write to complete
       await delay(500);
       const found2 = await cache.find(query);
       expect(found2).to.have.lengthOf(1);
@@ -1140,7 +1139,7 @@ describe('RemoteDataSource', function() {
   describe('#invalidate()', function() {
     it('should flag searches as dirty based on change info', async function() {
       const location = { address: 'http://kitchen.helms-deep.me', schema: 'global', table: 'project' };
-      const objects = [ { id: 1, gn: 2, name: 'milk' } ];
+      let objects = [ { id: 1, gn: 2, name: 'milk' } ];
       let discovery = 0, retrieval = 0;
       mockHTTPRequest(async (method, url, payload, options) => {
         await delay(50);
@@ -1212,9 +1211,9 @@ describe('RemoteDataSource', function() {
     })
     it('should trigger merging of remote changes', async function() {
       const location = { address: 'http://arnor.me', schema: 'global', table: 'project' };
-      const objects = [ { id: 7, gn: 1, name: 'pigconst' } ];
+      let objects = [ { id: 7, gn: 1, name: 'piglet' } ];
       const changedObject = { id: 7, gn: 1, name: 'lizard' };
-      const onConflictCalled = false;
+      let onConflictCalled = false;
       const onConflict = function(evt) {
         onConflictCalled = true;
         expect(evt).to.have.property('type', 'conflict');
@@ -1267,7 +1266,7 @@ describe('RemoteDataSource', function() {
     })
     it('should force the abandonment of a change when onConflict is not set', async function() {
       const location = { address: 'http://esgaroth.me', schema: 'global', table: 'project' };
-      const objects = [ { id: 7, gn: 1, name: 'pigconst' } ];
+      let objects = [ { id: 7, gn: 1, name: 'piglet' } ];
       const changedObject = { id: 7, gn: 1, name: 'lizard' };
       let discovery = 0, retrieval = 0, storage = 0;
       mockHTTPRequest(async (method, url, payload, options) => {
@@ -1308,9 +1307,9 @@ describe('RemoteDataSource', function() {
     })
     it('should force the abandonment of a change when onConflict does not call preventDefault', async function() {
       const location = { address: 'http://fangorn.me', schema: 'global', table: 'project' };
-      const objects = [ { id: 7, gn: 1, name: 'pigconst' } ];
+      let objects = [ { id: 7, gn: 1, name: 'piglet' } ];
       const changedObject = { id: 7, gn: 1, name: 'lizard' };
-      const onConflictCalled = false;
+      let onConflictCalled = false;
       const onConflict = function(evt) {
         onConflictCalled = true;
       };
@@ -1357,7 +1356,7 @@ describe('RemoteDataSource', function() {
   describe('#revalidate()', function() {
     it ('should force cache revalidation', async function() {
       const query = {
-        address: 'http://dol-guldur.me',
+        address: 'http://narchost.me',
         schema: 'global',
         table: 'user',
         criteria: {},
@@ -1366,10 +1365,10 @@ describe('RemoteDataSource', function() {
       const objects = [
         { id: 1, gn: 70, username: 'gandolf', secret: 'magic' }
       ]
-      const filtering = false;
+      let filtering = false;
       let discovery = 0;
       let retrieval = 0;
-      const signature = 0;
+      let signature = 0;
       mockHTTPRequest(async (method, url, payload, options) => {
         if (/discovery/.test(url)) {
           discovery++;
