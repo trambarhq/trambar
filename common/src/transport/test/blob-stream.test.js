@@ -1,5 +1,5 @@
 import Chai, { expect } from 'chai';
-import { delay } from '../utils/delay.js';
+import { delay } from '../../utils/delay.js';
 
 import { BlobStream } from '../blob-stream.js';
 import { performHTTPRequest, mockHTTPRequest } from '../http-request.js';

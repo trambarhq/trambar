@@ -26,8 +26,9 @@ module.exports = function(config) {
       'karma-sourcemap-loader',
       'karma-webpack',
       'karma-server-side',
+      'karma-spec-reporter',
     ],
-    reporters: [ 'progress' ],
+    reporters: [ 'spec' ],
     webpack: {
       mode: 'development',
       module: {
@@ -35,7 +36,8 @@ module.exports = function(config) {
           {
             test: /\.(js|jsx|mjs)$/,
             loader: 'babel-loader',
-            exclude: Path.resolve('./node_modules'),
+            exclude: /node_modules/,
+            type: 'javascript/auto',
             query: {
               presets: [
                 '@babel/env',

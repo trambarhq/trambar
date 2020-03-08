@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import {
   hasEmojiSupport,
   renderEmoji,
-} as PlainText from '../plain-text.js';
+} from '../plain-text.js';
 
 describe('PlainText', function() {
   describe('#hasEmojiSupport()', function() {

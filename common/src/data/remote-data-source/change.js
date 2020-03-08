@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { delay } from '../../utils/delay.js';
 
-import { matchSearchCriteria } from './local-search.js';
+import { matchSearchCriteria } from '../local-search.js';
 import { allocateTempoaryID } from './temporary-id.js';
 
 export class Change {

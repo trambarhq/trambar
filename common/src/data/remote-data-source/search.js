@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Operation from './operation.js';
+import { Operation } from './operation.js';
 
 export class Search extends Operation {
   constructor(query) {

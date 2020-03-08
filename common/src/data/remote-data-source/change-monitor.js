@@ -1,6 +1,6 @@
 import { promiseSelf } from '../../utils/promise-self.js';
 
-export class CacheSignature {
+export class ChangeMonitor {
   constructor(address, schema, table, id) {
     this.address = address;
     this.schema = schema;

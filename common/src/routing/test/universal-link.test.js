@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import {
   createActivationURL,
   parseActivationURL,
-} as UniversalLink from '../universal-link.js';
+} from '../universal-link.js';
 
 describe('UniversalLink', function() {
   describe('#createActivationURL()', function() {

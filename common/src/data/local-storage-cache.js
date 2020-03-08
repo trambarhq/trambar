@@ -81,10 +81,10 @@ class LocalStorageCache {
       }));
     } else {
       objects = _.filter(rows, (row) => {
-        return LocalSearch.match(table, row, criteria);
+        return matchSearchCriteria(table, row, criteria);
       });
     }
-    LocalSearch.limit(table, objects, criteria);
+    limitSearchResults(table, objects, criteria);
     return objects;
   }
 

@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import {
   findTags,
   isTag,
-} as TagScanner from '../tag-scanner.js';
+} from '../tag-scanner.js';
 
 describe('TagScanner', function() {
   describe('#findTags()', function() {

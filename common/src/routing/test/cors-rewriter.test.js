@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import CORSRewriter from '../cors-rewriter.js';
+import { CORSRewriter } from '../cors-rewriter.js';
 
 describe('CORSRewriter', function() {
   describe('#extract()', function() {

@@ -13,7 +13,7 @@ import {
   removeLink,
   importProperty,
   importResource,
-} as ExternalDataUtils from '../external-data-utils.js';
+} from '../external-data-utils.js';
 
 describe('ExternalDataUtils', function() {
   describe('#createLink()', function() {

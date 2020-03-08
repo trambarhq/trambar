@@ -1,4 +1,4 @@
-import Storage from './storage.js';
+import { Storage } from './storage.js';
 
 export class Removal extends Storage {
   constructor(location, objects) {

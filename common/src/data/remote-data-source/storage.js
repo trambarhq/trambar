@@ -1,4 +1,4 @@
-import Operation from './operation.js';
+import { Operation } from './operation.js';
 
 export class Storage extends Operation {
   constructor(location, objects, options) {

@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import {
   matchSearchCriteria,
   limitSearchResults
-} from './local-search.js';
+} from '../local-search.js';
 
 describe('LocalSearch', function() {
   describe('#match()', function() {
