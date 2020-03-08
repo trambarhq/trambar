@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import TestServer from './lib/test-server.js';
+import { TestServer } from './lib/test-server.js';
 import { delay } from '../../utils/delay.js';
 
 import { WebsocketNotifier } from '../websocket-notifier.js';

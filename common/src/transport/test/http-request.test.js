@@ -1,7 +1,10 @@
 import { expect } from 'chai';
-import TestServer from './lib/test-server.js';
+import { TestServer } from './lib/test-server.js';
 
-import * as HTTPRequest from '../http-request.js';
+import {
+  performHTTPRequest,
+  mockHTTPRequest,
+} from '../http-request.js';
 
 let port = 7978;
 let baseURL = `http://localhost:${port}`;
@@ -11,80 +14,88 @@ describe('HTTPRequest', function() {
     this.timeout(5000);
     return TestServer.start(port);
   })
-
-  describe('#fetch()', function() {
+  after(function() {
+    mockHTTPRequest(false);
+    return TestServer.stop();
+  })
+  describe('#performHTTPRequest()', function() {
     it('should retrieve a JSON object using GET', async function() {
-      let url = `${baseURL}/echo`;
-      let payload = {
+      const url = `${baseURL}/echo`;
+      const payload = {
         msg: 'hello world',
         life: 42,
       };
-      let options = {
+      const options = {
         responseType: 'json'
       };
-      let result = await HTTPRequest.fetch('GET', url, payload, options);
+      const result = await performHTTPRequest('GET', url, payload, options);
       expect(result).to.have.property('life', '42');
     })
     it('should retrieve a JSON object using POST', async function() {
-      let url = `${baseURL}/echo`;
-      let payload = {
+      const url = `${baseURL}/echo`;
+      const payload = {
         life: 42,
       };
-      let options = {
-        contentType: 'application/json',
+      const options = {
+        contentType: 'json',
         responseType: 'json'
       };
-      let result = await HTTPRequest.fetch('POST', url, payload, options);
+      const result = await performHTTPRequest('POST', url, payload, options);
       expect(result).to.have.property('life', 42);
     })
     it('should retrieve a string using GET', async function() {
-      let url = `${baseURL}/echo`;
-      let payload = {
+      const url = `${baseURL}/echo`;
+      const payload = {
         msg: 'hello world',
         life: 42,
       };
-      let options = {
+      const options = {
         responseType: 'text'
       };
-      let result = await HTTPRequest.fetch('GET', url, payload, options);
+      const result = await performHTTPRequest('GET', url, payload, options);
       expect(result).to.be.a('string');
     })
     it('should retrieve a blob using GET', async function() {
-      let url = `${baseURL}/echo`;
-      let payload = {
+      const url = `${baseURL}/echo`;
+      const payload = {
         msg: 'hello world',
         life: 42,
       };
-      let options = {
+      const options = {
         responseType: 'blob'
       };
-      let result = await HTTPRequest.fetch('GET', url, payload, options);
+      const result = await performHTTPRequest('GET', url, payload, options);
       expect(result).to.be.an.instanceof(Blob);
     })
     it('should reject with an error when the host is unreachable', async function() {
       this.timeout(5000);
-      let url = 'http://domain.test/';
+      const url = 'http://domain.test/';
       try {
-        await HTTPRequest.fetch('GET', url);
+        await performHTTPRequest('GET', url);
         expect.fail();
       } catch (err) {
         expect(err).to.be.instanceOf(Error);
       }
     })
     it('should reject with an error when timeout is short', async function() {
-      let url = `${baseURL}/delay/1000`;
-      let options = {
+      const url = `${baseURL}/delay/1000`;
+      const options = {
         timeout: 200
       };
       try {
-        await HTTPRequest.fetch('GET', url, {}, options);
+        await performHTTPRequest('GET', url, {}, options);
         expect.fail();
       } catch (err) {
         expect(err).to.be.instanceOf(Error);
       }
     })
   })
-  after(function() {
-    return TestServer.stop();
+  describe('#mockHTTPRequest()', function() {
+    it('should override normal functionality', async function() {
+      const mockResult = { hello: 'world' };
+      mockHTTPRequest(async () => mockResult);
+      const result = await performHTTPRequest('GET', 'http://nowhere');
+      expect(result).to.equal(mockResult);
+    });
   })
 })

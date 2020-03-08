@@ -2,59 +2,71 @@ import _ from 'lodash';
 import { HTTPError } from '../errors.js';
 
 function performHTTPRequest(method, url, payload, options) {
-  let xhr = new XMLHttpRequest();
-  let promise = new Promise((resolve, reject) => {
-    let username = _.get(options, 'username', null);
-    let password = _.get(options, 'password', null);
-    let contentType = _.get(options, 'contentType', null);
+  if (mockFunc) {
+    return mockFunc(method, url, payload, options);
+  }
 
+  const {
+    username = null,
+    password = null,
+    contentType = '',
+    responseType = '',
+    timeout,
+    crossSite = false,
+    attributes,
+    onDownloadProgress,
+    onUploadProgress,
+  } = options || {};
+  const xhr = new XMLHttpRequest();
+  const promise = new Promise((resolve, reject) => {
     // attach GET letiables to URL
-    method = _.toUpper(method);
-    if (method === 'GET' && !_.isEmpty(payload)) {
-      let pairs = [];
-      _.forIn(payload, (value, name) => {
+    method = method.toUpperCase();
+    if (method === 'GET' && payload instanceof Object) {
+      const pairs = [];
+      for (let [ name, value ] of Object.entries(payload)) {
         name = encodeURIComponent(name);
         value = encodeURIComponent(value);
         if (value !== undefined) {
           pairs.push(`${name}=${value}`);
         }
-      });
-      if (_.indexOf(url, '?') === -1) {
+      }
+      if (url.indexOf('?') === -1) {
         url += '?';
       } else {
         url += '&';
       }
-      url += _.join(pairs, '&');
+      url += pairs.join('&');
       payload = null;
     }
     // convert object to string
-    if (contentType === 'json') {
-      contentType = 'application/json';
-    }
-    if (contentType === 'application/json' && _.isObject(payload)) {
-      payload = JSON.stringify(payload, omitBlob);
+    const mimeType = (contentType === 'json') ? `application/json` : contentType;
+    if (mimeType === 'application/json' && payload instanceof Object) {
+      payload = JSON.stringify(payload, (value) => {
+        if (value instanceof Blob) {
+          return undefined;
+        }
+        return value;
+      });
     }
 
-    xhr.timeout = _.get(options, 'timeout');
-    xhr.withCredentials = _.get(options, 'crossSite', false);
-    xhr.responseType = _.get(options, 'responseType', '');
-    xhr.attributes = _.get(options, 'attributes');
+    xhr.timeout = timeout;
+    xhr.withCredentials = crossSite;
+    xhr.responseType = responseType;
+    xhr.attributes = attributes;
     if (xhr.attributes) {
       if (xhr.upload) {
         xhr.upload.attributes = xhr.attributes;
       }
     }
     xhr.open(method, url, true, username, password);
-    if (contentType) {
-      xhr.setRequestHeader("Content-Type", contentType);
+    if (mimeType) {
+      xhr.setRequestHeader('Content-Type', mimeType);
     }
     xhr.onload = function(evt) {
       if (xhr.status >= 400) {
-        let error = new HTTPError(xhr.status, xhr.response);
-        reject(error);
+        reject(new HTTPError(xhr.status, xhr.response));
       } else {
-        let result = xhr.response;
-        resolve(result);
+        resolve(xhr.response);
       }
     };
     xhr.ontimeout = function(evt) {
@@ -66,8 +78,6 @@ function performHTTPRequest(method, url, payload, options) {
     xhr.onabort = function(evt) {
       reject(new Error('Transfer aborted: ' + url));
     }
-    let onDownloadProgress = _.get(options, 'onDownloadProgress');
-    let onUploadProgress = _.get(options, 'onUploadProgress');
     xhr.onprogress = function(evt) {
       if (onDownloadProgress) {
         onDownloadProgress(evt);
@@ -86,14 +96,13 @@ function performHTTPRequest(method, url, payload, options) {
   return promise;
 }
 
-function omitBlob(key, value) {
-  if (value instanceof Blob) {
-    return undefined;
-  }
-  return value;
+function mockHTTPRequest(func) {
+  mockFunc = func || undefined;
 }
+
+let mockFunc = undefined;
 
 export {
   performHTTPRequest,
-  performHTTPRequest as fetch,
+  mockHTTPRequest,
 };

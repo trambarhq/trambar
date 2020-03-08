@@ -2,14 +2,12 @@ import { expect } from 'chai';
 
 import { BlobManager } from '../blob-manager.js';
 import { CordovaFile } from '../cordova-file.js';
-import * as HTTPRequest from '../http-request.js';
+import { performHTTPRequest, mockHTTPRequest } from '../http-request.js';
 
 describe('BlobManager', function() {
-  let fetchOriginal = HTTPRequest.fetch;
   after(function() {
-    HTTPRequest.fetch = fetchOriginal;
+    mockHTTPRequest(false);
   })
-
   describe('#manage()', function() {
     it('should accept a blob and return its URL', function() {
       let blob = new Blob([ 'Hello' ]);
@@ -52,28 +50,27 @@ describe('BlobManager', function() {
   })
   describe('#fetch()', function() {
     it('should fetch a blob over HTTP', async function() {
-      let blob1 = new Blob([ 'Hello' ]);
-      HTTPRequest.fetch = (method, url, payload, options) => {
-        return Promise.resolve(blob1);
-      };
-      let blob2 = await BlobManager.fetch('http://blobhub.net/123');
+      const blob1 = new Blob([ 'Hello' ]);
+      mockHTTPRequest(async () => blob1);
+      const blob2 = await BlobManager.fetch('http://blobhub.net/123');
       expect(blob2).to.equal(blob1);
     })
     it('should return the blob if given a blob URL', async function() {
-      let blob1 = new Blob([ 'Hello' ]);
-      let url = BlobManager.manage(blob1);
-      let blob2 = await BlobManager.fetch(url);
+      const blob1 = new Blob([ 'Hello' ]);
+      mockHTTPRequest(async () => expect.fail());
+      const url = BlobManager.manage(blob1);
+      const blob2 = await BlobManager.fetch(url);
       expect(blob2).to.equal(blob1);
     })
     it('should not repeat a file transfer', async function() {
-      let blob1 = new Blob([ 'Hello' ]);
+      const blob1 = new Blob([ 'Hello' ]);
       let count = 0;
-      HTTPRequest.fetch = (method, url, payload, options) => {
+      mockHTTPRequest(async () => {
         count++;
-        return Promise.resolve(blob1);
-      };
-      let blob2 = await BlobManager.fetch('http://blobhub.net/567');
-      let blob3 = await BlobManager.fetch('http://blobhub.net/567');
+        return blob1;
+      });
+      const blob2 = await BlobManager.fetch('http://blobhub.net/567');
+      const blob3 = await BlobManager.fetch('http://blobhub.net/567');
       expect(blob3).to.equal(blob2);
       expect(blob2).to.equal(blob1);
       expect(count).to.equal(1);
@@ -81,17 +78,17 @@ describe('BlobManager', function() {
   })
   describe('#release()', function() {
     it('should remove a loaded blob', async function() {
-      let blob1 = new Blob([ 'Hello' ]);
-      let url = BlobManager.manage(blob1);
+      const blob1 = new Blob([ 'Hello' ]);
+      const url = BlobManager.manage(blob1);
       BlobManager.release(blob1);
-      let blob2 = BlobManager.find(url);
+      const blob2 = BlobManager.find(url);
       expect(blob2).to.be.null;
 
       try {
-        await fetchOriginal('GET', url);
+        mockHTTPRequest(false);
+        await performHTTPRequest('GET', url);
         expect.fail();
       } catch (err) {
-        expect(err).to.be.an.instanceOf(Error);
       }
     })
   })

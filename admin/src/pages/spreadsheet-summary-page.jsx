@@ -7,7 +7,7 @@ import { getWebsiteAddress } from 'common/objects/utils/project-utils.js';
 import { findSpreadsheet } from 'common/objects/finders/spreadsheet-finder.js';
 import { disableSpreadsheet, removeSpreadsheet, restoreSpreadsheet, saveSpreadsheet } from 'common/objects/savers/spreadsheet-saver.js';
 import { getSpreadsheetName } from 'common/objects/utils/spreadsheet-utils.js';
-import { fetch } from 'common/transport/http-request.js';
+import { performHTTPRequest } from 'common/transport/http-request.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -495,7 +495,7 @@ async function requestUpdate(project, spreadsheet, env) {
     const relativeURL = ExcelFile.getObjectURL([ spreadsheet.name ]);
     const url = `${baseURL}${relativeURL}`;
     try {
-      await fetch('HEAD', url);
+      await performHTTPRequest('HEAD', url);
     } catch (err) {
       console.error(err);
     }

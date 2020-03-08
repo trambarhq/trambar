@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import { fetch } from './http-request.js';
+import { performHTTPRequest } from './http-request.js';
 import { CordovaFile } from './cordova-file.js';
 
 class BlobManager {
@@ -82,7 +82,7 @@ class BlobManager {
     let blob = this.find(remoteURL);
     if (!blob) {
       const options = { responseType: 'blob' };
-      blob = await fetch('GET', remoteURL, null, options);
+      blob = await performHTTPRequest('GET', remoteURL, null, options);
       const localURL = this.manage(blob);
       this.associate(blob, remoteURL);
     }

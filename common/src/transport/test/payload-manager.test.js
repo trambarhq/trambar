@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import Chai, { expect } from 'chai';
-import ChaiAsPromised from 'chai-as-promised';
-import TestServer from './lib/test-server.js';
+import { TestServer } from './lib/test-server.js';
 import { promiseSelf } from '../../utils/promise-self.js';
 
 import { performHTTPRequest } from '../http-request.js';
