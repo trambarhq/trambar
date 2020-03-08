@@ -6,7 +6,7 @@ export class ByType {
   static columns = [ 'type' ];
   static monitoring = [];
 
-  async prepareContext(db, schema, stories, listing) {
+  static async prepareContext(db, schema, stories, listing) {
     return {};
   }
 

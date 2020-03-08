@@ -27,7 +27,7 @@ import { ByPopularity } from './lib/story-raters/by-popularity.mjs';
 import { ByRole } from './lib/story-raters/by-role.mjs';
 import { ByType } from './lib/story-raters/by-type.mjs';
 
-const Analysers = [
+const analysers = [
   DailyActivities,
   DailyNotifications,
   NotificationDateRange,
@@ -35,7 +35,7 @@ const Analysers = [
   StoryPopularity,
 ];
 
-const StoryRaters = [
+const storyRaters = [
   ByDiversity,
   ByPopularity,
   ByRole,
@@ -55,7 +55,7 @@ async function start() {
 
   // capture event for tables that the story raters are monitoring
   // (for the purpose of cache invalidation)
-  const raterTables = _.uniq(_.flatten(_.map(StoryRaters, 'monitoring')));
+  const raterTables = _.uniq(_.flatten(_.map(storyRaters, 'monitoring')));
   await db.listen(raterTables, 'change', handleRatingDependencyChanges, 0);
 
   // listen for changes to stories so we can invalidate cache
@@ -108,7 +108,7 @@ function handleCleanRequests(events) {
  */
 function handleRatingDependencyChanges(events) {
   for (let event of events) {
-    for (let rater of StoryRaters) {
+    for (let rater of storyRaters) {
       if (_.includes(rater.monitoring, event.table)) {
         rater.handleEvent(event);
       }
@@ -263,7 +263,7 @@ async function updateStatistics(schema, id) {
   }
   try {
     // regenerate the row
-    const analyser = _.find(Analysers, { type: row.type });
+    const analyser = _.find(analysers, { type: row.type });
     if (!analyser) {
       throw new Error('Unknown statistics type: ' + row.type);
     }
@@ -363,7 +363,7 @@ async function updateListing(schema, id) {
       order: 'btime DESC',
       limit: maxCandidateCount,
     };
-    let columns = _.flatten(_.map(StoryRaters, 'columns'));
+    let columns = _.flatten(_.map(storyRaters, 'columns'));
     columns = _.concat(columns, [ 'id', 'COALESCE(ptime, btime) AS btime' ]);
     columns = _.uniq(columns);
     const stories = await Story.findCached(db, schema, criteria, columns.join(', '));
@@ -482,7 +482,7 @@ async function updateListing(schema, id) {
  */
 async function prepareStoryRaterContexts(db, schema, stories, listing) {
   const contexts = {};
-  for (let rater of StoryRaters) {
+  for (let rater of storyRaters) {
     const context = await rater.prepareContext(db, schema, stories, listing);
     contexts[rater.type] = context;
   }
@@ -499,7 +499,7 @@ async function prepareStoryRaterContexts(db, schema, stories, listing) {
  */
 function calculateStoryRating(contexts, story) {
   let total = 0;
-  for (let rater of StoryRaters) {
+  for (let rater of storyRaters) {
     const rating = rater.calculateRating(contexts[rater.type], story);
     total += rating;
   }

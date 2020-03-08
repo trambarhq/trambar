@@ -69,9 +69,9 @@ function extractListItems(text) {
  */
 function isList(text) {
   if (typeof(text) === 'object') {
-    return _.some(text, detect);
+    return _.some(text, isList);
   }
-  let tokens = extract(text);
+  const tokens = extractListItems(text);
   return _.some(tokens, (token) => {
     // lists are arrays
     return token instanceof Array;

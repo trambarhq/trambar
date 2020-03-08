@@ -282,7 +282,7 @@ function canAddIssue(user, story, repo, access) {
   if (access !== 'read-write') {
     return false;
   }
-  if (isTrackable(story)) {
+  if (isStoryTrackable(story)) {
     // see if user is a member of one of the repos
     if (_.includes(repo.user_ids, user.id)) {
       if (repo.details.issues_enabled) {

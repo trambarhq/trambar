@@ -23,19 +23,16 @@ export function UserList(props) {
     preserve: (base, ours) => {
       const json = JSON.stringify(ours);
       sessionStorage.user_view_options = json;
-      console.log(sessionStorage.user_view_options);
     },
     restore: (base) => {
       try {
         const json = sessionStorage.user_view_options;
-        console.log(JSON.parse(json));
         return JSON.parse(json);
       } catch (err){
       }
     },
     compare: _.isEqual,
   });
-  console.log(viewOptions.current);
 
   const handleUserIdentity = useListener((evt) => {
     return getAnchor(evt.item.id);

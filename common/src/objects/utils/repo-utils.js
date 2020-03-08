@@ -11,7 +11,7 @@ function getRepoURL(repo) {
 }
 
 function getMembershipPageURL(repo) {
-  let projectURL = getURL(repo)
+  let projectURL = getRepoURL(repo)
   if (projectURL) {
     projectURL = _.trimEnd(projectURL, ' /');
     return `${projectURL}/settings/members`;
@@ -25,7 +25,7 @@ function getIssueNumber(repo, story) {
 }
 
 function getIssueURL(repo, story) {
-  const repoURL = getURL(repo);
+  const repoURL = getRepoURL(repo);
   const issueNumber = getIssueNumber(repo, story);
   if (repoURL && issueNumber) {
     return `${repoURL}/issues/${issueNumber}`;
@@ -33,7 +33,7 @@ function getIssueURL(repo, story) {
 }
 
 function getMilestoneURL(repo, story) {
-  const repoURL = getURL(repo);
+  const repoURL = getRepoURL(repo);
   const milestoneLink = findLinkByRelations(story, 'milestone');
   const milestoneID = _.get(milestoneLink, 'milestone.id');
   if (repoURL && milestoneID) {
@@ -42,7 +42,7 @@ function getMilestoneURL(repo, story) {
 }
 
 function getMergeRequestURL(repo, story) {
-  const repoURL = getURL(repo);
+  const repoURL = getRepoURL(repo);
   const mergeRequestLink = findLinkByRelations(story, 'merge_request');
   const mergeRequestID = _.get(mergeRequestLink, 'merge_request.number');
   if (repoURL && mergeRequestID) {
@@ -53,7 +53,7 @@ function getMergeRequestURL(repo, story) {
 function getPushURL(repo, story) {
   const commitBefore = _.get(story, 'details.commit_before');
   const commitAfter = _.get(story, 'details.commit_after');
-  const repoURL = getURL(repo);
+  const repoURL = getRepoURL(repo);
   if (repoURL) {
     if (commitBefore) {
       return `${repoURL}/compare/${commitBefore}...${commitAfter}`;
@@ -65,7 +65,7 @@ function getPushURL(repo, story) {
 
 function getBranchURL(repo, story) {
   const branch = _.get(story, 'details.branch');
-  const repoURL = getURL(repo);
+  const repoURL = getRepoURL(repo);
   if (repoURL) {
     if (story.type === 'branch') {
       return `${repoURL}/commits/${branch}`;
@@ -97,7 +97,7 @@ function getNoteHash(noteLink) {
 }
 
 function getCommitNoteURL(repo, reaction) {
-  const repoURL = getURL(repo);
+  const repoURL = getRepoURL(repo);
   const noteLink = findLinkByRelations(reaction, 'note', 'commit');
   if (repoURL && noteLink) {
     let commitID = noteLink.commit.id;
@@ -116,7 +116,7 @@ function getCommitNoteURL(repo, reaction) {
 }
 
 function getIssueNoteURL(repo, reaction) {
-  const repoURL = getURL(repo);
+  const repoURL = getRepoURL(repo);
   const noteLink = findLinkByRelations(reaction, 'note', 'issue');
   const issueNumber = _.get(noteLink, 'issue.number');
   if (repoURL && issueNumber) {
@@ -126,7 +126,7 @@ function getIssueNoteURL(repo, reaction) {
 }
 
 function getMergeRequestNoteURL(repo, reaction) {
-  const repoURL = getURL(repo);
+  const repoURL = getRepoURL(repo);
   const noteLink = findLinkByRelations(reaction, 'note', 'merge_request');
   const mergeRequestNumber = _.get(noteLink, 'merge_request.number');
   if (repoURL && mergeRequestNumber) {

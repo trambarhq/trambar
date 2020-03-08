@@ -22,7 +22,7 @@ import { ByPopularity } from './lib/story-raters/by-popularity.mjs';
 import { ByRole } from './lib/story-raters/by-role.mjs';
 import { ByType } from './lib/story-raters/by-type.mjs';
 
-const Analysers = [
+const analysers = [
   DailyActivities,
   DailyNotifications,
   NotificationDateRange,
@@ -30,7 +30,7 @@ const Analysers = [
   StoryPopularity,
 ];
 
-const StoryRaters = [
+const storyRaters = [
   ByDiversity,
   ByPopularity,
   ByRole,
@@ -45,7 +45,7 @@ async function start() {
   await db.need('global');
   // get list of tables that the analyers make use of and listen for
   // changes in them
-  const statsSources = _.uniq(_.flatten(_.map(Analysers, 'sourceTables')));
+  const statsSources = _.uniq(_.flatten(_.map(analysers, 'sourceTables')));
   await db.listen(statsSources, 'change', handleDatabaseChangesAffectingStatistics);
 
   // listings, meanwhile, are derived from story and statistics
@@ -129,7 +129,7 @@ async function invalidateStatistics(db, schema, events) {
  */
 async function findStatisticsImpactedByDatabaseChanges(db, schema, events) {
   const impactedRows = [];
-  for (let analyser of Analysers) {
+  for (let analyser of analysers) {
     for (let table of analyser.sourceTables) {
       const filteredColumnMappings = analyser.filteredColumns[table];
       const filteredColumns = _.values(filteredColumnMappings);
@@ -252,7 +252,7 @@ async function findListingsImpactedByStoryChanges(db, schema, events) {
   };
   const filteredColumns = _.values(filteredColumnMappings);
   // columns that affects rating
-  const ratingColumns = _.uniq(_.flatten(_.map(StoryRaters, 'columns')));
+  const ratingColumns = _.uniq(_.flatten(_.map(storyRaters, 'columns')));
   // columns that affects order (hence whether it'd be excluded by the LIMIT clause)
   const orderingColumns = [ 'btime' ];
   const relevantEvents = _.filter(events, (event) => {

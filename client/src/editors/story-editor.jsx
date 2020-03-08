@@ -46,7 +46,7 @@ export function StoryEditor(props) {
   const { database, route, env, payloads } = props;
   const { highlighting, isStationary } = props;
   const { t, languageCode } = env.locale;
-  const [ capturing, capture ] = useState(false);
+  const [ capturing, capture ] = useState();
   const [ selectedResourceIndex, setSelectedResourceIndex ] = useState(0);
   const [ openMenu, setOpenMenu ] = useState('');
   const importerRef = useRef();
