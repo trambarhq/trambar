@@ -5,9 +5,8 @@ import ReactEasyEmoji from 'react-easy-emoji';
 import { extractListItems } from './list-parser.js';
 
 function renderPlainText(props) {
-  const { type, text } = props;
+  const { type, text, answers, results, onChange } = props;
   if (type === 'survey') {
-    const { answers, results, onChange } = props;
     if (results) {
       return renderSurveyResults(text, results);
     } else {
@@ -65,7 +64,7 @@ function renderSurvey(text, answers, onChange) {
       });
     } else {
       // regular text
-      return listToken;
+      return renderEmoji(listToken.text, { key: index });
     }
   });
 }
@@ -109,7 +108,7 @@ function renderSurveyResults(text, voteCounts) {
       });
     } else {
       // regular text
-      return listToken;
+      return renderEmoji(listToken.text, { key: index });
     }
   });
 }
@@ -162,7 +161,7 @@ function renderTaskList(text, answers, onChange) {
       });
     } else {
       // regular text
-      return listToken;
+      return renderEmoji(listToken.text, { key: index });
     }
   });
 }

@@ -9,9 +9,8 @@ import { parseJSONEncodedURL } from '../objects/utils/resource-utils.js';
 import { ResourceView } from '../widgets/resource-view.jsx';
 
 function renderMarkdown(props) {
-  const { type, text, onReference } = props;
+  const { type, text, answers, results, onChange, onReference } = props;
   if (type === 'survey') {
-    const { answers, results, onChange } = props;
     if (results) {
       return renderSurveyResults(text, results);
     } else {
@@ -20,7 +19,7 @@ function renderMarkdown(props) {
   } else if (type === 'task-list') {
     return renderTaskList(text, answers, onChange, onReference);
   } else {
-    return render(text);
+    return renderText(text);
   }
 }
 
@@ -34,334 +33,10 @@ function renderMarkdown(props) {
  */
 function isMarkdown(text, onReference) {
   if (typeof(text) === 'object') {
-    return _.some(text, detect);
+    return _.some(text, isMarkdown);
   }
-  // process the text fully at block level, so ref links are captured
-  const parser = createParser(onReference);
-  const bTokens = parser.extractBlocks(text);
-  return _.some(bTokens, (bToken) => {
-    switch (bToken.type) {
-      case 'space':
-        return false;
-      case 'paragraph':
-      case 'text_block':
-        // scan for inline markup
-        const inlineLexer = parser.inlineLexer;
-        inlineLexer.start(bToken.markdown);
-        let iToken;
-        while (iToken = inlineLexer.captureToken()) {
-          switch (iToken.type) {
-            case 'url':
-            case 'text':
-            case 'autolink':
-            case 'br':
-              // ignore these, as they can occur in plain text
-              break;
-            default:
-              return true;
-          }
-        }
-        break;
-      case 'list':
-        return _.every(bToken.children, (item) => {
-          const child = item.children[0];
-          if (child.type === 'text_block') {
-            if (/^\s*\[/.test(child.markdown)) {
-              // it might be a task-list or survey item
-              return false;
-            }
-          }
-          return true;
-        });
-      default:
-        return true;
-    }
-  });
-}
-
-/**
- * Render Markdown text
- *
- * @param  {String} text
- * @param  {Function} onReference
- *
- * @return {Array<ReactElement>}
- */
-function render(text, onReference) {
-  const parser = createParser(onReference);
-  const renderer = createRenderer();
-  const bTokens = parser.parse(text);
-  const paragraphs = renderer.render(bTokens);
-  return paragraphs;
-}
-
-/**
- * Render text containing a survey
- *
- * @param  {String} text
- * @param  {Object} answers
- * @param  {Function} onChange
- * @param  {Function} onReference
- *
- * @return {Array<String|ReactElement>}
- */
-function renderSurvey(text, answers, onChange, onReference) {
-  const listTokens = extractListItems(text);
-  const markdownTexts = renderListTokens(listTokens, onReference);
-
-  // create text nodes and list items
-  return _.map(listTokens, (listToken, index) => {
-    if (listToken instanceof Array) {
-      // it's a list
-      const listItems = _.map(listToken, (item, key) => {
-        let checked = item.checked;
-        const label = markdownTexts[index][key];
-        if (answers) {
-          // override radio-button state indicated in text
-          // with set-but-not-yet-saved value
-          const answer = answers[item.list];
-          if (answer !== undefined) {
-            checked = (item.key == answer);
-          }
-        }
-        return (
-          <div className="list-item" key={key}>
-            <label onClick={handleClick}>
-              <input type="radio" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
-              {' '}
-              {label}
-            </label>
-          </div>
-        );
-      });
-      return <div key={index}>{listItems}</div>;
-    } else {
-      // regular text
-      return markdownTexts[index];
-    }
-  });
-}
-
-/**
- * Render text containing a survey, showing the results
- *
- * @param  {String} text
- * @param  {Object} voteCounts
- * @param  {Function} onReference
- *
- * @return {Array<String|ReactElement>}
- */
-function renderSurveyResults(text, voteCounts, onReference) {
-  const listTokens = extractListItems(text);
-  const markdownTexts = renderListTokens(listTokens, onReference);
-
-  // create text nodes and list items
-  return _.map(listTokens, (listToken, index) => {
-    if (listToken instanceof Array) {
-      const listItems = _.map(listToken, (item, key) => {
-        const label = markdownTexts[index][key];
-        const tally = voteCounts[item.list];
-        const total = _.get(tally, 'total', 0);
-        const count = _.get(tally, [ 'answers', item.key ], 0);
-        const percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
-        const color = `color-${item.key % 12}`;
-        let className = 'vote-count';
-        if (count === total) {
-          className += ' unanimous';
-        }
-        return (
-          <div className={className} key={key}>
-            <div className="label">{label}</div>
-            <div className="bar">
-              <span className={`filled ${color}`} style={{ width: percent }} />
-              <span className="percent">{percent}</span>
-              <span className="count">{count + '/' + total}</span>
-            </div>
-          </div>
-        );
-      });
-      return <div key={index}>{listItems}</div>;
-    } else {
-      // regular text
-      return markdownTexts[index];
-    }
-  });
-}
-
-/**
- * Render text containing a task list
- *
- * @param  {String} text
- * @param  {Object} answers
- * @param  {Function} onChange
- * @param  {Function} onReference
- *
- * @return {Array<String|ReactElement>}
- */
-function renderTaskList(text, answers, onChange, onReference) {
-  const listTokens = extractListItems(text);
-  const markdownTexts = renderListTokens(listTokens, onReference);
-
-  // create text nodes and list items
-  return _.map(listTokens, (listToken, index) => {
-    if (listToken instanceof Array) {
-      const listItems = _.map(listToken, (item, key) => {
-        let checked = item.checked;
-        const label = markdownTexts[index][key];
-        if (answers) {
-          // override checkbox state indicated in text
-          // with set-but-not-yet-saved value
-          const answer = answers[item.list];
-          if (answer !== undefined) {
-            const selected = answer[item.key];
-            if (selected !== undefined) {
-              checked = selected;
-            }
-          }
-        }
-        return (
-          <div className="list-item" key={key}>
-            <label onClick={handleClick}>
-              <input type="checkbox" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
-              {' '}
-              {label}
-            </label>
-          </div>
-        );
-      });
-      return <div key={index}>{listItems}</div>;
-    } else {
-      // regular text
-      return markdownTexts[index];
-    }
-  });
-}
-
-/**
- * Parse results from extractListItems() as Markdown. The result will retain the
- * same structure, with arrays of ReactElement replacing plain text.
- *
- * @param  {Array<String|Array<Object>>} listTokens
- * @param  {Function} onReference
- *
- * @return {Array<Array<ReactElement>|Array<Object>>}
- */
-function renderListTokens(listTokens, onReference) {
-  // process the text fully at block level, so ref links are captured
-  const parser = createParser(onReference);
-  const blockTokenLists = _.map(listTokens, (listToken, index) => {
-    let blockTokens;
-    if (listToken instanceof Array) {
-      // process the label of each item
-      return _.map(listToken, (item) => {
-        return parser.extractBlocks(item.label);
-      });
-    } else {
-      return parser.extractBlocks(listToken);
-    }
-  });
-
-  // process at the inline level
-  for (let [ index, listToken ] of _.entries(listTokens)) {
-    const blockTokens = blockTokenLists[index];
-    if (listToken instanceof Array) {
-      for (let tokens of blockTokens) {
-        parser.processInline(tokens);
-      }
-    } else {
-      parser.processInline(blockTokens);
-    }
-  }
-
-  // render tokens
-  const renderer = createRenderer();
-  const markdownTexts = _.map(listTokens, (listToken, index) => {
-    const blockTokens = blockTokenLists[index];
-    if (listToken instanceof Array) {
-      return _.map(listToken, (item, index) => {
-        let label = _.first(renderer.render(blockTokens[index]));
-        if (label && label.props && label.type === 'p') {
-          // take text out from <p>
-          label = label.props.children;
-        }
-        return label;
-      });
-    } else {
-      // regular Markdown text
-      return renderer.render(blockTokens);
-    }
-  });
-  return markdownTexts;
-}
-
-/**
- * Create a Markdown parser that can reference resources through callback
- *
- * @param  {Function} onReference
- *
- * @return {Parser}
- */
-function createParser(onReference) {
-  class inlineLexerClass extends InlineLexer {
-    findRefLink(name, forImage) {
-      let link = super.findRefLink(name, forImage);
-      if (link) {
-        return link;
-      }
-      if (onReference) {
-        link = onReference({
-          type: 'reference',
-          target: this,
-          name,
-          forImage,
-        });
-      }
-      return link;
-
-    }
-  }
-  return new Parser({ inlineLexerClass });
-}
-
-/**
- * Create a Markdown renderer, overriding certain functions
- *
- * @return {Renderer}
- */
-function createRenderer() {
-  return new MarkGor.Renderer({ renderImage, renderText });
-}
-
-/**
- * Render image referenced in text
- *
- * @param  {Object} token
- * @param  {Number} key
- *
- * @return {ReactElement}
- */
-function renderImage(token, key) {
-  const url = token.href;
-  const title = token.title;
-  const text = token.text;
-  const resource = parseJSONEncodedURL(url);
-  if (resource) {
-    return <ResourceView key={key} resource={resource} alt={text} title={title} />;
-  } else {
-    return <img key={key} src={url} alt={text} title={title} />;
-  }
-};
-
-/**
- * Render text with emoji
- *
- * @param  {Object} token
- * @param  {Number} key
- *
- * @return {Array<String|ReactElement>}
- */
-function renderText(token, key) {
-  return renderEmoji(token.text, { key });
+  const parser = new CustomParser({ onReference });
+  return parser.detect(text);
 }
 
 function findReferencedResource(resources, name) {
@@ -379,6 +54,357 @@ function findReferencedResource(resources, name) {
     }
   }
   return null;
+}
+
+/**
+ * Render text containing a survey
+ *
+ * @param  {String} text
+ * @param  {Object} answers
+ * @param  {Function} onChange
+ * @param  {Function} onReference
+ *
+ * @return {Array<String|ReactElement>}
+ */
+function renderSurvey(text, answers, onChange, onReference) {
+  const listTokens = extractListItems(text);
+  renderListItems(listTokens, onReference);
+
+  // create text nodes and list items
+  return _.map(listTokens, (listToken, index) => {
+    if (listToken instanceof Array) {
+      // it's a list
+      const listItems = _.map(listToken, (item, key) => {
+        let checked = item.checked;
+        if (answers) {
+          // override radio-button state indicated in text
+          // with set-but-not-yet-saved value
+          const answer = answers[item.list];
+          if (answer !== undefined) {
+            checked = (item.key == answer);
+          }
+        }
+        return (
+          <div className="list-item" key={key}>
+            <label onClick={handleClick}>
+              <input type="radio" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
+              {' '}
+              {item.react}
+            </label>
+          </div>
+        );
+      });
+      return <div key={index}>{listItems}</div>;
+    } else {
+      // regular text
+      return listToken.react;
+    }
+  });
+}
+
+/**
+ * Render text containing a survey, showing the results
+ *
+ * @param  {String} text
+ * @param  {Object} voteCounts
+ * @param  {Function} onReference
+ *
+ * @return {Array<String|ReactElement>}
+ */
+function renderSurveyResults(text, voteCounts, onReference) {
+  const listTokens = extractListItems(text);
+  renderListItems(listTokens, onReference);
+
+  // create text nodes and list items
+  return _.map(listTokens, (listToken, index) => {
+    if (listToken instanceof Array) {
+      const listItems = _.map(listToken, (item, key) => {
+        const tally = voteCounts[item.list];
+        const total = _.get(tally, 'total', 0);
+        const count = _.get(tally, [ 'answers', item.key ], 0);
+        const percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
+        const color = `color-${item.key % 12}`;
+        let className = 'vote-count';
+        if (count === total) {
+          className += ' unanimous';
+        }
+        return (
+          <div className={className} key={key}>
+            <div className="label">{listToken.react}</div>
+            <div className="bar">
+              <span className={`filled ${color}`} style={{ width: percent }} />
+              <span className="percent">{percent}</span>
+              <span className="count">{count + '/' + total}</span>
+            </div>
+          </div>
+        );
+      });
+      return <div key={index}>{listItems}</div>;
+    } else {
+      return listToken.react;
+    }
+  });
+}
+
+/**
+ * Render text containing a task list
+ *
+ * @param  {String} text
+ * @param  {Object} answers
+ * @param  {Function} onChange
+ * @param  {Function} onReference
+ *
+ * @return {Array<String|ReactElement>}
+ */
+function renderTaskList(text, answers, onChange, onReference) {
+  const listTokens = extractListItems(text);
+  renderListItems(listTokens, onReference);
+
+  // create text nodes and list items
+  return _.map(listTokens, (listToken, index) => {
+    if (listToken instanceof Array) {
+      const listItems = _.map(listToken, (item, key) => {
+        let checked = item.checked;
+        if (answers) {
+          // override checkbox state indicated in text
+          // with set-but-not-yet-saved value
+          const answer = answers[item.list];
+          if (answer !== undefined) {
+            const selected = answer[item.key];
+            if (selected !== undefined) {
+              checked = selected;
+            }
+          }
+        }
+        return (
+          <div className="list-item" key={key}>
+            <label onClick={handleClick}>
+              <input type="checkbox" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
+              {' '}
+              {listToken.react}
+            </label>
+          </div>
+        );
+      });
+      return <div key={index}>{listItems}</div>;
+    } else {
+      return listToken.react;
+    }
+  });
+}
+
+/**
+ * Render Markdown text
+ *
+ * @param  {String} text
+ * @param  {Function} onReference
+ *
+ * @return {Array<ReactElement>}
+ */
+function renderText(text, onReference) {
+  const parser = new CustomParser({ onReference });
+  const renderer = new CustomRenderer;
+  const tokens = parser.parse(text);
+  return renderer.render(tokens);
+}
+
+/**
+ * Parse results from extractListItems() as Markdown. Results are saved into
+ * the tokens themselves.
+ *
+ * @param  {Array<String|Array<Object>>} listTokens
+ * @param  {Function} onReference
+ */
+function renderListItems(listTokens, onReference) {
+  // process the text fully at block level, so ref links are captured
+  const parser = new CustomParser({ onReference });
+  const renderer = new CustomRenderer;
+  parser.parseList(listTokens);
+  renderer.renderList(listTokens);
+}
+
+class CustomParser extends Parser {
+  constructor(options) {
+    super({ ...options, inlineLexerClass: CustomInlineLexer });
+  }
+
+  detect(text) {
+    this.initialize(text);
+    this.processBlocks();
+    for (let bToken of this.tokens) {
+      switch (bToken.type) {
+        case 'space':
+          break;
+        case 'paragraph':
+        case 'text_block':
+          // scan for inline markup
+          this.inlineLexer.initialize(bToken.markdown, bToken.type);
+          while (this.inlineLexer.remaining) {
+            const iToken = this.inlineLexer.captureToken();
+            if (iToken) {
+              switch (iToken.type) {
+                case 'url':   // ignore these, as they can occur in plain text
+                case 'text':
+                case 'autolink':
+                case 'br':
+                  break;
+                default:
+                  return true;
+              }
+            }
+          }
+          break;
+        case 'list':
+          for (let itemToken of bToken.children) {
+            const child = itemToken.children[0];
+            if (/^\s*\[/.test(child.markdown)) {
+              // it might be a task-list or survey item
+              break;
+            }
+          }
+          return true;
+        default:
+          return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Parse markdown text in list items from extractListItems(), storing
+   * tokens into the list tokens themselves
+   *
+   * @param  {Array<Object>} listTokens
+   */
+  parseList(listTokens) {
+    this.initialize('');
+    // parse blocks first so we have all references
+    this.processListItemBlocks(listTokens);
+    this.processListItemInline(listTokens);
+  }
+
+  /**
+   * Parse token at block level
+   *
+   * @param  {Object|Array<Object>} listToken
+   */
+  processListItemBlocks(listToken) {
+    if (listToken instanceof Array) {
+      for (let token of listToken) {
+        this.processListItemBlocks(token);
+      }
+    } else {
+      this.text = (listToken.list) ? listToken.label : listToken.text;
+      this.tokens = listToken.tokens = [];
+      this.processBlocks();
+      if (listToken.list) {
+        if (this.tokens[0] && this.tokens[0].type === 'paragraph') {
+          // take text out of paragraph
+          this.tokens[0].type = 'html_block';
+        }
+      }
+    }
+  }
+
+  /**
+   * Parse token at inline level
+   *
+   * @param  {Object|Array<Object>} listToken
+   */
+  processListItemInline(listToken) {
+    if (listToken instanceof Array) {
+      for (let token of listToken) {
+        this.processListItemInline(token);
+      }
+    } else {
+      this.tokens = listToken.tokens;
+      this.processInline();
+    }
+  }
+}
+
+class CustomInlineLexer extends InlineLexer {
+  findRefLink(name, forImage) {
+    let link = super.findRefLink(name, forImage);
+    if (link) {
+      return link;
+    }
+    if (onReference) {
+      link = onReference({
+        type: 'reference',
+        target: this,
+        name,
+        forImage,
+      });
+    }
+    return link;
+  }
+}
+
+class CustomRenderer extends ReactRenderer {
+  /**
+   * Convert markdown tokens in list tokens into React elements
+   *
+   * @param  {Array<Object>} listTokens
+   */
+  renderList(listTokens) {
+    this.renderListItem(listTokens);
+  }
+
+  /**
+   * Convert markdown tokens into a React element, storing it in the
+   * given list token itself
+   *
+   * @param  {Object|Array<Object>} listToken
+   */
+  renderListItem(listToken) {
+    if (listToken instanceof Array) {
+      for (let token of listToken) {
+        this.renderListItem(token);
+      }
+    } else {
+      this.tokens = [];
+      this.renderTokens(listToken.tokens);
+      if (this.options.normalizeTags) {
+        this.normalize();
+      }
+      listToken.react = this.output();
+    }
+  }
+
+  /**
+   * Render image referenced in text
+   *
+   * @param  {Object} token
+   * @param  {Number} key
+   *
+   * @return {ReactElement}
+   */
+  outputHTMLElement(token, key) {
+    const { tagName, attributes, children } = token;
+    if (tagName === 'img') {
+      const { src, ...otherAttrs } = attributes;
+      const resource = parseJSONEncodedURL(src);
+      if (resource) {
+        const props = { ...otherAttrs, resource };
+        return <ResourceView key={key} {...props} />;
+      }
+    }
+    return super.outputHTMLElement(token, key);
+  }
+
+  /**
+   * Render text with emoji
+   *
+   * @param  {Object} token
+   * @param  {Number} key
+   *
+   * @return {Array<String|ReactElement>}
+   */
+  outputText(token, key) {
+    const { text } = token;
+    return renderEmoji(text, { key });
+  }
 }
 
 function handleClick(evt) {

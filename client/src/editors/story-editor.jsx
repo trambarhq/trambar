@@ -430,19 +430,24 @@ export function StoryEditor(props) {
   }
 
   function renderTextPreview() {
-    const langText = draft.get(`details.text.${languageCode}`, '');
     const isMarkdown = draft.get('details.markdown');
-    const type = draft.get('type');
+    const textProps = {
+      type: draft.get('type', 'post'),
+      text: draft.get(`details.text.${languageCode}`, ''),
+      answers: null,  // answers are written to the text itself
+      onChange: handleItemChange,
+      onReference: markdown.onReference,
+    };
     const classNames = [
       'text',
-      type || 'post',
+      textProps.type,
       (isMarkdown) ? 'markdown' : 'plain-text',
     ];
-    const answers = null; // answers are written to the text itself
-    const f = (isMarkdown) ? renderMarkdown : renderPlainText;
-    let contents = f({ type, answers, onChange: handleItemChange });
-    if (!isMarkdown) {
-      contents = <p>{contents}</p>;
+    let contents;
+    if (isMarkdown) {
+      contents = renderMarkdown(textProps);
+    } else {
+      contents = <p>{renderPlainText(textProps)}</p>;
     }
     return (
       <div className="story-contents">

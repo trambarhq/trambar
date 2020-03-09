@@ -8,7 +8,7 @@ const regExp = /^([ \t]*)\*\s+\[([ xхχ])\]([ \t]*)(.*?)([ \t]*?)$/mig;
  *
  * @param  {String} text
  *
- * @return {Array}
+ * @return {Array<Object>}
  */
 function extractListItems(text) {
   text = (text) ? text : '';
@@ -27,14 +27,14 @@ function extractListItems(text) {
         if (_.trim(textBefore)) {
           currentList = null;
           list++;
-          tokens.push(textBefore);
+          tokens.push({ text: textBefore });
         } else {
           // append the whitespaces onto the last time
           let lastItem = _.last(currentList);
           lastItem.after += textBefore;
         }
       } else {
-        tokens.push(textBefore);
+        tokens.push({ text: textBefore });
       }
     }
     let before = m[1];
@@ -55,7 +55,7 @@ function extractListItems(text) {
   }
   let textAfter = text.substring(si);
   if (textAfter) {
-    tokens.push(textAfter);
+    tokens.push({ text: textAfter });
   }
   return tokens;
 }
@@ -94,10 +94,10 @@ function setListItem(tokens, list, key, checked, clearOthers) {
         if (item.list == list) {
           // update .checked then .answer of item
           if (item.key == key) {
-            update(item, checked);
+            updateListItem(item, checked);
           } else {
             if (checked && clearOthers) {
-              update(item, false);
+              updateListItem(item, false);
             }
           }
         }
@@ -182,10 +182,10 @@ function stringifyList(tokens) {
   tokens = _.flattenDeep(tokens);
   let lines = [];
   for (let token of tokens) {
-    if (token instanceof Object) {
+    if (token.list) {
       lines.push(token.before + '* [' + token.answer + ']' + token.between + token.label + token.after);
     } else {
-      lines.push(token);
+      lines.push(token.text);
     }
   }
   return lines.join('');
