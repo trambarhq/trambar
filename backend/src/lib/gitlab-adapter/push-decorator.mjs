@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Path from 'path';
 import Ignore from 'ignore';
-import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
+import { AsyncParser } from 'mark-gor/html.mjs';
 import { TaskLog } from '../task-log.mjs';
 import * as ExternalDataUtils from '../external-data-utils.mjs';
 import { HTTPError } from '../errors.mjs';
@@ -295,7 +295,7 @@ async function parseDescriptorFile(cxt, path) {
 
   for (let token of tokens) {
     if (token.type === 'heading') {
-      const m = /^\s*([a-z]{2})(-[a-z]{2})?\b$/i.exec(token.markdown);
+      const m = /^\s*\(?([a-z]{2})(-[a-z]{2})?\)?\b$/i.exec(token.markdown);
       if (m) {
         const code = m[1];
         languageTokens[code] = currentLanguageTokens = [];

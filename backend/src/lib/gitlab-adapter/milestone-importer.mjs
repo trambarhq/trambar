@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import { getDefaultLanguageCode } from '../localization.mjs';
-import { findTags } from '../tag-scanner.mjs';
+import { findTagsInMarkdown } from '../text-utils.mjs';
 import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
@@ -103,7 +103,7 @@ async function updateMilestones(db, system, server, repo, project) {
  * @return {Story}
  */
 function copyMilestoneProperties(story, system, server, repo, author, glMilestone) {
-  const descriptionTags = findTags(glMilestone.description, true);
+  const descriptionTags = findTagsInMarkdown(glMilestone.description);
   const defLangCode = getDefaultLanguageCode(system);
 
   const storyChanges = _.cloneDeep(story) || {};

@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import CrossFetch from 'cross-fetch';
-import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
 import { Database } from '../database.mjs';
 import { HTTPError } from '../errors.mjs';
 import { TaskLog } from '../task-log.mjs';
+import { convertHTMLToJSON } from '../text-utils.mjs';
 
 import * as ProjectSettings from './project-settings.mjs';
 import * as MediaImporter from '../media-server/media-importer.mjs';
@@ -215,7 +215,7 @@ async function transformWPData(data) {
         }
         if (html !== undefined) {
           // parse the HTML
-          const json = await parseHTML(html);
+          const json = await convertHTMLToJSON(html);
           let resources;
           const scanElements = (elements) => {
             if (elements instanceof Array) {
@@ -289,14 +289,6 @@ function transformWPPurge(purge, rest) {
     }
   }
   return [];
-}
-
-async function parseHTML(html) {
-  const parser = new AsyncParser({ htmlOnly: true });
-  const renderer = new JSONRenderer;
-  const tokens = await parser.parse(html);
-  const json = renderer.render(tokens);
-  return json;
 }
 
 export {

@@ -5,7 +5,7 @@ import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
 import { isList, extractListItems, countListItems } from 'common/utils/list-parser.js';
 import { renderPlainText } from 'common/utils/plain-text.js';
 import { renderMarkdown, isMarkdown } from 'common/utils/markdown.js';
-import { findTags } from 'common/utils/tag-scanner.js';
+import { findTagsInText } from 'common/utils/tag-scanner.js';
 import { saveStory, removeStory } from 'common/objects/savers/story-saver.js';
 import { isCancelable, hasContents, removeSuperfluousDetails } from 'common/objects/utils/story-utils.js';
 import { isCoauthor } from 'common/objects/utils/user-utils.js';
@@ -575,8 +575,7 @@ function adjustStory(story) {
   }
 
   // look for tags
-  story.tags = findTags(story.details.text);
-
+  story.tags = findTagsInText(story.details.text, story.details.markdown);
   return story;
 }
 

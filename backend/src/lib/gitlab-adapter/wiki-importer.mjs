@@ -7,6 +7,7 @@ import loadLanguages from 'prismjs/components/index.js';
 import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
 import { TaskLog } from '../task-log.mjs';
 import { getDefaultLanguageCode } from '../localization.mjs';
+import { convertMarkdownToJSON, convertHTMLToJSON } from '../text-utils.mjs';
 import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
@@ -228,30 +229,26 @@ async function parseGitlabWiki(glWiki, baseURL) {
   const { slug, format, title, content } = glWiki;
 
   // parse content and convert to JSON
-  let text, htmlOnly = false;
+  let json;
   if (format === 'markdown') {
-    text = content;
+    const highlight = (code, language) => {
+      if (language) {
+        language = language.toLowerCase();
+        loadLanguages([ language ]);
+        const plugin = PrismJs.languages[language];
+        if (plugin) {
+          return PrismJs.highlight(code, plugin, language);
+        }
+      }
+    };
+    json = await convertMarkdownToJSON(content, { highlight });
   } else if (format === 'asciidoc') {
     const asciiDoctor = AsciiDoctor();
-    text = asciiDoctor.convert(content);
-    htmlOnly = true;
+    const html = asciiDoctor.convert(content);
+    json = await convertHTMLToJSON(html);
   } else {
-    text = '';
+    json = [];
   }
-  const highlight = (code, language) => {
-    if (language) {
-      language = language.toLowerCase();
-      loadLanguages([ language ]);
-      const plugin = PrismJs.languages[language];
-      if (plugin) {
-        return PrismJs.highlight(code, plugin, language);
-      }
-    }
-  };
-  const parser = new AsyncParser({ htmlOnly, highlight });
-  const tokens = await parser.parse(text);
-  const renderer = new JSONRenderer;
-  const json = renderer.render(tokens);
 
   // look for references and import images
   const references = [];

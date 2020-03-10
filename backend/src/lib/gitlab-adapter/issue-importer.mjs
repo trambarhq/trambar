@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import { getDefaultLanguageCode } from '../localization.mjs';
-import { findTags } from '../tag-scanner.mjs';
+import { findTagsInMarkdown } from '../text-utils.mjs';
 import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
@@ -136,7 +136,7 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
  * @return {Story}
  */
 function copyIssueProperties(story, system, server, repo, opener, assignments, glIssue) {
-  const descriptionTags = findTags(glIssue.description, true);
+  const descriptionTags = findTagsInMarkdown(glIssue.description);
   const labelTags = _.map(glIssue.labels, (label) => {
     return `#${_.replace(label, /\s+/g, '-')}`;
   });

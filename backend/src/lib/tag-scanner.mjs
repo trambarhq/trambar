@@ -1,27 +1,35 @@
-import _ from 'lodash';
-
 /**
  * Find @name and #keyword tags
  *
- * @param  {String|Object} text
- * @param  {Boolean} markdown
+ * @param  {String|Array<String>} text
  *
  * @return {Array<String>}
  */
-function findTags(text, markdown) {
-  let tags;
+function findTags(text) {
+  const strings = [];
+
   if (typeof(text) === 'string') {
-    text = removeURLs(text);
-    text = removeEmails(text);
-    tags = text.match(findRE);
-  } else if(text instanceof Object) {
-    tags = _.flatten(_.filter(_.map(text, (version) => {
-      version = removeURLs(version);
-      version = removeEmails(version);
-      return String(version).match(findRE);
-    })));
+    strings.push(cleanPlainText(text));
+  } else if (text instanceof Array) {
+    for (let fragment of text) {
+      if (typeof(fragment) === 'string') {
+        strings.push(cleanPlainText(fragment));
+      }
+    }
   }
-  return _.sortBy(_.uniq(tags));
+
+  const tags = [];
+  for (let string of strings) {
+    const match = string.match(findRE);
+    if (match) {
+      for (let tag of match) {
+        if (tags.indexOf(tag) === -1) {
+          tags.push(tag);
+        }
+      }
+    }
+  }
+  return tags.sort();
 }
 
 function isTag(text) {
@@ -29,12 +37,12 @@ function isTag(text) {
 }
 
 function removeTags(text) {
-  return _.trim(String(text).replace(findRE, ''));
+  return String(text).replace(findRE, '').trim();
 }
 
-let pattern = `[@#][a-zA-Z][a-zA-Z0-9_\\-]*`;
-let findRE = new RegExp(`${pattern}`, 'g');
-let checkRE = new RegExp(`^${pattern}$`);
+const pattern = `[@#][a-zA-Z][a-zA-Z0-9_\\-]*`;
+const findRE = new RegExp(`${pattern}`, 'g');
+const checkRE = new RegExp(`^${pattern}$`);
 
 function removeURLs(text) {
   return text.replace(/https?:\/\/\S+/g, '');
@@ -42,6 +50,12 @@ function removeURLs(text) {
 
 function removeEmails(text) {
   return text.replace(/\w+@\w+.\w+/g, '');
+}
+
+function cleanPlainText(text) {
+  text = removeURLs(text || '');
+  text = removeEmails(text);
+  return text;
 }
 
 export {

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import { getDefaultLanguageCode } from '../localization.mjs';
-import { findTags } from '../tag-scanner.mjs';
+import { findTagsInMarkdown } from '../text-utils.mjs';
 import * as ExternalDataUtils from '../external-data-utils.mjs';
 import { HTTPError } from '../errors.mjs';
 
@@ -126,7 +126,7 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
  * @return {Story}
  */
 function copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest) {
-  const descriptionTags = findTags(glMergeRequest.description, true);
+  const descriptionTags = findTagsInMarkdown(glMergeRequest.description);
   const labelTags = _.map(glMergeRequest.labels, (label) => {
     return `#${_.replace(label, /\s+/g, '-')}`;
   });

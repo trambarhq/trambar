@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import { findTags } from 'common/utils/tag-scanner.js';
+import { findTagsInText } from 'common/utils/tag-scanner.js';
 import { isMarkdown } from 'common/utils/markdown.js';
 import { FocusManager } from 'common/utils/focus-manager.js';
 import { saveReaction, republishReaction, removeReaction } from 'common/objects/savers/reaction-saver.js';
@@ -268,7 +268,6 @@ function adjustReaction(reaction) {
   }
 
   // look for tags
-  reaction.tags = findTags(reaction.details.text);
-
+  reaction.tags = findTagsInText(reaction.details.text, reaction.details.markdown);
   return reaction
 }
