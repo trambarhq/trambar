@@ -111,7 +111,7 @@ EmptyMessage.propTypes = {
 };
 HeaderButton.propTypes = {
   label: PropTypes.string,
-  icon: PropTypes.string,
+  iconClass: PropTypes.string,
   hidden: PropTypes.bool,
   highlighted: PropTypes.bool,
   disabled: PropTypes.bool,
@@ -119,7 +119,7 @@ HeaderButton.propTypes = {
 };
 HeaderButton.File.propTypes = {
   label: PropTypes.string,
-  icon: PropTypes.string,
+  iconClass: PropTypes.string,
   hidden: PropTypes.bool,
   highlighted: PropTypes.bool,
   disabled: PropTypes.bool,
@@ -132,7 +132,7 @@ Link.propTypes = {
 };
 MediaButton.propTypes = {
   label: PropTypes.string,
-  icon: PropTypes.string,
+  iconClass: PropTypes.string,
   hidden: PropTypes.bool,
   highlighted: PropTypes.bool,
   disabled: PropTypes.bool,
@@ -170,9 +170,9 @@ NewItemsAlert.propTypes = {
 OptionButton.propTypes = {
   label: PropTypes.node,
   id: PropTypes.string,
-  icon: PropTypes.string,
-  iconOn: PropTypes.string,
-  iconOff: PropTypes.string,
+  iconClass: PropTypes.string,
+  iconClassOn: PropTypes.string,
+  iconClassOff: PropTypes.string,
   url: PropTypes.string,
   target: PropTypes.string,
   hidden: PropTypes.bool,

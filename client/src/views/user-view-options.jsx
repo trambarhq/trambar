@@ -87,35 +87,35 @@ export function UserViewOptions(props) {
       } = user?.details ?? {};
       const phoneProps = {
         label: t('action-contact-by-phone'),
-        icon: 'phone-square',
+        iconClass: 'fas fa-phone-square-alt',
         url: `tel:${phone}`,
         hidden: !phone,
         onClick: handlePhoneClick,
       };
       const emailProps = {
         label: t('action-contact-by-email'),
-        icon: 'envelope',
+        iconClass: 'fas fa-envelope',
         url: `mailto:${email}`,
         hidden: !email,
         onClick: handleLinkClick,
       };
       const skypeProps = {
         label: t('action-contact-by-skype'),
-        icon: 'skype',
+        iconClass: 'fab fa-skype',
         url: `skype:${skypeUsername}?chat`,
         hidden: !skypeUsername,
         onClick: handleLinkClick,
       };
       const ichatProps = {
         label: t('action-contact-by-ichat'),
-        icon: 'apple',
+        icon: 'fab fa-apple',
         url: `ichat:${ichatUsername}`,
         hidden: !ichatUsername,
         onClick: handleLinkClick,
       };
       const twitterProps = {
         label: t('action-contact-by-twitter'),
-        icon: 'twitter',
+        icon: 'fab fa-twitter-square',
         url: `https://twitter.com/${twitterUsername}`,
         target: '_blank',
         hidden: !twitterUsername,
@@ -123,7 +123,7 @@ export function UserViewOptions(props) {
       };
       const gitlabProps = {
         label: t('action-view-gitlab-page'),
-        icon: 'gitlab',
+        icon: 'fab fa-gitlab',
         url: gitlabURL,
         target: '_blank',
         hidden: !gitlabURL,
@@ -131,7 +131,7 @@ export function UserViewOptions(props) {
       };
       const githubProps = {
         label: t('action-view-github-page'),
-        icon: 'github',
+        icon: 'fab fa-github-square',
         url: githubURL,
         target: '_blank',
         hidden: !githubURL,
@@ -139,7 +139,7 @@ export function UserViewOptions(props) {
       };
       const linkedInProps = {
         label: t('action-view-linkedin-page'),
-        icon: 'linkedin',
+        icon: 'fab fa-linkedin',
         url: linkedinURL,
         target: '_blank',
         hidden: !linkedinURL,
@@ -147,7 +147,7 @@ export function UserViewOptions(props) {
       };
       const stackOverflowProps = {
         label: t('action-view-stackoverflow-page'),
-        icon: 'stack-overflow',
+        icon: 'fab fa-stack-overflow',
         url: stackoverflowURL,
         target: '_blank',
         hidden: !stackoverflowURL,

@@ -40,7 +40,7 @@ export function ReactionToolbar(props) {
   });
 
   const likeButtonProps = {
-    icon: 'thumbs-up',
+    iconClass: 'fas fa-thumbs-up',
     label: t('story-like'),
     hidden: !canComment,
     highlighted: !!userLike,
@@ -48,7 +48,7 @@ export function ReactionToolbar(props) {
     onClick: handleLikeClick,
   };
   const commentButtonProps = {
-    icon: 'comment',
+    iconClass: 'fas fa-comment',
     label: t('story-comment'),
     hidden: !canComment,
     highlighted: !_.isEmpty(userComments) || addingComment,

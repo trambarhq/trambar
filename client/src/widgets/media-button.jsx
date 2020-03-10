@@ -6,13 +6,13 @@ import './media-button.scss';
  * Stateless component that renders a button for adding/removing attached media.
  */
 export function MediaButton(props) {
-  const { label, hidden, disabled, onClick } = props;
+  const { label, hidden, disabled, iconClass, onClick } = props;
   if (hidden) {
     return null;
   }
   return (
     <label className={buttonClasses(props)} onClick={!disabled ? onClick : null}>
-      <i className={iconClasses(props)}/>
+      <i className={iconClass}/>
       <span className="label">{label}</span>
     </label>
   );
@@ -51,14 +51,6 @@ function buttonClasses(props) {
   }
   if (props.disabled) {
     classNames.push('disabled');
-  }
-  return classNames.join(' ');
-}
-
-function iconClasses(props) {
-  const classNames = [];
-  if (props.icon) {
-    classNames.push('fas', `fa-${props.icon}`);
   }
   return classNames.join(' ');
 }

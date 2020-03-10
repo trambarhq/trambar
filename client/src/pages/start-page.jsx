@@ -483,9 +483,9 @@ export default async function StartPage(props) {
     // add badge to indicate membership status
     let badge;
     if (isMember(currentUser, project)) {
-      badge = <i className="fa fa-user-circle-o badge" />;
+      badge = <i className="far fa-user-circle badge" />;
     } else if (isPendingMember(currentUser, project)) {
-      badge = <i className="fa fa-clock-o badge" />;
+      badge = <i className="far fa-clock badge" />;
     }
 
     // don't show dialog box if user has previously visited the project

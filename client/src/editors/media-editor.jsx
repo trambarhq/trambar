@@ -122,18 +122,18 @@ export function MediaEditor(props) {
     }
     const removeProps = {
       label: t('media-editor-remove'),
-      icon: 'remove',
+      iconClass: 'fas fa-remove',
       onClick: handleRemoveClick,
     };
     const embedProps = {
       label: t('media-editor-embed'),
-      icon: 'code',
+      iconClass: 'fas fa-code',
       hidden: !allowEmbedding,
       onClick: handleEmbedClick,
     };
     const shiftProps = {
       label: t('media-editor-shift'),
-      icon: 'chevron-left',
+      iconClass: 'fas fa-chevron-left',
       hidden: !allowShifting || !(resourceCount > 1),
       disabled: !(resourceIndex > 0),
       onClick: handleShiftClick,

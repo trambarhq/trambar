@@ -41,20 +41,18 @@ function buttonClasses(props) {
 }
 
 function iconClasses(props) {
-  const classNames = [ 'fas' ];
-  if (props.icon) {
-    classNames.push(`fa-${props.icon}`);
+  if (props.iconClass) {
+    return props.iconClass);
   } else {
     if (props.selected) {
-      classNames.push(`fa-${props.iconOn}`);
+      return props.iconClassOn);
     } else {
-      classNames.push(`fa-${props.iconOff}`);
+      return props.iconClassOff);
     }
   }
-  return classNames.join(' ');
 }
 
 OptionButton.defaultProps = {
-  iconOn: 'check-circle',
-  iconOff: 'circle-o',
+  iconClassOn: 'fas fa-check-circle',
+  iconClassOff: 'far fa-circle',
 };

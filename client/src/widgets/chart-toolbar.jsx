@@ -23,21 +23,21 @@ export function ChartToolbar(props) {
 
   const barChartProps = {
     label: t('statistics-bar'),
-    icon: 'bar-chart',
+    iconClass: 'fas fa-bar-chart',
     highlighted: (chartType === 'bar'),
     'data-type': 'bar',
     onClick: handleClick,
   };
   const lineChartProps = {
     label: t('statistics-line'),
-    icon: 'line-chart',
+    iconClass: 'fas fa-line-chart',
     highlighted: (chartType === 'line'),
     'data-type': 'line',
     onClick: handleClick,
   };
   const pieChartProps = {
     label: t('statistics-pie'),
-    icon: 'pie-chart',
+    iconClass: 'fas fa-pie-chart',
     highlighted: (chartType === 'pie'),
     'data-type': 'pie',
     onClick: handleClick,
