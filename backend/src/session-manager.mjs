@@ -9,15 +9,14 @@ import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Moment from 'moment';
 import CrossFetch from 'cross-fetch';
 import HtpasswdJS from 'htpasswd-js';
-
 import { HTTPError } from './lib/errors.mjs';
 import { Database } from './lib/database.mjs';
 import { TaskLog } from './lib/task-log.mjs';
 import { createLink, addLink, removeLink, countLinks, importProperty, importResource } from './lib/external-data-utils.mjs';
+import { onShutdown, shutdownHTTPServer } from './lib/shutdown.mjs';
 
 import * as GitlabUserImporter from './lib/gitlab-adapter/user-importer.mjs';
 import * as MediaImporter from './lib/media-server/media-importer.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
 
 // accessors
 import { Device } from './lib/accessors/device.mjs';
@@ -68,7 +67,7 @@ async function start() {
 
 async function stop() {
   clearInterval(cleanUpInterval);
-  await Shutdown.close(server);
+  await shutdownHTTPServer(server);
 };
 
 /**
@@ -1351,7 +1350,7 @@ async function deleteExpiredSessions() {
 
 if ('file://' + process.argv[1] === import.meta.url) {
   start();
-  Shutdown.addListener(stop);
+  onShutdown(stop);
 }
 
 export {

@@ -8,8 +8,8 @@ import { Database } from './lib/database.mjs';
 import { HTTPError } from './lib/errors.mjs';
 import { TaskLog } from './lib/task-log.mjs';
 import { getUserAccessLevel } from './lib/project-utils.mjs';
-import * as Accessors from './lib/data-server/accessors.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
+import { getAccessors } from './lib/data-server/accessors.mjs';
+import { onShutdown, shutdownHTTPServer } from './lib/shutdown.mjs';
 
 // accessors
 import { Project } from './lib/accessors/project.mjs';
@@ -58,7 +58,7 @@ async function start() {
 }
 
 async function stop() {
-  await Shutdown.close(server);
+  await shutdownHTTPServer(server);
 };
 
 /**
@@ -419,7 +419,7 @@ async function fetchCredentials(db, userID, schema) {
  * @return {Accessor}
  */
 function getAccessor(schema, table) {
-  const accessors = Accessors.get(schema);
+  const accessors = getAccessors(schema);
   const accessor = _.find(accessors, { table });
   if (!accessor) {
     throw new HTTPError(404);
@@ -429,7 +429,7 @@ function getAccessor(schema, table) {
 
 if ('file://' + process.argv[1] === import.meta.url) {
   start();
-  Shutdown.addListener(stop);
+  onShutdown(stop);
 }
 
 export {

@@ -5,7 +5,7 @@ import BodyParser from 'body-parser';
 import DNSCache from 'dnscache';
 import { Database } from './lib/database.mjs';
 import { TaskLog } from './lib/task-log.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
+import { onShutdown, shutdownHTTPServer } from './lib/shutdown.mjs';
 
 import * as HookManager from './lib/gitlab-adapter/hook-manager.mjs';
 import * as SnapshotManager from './lib/gitlab-adapter/snapshot-manager.mjs';
@@ -95,7 +95,7 @@ async function start() {
 }
 
 async function stop() {
-  await Shutdown.close(server);
+  await shutdownHTTPServer(server);
 
   if (taskQueue) {
     await taskQueue.stop();
@@ -359,7 +359,7 @@ function handleError(err, req, res, next) {
 
 if ('file://' + process.argv[1] === import.meta.url) {
   start();
-  Shutdown.addListener(stop);
+  onShutdown(stop);
 }
 
 export {

@@ -10,7 +10,7 @@ import Crypto from 'crypto'; Bluebird.promisifyAll(Crypto);
 import XML2JS from 'xml2js';
 import { HTTPError } from '../errors.mjs';
 import { TaskLog } from '../task-log.mjs';
-import * as Shutdown from '../shutdown.mjs';
+import { shutdownHTTPServer }  from '../shutdown.mjs';
 
 // accessors
 import { Subscription } from '../accessors/subscription.mjs';
@@ -76,7 +76,7 @@ async function shutdown() {
     }
   }
   sockets = [];
-  await Shutdown.close(server);
+  await shutdownHTTPServer(server);
 }
 
 /**

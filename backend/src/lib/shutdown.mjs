@@ -5,7 +5,7 @@ const listeners = [];
  *
  * @param  {Function} callback
  */
-function addListener(callback) {
+function addShutdownListener(callback) {
   listeners.push(callback);
 }
 
@@ -14,7 +14,7 @@ function addListener(callback) {
  *
  * @param  {Function} callback
  */
-function removeListener(callback) {
+function removeShutdownListener(callback) {
   const index = listeners.indexOf(callback);
   if (index !== -1) {
     listeners.splice(index, 1);
@@ -29,7 +29,7 @@ function removeListener(callback) {
  *
  * @return {Promise}
  */
-async function close(server, maxWait) {
+async function shutdownHTTPServer(server, maxWait) {
   if (maxWait === undefined) {
     maxWait = 1000;
   }
@@ -58,9 +58,9 @@ async function close(server, maxWait) {
 /**
  * Start shutting down system
  */
-async function initiate() {
+async function initiateShutdown() {
   console.log('Shutting down...');
-  await broadcast();
+  await broadcastShutdownEvent();
   process.exit(0);
 }
 
@@ -70,7 +70,7 @@ async function initiate() {
  *
  * @return {Promise}
  */
-async function broadcast() {
+async function broadcastShutdownEvent() {
   while (listeners.length > 0) {
     const list = listeners.splice(0);
     for (let callback of list) {
@@ -83,15 +83,16 @@ async function broadcast() {
   }
 }
 
-process.on('SIGTERM', initiate);
-process.on('SIGUSR2', initiate);
-process.on('uncaughtException', function(err) {
+process.on('SIGTERM', initiateShutdown);
+process.on('SIGUSR2', initiateShutdown);
+process.on('uncaughtException', (err) => {
   console.error(err);
 });
 
 export {
-  addListener,
-  removeListener,
-  initiate,
-  close,
+  addShutdownListener,
+  addShutdownListener as onShutdown,
+  removeShutdownListener,
+  initiateShutdown,
+  shutdownHTTPServer,
 };

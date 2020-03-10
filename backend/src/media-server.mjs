@@ -13,13 +13,13 @@ import FileType from 'file-type';
 import { Database } from './lib/database.mjs';
 import { HTTPError } from './lib/errors.mjs';
 import { TaskLog } from './lib/task-log.mjs';
+import { onShutdown, shutdownHTTPServer } from './lib/shutdown.mjs';
 
 import * as CacheFolders from './lib/media-server/cache-folders.mjs';
 import * as FileManager from './lib/media-server/file-manager.mjs';
 import * as ImageManager from './lib/media-server/image-manager.mjs';
 import * as VideoManager from './lib/media-server/video-manager.mjs';
 import * as StockPhotoImporter from './lib/media-server/stock-photo-importer.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
 
 let server;
 const cacheControl = {
@@ -70,7 +70,7 @@ async function start() {
 }
 
 async function stop() {
-  await Shutdown.close(server);
+  await shutdownHTTPServer(server);
 }
 
 /**
@@ -608,7 +608,7 @@ function getFileURL(path) {
 
 if ('file://' + process.argv[1] === import.meta.url) {
   start();
-  Shutdown.addListener(stop);
+  onShutdown(stop);
 }
 
 export {

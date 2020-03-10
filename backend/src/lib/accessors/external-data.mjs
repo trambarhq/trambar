@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { Data } from './data.mjs';
-import * as StoredProcs from '../stored-procs/functions.mjs';
+import { externalIdStrings } from '../stored-procs/functions.mjs';
 
 export class ExternalData extends Data {
   static columns = {
@@ -80,7 +80,7 @@ export class ExternalData extends Data {
           objectNames.push(name);
         }
       }
-      const idStrings = StoredProcs.externalIdStrings(external, serverType, objectNames);
+      const idStrings = externalIdStrings(external, serverType, objectNames);
       conds.push(`"externalIdStrings"(external, '${serverType}', '{${objectNames}}'::text[]) && $${params.push(idStrings)}`);
     }
   }

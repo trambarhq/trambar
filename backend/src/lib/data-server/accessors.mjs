@@ -48,10 +48,10 @@ const projectAccessors = [
   Wiki,
 ];
 
-function get(schema) {
+function getAccessors(schema) {
   return (schema === 'global') ? globalAccessors : projectAccessors;
 }
 
 export {
-  get,
+  getAccessors,
 };

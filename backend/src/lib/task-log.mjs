@@ -2,8 +2,8 @@ import _ from 'lodash';
 import Moment from 'moment';
 import Bytes from 'bytes';
 import { Database } from './database.mjs';
-import * as RevertibleConsole from './revertible-console.mjs';
-import * as Shutdown from './shutdown.mjs';
+import { write, commit, revert } from './revertible-console.mjs';
+import { addShutdownListener, removeShutdownListener } from './shutdown.mjs';
 import { HTTPError } from './errors.mjs';
 
 // accessors
@@ -113,7 +113,7 @@ export class TaskLog {
         }
       }
     };
-    Shutdown.addListener(this.shutdownListener);
+    addShutdownListener(this.shutdownListener);
   }
 
   /**
@@ -215,13 +215,13 @@ export class TaskLog {
     this.saved = false;
     this.endTime = Moment();
     clearTimeout(this.saveTimeout);
-    Shutdown.removeListener(this.shutdownListener);
+    removeShutdownListener(this.shutdownListener);
     await this.save();
     if (this.finished) {
       if (!this.clearing || this.error || !this.noop) {
         this.output(true);
       } else {
-        RevertibleConsole.revert();
+        revert();
       }
       if (this.token) {
         _.unset(taskLogHash, [ this.schema, this.token ]);
@@ -247,7 +247,7 @@ export class TaskLog {
     this.saved = false;
     this.endTime = Moment();
     clearTimeout(this.saveTimeout);
-    Shutdown.removeListener(this.shutdownListener);
+    removeShutdownListener(this.shutdownListener);
     const task = await this.save();
     this.output(true);
     if (this.token) {
@@ -300,20 +300,20 @@ export class TaskLog {
     const stime = `[${this.startTime.toISOString()}]`;
     const etime = `[${(this.endTime || Moment()).toISOString()}]`;
     const blank = _.repeat('·', etime.length);
-    RevertibleConsole.revert();
+    revert();
     const status = this.formatStatus();
     const options = this.formatOptions();
-    RevertibleConsole.write(`${stime} ${this.action}${options} - ${status}`);
+    write(`${stime} ${this.action}${options} - ${status}`);
     const lines = this.formatDescription();
     for (let [ index, line ] of lines.entries()) {
       if (index === lines.length - 1) {
-        RevertibleConsole.write(`${etime}   ${line}`);
+        write(`${etime}   ${line}`);
       } else {
-        RevertibleConsole.write(`${blank}   ${line}`);
+        write(`${blank}   ${line}`);
       }
     }
     if (commit) {
-      RevertibleConsole.commit();
+      commit();
     }
   }
 

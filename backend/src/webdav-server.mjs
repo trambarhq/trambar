@@ -3,9 +3,8 @@ import JsDAV from '@pylonide/jsdav';
 import JsDAVLocksBackendFS from '@pylonide/jsdav/lib/DAV/plugins/locks/fs.js';
 import JsDAVPromise from 'jsdav-promise/es6.js'; const { File, Collection, Conflict } = JsDAVPromise;
 import { Database } from './lib/database.mjs';
-
-import * as Accessors from './lib/schema-manager/accessors.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
+import { getAccessors } from './lib/schema-manager/accessors.mjs';
+import { onShutdown, shutdownHTTPServer } from './lib/shutdown.mjs';
 
 // accessors
 import { Project } from './lib/accessors/project.mjs';
@@ -50,7 +49,7 @@ class SchemaFolder extends Collection {
     this.name = schema;
     this.path = `/${schema}`;
     this.schema = schema;
-    this.accessors = Accessors.get(schema);
+    this.accessors = getAccessors(schema);
   }
 
   async getChildrenAsync() {
@@ -69,7 +68,7 @@ class TableFolder extends Collection {
     this.path = `/${schema}/${table}`;
     this.schema = schema;
     this.table = table;
-    this.accessor = _.find(Accessors.get(schema), { table });
+    this.accessor = _.find(getAccessors(schema), { table });
   }
 
   async createFileAsync(name, data, type) {
@@ -129,7 +128,7 @@ class RowFile extends File {
     this.id = id;
     this.schema = schema;
     this.table = table;
-    this.accessor = _.find(Accessors.get(schema), { table });
+    this.accessor = _.find(getAccessors(schema), { table });
   }
 
   async getAsync() {
@@ -182,14 +181,14 @@ async function start() {
 }
 
 async function stop() {
-  await Shutdown.close(server);
+  await shutdownHTTPServer(server);
   db.close();
   db = null;
 }
 
 if ('file://' + process.argv[1] === import.meta.url) {
   start();
-  Shutdown.addListener(stop);
+  onShutdown(stop);
 }
 
 export {

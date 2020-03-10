@@ -14,6 +14,7 @@ import DNSCache from 'dnscache';
 import { Database } from './lib/database.mjs';
 import { TaskLog } from './lib/task-log.mjs'
 import { getDefaultLanguageCode } from './lib/localization.mjs';
+import { onShutdown, shutdownHTTPServer } from './lib/shutdown.mjs';
 
 import * as CacheManager from './lib/www-handler/cache-manager.mjs';
 import * as ExcelRetriever from './lib/www-handler/excel-retriever.mjs';
@@ -23,7 +24,6 @@ import * as RestRetriever from './lib/www-handler/rest-retriever.mjs';
 import * as SnapshotRetriever from './lib/www-handler/snapshot-retriever.mjs';
 import * as TrafficMonitor from './lib/www-handler/traffic-monitor.mjs';
 import * as WikiRetriever from './lib/www-handler/wiki-retriever.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
 
 import { TaskQueue } from './lib/task-queue.mjs';
 import {
@@ -125,7 +125,7 @@ async function start() {
 }
 
 async function stop() {
-  await Shutdown.close(server);
+  await shutdownHTTPServer(server);
 
   if (taskQueue) {
     await taskQueue.stop();
@@ -612,7 +612,7 @@ function convertMultilingualText(langText) {
 
 if ('file://' + process.argv[1] === import.meta.url) {
   start();
-  Shutdown.addListener(stop);
+  onShutdown(stop);
 }
 
 export {

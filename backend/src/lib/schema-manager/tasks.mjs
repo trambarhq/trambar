@@ -3,7 +3,7 @@ import Moment from 'moment';
 import { Database } from '../database.mjs';
 import { PeriodicTask } from '../task-queue.mjs';
 import { TaskLog } from '../task-log.mjs';
-import * as Accessors from './accessors.mjs';
+import { getAccessor } from './accessors.mjs';
 
 import { Project } from '../accessors/project.mjs';
 
@@ -70,7 +70,7 @@ class PeriodicTaskCollectGarbage extends PeriodicTask {
           continue;
         }
         let schemaTotal = 0;
-        const accessors = Accessors.get(schema);
+        const accessors = getAccessor(schema);
         for (let accessor of accessors) {
           const table = accessor.getTableName(schema);
           taskLog.describe(`cleaning ${table}`);

@@ -2,7 +2,7 @@ import _ from 'lodash';
 import FS from 'fs';
 import { Database } from './lib/database.mjs';
 import { TaskLog } from './lib/task-log.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
+import { onShutdown } from './lib/shutdown.mjs';
 
 // accessors
 import { Statistics } from './lib/accessors/statistics.mjs';
@@ -378,7 +378,7 @@ function extractPreviousValues(events, columns) {
 
 if ('file://' + process.argv[1] === import.meta.url) {
   start();
-  Shutdown.addListener(stop);
+  onShutdown(stop);
 }
 
 export {

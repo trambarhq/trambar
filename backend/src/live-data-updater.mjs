@@ -4,8 +4,8 @@ import FS from 'fs';
 import Moment from 'moment';
 import { Database } from './lib/database.mjs';
 import { TaskLog } from './lib/task-log.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
 import { AsyncQueue } from './lib/async-queue.mjs';
+import { onShutdown } from './lib/shutdown.mjs';
 
 // accessors
 import { Statistics } from './lib/accessors/statistics.mjs';
@@ -555,7 +555,7 @@ function getTimeElapsed(start, end) {
 
 if ('file://' + process.argv[1] === import.meta.url) {
   start();
-  Shutdown.addListener(stop);
+  onShutdown(stop);
 }
 
 export {

@@ -4,8 +4,8 @@ import Moment from 'moment';
 import Crypto from 'crypto'; Bluebird.promisifyAll(Crypto);
 import { Database } from './lib/database.mjs';
 import { TaskLog } from './lib/task-log.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
-import * as Accessors from './lib/schema-manager/accessors.mjs';
+import { getAccessors } from './lib/schema-manager/accessors.mjs';
+import { onShutdown } from './lib/shutdown.mjs';
 
 import { Project } from './lib/accessors/project.mjs';
 import { Reaction } from './lib/accessors/reaction.mjs';
@@ -163,7 +163,8 @@ async function handleDatabaseChanges(events) {
 async function addSearchIndices(db, schema, table, languages) {
   const taskLog = TaskLog.start('search-indices-add', { schema });
   try {
-    const accessor = _.find(Accessors.get(schema), { table });
+    cosnt accessors = getAccessors(schema);
+    const accessor = _.find(accessors, { table });
     // make sure we have indices for these languages
     const existing = await accessor.getTextSearchLanguages(db, schema);
     // take out the ones we have already
@@ -251,7 +252,7 @@ async function upgradeDatabase(db) {
  * @return {Promise<Boolean>}
  */
 async function upgradeSchema(db, schema) {
-  const accessors = Accessors.get(schema);
+  const accessors = getAccessors(schema);
   const currentVersion = await getSchemaVersion(db, schema);
   const latestVersion = _.max(_.map(accessors, 'version'));
   if (currentVersion >= latestVersion) {
@@ -473,7 +474,7 @@ async function createMessageQueue(db) {
 
 if ('file://' + process.argv[1] === import.meta.url) {
   start();
-  Shutdown.addListener(stop);
+  onShutdown(stop);
 }
 
 export {

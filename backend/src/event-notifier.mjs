@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import { Database } from './lib/database.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
+import { onShutdown } from './lib/shutdown.mjs';
 import { HTTPError } from './lib/errors.mjs';
 
 import * as ListenerManager from './lib/event-notifier/listener-manager.mjs';
 import * as NotificationGenerator from './lib/event-notifier/notification-generator.mjs';
 import * as AlertComposer from './lib/event-notifier/alert-composer.mjs';
-import * as Accessors from './lib/data-server/accessors.mjs';
+import { getAccessors } from './lib/data-server/accessors.mjs';
 
 // accessors
 import { Subscription } from './lib/accessors/subscription.mjs';
@@ -20,7 +20,7 @@ let database;
 async function start() {
   database = await Database.open(true);
   await ListenerManager.listen(database);
-  const accessors = _.union(Accessors.get('global'), Accessors.get('project'));
+  const accessors = _.union(getAccessors('global'), getAccessors('project'));
   const tables = _.map(accessors, 'table');
   const result = await database.listen(tables, 'change', handleDatabaseChanges, 100);
   return result;
@@ -113,7 +113,7 @@ async function sendChangeNotifications(db, events, listeners, system) {
     const changes = {};
     let badge;
     for (let event of events) {
-      const accessors = Accessors.get(event.schema);
+      const accessors = getAccessors(event.schema);
       const accessor = _.find(accessors, { table: event.table });
       if (accessor.isRelevantTo(event, listener.user, listener.subscription)) {
         const table = `${event.schema}.${event.table}`;
@@ -196,7 +196,7 @@ class Message {
 
 if ('file://' + process.argv[1] === import.meta.url) {
   start();
-  Shutdown.addListener(stop);
+  onShutdown(stop);
 }
 
 export {
