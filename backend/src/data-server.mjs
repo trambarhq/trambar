@@ -8,8 +8,8 @@ import { Database } from './lib/database.mjs';
 import { HTTPError } from './lib/errors.mjs';
 import { TaskLog } from './lib/task-log.mjs';
 import { getUserAccessLevel } from './lib/project-utils.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
 import * as Accessors from './lib/data-server/accessors.mjs';
+import * as Shutdown from './lib/shutdown.mjs';
 
 // accessors
 import { Project } from './lib/accessors/project.mjs';

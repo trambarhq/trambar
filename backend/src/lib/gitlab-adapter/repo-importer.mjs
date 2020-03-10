@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import { TaskLog } from '../task-log.mjs';
 import { getDefaultLanguageCode } from '../localization.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { createLink, findLink, inheritLink, addLink, importProperty } from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 import * as SnapshotManager from './snapshot-manager.mjs';
@@ -31,7 +31,7 @@ async function importRepositories(db, server) {
   try {
     // find existing repos connected with server (including deleted ones)
     const criteria = {
-      external_object: ExternalDataUtils.createLink(server)
+      external_object: createLink(server)
     };
     const repos = await Repo.find(db, 'global', criteria, '*');
 
@@ -40,7 +40,7 @@ async function importRepositories(db, server) {
 
     // delete ones that no longer exists at GitLab
     for (let repo of repos) {
-      const repoLink = ExternalDataUtils.findLink(repo, server);
+      const repoLink = findLink(repo, server);
       if (!_.some(glRepos, { id: repoLink.project.id })) {
         await Repo.updateOne(db, 'global', { id: repo.id, deleted: true });
         taskLog.append('deleted', repo.name);
@@ -102,7 +102,7 @@ async function importRepositories(db, server) {
 
 async function detectTemplate(db, server, repo) {
   try {
-    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const repoLink = findLink(repo, server);
     const packageInfo = await fetchPackageJSON(server, repoLink.project.id);
     const keywords = _.get(packageInfo, 'keywords');
     const template = _.includes(keywords, 'trambar-template');
@@ -155,7 +155,7 @@ async function processSystemEvent(db, server, glHookEvent) {
 
   if (eventName === 'repository_update') {
     const criteria = {
-      external_object: ExternalDataUtils.createLink(server, {
+      external_object: createLink(server, {
         project: { id: glHookEvent.project_id }
       }),
       deleted: false,
@@ -190,36 +190,36 @@ async function processSystemEvent(db, server, glHookEvent) {
 function copyEventProperties(story, system, server, repo, author, glEvent) {
   const defLangCode = getDefaultLanguageCode(system);
   const storyChanges = _.cloneDeep(story) || {};
-  ExternalDataUtils.inheritLink(storyChanges, server, repo);
-  ExternalDataUtils.importProperty(storyChanges, server, 'type', {
+  inheritLink(storyChanges, server, repo);
+  importProperty(storyChanges, server, 'type', {
     value: 'repo',
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'language_codes', {
+  importProperty(storyChanges, server, 'language_codes', {
     value: [ defLangCode ],
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'user_ids', {
+  importProperty(storyChanges, server, 'user_ids', {
     value: [ author.id ],
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'role_ids', {
+  importProperty(storyChanges, server, 'role_ids', {
     value: author.role_ids,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.action', {
+  importProperty(storyChanges, server, 'details.action', {
     value: glEvent.action_name,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'public', {
+  importProperty(storyChanges, server, 'public', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'published', {
+  importProperty(storyChanges, server, 'published', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'ptime', {
+  importProperty(storyChanges, server, 'ptime', {
     value: Moment(glEvent.created_at).toISOString(),
     overwrite: 'always',
   });
@@ -242,7 +242,7 @@ function copyEventProperties(story, system, server, repo, author, glEvent) {
  */
 async function findExistingRepo(db, server, repos, glRepo) {
   const repo = _.find(repos, (repo) => {
-    return ExternalDataUtils.findLink(repo, server, {
+    return findLink(repo, server, {
       project: { id: glRepo.id }
     });
   });
@@ -292,42 +292,42 @@ async function addProjectMembers(db, repo, users) {
  */
 function copyRepoDetails(repo, server, members, glRepo, glLabels) {
   const repoChanges = _.cloneDeep(repo) || {};
-  ExternalDataUtils.addLink(repoChanges, server, {
+  addLink(repoChanges, server, {
     project: { id: glRepo.id }
   });
-  ExternalDataUtils.importProperty(repoChanges, server, 'type', {
+  importProperty(repoChanges, server, 'type', {
     value: 'gitlab',
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(repoChanges, server, 'name', {
+  importProperty(repoChanges, server, 'name', {
     value: glRepo.name,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(repoChanges, server, 'user_ids', {
+  importProperty(repoChanges, server, 'user_ids', {
     value: _.map(members, 'id'),
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(repoChanges, server, 'details.web_url', {
+  importProperty(repoChanges, server, 'details.web_url', {
     value: glRepo.web_url,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(repoChanges, server, 'details.issues_enabled', {
+  importProperty(repoChanges, server, 'details.issues_enabled', {
     value: glRepo.issues_enabled,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(repoChanges, server, 'details.archived', {
+  importProperty(repoChanges, server, 'details.archived', {
     value: glRepo.archived,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(repoChanges, server, 'details.default_branch', {
+  importProperty(repoChanges, server, 'details.default_branch', {
     value: glRepo.default_branch,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(repoChanges, server, 'details.labels', {
+  importProperty(repoChanges, server, 'details.labels', {
     value: _.map(glLabels, 'name'),
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(repoChanges, server, 'details.label_colors', {
+  importProperty(repoChanges, server, 'details.label_colors', {
     value: _.map(glLabels, 'color'),
     overwrite: 'always',
   });

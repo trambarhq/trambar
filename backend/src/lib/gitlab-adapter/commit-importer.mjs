@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import Crypto from 'crypto';
 import ParseDiff from 'parse-diff';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLink, extendLink, inheritLink, importProperty } from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 
@@ -23,7 +23,7 @@ import { Commit } from '../accessors/commit.mjs';
 async function importCommit(db, server, repo, glBranch, glCommitID) {
   // first, check if the commit was previously imported
   const criteria = {
-    external_object: ExternalDataUtils.extendLink(server, repo, {
+    external_object: extendLink(server, repo, {
       commit: { id: glCommitID }
     })
   };
@@ -31,7 +31,7 @@ async function importCommit(db, server, repo, glBranch, glCommitID) {
   if (commit) {
     return commit;
   }
-  const repoLink = ExternalDataUtils.findLink(repo, server);
+  const repoLink = findLink(repo, server);
   const glProjectID = repoLink.project.id;
   const glCommit = await fetchCommit(server, glProjectID, glCommitID);
   const glDiff = await fetchDiff(server, glProjectID, glCommit.id);
@@ -56,41 +56,41 @@ function copyCommitProperties(commit, server, repo, glBranch, glCommit, glDiff) 
   const changes = countChanges(glDiff);
 
   const commitChanges = _.cloneDeep(commit) || {};
-  ExternalDataUtils.inheritLink(commitChanges, server, repo, {
+  inheritLink(commitChanges, server, repo, {
     commit: {
       id: glCommit.id,
       parent_ids: glCommit.parent_ids,
     }
   });
-  ExternalDataUtils.importProperty(commitChanges, server, 'initial_branch', {
+  importProperty(commitChanges, server, 'initial_branch', {
     value: glBranch,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(commitChanges, server, 'title_hash', {
+  importProperty(commitChanges, server, 'title_hash', {
     value: hash(glCommit.title),
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(commitChanges, server, 'details.status', {
+  importProperty(commitChanges, server, 'details.status', {
     value: glCommit.status,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(commitChanges, server, 'details.author_name', {
+  importProperty(commitChanges, server, 'details.author_name', {
     value: glCommit.author_name,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(commitChanges, server, 'details.author_email', {
+  importProperty(commitChanges, server, 'details.author_email', {
     value: glCommit.author_email,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(commitChanges, server, 'details.lines', {
+  importProperty(commitChanges, server, 'details.lines', {
     value: changes.lines,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(commitChanges, server, 'details.files', {
+  importProperty(commitChanges, server, 'details.files', {
     value: changes.files,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(commitChanges, server, 'ptime', {
+  importProperty(commitChanges, server, 'ptime', {
     value: Moment(glCommit.committed_date).toISOString(),
     overwrite: 'always',
   });

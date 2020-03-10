@@ -187,7 +187,7 @@ function getLocalImageURL(res, params, env) {
     // encode the resource as JSON
     return `json:${JSON.stringify(res)}`;
   } else if (params.original) {
-    return BlobManager.url(blob);
+    return BlobManager.manage(blob);
   }
 }
 

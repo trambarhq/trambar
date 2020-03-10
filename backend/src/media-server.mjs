@@ -13,13 +13,13 @@ import FileType from 'file-type';
 import { Database } from './lib/database.mjs';
 import { HTTPError } from './lib/errors.mjs';
 import { TaskLog } from './lib/task-log.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
 
 import * as CacheFolders from './lib/media-server/cache-folders.mjs';
 import * as FileManager from './lib/media-server/file-manager.mjs';
 import * as ImageManager from './lib/media-server/image-manager.mjs';
 import * as VideoManager from './lib/media-server/video-manager.mjs';
 import * as StockPhotoImporter from './lib/media-server/stock-photo-importer.mjs';
+import * as Shutdown from './lib/shutdown.mjs';
 
 let server;
 const cacheControl = {
@@ -576,7 +576,7 @@ async function getFileType(path) {
     const len = 1024;
     const buffer = Buffer.alloc(len);
     await FS.readAsync(fd, buffer, 0, len, 0);
-    const info = FileType(buffer);
+    const info = FileType.fromBuffer(buffer);
     if (info.mime === 'application/xml') {
       const text = buffer.toString('utf-8');
       if (text.indexOf('<svg')) {

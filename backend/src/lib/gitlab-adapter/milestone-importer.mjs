@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import { getDefaultLanguageCode } from '../localization.mjs';
 import { findTagsInMarkdown } from '../text-utils.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLink, inheritLink, extendLink, importProperty } from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 
@@ -28,11 +28,11 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
     return;
   }
   const schema = project.name;
-  const repoLink = ExternalDataUtils.findLink(repo, server);
+  const repoLink = findLink(repo, server);
   const glMilestone = await fetchMilestone(server, repoLink.project.id, glEvent.target_id);
   // the story is linked to both the issue and the repo
   const criteria = {
-    external_object: ExternalDataUtils.extendLink(server, repo, {
+    external_object: extendLink(server, repo, {
       milestone: { id: glMilestone.id }
     }),
   };
@@ -54,7 +54,7 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
  */
 async function updateMilestones(db, system, server, repo, project) {
   const schema = project.name;
-  const repoLink = ExternalDataUtils.findLink(repo, server);
+  const repoLink = findLink(repo, server);
   // find milestone stories
   const criteria = {
     type: 'milestone',
@@ -67,7 +67,7 @@ async function updateMilestones(db, system, server, repo, project) {
   // delete ones that no longer exists
   let deleteCount = 0, updateCount = 0;
   for (let story of stories) {
-    const storyLink = ExternalDataUtils.findLink(story, server);
+    const storyLink = findLink(story, server);
     if (!_.some(glMilestones, { id: storyLink.milestone.id })) {
       await Story.updateOne(db, schema, { id: story.id, deleted: true });
       deleteCount++;
@@ -75,7 +75,7 @@ async function updateMilestones(db, system, server, repo, project) {
   }
   for (let glMilestone of glMilestones) {
     const story = _.find(stories, (story) => {
-      return !!ExternalDataUtils.findLink(story, server, {
+      return !!findLink(story, server, {
         milestone: { id: glMilestone.id }
       });
     });
@@ -107,44 +107,44 @@ function copyMilestoneProperties(story, system, server, repo, author, glMileston
   const defLangCode = getDefaultLanguageCode(system);
 
   const storyChanges = _.cloneDeep(story) || {};
-  ExternalDataUtils.inheritLink(storyChanges, server, repo, {
+  inheritLink(storyChanges, server, repo, {
     milestone: { id: glMilestone.id }
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'type', {
+  importProperty(storyChanges, server, 'type', {
     value: 'milestone',
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'tags', {
+  importProperty(storyChanges, server, 'tags', {
     value: descriptionTags,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'language_codes', {
+  importProperty(storyChanges, server, 'language_codes', {
     value: [ defLangCode ],
     overwrite: 'always',
   });
   if (author) {
-    ExternalDataUtils.importProperty(storyChanges, server, 'user_ids', {
+    importProperty(storyChanges, server, 'user_ids', {
       value: [ author.id ],
       overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyChanges, server, 'role_ids', {
+    importProperty(storyChanges, server, 'role_ids', {
       value: author.role_ids,
       overwrite: 'always',
     });
   }
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.title', {
+  importProperty(storyChanges, server, 'details.title', {
     value: glMilestone.title,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'public', {
+  importProperty(storyChanges, server, 'public', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'published', {
+  importProperty(storyChanges, server, 'published', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'ptime', {
+  importProperty(storyChanges, server, 'ptime', {
     value: Moment(glMilestone.created_at).toISOString(),
     overwrite: 'always',
   });

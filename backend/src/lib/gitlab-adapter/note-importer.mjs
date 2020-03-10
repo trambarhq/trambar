@@ -3,7 +3,7 @@ import Moment from 'moment';
 import Crypto from 'crypto';
 import { TaskLog } from '../task-log.mjs';
 import { getDefaultLanguageCode } from '../localization.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLink, inheritLink, extendLink, importProperty } from '../external-data-utils.mjs';
 import { HTTPError } from '../errors.mjs';
 
 import * as Transport from './transport.mjs';
@@ -52,7 +52,7 @@ async function processEvent(db, system, server, repo, project, author, glEvent, 
 async function processIssueNoteEvent(db, system, server, repo, project, author, glEvent) {
   const schema = project.name;
   const criteria = {
-    external_object: ExternalDataUtils.extendLink(server, repo, {
+    external_object: extendLink(server, repo, {
       issue: { id: glEvent.note.noteable_id }
     })
   };
@@ -80,7 +80,7 @@ async function processIssueNoteEvent(db, system, server, repo, project, author, 
 async function processMergeRequestNoteEvent(db, system, server, repo, project, author, glEvent) {
   const schema = project.name;
   const criteria = {
-    external_object: ExternalDataUtils.extendLink(server, repo, {
+    external_object: extendLink(server, repo, {
       merge_request: { id: glEvent.note.noteable_id }
     })
   };
@@ -114,7 +114,7 @@ async function processCommitNoteEvent(db, system, server, repo, project, author,
   }
   const schema = project.name;
   const criteria = {
-    external_object: ExternalDataUtils.extendLink(server, repo, {
+    external_object: extendLink(server, repo, {
       commit: { id: commitID }
     })
   };
@@ -124,7 +124,7 @@ async function processCommitNoteEvent(db, system, server, repo, project, author,
   }
   const reactionNew = copyEventProperties(null, system, server, story, author, glEvent);
   // link to a particular commit (whereas the story could be linked to multiple)
-  const link = ExternalDataUtils.findLink(reactionNew, server);
+  const link = findLink(reactionNew, server);
   if (link.commit.ids instanceof Array) {
     link.commit = { id: commitID };
   }
@@ -154,11 +154,11 @@ async function findCommitID(db, server, repo, glEvent, glHookEvent) {
 
   const criteria = {
     title_hash: hash(glEvent.target_title),
-    external_object: ExternalDataUtils.findLink(repo, server),
+    external_object: findLink(repo, server),
   };
   const commits = await Commit.find(db, 'global', criteria, '*');
   for (let commit of commits) {
-    const commitLink = ExternalDataUtils.findLink(commit, server);
+    const commitLink = findLink(commit, server);
     const commitID = commitLink.commit.id;
     const projectID = commitLink.project.id;
     const glNotes = await fetchCommitNotes(server, projectID, commitID);
@@ -189,30 +189,30 @@ async function findCommitID(db, server, repo, glEvent, glHookEvent) {
 function copyEventProperties(reaction, system, server, story, author, glNote) {
   const defLangCode = getDefaultLanguageCode(system);
   const reactionChanges = _.cloneDeep(reaction) || {};
-  ExternalDataUtils.inheritLink(reactionChanges, server, story, {
+  inheritLink(reactionChanges, server, story, {
     note: { id: _.get(glNote, 'note.id') }
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'type', {
+  importProperty(reactionChanges, server, 'type', {
     value: 'note',
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'story_id', {
+  importProperty(reactionChanges, server, 'story_id', {
     value: story.id,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'user_id', {
+  importProperty(reactionChanges, server, 'user_id', {
     value: author.id,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'public', {
+  importProperty(reactionChanges, server, 'public', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'published', {
+  importProperty(reactionChanges, server, 'published', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'ptime', {
+  importProperty(reactionChanges, server, 'ptime', {
     value: Moment(glNote.created_at).toISOString(),
     overwrite: 'always',
   });

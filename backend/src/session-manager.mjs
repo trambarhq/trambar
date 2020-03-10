@@ -13,11 +13,11 @@ import HtpasswdJS from 'htpasswd-js';
 import { HTTPError } from './lib/errors.mjs';
 import { Database } from './lib/database.mjs';
 import { TaskLog } from './lib/task-log.mjs';
-import * as Shutdown from './lib/shutdown.mjs';
-import * as ExternalDataUtils from './lib/external-data-utils.mjs';
+import { createLink, addLink, removeLink, countLinks, importProperty, importResource } from './lib/external-data-utils.mjs';
 
 import * as GitlabUserImporter from './lib/gitlab-adapter/user-importer.mjs';
 import * as MediaImporter from './lib/media-server/media-importer.mjs';
+import * as Shutdown from './lib/shutdown.mjs';
 
 // accessors
 import { Device } from './lib/accessors/device.mjs';
@@ -620,7 +620,7 @@ async function authenticateThruPassport(req, res, system, server, params) {
 async function detachExternalAccount(server, externalUserID) {
   const db = await Database.open();
   const criteria = {
-    external_object: ExternalDataUtils.createLink(server, {
+    external_object: createLink(server, {
       user: { id: externalUserID },
     }),
   };
@@ -628,10 +628,10 @@ async function detachExternalAccount(server, externalUserID) {
   if (!user) {
     return null;
   }
-  ExternalDataUtils.removeLink(user, server);
+  removeLink(user, server);
   const userAfter = await User.saveOne(db, 'global', user);
   // delete active sessions when user is not connected to any account
-  if (ExternalDataUtils.countLinks(userAfter) === 0) {
+  if (countLinks(userAfter) === 0) {
     const sessionCriteria = {
       deleted: false,
       user_id: userAfter.id,
@@ -839,7 +839,7 @@ async function findMatchingUser(server, account) {
   // look for a user with the external id
   const profile = account.profile;
   const criteria = {
-    external_object: ExternalDataUtils.createLink(server, {
+    external_object: createLink(server, {
       user: { id: getProfileID(profile) },
     }),
     deleted: false,
@@ -1080,39 +1080,39 @@ function copyUserProperties(user, server, image, profile) {
       };
     }
 
-    ExternalDataUtils.addLink(userAfter, server, {
+    addLink(userAfter, server, {
       user: {
         id: getProfileID(profile),
         username: profile.username,
       }
     });
-    ExternalDataUtils.importProperty(userAfter, server, 'type', {
+    importProperty(userAfter, server, 'type', {
       value: userType,
       overwrite: 'match-previous:type',
     });
-    ExternalDataUtils.importProperty(userAfter, server, 'username', {
+    importProperty(userAfter, server, 'username', {
       value: username,
       overwrite: 'match-previous:username',
     });
-    ExternalDataUtils.importProperty(userAfter, server, 'details.name', {
+    importProperty(userAfter, server, 'details.name', {
       value: profile.displayName,
       overwrite: 'match-previous:name',
     });
-    ExternalDataUtils.importProperty(userAfter, server, 'details.email', {
+    importProperty(userAfter, server, 'details.email', {
       value: email,
       overwrite: 'match-previous:email',
     });
-    ExternalDataUtils.importProperty(userAfter, server, 'details.gender', {
+    importProperty(userAfter, server, 'details.gender', {
       value: json.gender,
       overwrite: 'match-previous:gender',
     });
-    ExternalDataUtils.importResource(userAfter, server, {
+    importResource(userAfter, server, {
       type: 'image',
       value: image,
       replace: 'match-previous'
     });
     if (server.type === 'github') {
-      ExternalDataUtils.importProperty(userAfter, server, 'details.github_url', {
+      importProperty(userAfter, server, 'details.github_url', {
         value: profile.profileUrl,
         overwrite: 'match-previous:github_url',
       });

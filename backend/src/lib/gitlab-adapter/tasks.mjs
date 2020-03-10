@@ -3,7 +3,7 @@ import Bluebird from 'bluebird';
 import Moment from 'moment';
 import { Database } from '../database.mjs';
 import { TaskLog } from '../task-log.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLinkByServerType, findLinkByRelations, createLink } from '../external-data-utils.mjs';
 import { BasicTask, PeriodicTask } from '../task-queue.mjs';
 
 import * as HookManager from './hook-manager.mjs';
@@ -408,7 +408,7 @@ class TaskExportStory extends BasicTask {
         task.etime = new String('NOW()');
         delete task.details.error;
         if (story) {
-          const issueLink = ExternalDataUtils.findLinkByServerType(story, 'gitlab');
+          const issueLink = findLinkByServerType(story, 'gitlab');
           _.assign(task.details, _.pick(issueLink, 'repo', 'issue'));
         }
       } catch (err) {
@@ -653,7 +653,7 @@ async function getRepoServer(db, repo) {
   if (!repo) {
     return;
   }
-  const repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
+  const repoLink = findLinkByServerType(repo, 'gitlab');
   if (repoLink) {
     return getServer(db, repoLink.server_id);
   }
@@ -664,7 +664,7 @@ async function getServerRepos(db, server) {
     return [];
   }
   const criteria = {
-    external_object: ExternalDataUtils.createLink(server),
+    external_object: createLink(server),
     deleted: false,
   };
   return Repo.find(db, 'global', criteria, '*');
@@ -749,7 +749,7 @@ async function getWiki(db, schema, wikiID) {
 
 async function getWikiRepo(db, wiki) {
   if (wiki) {
-    const wikiLink = ExternalDataUtils.findLinkByRelations(wiki, 'wiki');
+    const wikiLink = findLinkByRelations(wiki, 'wiki');
     if (wikiLink) {
       const repoLink = _.omit(wikiLink, 'wiki');
       const criteria = {

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { Database } from '../database.mjs';
 import { TaskLog } from '../task-log.mjs'
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLinkByRelations } from '../external-data-utils.mjs';
 import { HTTPError } from '../errors.mjs';
 
 import * as MediaImporter from '../media-server/media-importer.mjs';
@@ -34,7 +34,7 @@ async function discover(project, identifier, search) {
         contents.push(wiki.slug);
       } else {
         // need to look up the repo
-        const repoLink = ExternalDataUtils.findLinkByRelations(wiki, 'repo');
+        const repoLink = findLinkByRelations(wiki, 'repo');
         const repoCriteria = {
           external_object: repoLink,
           deleted: false
@@ -135,7 +135,7 @@ async function addRepoCheck(db, repoName, criteria) {
     if (!repo) {
       throw new HTTPError(404);
     }
-    const repoLink = ExternalDataUtils.findLinkByRelations(repo, 'repo');
+    const repoLink = findLinkByRelations(repo, 'repo');
     criteria.external_object = repoLink;
   }
   return criteria;

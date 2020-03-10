@@ -3,7 +3,7 @@ import Path from 'path';
 import Ignore from 'ignore';
 import { AsyncParser } from 'mark-gor/html.mjs';
 import { TaskLog } from '../task-log.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLink } from '../external-data-utils.mjs';
 import { HTTPError } from '../errors.mjs';
 
 import * as Transport from './transport.mjs';
@@ -346,7 +346,7 @@ async function scanFolder(cxt, folderPath) {
   }
   try {
     cxt.taskLog.describe(`scanning ${folderPath || '[ROOT]'}`);
-    const repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
+    const repoLink = findLink(cxt.repo, cxt.server);
     const projectID = repoLink.project.id;
     const url = `projects/${projectID}/repository/tree`;
     const query = {
@@ -380,7 +380,7 @@ async function retrieveFile(cxt, filePath) {
   }
 
   cxt.taskLog.describe(`retrieving file: ${filePath}`);
-  const repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
+  const repoLink = findLink(cxt.repo, cxt.server);
   const projectID = repoLink.project.id;
   const pathEncoded = encodeURIComponent(filePath);
   const url = `/projects/${projectID}/repository/files/${pathEncoded}`;

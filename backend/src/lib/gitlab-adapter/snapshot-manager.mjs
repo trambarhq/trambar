@@ -4,7 +4,7 @@ import { promises as FS } from 'fs';
 import Path from 'path';
 import { Database } from '../database.mjs';
 import { TaskLog } from '../task-log.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLink, findLinkByServerType } from '../external-data-utils.mjs';
 import { HTTPError } from '../errors.mjs';
 
 import { Project } from '../accessors/project.mjs';
@@ -52,7 +52,7 @@ async function retrieveFile(schema, tag, type, path) {
       }
 
       // get the server
-      const repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
+      const repoLink = findLinkByServerType(repo, 'gitlab');
       const serverCriteria = {
         id: repoLink.server_id,
         deleted: false,
@@ -127,7 +127,7 @@ async function processNewEvents(db, server, repo) {
     repo_id: repo.id,
   });
   const lastEventTime = _.get(lastTask, 'details.last_event_time');
-  const repoLink = ExternalDataUtils.findLink(repo, server);
+  const repoLink = findLink(repo, server);
   const url = `/projects/${repoLink.project.id}/events`;
   const params = { sort: 'asc', action: 'pushed' };
   if (lastEventTime) {

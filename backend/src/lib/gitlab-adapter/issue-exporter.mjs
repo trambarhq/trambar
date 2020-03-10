@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import { TaskLog } from '../task-log.mjs';
 import { getDefaultLanguageCode, getUserName, translate } from '../localization.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLinkByServerType, inheritLink, removeLink, importProperty, exportProperty } from '../external-data-utils.mjs';
 import { HTTPError } from '../errors.mjs';
 
 import * as Transport from './transport.mjs';
@@ -58,7 +58,7 @@ async function exportStoryCreate(db, system, project, story, repo, task) {
   const server = await findRepoServer(db, repo);
   const user = await findActingUser(db, task);
   const authors = await findAuthors(db, story);
-  const repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
+  const repoLink = findLinkByServerType(repo, 'gitlab');
   const glProjectID = repoLink.project.id;
   const glIssueNumber = undefined;
   const userLink = findUserLink(user, server);
@@ -154,8 +154,8 @@ async function exportStoryRemove(db, system, project, story, repo, task) {
  * @return {Promise<Story>}
  */
 async function exportStoryMove(db, system, project, story, fromRepo, toRepo, task) {
-  const fromRepoLink = ExternalDataUtils.findLinkByServerType(fromRepo, 'gitlab');
-  const toRepoLink = ExternalDataUtils.findLinkByServerType(toRepo, 'gitlab');
+  const fromRepoLink = findLinkByServerType(fromRepo, 'gitlab');
+  const toRepoLink = findLinkByServerType(toRepo, 'gitlab');
   if (!fromRepoLink) {
     // moving issue from a server that isn't GitLab
     return exportStoryCreate(db, system, project, story, toRepo, task);
@@ -217,19 +217,19 @@ function exportIssueProperties(glIssue, server, system, project, story, authors,
   const contents = generateIssueText(system, project, story, authors, task);
 
   const glIssueChanges = _.cloneDeep(glIssue) || {};
-  ExternalDataUtils.exportProperty(story, server, 'title', glIssueAfter, {
+  exportProperty(story, server, 'title', glIssueAfter, {
     value: task.options.title,
     overwrite: 'match-previous:title',
   });
-  ExternalDataUtils.exportProperty(story, server, 'description', glIssueAfter, {
+  exportProperty(story, server, 'description', glIssueAfter, {
     value: contents,
     overwrite: 'match-previous:description',
   });
-  ExternalDataUtils.exportProperty(story, server, 'confidential', glIssueAfter, {
+  exportProperty(story, server, 'confidential', glIssueAfter, {
     value: !story.public,
     overwrite: 'match-previous:confidential',
   });
-  ExternalDataUtils.exportProperty(story, server, 'labels', glIssueAfter, {
+  exportProperty(story, server, 'labels', glIssueAfter, {
     value: task.options.labels,
     overwrite: 'match-previous:labels',
   });
@@ -306,29 +306,29 @@ function copyIssueProperties(story, server, repo, glIssue) {
   const tags = _.union(story.tags, labelTags);
 
   const storyChanges = _.cloneDeep(story);
-  ExternalDataUtils.inheritLink(storyChanges, server, repo, {
+  inheritLink(storyChanges, server, repo, {
     issue: {
       id: glIssue.id,
       number: glIssue.iid,
     }
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'type', {
+  importProperty(storyChanges, server, 'type', {
     value: 'issue',
     overwrite: 'always'
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'tags', {
+  importProperty(storyChanges, server, 'tags', {
     value: tags,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.title', {
+  importProperty(storyChanges, server, 'details.title', {
     value: glIssue.title,
     overwrite: 'always'
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.labels', {
+  importProperty(storyChanges, server, 'details.labels', {
     value: glIssue.labels,
     overwrite: 'always'
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.exported', {
+  importProperty(storyChanges, server, 'details.exported', {
     value: true,
     overwrite: 'always'
   });
@@ -355,7 +355,7 @@ function deleteIssueProperties(story, server) {
   delete storyChanges.details.title;
   delete storyChanges.details.labels;
   delete storyChanges.details.exported;
-  ExternalDataUtils.removeLink(storyChanges, server);
+  removeLink(storyChanges, server);
   return storyChanges;
 }
 
@@ -372,28 +372,28 @@ function deleteIssueProperties(story, server) {
  */
 function copyTrackingReactionProperties(reaction, server, project, story, user) {
   const reactionChanges = _.cloneDeep(reaction) || {};
-  ExternalDataUtils.inheritLink(reactionChanges, server, story);
-  ExternalDataUtils.importProperty(reactionChanges, server, 'type', {
+  inheritLink(reactionChanges, server, story);
+  importProperty(reactionChanges, server, 'type', {
     value: 'tracking',
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'story_id', {
+  importProperty(reactionChanges, server, 'story_id', {
     value: story.id,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'user_id', {
+  importProperty(reactionChanges, server, 'user_id', {
     value: user.id,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'public', {
+  importProperty(reactionChanges, server, 'public', {
     value: story.public,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'published', {
+  importProperty(reactionChanges, server, 'published', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'ptime', {
+  importProperty(reactionChanges, server, 'ptime', {
     value: Moment().toISOString(),
     overwrite: 'always',
   });
@@ -415,7 +415,7 @@ function copyTrackingReactionProperties(reaction, server, project, story, user) 
  */
 function adjustReactionProperties(reaction, server, story) {
   const reactionAfter = _.cloneDeep(reaction);
-  ExternalDataUtils.inheritLink(reactionAfter, server, story);
+  inheritLink(reactionAfter, server, story);
   return reactionAfter;
 }
 
@@ -496,7 +496,7 @@ async function findCurrentRepo(db, story) {
  * @return {Promise<Server>}
  */
 async function findRepoServer(db, repo) {
-  const repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
+  const repoLink = findLinkByServerType(repo, 'gitlab');
   const criteria = {
     id: repoLink.server_id,
     deleted: false
@@ -539,7 +539,7 @@ async function findAuthors(db, story) {
  * @return {Object|null}
  */
 function findIssueLink(story) {
-  const link = ExternalDataUtils.findLinkByServerType(story, 'gitlab');
+  const link = findLinkByServerType(story, 'gitlab');
   if (!link || !link.issue) {
     return null
   }
@@ -554,7 +554,7 @@ function findIssueLink(story) {
  * @return {Object}
  */
 function findUserLink(user, server) {
-  const link = ExternalDataUtils.findLink(user, server);
+  const link = findLink(user, server);
   if (!link) {
     throw new HTTPError(403, 'User is not associated with a GitLab account')
   }

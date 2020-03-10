@@ -8,7 +8,7 @@ import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
 import { TaskLog } from '../task-log.mjs';
 import { getDefaultLanguageCode } from '../localization.mjs';
 import { convertMarkdownToJSON, convertHTMLToJSON } from '../text-utils.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLink, inheritLink, extendLink } from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 import * as MediaImporter from '../media-server/media-importer.mjs';
@@ -42,7 +42,7 @@ async function importWikis(db, system, server, repo, project) {
   const wikisAfter = [];
   try {
     const schema = project.name;
-    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const repoLink = findLink(repo, server);
     const criteria = {
       external_object: repoLink,
       deleted: false,
@@ -155,7 +155,7 @@ async function removeWikis(db, system, server, repo, project) {
   });
   try {
     const schema = project.name;
-    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const repoLink = findLink(repo, server);
     const criteria = {
       external_object: repoLink,
       deleted: false,
@@ -186,36 +186,36 @@ async function removeWikis(db, system, server, repo, project) {
 function copyWikiProperties(wiki, system, server, repo, glWikiParsed) {
   const defLangCode = getDefaultLanguageCode(system);
   const wikiChanges = _.cloneDeep(wiki) || {};
-  ExternalDataUtils.inheritLink(wikiChanges, server, repo);
-  ExternalDataUtils.importProperty(wikiChanges, server, 'language_codes', {
+  inheritLink(wikiChanges, server, repo);
+  importProperty(wikiChanges, server, 'language_codes', {
     value: _.union(glWikiParsed.languages, [ defLangCode ]),
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(wikiChanges, server, 'public', {
+  importProperty(wikiChanges, server, 'public', {
     value: glWikiParsed.public,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(wikiChanges, server, 'slug', {
+  importProperty(wikiChanges, server, 'slug', {
     value: glWikiParsed.slug,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(wikiChanges, server, 'details.title', {
+  importProperty(wikiChanges, server, 'details.title', {
     value: _.capitalize(glWikiParsed.title),
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(wikiChanges, server, 'details.content', {
+  importProperty(wikiChanges, server, 'details.content', {
     value: (glWikiParsed.public) ? glWikiParsed.content : undefined,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(wikiChanges, server, 'details.json', {
+  importProperty(wikiChanges, server, 'details.json', {
     value: (glWikiParsed.public) ? glWikiParsed.json : undefined,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(wikiChanges, server, 'details.format', {
+  importProperty(wikiChanges, server, 'details.format', {
     value: glWikiParsed.format,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(wikiChanges, server, 'details.resources', {
+  importProperty(wikiChanges, server, 'details.resources', {
     value: (glWikiParsed.public) ? glWikiParsed.resources : undefined,
     overwrite: 'always',
   });
@@ -360,7 +360,7 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
   // one story a day about a page is enough
   const criteria = {
     newer_than: Moment().subtract(1, 'day').toISOString(),
-    external_object: ExternalDataUtils.extendLink(server, repo, {
+    external_object: extendLink(server, repo, {
       wiki: { id: glHookEvent.object_attributes.slug }
     }),
   };
@@ -392,50 +392,50 @@ function copyEventProperties(story, system, server, repo, author, glHookEvent) {
   const defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
 
   const storyChanges = _.cloneDeep(story) || {};
-  ExternalDataUtils.inheritLink(storyChanges, server, repo, {
+  inheritLink(storyChanges, server, repo, {
     wiki: { id: glHookEvent.object_attributes.slug }
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'type', {
+  importProperty(storyChanges, server, 'type', {
     value: 'wiki',
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'language_codes', {
+  importProperty(storyChanges, server, 'language_codes', {
     value: [ defLangCode ],
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'user_ids', {
+  importProperty(storyChanges, server, 'user_ids', {
     value: [ author.id ],
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'role_ids', {
+  importProperty(storyChanges, server, 'role_ids', {
     value: author.role_ids,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.url', {
+  importProperty(storyChanges, server, 'details.url', {
     value: glHookEvent.object_attributes.url,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.title', {
+  importProperty(storyChanges, server, 'details.title', {
     value: glHookEvent.object_attributes.title,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.action', {
+  importProperty(storyChanges, server, 'details.action', {
     value: glHookEvent.object_attributes.action,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.slug', {
+  importProperty(storyChanges, server, 'details.slug', {
     value: glHookEvent.object_attributes.slug,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'public', {
+  importProperty(storyChanges, server, 'public', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'published', {
+  importProperty(storyChanges, server, 'published', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'ptime', {
+  importProperty(storyChanges, server, 'ptime', {
     value: Moment().toISOString(),
     overwrite: 'always',
   });

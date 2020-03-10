@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { inheritLink, importProperty } from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 import * as UserImporter from './user-importer.mjs';
@@ -164,30 +164,30 @@ async function findAssignmentsFromNotes(db, server, glObject, glNotes) {
  */
 function copyAssignmentProperties(reaction, server, story, assignment) {
   const reactionChanges = _.cloneDeep(reaction) || {};
-  ExternalDataUtils.inheritLink(reactionChanges, server, story, {
+  inheritLink(reactionChanges, server, story, {
     note: { id: assignment.id }
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'type', {
+  importProperty(reactionChanges, server, 'type', {
     value: 'assignment',
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'story_id', {
+  importProperty(reactionChanges, server, 'story_id', {
     value: story.id,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'user_id', {
+  importProperty(reactionChanges, server, 'user_id', {
     value: assignment.user.id,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'public', {
+  importProperty(reactionChanges, server, 'public', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'published', {
+  importProperty(reactionChanges, server, 'published', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(reactionChanges, server, 'ptime', {
+  importProperty(reactionChanges, server, 'ptime', {
     value: assignment.ctime,
     overwrite: 'always',
   });

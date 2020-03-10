@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { ExternalData } from './external-data.mjs';
 import { HTTPError } from '../errors.mjs';
 import { Task } from './task.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { createLink } from '../external-data-utils.mjs';
 
 export class Repo extends ExternalData {
   static schema = 'global';
@@ -172,7 +172,7 @@ export class Repo extends ExternalData {
       if (type === 'server') {
         for (let server of objects) {
           const criteria = {
-            external_object: ExternalDataUtils.createLink(server),
+            external_object: createLink(server),
             deleted: false,
           };
           await this.updateMatching(db, schema, criteria, { deleted: true });
@@ -198,7 +198,7 @@ export class Repo extends ExternalData {
       if (type === 'server') {
         for (let server of objects) {
           const criteria = {
-            external_object: ExternalDataUtils.createLink(server),
+            external_object: createLink(server),
             deleted: true,
           };
           await this.updateMatching(db, schema, criteria, { deleted: false });

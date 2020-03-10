@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import { getDefaultLanguageCode } from '../localization.mjs';
 import { findTagsInMarkdown } from '../text-utils.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLink, inheritLink, extendLink, importProperty } from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 import * as AssignmentImporter from './assignment-importer.mjs';
@@ -28,11 +28,11 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
     return;
   }
   const schema = project.name;
-  const repoLink = ExternalDataUtils.findLink(repo, server);
+  const repoLink = findLink(repo, server);
   const glIssue = await fetchIssue(server, repoLink.project.id, glEvent.target_id);
   // the story is linked to both the issue and the repo
   const criteria = {
-    external_object: ExternalDataUtils.extendLink(server, repo, {
+    external_object: extendLink(server, repo, {
       issue: { id: glIssue.id }
     }),
   };
@@ -74,7 +74,7 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
     return;
   }
   // construct a glIssue object from data in hook event
-  const repoLink = ExternalDataUtils.findLink(repo, server);
+  const repoLink = findLink(repo, server);
   const glIssue = _.omit(glHookEvent.object_attributes, 'action');
   glIssue.project_id = repoLink.project.id;
   glIssue.labels = _.map(glHookEvent.labels, 'title');
@@ -88,7 +88,7 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
   // find existing story
   const schema = project.name;
   const criteria = {
-    external_object: ExternalDataUtils.extendLink(server, repo, {
+    external_object: extendLink(server, repo, {
       issue: { id: glIssue.id }
     }),
   };
@@ -156,67 +156,67 @@ function copyIssueProperties(story, system, server, repo, opener, assignments, g
   }
 
   const storyChanges = _.cloneDeep(story) || {};
-  ExternalDataUtils.inheritLink(storyChanges, server, repo, {
+  inheritLink(storyChanges, server, repo, {
     issue: {
       id: glIssue.id,
       number: glIssue.iid,
     }
   });
   const exported = !!storyChanges.etime;
-  ExternalDataUtils.importProperty(storyChanges, server, 'type', {
+  importProperty(storyChanges, server, 'type', {
     value: 'issue',
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'tags', {
+  importProperty(storyChanges, server, 'tags', {
     value: tags,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'language_codes', {
+  importProperty(storyChanges, server, 'language_codes', {
     value: [ defLangCode ],
     overwrite: 'always',
     ignore: exported,
   });
   if (opener) {
-    ExternalDataUtils.importProperty(storyChanges, server, 'user_ids', {
+    importProperty(storyChanges, server, 'user_ids', {
       value: [ opener.id ],
       overwrite: 'always',
       ignore: exported,
     });
-    ExternalDataUtils.importProperty(storyChanges, server, 'role_ids', {
+    importProperty(storyChanges, server, 'role_ids', {
       value: opener.role_ids,
       overwrite: 'always',
       ignore: exported,
     });
   }
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.title', {
+  importProperty(storyChanges, server, 'details.title', {
     value: glIssue.title,
     overwrite: 'match-previous:title',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.labels', {
+  importProperty(storyChanges, server, 'details.labels', {
     value: glIssue.labels,
     overwrite: 'match-previous:labels',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.state', {
+  importProperty(storyChanges, server, 'details.state', {
     value: state,
     overwrite: 'always',
     ignore: exported,
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.milestone', {
+  importProperty(storyChanges, server, 'details.milestone', {
     value: _.get(glIssue, 'milestone.title'),
     overwrite: 'always',
     ignore: exported,
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'published', {
+  importProperty(storyChanges, server, 'published', {
     value: true,
     overwrite: 'always',
     ignore: exported,
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'public', {
+  importProperty(storyChanges, server, 'public', {
     value: !glIssue.confidential,
     overwrite: 'always',
     ignore: exported,
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'ptime', {
+  importProperty(storyChanges, server, 'ptime', {
     value: Moment(new Date(glIssue.created_at)).toISOString(),
     overwrite: 'always',
     ignore: exported,

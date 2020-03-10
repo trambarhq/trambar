@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import { TaskLog } from '../task-log.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLink } from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 import * as IssueImporter from './issue-importer.mjs';
@@ -35,7 +35,7 @@ async function processNewEvents(db, system, server, repo, project, glHookEvent) 
     project_id: project.id,
   });
   const lastEventTime = _.get(lastTask, 'details.last_event_time');
-  const repoLink = ExternalDataUtils.findLink(repo, server);
+  const repoLink = findLink(repo, server);
   const url = `/projects/${repoLink.project.id}/events`;
   const params = { sort: 'asc' };
   if (lastEventTime) {

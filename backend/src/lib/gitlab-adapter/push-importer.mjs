@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import { getDefaultLanguageCode } from '../localization.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { inheritLink, importProperty } from '../external-data-utils.mjs';
 
 import * as PushReconstructor from './push-reconstructor.mjs';
 import * as PushDecorator from './push-decorator.mjs';
@@ -101,62 +101,62 @@ function copyPushProperties(story, system, server, repo, author, push, component
 
   const defLangCode = getDefaultLanguageCode(system);
   const storyChanges = _.cloneDeep(story) || {};
-  ExternalDataUtils.inheritLink(storyChanges, server, repo, {
+  inheritLink(storyChanges, server, repo, {
     commit: { ids: push.commitIDs }
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'type', {
+  importProperty(storyChanges, server, 'type', {
     value: storyType,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'language_codes', {
+  importProperty(storyChanges, server, 'language_codes', {
     value: [ defLangCode ],
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'user_ids', {
+  importProperty(storyChanges, server, 'user_ids', {
     value: [ author.id ],
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'role_ids', {
+  importProperty(storyChanges, server, 'role_ids', {
     value: author.role_ids,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.commit_before', {
+  importProperty(storyChanges, server, 'details.commit_before', {
     value: push.tailID || undefined,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.commit_after', {
+  importProperty(storyChanges, server, 'details.commit_after', {
     value: push.headID,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.lines', {
+  importProperty(storyChanges, server, 'details.lines', {
     value: _.pickBy(push.lines),  // don't include 0's
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.files', {
+  importProperty(storyChanges, server, 'details.files', {
     value: _.pickBy(_.mapValues(push.files, 'length')),
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.components', {
+  importProperty(storyChanges, server, 'details.components', {
     value: components,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.branch', {
+  importProperty(storyChanges, server, 'details.branch', {
     value: push.branch,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.from_branches', {
+  importProperty(storyChanges, server, 'details.from_branches', {
     value: !_.isEmpty(push.fromBranches) ? push.fromBranches : undefined,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'public', {
+  importProperty(storyChanges, server, 'public', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'published', {
+  importProperty(storyChanges, server, 'published', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'ptime', {
+  importProperty(storyChanges, server, 'ptime', {
     value: Moment(glEvent.created_at).toISOString(),
     overwrite: 'always',
   });

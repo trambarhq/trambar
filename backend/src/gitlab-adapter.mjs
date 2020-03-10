@@ -7,11 +7,6 @@ import { Database } from './lib/database.mjs';
 import { TaskLog } from './lib/task-log.mjs';
 import * as Shutdown from './lib/shutdown.mjs';
 
-// accessors
-import { Project } from './lib/accessors/project.mjs';
-import { Repo } from './lib/accessors/repo.mjs';
-import { Server } from './lib/accessors/server.mjs';
-
 import * as HookManager from './lib/gitlab-adapter/hook-manager.mjs';
 import * as SnapshotManager from './lib/gitlab-adapter/snapshot-manager.mjs';
 
@@ -47,6 +42,11 @@ import {
   PeriodicTaskUpdateMilestones,
   PeriodicTaskRetryFailedExports,
 } from './lib/gitlab-adapter/tasks.mjs';
+
+// accessors
+import { Project } from './lib/accessors/project.mjs';
+import { Repo } from './lib/accessors/repo.mjs';
+import { Server } from './lib/accessors/server.mjs';
 
 let server;
 let database;

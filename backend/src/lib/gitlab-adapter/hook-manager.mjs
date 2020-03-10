@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Crypto from 'crypto'
 import { Database } from '../database.mjs';
 import { TaskLog } from '../task-log.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLink } from '../external-data-utils.mjs';
 import { HTTPError } from '../errors.mjs';
 
 // accessors
@@ -119,7 +119,7 @@ async function installProjectHook(host, server, repo, project) {
   if (!host) {
     throw HTTPError(400, 'Unable to install hook due to missing server address');
   }
-  const repoLink = ExternalDataUtils.findLink(repo, server);
+  const repoLink = findLink(repo, server);
   const glHooks = await fetchProjectHooks(server, repoLink.project.id);
 
   // remove existing hooks
@@ -168,7 +168,7 @@ async function removeProjectHook(host, server, repo, project) {
   if (!host) {
     return;
   }
-  const repoLink = ExternalDataUtils.findLink(repo, server);
+  const repoLink = findLink(repo, server);
   const glHooks = await fetchProjectHooks(server, repoLink.project.id);
   for (let glHook of glHooks) {
     const url = getProjectHookEndpoint(host, server, repo, project);

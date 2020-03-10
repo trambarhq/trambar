@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import { getDefaultLanguageCode } from '../localization.mjs';
 import { findTagsInMarkdown } from '../text-utils.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLink, inheritLink, extendLink, importProperty } from '../external-data-utils.mjs';
 import { HTTPError } from '../errors.mjs';
 
 import * as Transport from './transport.mjs';
@@ -30,11 +30,11 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
     return;
   }
   const schema = project.name;
-  const repoLink = ExternalDataUtils.findLink(repo, server);
+  const repoLink = findLink(repo, server);
   const glMergeRequest = await fetchMergeRequest(server, repoLink.project.id, glEvent.target_id);
   // the story is linked to both the merge request and the repo
   const criteria = {
-    external_object: ExternalDataUtils.extendLink(server, repo, {
+    external_object: extendLink(server, repo, {
       merge_request: { id: glMergeRequest.id }
     })
   };
@@ -76,7 +76,7 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
     return;
   }
   // construct a glMergeRequest object from data in hook event
-  const repoLink = ExternalDataUtils.findLink(repo, server);
+  const repoLink = findLink(repo, server);
   const glMergeRequest = _.omit(glHookEvent.object_attributes, 'action');
   glMergeRequest.project_id = repoLink.project.id;
   glMergeRequest.labels = _.map(glHookEvent.labels, 'title');
@@ -90,7 +90,7 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
   // find existing story
   const schema = project.name;
   const criteria = {
-    external_object: ExternalDataUtils.extendLink(server, repo, {
+    external_object: extendLink(server, repo, {
       merge_request: { id: glMergeRequest.id }
     }),
   };
@@ -134,67 +134,67 @@ function copyMergeRequestProperties(story, system, server, repo, opener, assignm
   const defLangCode = getDefaultLanguageCode(system);
 
   const storyChanges = _.cloneDeep(story) || {};
-  ExternalDataUtils.inheritLink(storyChanges, server, repo, {
+  inheritLink(storyChanges, server, repo, {
     merge_request: {
       id: glMergeRequest.id,
       number: glMergeRequest.iid,
     }
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'type', {
+  importProperty(storyChanges, server, 'type', {
     value: 'merge-request',
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'tags', {
+  importProperty(storyChanges, server, 'tags', {
     value: tags,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'language_codes', {
+  importProperty(storyChanges, server, 'language_codes', {
     value: [ defLangCode ],
     overwrite: 'always',
   });
   if (opener) {
-    ExternalDataUtils.importProperty(storyChanges, server, 'user_ids', {
+    importProperty(storyChanges, server, 'user_ids', {
       value: [ opener.id ],
       overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyChanges, server, 'role_ids', {
+    importProperty(storyChanges, server, 'role_ids', {
       value: opener.role_ids,
       overwrite: 'always',
     });
   }
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.state', {
+  importProperty(storyChanges, server, 'details.state', {
     value: glMergeRequest.state,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.branch', {
+  importProperty(storyChanges, server, 'details.branch', {
     value: glMergeRequest.target_branch,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.source_branch', {
+  importProperty(storyChanges, server, 'details.source_branch', {
     value: glMergeRequest.source_branch,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.labels', {
+  importProperty(storyChanges, server, 'details.labels', {
     value: glMergeRequest.labels,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.milestone', {
+  importProperty(storyChanges, server, 'details.milestone', {
     value: _.get(glMergeRequest, 'milestone.title'),
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.title', {
+  importProperty(storyChanges, server, 'details.title', {
     value: glMergeRequest.title,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'published', {
+  importProperty(storyChanges, server, 'published', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'public', {
+  importProperty(storyChanges, server, 'public', {
     value: !glMergeRequest.confidential,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'ptime', {
+  importProperty(storyChanges, server, 'ptime', {
     value: Moment(new Date(glMergeRequest.created_at)).toISOString(),
     overwrite: 'always',
   });

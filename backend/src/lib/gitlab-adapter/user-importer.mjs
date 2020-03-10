@@ -3,7 +3,7 @@ import Moment from 'moment';
 import CrossFetch from 'cross-fetch';
 import { TaskLog } from '../task-log.mjs';
 import { getDefaultLanguageCode } from '../localization.mjs';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { findLink, inheritLink, createLink, addLink, removeLink, countLinks, importProperty, importResource } from '../external-data-utils.mjs';
 import { HTTPError } from '../errors.mjs';
 
 import * as Transport from './transport.mjs';
@@ -35,20 +35,20 @@ async function importUsers(db, server) {
   try {
     // find existing users connected with server (including disabled ones)
     const criteria = {
-      external_object: ExternalDataUtils.createLink(server),
+      external_object: createLink(server),
     };
     const users = await User.find(db, 'global', criteria, '*');
     const glUsers = await fetchUsers(server);
 
     // disable users that no longer exists at GitLab
     for (let user of users) {
-      const userLink = ExternalDataUtils.findLink(user, server);
+      const userLink = findLink(user, server);
       const glUserId = _.get(userLink, 'user.id');
       if (!_.some(glUsers, { id: glUserId })) {
         const userChanges = _.cloneDeep(user);
-        ExternalDataUtils.removeLink(userChanges, server);
+        removeLink(userChanges, server);
         // remove user unless he's associated with another server
-        if (ExternalDataUtils.countLinks(userChanges) === 0) {
+        if (countLinks(userChanges) === 0) {
           userChanges.disabled = true;
         }
         const userAfter = await User.updateOne(db, 'global', userChanges);
@@ -101,7 +101,7 @@ async function importUser(db, server, glUser) {
     glUser = await fetchUserByName(server, glUsername);
   }
   const criteria = {
-    external_object: ExternalDataUtils.createLink(server, {
+    external_object: createLink(server, {
       user: { id: glUser.id }
     })
   };
@@ -109,7 +109,7 @@ async function importUser(db, server, glUser) {
   if (!user) {
     const users = await importUsers(db, server);
     user = _.find(users, (user) => {
-      return !!ExternalDataUtils.findLink(user, server, {
+      return !!findLink(user, server, {
         user: { id: glUser.id }
       });
     });
@@ -129,7 +129,7 @@ async function importUser(db, server, glUser) {
 async function findExistingUser(db, server, users, glUser) {
   // look for matching id among users imported from server previously
   let user = _.find(users, (user) => {
-    return !!ExternalDataUtils.findLink(user, server, {
+    return !!findLink(user, server, {
       user: { id: glUser.id }
     });
   });
@@ -167,13 +167,13 @@ async function findUsersByName(db, server, glUsernames) {
   const userList = [];
   // first, load all users from server
   const criteria = {
-    external_object: ExternalDataUtils.createLink(server)
+    external_object: createLink(server)
   };
   const users = await User.find(db, 'global', criteria, '*');
   for (let glUsername of glUsernames) {
     // try to find an user imported with that name
     const user = _.find(users, (user) => {
-      const userLink = ExternalDataUtils.findLink(user, server);
+      const userLink = findLink(user, server);
       const username = _.get(userLink, 'user.username');
       if (username === glUsername) {
         return true;
@@ -228,49 +228,49 @@ function copyUserProperties(user, server, image, glUser) {
     role_ids: _.get(server, 'settings.user.role_ids', []),
     settings: User.getDefaultSettings(),
   };
-  ExternalDataUtils.addLink(userChanges, server, {
+  addLink(userChanges, server, {
     user: {
       id: glUser.id,
       username: glUser.username,
     }
   });
-  ExternalDataUtils.importProperty(userChanges, server, 'disabled', {
+  importProperty(userChanges, server, 'disabled', {
     value: disabled,
     overwrite: 'match-previous:disabled',
   });
-  ExternalDataUtils.importProperty(userChanges, server, 'type', {
+  importProperty(userChanges, server, 'type', {
     value: userType,
     overwrite: 'match-previous:type',
   });
-  ExternalDataUtils.importProperty(userChanges, server, 'username', {
+  importProperty(userChanges, server, 'username', {
     value: glUser.username,
     overwrite: 'match-previous:username'
   });
-  ExternalDataUtils.importProperty(userChanges, server, 'details.name', {
+  importProperty(userChanges, server, 'details.name', {
     value: glUser.name,
     overwrite: 'match-previous:name',
   });
-  ExternalDataUtils.importProperty(userChanges, server, 'details.email', {
+  importProperty(userChanges, server, 'details.email', {
     value: glUser.email,
     overwrite: 'match-previous:email',
   });
-  ExternalDataUtils.importProperty(userChanges, server, 'details.gitlab_url', {
+  importProperty(userChanges, server, 'details.gitlab_url', {
     value: glUser.web_url,
     overwrite: 'match-previous:gitlab_url',
   });
-  ExternalDataUtils.importProperty(userChanges, server, 'details.skype_username', {
+  importProperty(userChanges, server, 'details.skype_username', {
     value: glUser.skype,
     overwrite: 'match-previous:skype_username',
   });
-  ExternalDataUtils.importProperty(userChanges, server, 'details.twitter_username', {
+  importProperty(userChanges, server, 'details.twitter_username', {
     value: glUser.twitter,
     overwrite: 'match-previous:twitter_username',
   });
-  ExternalDataUtils.importProperty(userChanges, server, 'details.linkedin_username', {
+  importProperty(userChanges, server, 'details.linkedin_username', {
     value: glUser.linkedin_name,
     overwrite: 'match-previous:linkedin_username',
   });
-  ExternalDataUtils.importResource(userChanges, server, {
+  importResource(userChanges, server, {
     type: 'image',
     value: image,
     replace: 'match-previous',
@@ -341,38 +341,38 @@ async function processSystemEvent(db, server, glHookEvent) {
 function copyEventProperties(story, system, server, repo, author, glEvent) {
   const defLangCode = getDefaultLanguageCode(system);
   const storyChanges = _.cloneDeep(story) || {};
-  ExternalDataUtils.inheritLink(storyChanges, server, repo, {
+  inheritLink(storyChanges, server, repo, {
     user: { id: glEvent.author_id }
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'type', {
+  importProperty(storyChanges, server, 'type', {
     value: 'member',
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'language_codes', {
+  importProperty(storyChanges, server, 'language_codes', {
     value: [ defLangCode ],
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'user_ids', {
+  importProperty(storyChanges, server, 'user_ids', {
     value: [ author.id ],
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'role_ids', {
+  importProperty(storyChanges, server, 'role_ids', {
     value: author.role_ids,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'details.action', {
+  importProperty(storyChanges, server, 'details.action', {
     value: glEvent.action_name,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'published', {
+  importProperty(storyChanges, server, 'published', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'public', {
+  importProperty(storyChanges, server, 'public', {
     value: true,
     overwrite: 'always',
   });
-  ExternalDataUtils.importProperty(storyChanges, server, 'ptime', {
+  importProperty(storyChanges, server, 'ptime', {
     value: Moment(glEvent.created_at).toISOString(),
     overwrite: 'always',
   });

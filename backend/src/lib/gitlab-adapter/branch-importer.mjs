@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import * as ExternalDataUtils from '../external-data-utils.mjs';
+import { extendLink } from '../external-data-utils.mjs';
 
 // accessors
 import { Story } from '../accessors/story.mjs';
@@ -43,7 +43,7 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
   // that are probably mistakes
   const criteria = {
     type: type,
-    external_object: ExternalDataUtils.extendLink(server, repo, {
+    external_object: extendLink(server, repo, {
       commit: { ids: [ tailID ] }
     })
   };
