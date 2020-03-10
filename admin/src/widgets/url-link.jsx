@@ -9,7 +9,7 @@ export function URLLink(props) {
   }
   return (
     <a className="url-link" href={url} target="_blank">
-      <i className="fas fa-external-link" />
+      <i className="fas fa-external-link-alt" />
     </a>
   );
 }

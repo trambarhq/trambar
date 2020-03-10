@@ -275,7 +275,7 @@ function WebsiteSummaryPageSync(props) {
     }
     return (
       <a className="link" href={url} target="_blank">
-        <i className="fas fa-external-link" />
+        <i className="fas fa-external-link-alt" />
       </a>
     );
   }

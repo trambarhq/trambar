@@ -130,7 +130,7 @@ function renderSurveyResults(text, voteCounts, onReference) {
         }
         return (
           <div className={className} key={key}>
-            <div className="label">{listToken.react}</div>
+            <div className="label">{item.react}</div>
             <div className="bar">
               <span className={`filled ${color}`} style={{ width: percent }} />
               <span className="percent">{percent}</span>
@@ -181,7 +181,7 @@ function renderTaskList(text, answers, onChange, onReference) {
             <label onClick={handleClick}>
               <input type="checkbox" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
               {' '}
-              {listToken.react}
+              {item.react}
             </label>
           </div>
         );
@@ -295,7 +295,7 @@ class CustomParser extends Parser {
       }
     } else {
       this.text = (listToken.list) ? listToken.label : listToken.text;
-      this.tokens = listToken.tokens = [];
+      this.tokens = [];
       this.processBlocks();
       if (listToken.list) {
         if (this.tokens[0] && this.tokens[0].type === 'paragraph') {
@@ -303,6 +303,7 @@ class CustomParser extends Parser {
           this.tokens[0].type = 'html_block';
         }
       }
+      listToken.tokens = this.tokens;
     }
   }
 

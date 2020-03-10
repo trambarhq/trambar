@@ -65,7 +65,7 @@ export const ImagePreviewDialogBox = Overlay.create((props) => {
       <a href={image.source} className="link" target="_blank">
         {t(`image-preview-${source}`)}
         {' '}
-        <i className="fas fa-external-link" />
+        <i className="fas fa-external-link-alt" />
       </a>
     );
   }

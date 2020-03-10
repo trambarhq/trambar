@@ -10,7 +10,7 @@ import { getOrientationMatrix, invertMatrix, transformRect } from '../media/imag
  * correction for orientation flag.
  */
 export const BitmapView = React.forwardRef((props, ref) => {
-  const { url, clippingRect, width, height, onLoad, ...otherProps } = props;
+  const { url, clippingRect, width, height, onLoad, onError, ...otherProps } = props;
   const [ image, setImage ] = useState(null);
   const canvasRef = useRef();
   const [ instance ] = useState({

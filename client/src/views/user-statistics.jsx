@@ -237,7 +237,7 @@ export const UserStatistics = React.memo((props) => {
           x: x,
           y: y + 8,
           'text-anchor': 'middle',
-          class: 'date-arrow',
+          class: 'date-arrow fas fa-caret-down',
         });
         cxt.group.append(arrow);
         cxt.label = 'Hello';
