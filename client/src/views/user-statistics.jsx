@@ -232,7 +232,7 @@ export const UserStatistics = React.memo((props) => {
         cxt.group.append(text);
 
         let arrow = new Svg('text');
-        arrow.text('\uf0dd');
+        arrow.text('\uf0d7');
         arrow.attr({
           x: x,
           y: y + 8,

@@ -66,7 +66,7 @@ export function TopNavigation(props) {
   }
 
   function renderButton(control, i) {
-    const { name, icon } = control;
+    const { name, iconClass } = control;
     const controlSettings = settings?.name;
     const className = `${name}-btn`;
     const active = (selectedControl?.name === name);
@@ -79,7 +79,7 @@ export function TopNavigation(props) {
       }
       url = route.find(route.name, params);
     }
-    const props = { icon, className, active, url };
+    const props = { iconClass, className, active, url };
     return <Button key={i} {...props} />
   }
 
@@ -107,26 +107,26 @@ export function TopNavigation(props) {
 const controls = [
   {
     name: 'calendar',
-    icon: 'calendar',
+    iconClass: 'fas fa-calendar-alt',
     params: { date: '' },
     component: CalendarBar,
   },
   {
     name: 'filter',
-    icon: 'filter',
+    iconClass: 'fas fa-filter',
     params: { roleIDs: [] },
     component: RoleFilterBar,
   },
   {
     name: 'search',
-    icon: 'search',
+    iconClass: 'fas fa-search',
     params: { search: '' },
     component: SearchBar,
   },
 ];
 
 function Button(props) {
-  const { url, icon, className, active } = props;
+  const { url, iconClass, className, active } = props;
   const classNames = [ 'button' ];
   if (className) {
     classNames.push(className);
@@ -139,7 +139,7 @@ function Button(props) {
   }
   return (
     <Link className={classNames.join(' ')} url={url}>
-      <i className={`fa fa-${icon}`} />
+      <i className={iconClass} />
     </Link>
   );
 }

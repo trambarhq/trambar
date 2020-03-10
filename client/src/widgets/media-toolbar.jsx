@@ -54,7 +54,7 @@ export function MediaToolbar(props) {
 
   const photoButtonProps = {
     label: t('story-photo'),
-    icon: 'camera',
+    iconClass: 'fas fa-camera',
     hidden: !counts.photo && !canCaptureImage,
     disabled: !canCaptureImage,
     highlighted: (counts.photo > 0 || capturing === 'image'),
@@ -63,7 +63,7 @@ export function MediaToolbar(props) {
   };
   const videoButtonProps = {
     label: t('story-video'),
-    iconClass: 'fas fa-video-camera',
+    iconClass: 'fas fa-video',
     hidden: !counts.video && !canCaptureVideo,
     disabled: !canCaptureVideo,
     highlighted: (counts.video > 0 || capturing === 'video'),
@@ -72,7 +72,7 @@ export function MediaToolbar(props) {
   };
   const audioButtonProps = {
     label: t('story-audio'),
-    icon: 'fas fa-microphone',
+    iconClass: 'fas fa-microphone',
     hidden: !counts.audio && !canCaptureAudio,
     disabled: !canCaptureAudio,
     highlighted: (counts.audio > 0 || capturing === 'audio'),
@@ -81,7 +81,7 @@ export function MediaToolbar(props) {
   };
   const selectButtonProps = {
     label: t('story-file'),
-    iconClass: 'far fa-file-photo',
+    iconClass: 'far fa-file-image',
     multiple: true,
     highlighted: (counts.file > 0),
     onChange: handleFileChange,

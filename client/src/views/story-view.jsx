@@ -196,7 +196,7 @@ export function StoryView(props) {
             {renderReactionToolbar()}
           </div>
           <div className="column-3 padded">
-            <HeaderButton icon="chevron-circle-right" label={t('story-options')} disabled />
+            <HeaderButton iconClass="fas fa-chevron-circle-right" label={t('story-options')} disabled />
           </div>
         </div>
         <div className="body">

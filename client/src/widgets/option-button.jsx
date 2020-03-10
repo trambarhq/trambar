@@ -42,12 +42,12 @@ function buttonClasses(props) {
 
 function iconClasses(props) {
   if (props.iconClass) {
-    return props.iconClass);
+    return props.iconClass;
   } else {
     if (props.selected) {
-      return props.iconClassOn);
+      return props.iconClassOn;
     } else {
-      return props.iconClassOff);
+      return props.iconClassOff;
     }
   }
 }

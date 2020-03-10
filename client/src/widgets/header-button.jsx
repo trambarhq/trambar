@@ -7,7 +7,7 @@ import './header-button.scss';
  * header of a panel.
  */
 export function HeaderButton(props) {
-  const { label, hidden, disabled, highlighted, onClick, ...otherProps } = props;
+  const { label, hidden, disabled, highlighted, iconClass, onClick, ...otherProps } = props;
   if (hidden) {
     return null;
   }
@@ -18,7 +18,7 @@ export function HeaderButton(props) {
   };
   return (
     <label {...labelProps}>
-      <i className={iconClasses(props)}/>
+      <i className={iconClass}/>
       <span className="label">{label}</span>
     </label>
   );
@@ -30,7 +30,7 @@ HeaderButton.File = FileButton;
  * Stateless component that renders a header button for selecting a file.
  */
 function FileButton(props) {
-  const { label, hidden, disabled, highlighted, multiple, onChange, ...otherProps } = props;
+  const { label, hidden, disabled, highlighted, multiple, iconClass, onChange, ...otherProps } = props;
   if (hidden) {
     return null;
   }
@@ -52,7 +52,7 @@ function FileButton(props) {
     return (
       <span {...labelProps}>
         <label htmlFor={inputProps.id}>
-          <i className={iconClasses(props)}/>
+          <i className={iconClass}/>
           <span className="label">{label}</span>
         </label>
         <input {...inputProps} />
@@ -61,7 +61,7 @@ function FileButton(props) {
   }
   return (
     <label className={buttonClasses(props)}>
-      <i className={iconClasses(props)}/>
+      <i className={iconClass}/>
       <span className="label">{label}</span>
       <input {...inputProps} />
     </label>
@@ -81,14 +81,6 @@ function buttonClasses(props) {
   }
   if (props.disabled) {
     classNames.push('disabled');
-  }
-  return classNames.join(' ');
-}
-
-function iconClasses(props) {
-  const classNames = [];
-  if (props.icon) {
-    classNames.push('fas', `fa-${props.icon}`);
   }
   return classNames.join(' ');
 }

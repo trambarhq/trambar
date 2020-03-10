@@ -27,12 +27,12 @@ export function WebAlertPanel(props) {
     userDraft.toggle(`settings.web_alert.${optionName}`);
   });
 
-  const browserIcon = getBrowserIcon();
+  const browserIconClass = getBrowserIconClass();
   return (
     <SettingsPanel className="web-alert">
       <header>
         <div className="icon">
-          <i className={`fa fa-${browserIcon}`} />
+          <i className={browserIconClass} />
           <i className="fas fa-exclamation-circle icon-overlay" />
         </div>
         {' '}
@@ -62,13 +62,13 @@ export function WebAlertPanel(props) {
 }
 
 const userAgentRegExps = {
-  'edge': /(Edge|Internet Explorer)/,
-  'chrome': /Chrome/,
-  'safari': /Safari/,
-  'firefox': /Firefox/,
+  'fab fa-edge': /(Edge|Internet Explorer)/,
+  'fab fa-chrome': /Chrome/,
+  'fab fa-safari': /Safari/,
+  'fab fa-firefox': /Firefox/,
 };
 
-function getBrowserIcon() {
+function getBrowserIconClass() {
   let ua = navigator.userAgent;
   for (let key in userAgentRegExps) {
     let re = userAgentRegExps[key];
@@ -76,5 +76,5 @@ function getBrowserIcon() {
       return key;
     }
   }
-  return 'globe';
+  return 'fas fa-globe';
 }

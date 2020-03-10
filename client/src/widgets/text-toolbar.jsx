@@ -30,21 +30,21 @@ export function TextToolbar(props) {
 
   const markdownProps = {
     label: t('story-markdown'),
-    icon: 'pencil-square',
+    iconClass: 'fas fa-pen-square',
     highlighted: story.details.markdown,
     'data-type': 'markdown',
     onClick: handleClick,
   };
   const taskListProps = {
     label: t('story-task-list'),
-    icon: 'list-ol',
+    iconClass: 'fas fa-list-ol',
     highlighted: (story.type === 'task-list'),
     'data-type': 'task-list',
     onClick: handleClick,
   };
   const surveyProps = {
     label: t('story-survey'),
-    icon: 'list-ul',
+    iconClass: 'fas fa-list-ul',
     highlighted: (story.type === 'survey'),
     'data-type': 'survey',
     onClick: handleClick,

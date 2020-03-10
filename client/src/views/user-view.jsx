@@ -136,7 +136,7 @@ export function UserView(props) {
             {renderChartToolbar()}
           </div>
           <div className="column-3 padded">
-            <HeaderButton icon="chevron-circle-right" label={t('user-actions')} disabled />
+            <HeaderButton iconClass="fas fa-chevron-circle-right" label={t('user-actions')} disabled />
           </div>
         </div>
         <div className="body">
