@@ -55,12 +55,12 @@ export function StoryViewOptions(props) {
 
   const handleAddBookmarkClick = useListener((evt) => {
     run(async () => {
-      const list = options.get('recipients');
-      const self = _.find(list, { id: currentUser });
+      const list = options.get('recipients', []);
+      const self = _.find(list, { id: currentUser.id });
       const newList = (self) ? _.without(list, self) : _.concat(list, currentUser);
       options.set('recipients', newList);
       done();
-      await syncBookmarks(database, story, bookmarks, currentUser, newList);
+      await syncBookmarks(database, bookmarks, story, currentUser, newList);
     });
   });
   const handleHideClick = useListener((evt) => {
@@ -107,7 +107,7 @@ export function StoryViewOptions(props) {
       options.set('recipients', selection);
       selectRecipients(false);
       done();
-      await BookmarkSaver.syncBookmarks(database, story, bookmarks, currentUser, selection);
+      await syncBookmarks(database, bookmarks, story, currentUser, selection);
     });
   });
   const handleRecipientsCancel = useListener((evt) => {

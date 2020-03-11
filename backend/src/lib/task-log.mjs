@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import Bytes from 'bytes';
 import { Database } from './database.mjs';
-import { write, commit, revert } from './revertible-console.mjs';
+import { writeOutput, commitOutput, revertOutput } from './revertible-console.mjs';
 import { addShutdownListener, removeShutdownListener } from './shutdown.mjs';
 import { HTTPError } from './errors.mjs';
 
@@ -221,7 +221,7 @@ export class TaskLog {
       if (!this.clearing || this.error || !this.noop) {
         this.output(true);
       } else {
-        revert();
+        revertOutput();
       }
       if (this.token) {
         _.unset(taskLogHash, [ this.schema, this.token ]);
@@ -300,20 +300,20 @@ export class TaskLog {
     const stime = `[${this.startTime.toISOString()}]`;
     const etime = `[${(this.endTime || Moment()).toISOString()}]`;
     const blank = _.repeat('·', etime.length);
-    revert();
+    revertOutput();
     const status = this.formatStatus();
     const options = this.formatOptions();
-    write(`${stime} ${this.action}${options} - ${status}`);
+    writeOutput(`${stime} ${this.action}${options} - ${status}`);
     const lines = this.formatDescription();
     for (let [ index, line ] of lines.entries()) {
       if (index === lines.length - 1) {
-        write(`${etime}   ${line}`);
+        writeOutput(`${etime}   ${line}`);
       } else {
-        write(`${blank}   ${line}`);
+        writeOutput(`${blank}   ${line}`);
       }
     }
     if (commit) {
-      commit();
+      commitOutput();
     }
   }
 
