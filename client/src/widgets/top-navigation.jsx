@@ -67,7 +67,7 @@ export function TopNavigation(props) {
 
   function renderButton(control, i) {
     const { name, iconClass } = control;
-    const controlSettings = settings?.name;
+    const controlSettings = settings?.[name];
     const className = `${name}-btn`;
     const active = (selectedControl?.name === name);
     let url;
