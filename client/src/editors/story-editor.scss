@@ -45,6 +45,16 @@
     .story-contents {
       margin-top: 0.25em;
       padding: 0.25em 0.25em 0.25em 0.5em;
+
+      .text {
+        &.emoji-1, &.emoji-2, &.emoji-3 {
+          font-size: 3em;
+        }
+
+        &.emoji-4, &.emoji-5, &.emoji-6 {
+          font-size: 2em;
+        }
+      }
     }
 
     .buttons {

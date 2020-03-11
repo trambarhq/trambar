@@ -143,33 +143,30 @@ export function StoryContents(props) {
   }
 
   function renderStoryText() {
+    const { type } = story;
     const { text, markdown, labels } = story.details;
     const langText = _.trimEnd(p(text));
     const textProps = {
-      type: story.type,
+      type,
       text: langText,
       markdown,
       answers: userAnswers.current,
       onReference: markdownRes.onReference,
     };
-    const classNames = [
-      'text',
-      story.type,
-      (markdown) ? 'markdown' : 'plain-text'
-    ];
-    if (story.type === 'post') {
+    const classNames = [ 'text', type, (markdown) ? 'markdown' : 'plain-text' ];
+    if (type === 'post') {
       // if all we have are emojis, make them bigger depending on
       // how many there are
       const emoji = findEmoji(langText);
       const chars = langText.replace(/\s+/g, '');
       if (emoji && emoji.join('') === chars) {
-        className.push(`emoji-${emoji.length}`);
+        classNames.push(`emoji-${emoji.length}`);
       }
-    } else if (story.type === 'task-list') {
+    } else if (type === 'task-list') {
       if (_.includes(story.user_ids, currentUser.id)) {
         textProps.onChange = handleTaskListItemChange;
       }
-    } else if (story.type === 'survey') {
+    } else if (type === 'survey') {
       if (userVoted || !userCanVote) {
         textProps.results = countVotes(reactions);
       }

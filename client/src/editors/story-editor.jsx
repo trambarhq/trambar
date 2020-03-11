@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FocusManager } from 'common/utils/focus-manager.js';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
 import { isList, extractListItems, countListItems } from 'common/utils/list-parser.js';
-import { renderPlainText } from 'common/utils/plain-text.js';
+import { renderPlainText, findEmoji } from 'common/utils/plain-text.js';
 import { renderMarkdown, isMarkdown } from 'common/utils/markdown.js';
 import { findTagsInText } from 'common/utils/tag-scanner.js';
 import { saveStory, removeStory } from 'common/objects/savers/story-saver.js';
@@ -429,28 +429,27 @@ export function StoryEditor(props) {
   }
 
   function renderTextPreview() {
-    const isMarkdown = draft.get('details.markdown');
+    const markdown = draft.get('details.markdown');
+    const type = draft.get('type', 'post');
+    const langText = draft.get(`details.text.${languageCode}`, '');
     const textProps = {
-      type: draft.get('type', 'post'),
-      text: draft.get(`details.text.${languageCode}`, ''),
+      type,
+      text: langText,
       answers: null,  // answers are written to the text itself
       onChange: handleItemChange,
       onReference: markdownRes.onReference,
     };
-    const classNames = [
-      'text',
-      textProps.type,
-      (isMarkdown) ? 'markdown' : 'plain-text',
-    ];
-    let contents;
-    if (isMarkdown) {
-      contents = renderMarkdown(textProps);
-    } else {
-      contents = renderPlainText(textProps);
+    const classNames = [ 'text', type, (markdown) ? 'markdown' : 'plain-text' ];
+    const emoji = findEmoji(langText);
+    const chars = langText.replace(/\s+/g, '');
+    if (emoji && emoji.join('') === chars) {
+      classNames.push(`emoji-${emoji.length}`);
     }
     return (
       <div className="story-contents">
-        <div className={classNames.join(' ')}>{contents}</div>
+        <div className={classNames.join(' ')}>
+          {markdown ? renderMarkdown(textProps) : renderPlainText(textProps)}
+        </div>
       </div>
     );
   }

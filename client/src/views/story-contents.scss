@@ -61,14 +61,6 @@
           width: 100%;
         }
       }
-
-      &.emoji-1, &.emoji-2, &.emoji-3 {
-        font-size: 3em;
-      }
-
-      &.emoji-4, &.emoji-5, &.emoji-6 {
-        font-size: 2em;
-      }
     }
 
     &.markdown {
@@ -276,6 +268,14 @@
           }
         }
       }
+    }
+
+    &.emoji-1, &.emoji-2, &.emoji-3 {
+      font-size: 3em;
+    }
+
+    &.emoji-4, &.emoji-5, &.emoji-6 {
+      font-size: 2em;
     }
   }
 
