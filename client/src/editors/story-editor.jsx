@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { FocusManager } from 'common/utils/focus-manager.js';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
-import { isList, extractListItems, countListItems } from 'common/utils/list-parser.js';
+import { isList, extractListItems, setListItem, countListItems, stringifyList } from 'common/utils/list-parser.js';
 import { renderPlainText, findEmoji } from 'common/utils/plain-text.js';
 import { renderMarkdown, isMarkdown } from 'common/utils/markdown.js';
 import { findTagsInText } from 'common/utils/tag-scanner.js';
@@ -155,6 +155,31 @@ export function StoryEditor(props) {
     setOpenMenu('');
   });
   const handleItemChange = useListener((evt) => {
+    const target = evt.currentTarget;
+    const list = parseInt(target.name);
+    const item = parseInt(target.value);
+    const selected = target.checked;
+    const type = draft.get('type');
+    const text = draft.get(`details.text`, {});
+    if (type === 'task-list') {
+      const counts = [];
+      const newText = _.mapValues(text, (langText) => {
+        const tokens = extractListItems(langText);
+        setListItem(tokens, list, item, selected);
+        let unfinished = countListItems(tokens, false);
+          counts.push(unfinished);
+          return stringifyList(tokens);
+      });
+      draft.set('details.text', newText);
+      draft.set('unfinished_tasks', _.max(counts));
+    } else if (type === 'survey') {
+      const newText = _.mapValues(text, (langText) => {
+        const tokens = extractListItems(langText);
+        setListItem(tokens, list, item, selected, true);
+        return stringifyList(tokens);
+      });
+      draft.set('details.text', newText);
+    }
   });
   const handleCoauthorSelect = useListener((evt) => {
     const { selection } = evt;

@@ -84,12 +84,18 @@ function renderSurvey(text, answers, onChange, onReference) {
             checked = (item.key == answer);
           }
         }
+        const inputProps = {
+          type: 'radio',
+          name: item.list,
+          value: item.key,
+          readOnly: !onChange,
+          checked,
+          onChange,
+        };
         return (
           <div className="list-item" key={key}>
             <label onClick={handleClick}>
-              <input type="radio" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
-              {' '}
-              {item.react}
+              <input {...inputProps}/> {item.react}
             </label>
           </div>
         );
@@ -176,12 +182,18 @@ function renderTaskList(text, answers, onChange, onReference) {
             }
           }
         }
+        const inputProps = {
+          type: 'checkbox',
+          name: item.list,
+          value: item.key,
+          readOnly: !onChange,
+          checked,
+          onChange,
+        };
         return (
           <div className="list-item" key={key}>
             <label onClick={handleClick}>
-              <input type="checkbox" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
-              {' '}
-              {item.react}
+              <input {...inputProps}/> {item.react}
             </label>
           </div>
         );
@@ -257,7 +269,7 @@ class CustomParser extends Parser {
         case 'list':
           for (let itemToken of bToken.children) {
             const child = itemToken.children[0];
-            if (/^\s*\[/.test(child.markdown)) {
+            if (child && /^\s*\[/.test(child.markdown)) {
               // it might be a task-list or survey item
               break;
             }
