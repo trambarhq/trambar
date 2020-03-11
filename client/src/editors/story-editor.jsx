@@ -64,6 +64,7 @@ export function StoryEditor(props) {
     original: story || createBlankStory(currentUser),
     transform: adjustStory,
   });
+  const markdownRes = useMarkdownResources(draft.get('resources'), env);
   const [ error, run ] = useErrorCatcher(true);
   const [ confirmationRef, confirm ] = useConfirmation();
   const [ input ] = useState({ last: null })
@@ -217,8 +218,6 @@ export function StoryEditor(props) {
       }
     }
   }, [ draft.get('type') ]);
-
-  const markdown = useMarkdownResources(draft.get('resources'), env);
 
   const classNames = [ 'story-editor' ] ;
   if (highlighting) {
@@ -436,7 +435,7 @@ export function StoryEditor(props) {
       text: draft.get(`details.text.${languageCode}`, ''),
       answers: null,  // answers are written to the text itself
       onChange: handleItemChange,
-      onReference: markdown.onReference,
+      onReference: markdownRes.onReference,
     };
     const classNames = [
       'text',
@@ -447,7 +446,7 @@ export function StoryEditor(props) {
     if (isMarkdown) {
       contents = renderMarkdown(textProps);
     } else {
-      contents = <p>{renderPlainText(textProps)}</p>;
+      contents = renderPlainText(textProps);
     }
     return (
       <div className="story-contents">

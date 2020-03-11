@@ -210,14 +210,16 @@ function extractUserAnswers(story, locale) {
   const tokens = extractListItems(langText);
   const answers = {};
   for (let token of tokens) {
-    for (let item of token) {
-      if (story.type === 'task-list') {
-        _.set(answers, [ item.list, item.key ], item.checked);
-      } else if (story.type === 'survey') {
-        if (item.checked) {
-          _.set(answers, item.list, item.key);
-        } else {
-          _.set(answers, item.list, undefined);
+    if (token instanceof Array) {
+      for (let item of token) {
+        if (story.type === 'task-list') {
+          _.set(answers, [ item.list, item.key ], item.checked);
+        } else if (story.type === 'survey') {
+          if (item.checked) {
+            _.set(answers, item.list, item.key);
+          } else {
+            _.set(answers, item.list, undefined);
+          }
         }
       }
     }

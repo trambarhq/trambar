@@ -56,7 +56,7 @@ export function StoryContents(props) {
     original: originalAnswers,
   });
   const resources = story.details.resources;
-  const markdownResources = useMarkdownResources(resources, env);
+  const markdownRes = useMarkdownResources(resources, env);
 
   const handleTaskListItemChange = useListener((evt) => {
     run(async () => {
@@ -110,11 +110,9 @@ export function StoryContents(props) {
     const { exported } = story.details;
     switch (story.type) {
       case 'post':
-        return renderStoryText();
       case 'task-list':
-        return renderTaskListText();
       case 'survey':
-        return renderSurveyText();
+        return renderStoryText();
       case 'repo':
         return renderRepoText();
       case 'member':
@@ -147,98 +145,39 @@ export function StoryContents(props) {
   function renderStoryText() {
     const { text, markdown, labels } = story.details;
     const langText = _.trimEnd(p(text));
-    let tags;
-    if (labels) {
-      tags = renderLabels();
-    }
-    if (!langText && !tags) {
-      return null;
-    }
-    const classNames = [ 'text', 'story' ];
-    let contents, onClick;
-    if (markdown) {
-      classNames.push('markdown');
-      contents = Markdown.render(langText, markdownResources.onReference);
-      onClick = handleMarkdownClick;
-    } else {
-      classNames.push('plain-text');
-
+    const textProps = {
+      type: story.type,
+      text: langText,
+      markdown,
+      answers: userAnswers.current,
+      onReference: markdownRes.onReference,
+    };
+    const classNames = [
+      'text',
+      story.type,
+      (markdown) ? 'markdown' : 'plain-text'
+    ];
+    if (story.type === 'post') {
       // if all we have are emojis, make them bigger depending on
       // how many there are
       const emoji = findEmoji(langText);
-      const chars = _.replace(langText, /\s+/g, '');
-      if (emoji) {
-        if (_.join(emoji, '') === chars) {
-          className.join('emoji-${emoji.length}');
-        }
+      const chars = langText.replace(/\s+/g, '');
+      if (emoji && emoji.join('') === chars) {
+        className.push(`emoji-${emoji.length}`);
       }
-      contents = <p>{renderEmoji(langText)}</p>;
+    } else if (story.type === 'task-list') {
+      if (_.includes(story.user_ids, currentUser.id)) {
+        textProps.onChange = handleTaskListItemChange;
+      }
+    } else if (story.type === 'survey') {
+      if (userVoted || !userCanVote) {
+        textProps.results = countVotes(reactions);
+      }
     }
     return (
-      <div className={classNames.join(' ')} onClick={onClick}>
-        {contents}{tags}
-      </div>
-    );
-  }
-
-  function renderTaskListText() {
-    const { text, markdown } = story.details;
-    const answers = userAnswers.current;
-    let langText = _.trimEnd(p(text));
-    if (!langText) {
-      return null;
-    }
-    const classNames = [ 'text', 'task-list' ];
-    let contents, onClick, onChange;
-    if (_.includes(story.user_ids, currentUser.id)) {
-      onChange = handleTaskListItemChange;
-    }
-    if (markdown) {
-      classNames.push('markdown');
-      contents = Markdown.renderTaskList(langText, answers, onChange, markdownResources.onReference);
-      onClick = markdownResources.onClick;
-    } else {
-      classNames.push('plain-text');
-      contents = <p>{renderTaskList(langText, answers, onChange)}</p>;
-    }
-    return (
-      <div className={classNames.join(' ')} onClick={onClick}>
-        {contents}
-      </div>
-    );
-  }
-
-  function renderSurveyText() {
-    const { text, markdown } = story.details;
-    const answers = userAnswers.current;
-    const langText = _.trimEnd(p(text));
-    if (!langText) {
-      return null;
-    }
-    const showingResult = userVoted || !userCanVote;
-    const voteCounts = (showingResult) ? countVotes(reactions) || {} : undefined;
-    const classNames = [ 'text', 'survey' ];
-    let contents, onClick;
-    if (markdown) {
-      classNames.push('markdown');
-      if (showingResult) {
-        contents = Markdown.renderSurveyResults(langText, voteCounts, markdownResources.onReference);
-      } else {
-        contents = Markdown.renderSurvey(langText, answers, handleSurveyItemChange, markdownResources.onReference);
-      }
-      onClick = handleMarkdownClick;
-    } else {
-      classNames.push('plain-text');
-      if (showingResult) {
-        contents = renderSurveyResults(langText, voteCounts);
-      } else {
-        contents = renderSurvey(langText, answers, handleSurveyItemChange);
-      }
-      contents = <p>{contents}</p>;
-    }
-    return (
-      <div className={classNames.join(' ')} onClick={onClick}>
-        {contents}
+      <div className={classNames.join(' ')} onClick={markdownRes.onClick}>
+        {markdown ? renderMarkdown(textProps) : renderPlainText(textProps)}
+        {renderLabels()}
       </div>
     );
   }
@@ -462,8 +401,6 @@ export function StoryContents(props) {
         </span>
       );
     });
-
-
   }
 
   function renderChanges() {
@@ -521,7 +458,7 @@ export function StoryContents(props) {
     if (_.isEmpty(labels)) {
       return null;
     }
-    const tags = _.map(labels, renderLabel);
+    const tags = labels.map(renderLabel);
     // inserting actual spaces between the tags for the sake of copy-and-pasting
     for (let i = 1; i < tags.length; i += 2) {
       tags.splice(i, 0, ' ');
@@ -553,7 +490,7 @@ export function StoryContents(props) {
   }
 
   function renderAudioPlayer() {
-    const { audioURL, onAudioEnded } = markdownResources;
+    const { audioURL, onAudioEnded } = markdownRes;
     if (!audioURL) {
       return null;
     }
@@ -567,7 +504,7 @@ export function StoryContents(props) {
   }
 
   function renderMedia() {
-    const remaining = markdownResources.unreferenced;
+    const remaining = markdownRes.unreferenced;
     if (_.isEmpty(remaining)) {
       return null;
     }
@@ -580,7 +517,7 @@ export function StoryContents(props) {
   }
 
   function renderReferencedMediaDialog() {
-    const { zoomed, zoomable, selected, onClose } = markdownResources;
+    const { zoomed, zoomable, selected, onClose } = markdownRes;
     const selectedIndex = _.indexOf(zoomable, selected);
     const dialogProps = {
       show: zoomed,
@@ -629,7 +566,7 @@ export function StoryContents(props) {
   }
 }
 
-const countVotes = memoizeWeak(null, function(reactions) {
+const countVotes = memoizeWeak({}, function(reactions) {
   let tallies = {};
   _.each(reactions, (reaction) => {
     if (reaction.type === 'vote' ) {

@@ -15,7 +15,15 @@ function renderPlainText(props) {
   } else if (type === 'task-list') {
     return renderTaskList(text, answers, onChange);
   } else {
-    return renderEmoji(text);
+    if (!text) {
+      return null;
+    }
+    const contents = renderEmoji(text);
+    if (type === 'post') {
+      return <p>{contents}</p>;
+    } else {
+      return contents;
+    }
   }
 }
 
@@ -263,7 +271,7 @@ function findEmoji(string) {
   if (!emojiRegex) {
     emojiRegex = EmojiRegex();
   }
-  let m = string.match(emojiRegex);
+  const m = string.match(emojiRegex);
   return m;
 }
 
