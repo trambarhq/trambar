@@ -22,7 +22,7 @@ export function StoryEditorOptions(props) {
   const [ enteringIssueDetails, enterIssueDetails ] = useState(false);
   const handleAddBookmarkClick = useListener((evt) => {
     const list = options.get('recipients');
-    const self = _.find(list, { id: currentUser });
+    const self = _.find(list, { id: currentUser.id });
     const newList = (self) ? _.without(list, self) : _.concat(list, currentUser);
     options.set('recipients', newList);
     done();
