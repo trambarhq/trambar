@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import { extractListItems, updateListItem, stringifyList } from 'common/utils/list-parser.js';
+import { extractListItems, updateListItem, countListItems, stringifyList } from 'common/utils/list-parser.js';
 import { mergeObjects } from '../../data/merger.js';
 import { mergeLists } from './resource-utils.js';
 import {

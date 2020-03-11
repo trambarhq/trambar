@@ -57,6 +57,9 @@ export function StoryContents(props) {
   });
   const resources = story.details.resources;
   const markdownRes = useMarkdownResources(resources, env);
+  if (error) {
+    console.error(error);
+  }
 
   const handleTaskListItemChange = useListener((evt) => {
     run(async () => {
@@ -169,6 +172,8 @@ export function StoryContents(props) {
     } else if (type === 'survey') {
       if (userVoted || !userCanVote) {
         textProps.results = countVotes(reactions);
+      } else {
+        textProps.onChange = handleSurveyItemChange;
       }
     }
     return (

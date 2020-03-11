@@ -45,12 +45,12 @@ function renderSurvey(text, answers, onChange) {
         if (answers) {
           // override radio-button state indicated in text
           // with set-but-not-yet-saved value
-          let answer = answers[item.list];
+          const answer = answers[item.list];
           if (answer !== undefined) {
             checked = (item.key == answer);
           }
         }
-        let inputProps = {
+        const inputProps = {
           type: 'radio',
           name: item.list,
           value: item.key,
@@ -90,12 +90,12 @@ function renderSurveyResults(text, voteCounts) {
   return _.map(listTokens, (listToken, index) => {
     if (listToken instanceof Array) {
       return _.map(listToken, (item, key) => {
-        let tally = voteCounts[item.list];
-        let total = _.get(tally, 'total', 0);
-        let count = _.get(tally, [ 'answers', item.key ], 0);
-        let percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
-        let color = `color-${item.key % 12}`;
-        let className = 'vote-count';
+        const tally = voteCounts[item.list];
+        const total = _.get(tally, 'total', 0);
+        const count = _.get(tally, [ 'answers', item.key ], 0);
+        const percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
+        const color = `color-${item.key % 12}`;
+        const className = 'vote-count';
         if (count === total) {
           className += ' unanimous';
         }
@@ -139,15 +139,15 @@ function renderTaskList(text, answers, onChange) {
         if (answers) {
           // override checkbox/radio-button state indicated in text
           // with set-but-not-yet-saved value
-          let answer = answers[item.list];
+          const answer = answers[item.list];
           if (answer !== undefined) {
-            let selected = answer[item.key];
+            const selected = answer[item.key];
             if (selected !== undefined) {
               checked = selected;
             }
           }
         }
-        let inputProps = {
+        const inputProps = {
           type: 'checkbox',
           name: item.list,
           value: item.key,
@@ -159,9 +159,7 @@ function renderTaskList(text, answers, onChange) {
           <span key={key}>
             {item.before}
             <label>
-              <input {...inputProps} />
-              {item.between}
-              {renderEmoji(item.label)}
+              <input {...inputProps} />{item.between}{renderEmoji(item.label)}
             </label>
             {item.after}
           </span>
@@ -197,7 +195,7 @@ function renderEmoji(text, options) {
   return ReactEasyEmoji(text, renderEmojiImage.bind(null, parentKey));
 }
 
-let emojiStyle = {
+const emojiStyle = {
 	height: '1em',
 	width: '1em',
 	margin: '0 .05em 0 .1em',
@@ -205,8 +203,8 @@ let emojiStyle = {
 };
 
 function renderEmojiImage(parentKey, code, string, characterKey) {
-  let key = (parentKey !== undefined) ? `${parentKey}.${characterKey}` : characterKey;
-  let src = `https://twemoji.maxcdn.com/2/72x72/${code}.png`;
+  const key = (parentKey !== undefined) ? `${parentKey}.${characterKey}` : characterKey;
+  const src = `https://twemoji.maxcdn.com/2/72x72/${code}.png`;
   return <img key={key} alt={string} draggable={false} src={src} style={emojiStyle} />;
 }
 
@@ -234,18 +232,18 @@ function hasSkinToneSupport() {
  * @return {Boolean}
  */
 function canDrawEmoji(text) {
-  let canvas = document.createElement('canvas');
+  const canvas = document.createElement('canvas');
   if (!canvas.getContext) {
     return false;
   }
-  let context = canvas.getContext('2d');
+  const context = canvas.getContext('2d');
   if (!context.fillText) {
     return false;
   }
   context.textBaseline = "top";
   context.font = "32px Arial";
   context.fillText(text, 0, 0);
-  let pixels = context.getImageData(16, 16, 1, 1).data;
+  const pixels = context.getImageData(16, 16, 1, 1).data;
   return pixels[0] !== 0;
 }
 

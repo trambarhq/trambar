@@ -96,6 +96,8 @@ function useMarkdownResources(resources, env) {
     setZoomed(false);
   });
   const onClick = useListener((evt) => {
+    // TODO: this needs to be reworked somehow
+    return;
     evt.preventDefault();
 
     let target = evt.target;
@@ -112,13 +114,13 @@ function useMarkdownResources(resources, env) {
       name = evt.target.title;
     }
     if (name) {
-      let res = Markdown.findReferencedResource(resources, name);
+      let res = findReferencedResource(resources, name);
       if (res) {
         if (res.type === 'image' || res.type === 'video') {
           setName(name);
           setZoomed(true);
         } else if (res.type === 'website') {
-          window.open(res.url, '_blank');
+          //window.open(res.url, '_blank');
         } else if (res.type === 'audio') {
           const version = _.first(_.keys(res.versions));
           const selected = getAudioURL(res, { version }, env);
@@ -126,7 +128,8 @@ function useMarkdownResources(resources, env) {
         }
       }
     } else {
-      openPopUpWindow(target);
+      // TODO: WTF?
+      //openPopUpWindow(target);
     }
   });
   const onAudioEnd = useListener((evt) => {
@@ -161,7 +164,9 @@ function openPopUpWindow(target) {
     options = `width=${width},height=${height},left=${left},top=${top}status=no,menubar=no`;
     url = target.src;
   }
-  window.open(url, '_blank', options);
+  if (url) {
+    window.open(url, '_blank', options);
+  }
 }
 
 export {
