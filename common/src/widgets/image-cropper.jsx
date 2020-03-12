@@ -17,6 +17,7 @@ export const ImageCropper = React.forwardRef((props, ref) => {
   const imageRef = useRef();
   const [ hasFocus, setHasFocus ] = useState(false);
   const [ dragStart, setDragStart ] = useState(null);
+  const [ panStart, setPanStart ] = useState(null);
 
   useImperativeHandle(ref, () => {
     function focus() {

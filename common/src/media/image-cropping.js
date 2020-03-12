@@ -19,5 +19,4 @@ function centerSquare(width, height) {
 
 export {
   centerSquare,
-  centerSquare as apply,
 };

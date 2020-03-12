@@ -41,7 +41,7 @@ ErrorBoundary.propTypes = {
 };
 ImageCropper.propTypes = {
   url: PropTypes.string.isRequired,
-  clippingRect: PropTypes.object,
+  clippingRect: PropTypes.object.isRequired,
   vector: PropTypes.bool,
   disabled: PropTypes.bool,
   onChange: PropTypes.func,

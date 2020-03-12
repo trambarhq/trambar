@@ -145,7 +145,7 @@ class Payload {
   }
 
   /**
-   * Return the oversize of the payload
+   * Return the overall size of the payload
    *
    * @return {Number}
    */

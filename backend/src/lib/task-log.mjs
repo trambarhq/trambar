@@ -34,7 +34,7 @@ export class TaskLog {
   static async obtain(schema, token, action) {
     const db = await Database.open();
     const task = await Task.findOne(db, schema, { token }, 'id, options, action');
-    if (!task || task.action !== action) {
+    if (!task || task.action !== action || !token) {
       throw new HTTPError(403);
     }
     const loadedTaskLog = _.get(taskLogHash, [ schema, token ]);
@@ -43,7 +43,7 @@ export class TaskLog {
     }
     const newTaskLog = new TaskLog(action, {
       saving: true,
-      database: { schema, id, token },
+      database: { schema, id: task.id, token },
       multiparts: task.options,
     });
     _.set(taskLogHash, [ schema, token ], newTaskLog);

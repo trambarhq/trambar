@@ -40,9 +40,8 @@ function performHTTPRequest(method, url, payload, options) {
     }
     // convert object to string
     const mimeType = (contentType === 'json') ? `application/json` : contentType;
-    let contents = '';
     if (mimeType === 'application/json' && payload instanceof Object) {
-      contents = JSON.stringify(payload, (key, value) => {
+      payload = JSON.stringify(payload, (key, value) => {
         if (value instanceof Blob) {
           return undefined;
         }
@@ -89,7 +88,7 @@ function performHTTPRequest(method, url, payload, options) {
         onUploadProgress(evt);
       }
     };
-    xhr.send(contents);
+    xhr.send(payload);
   });
   promise.cancel = function() {
     xhr.abort();

@@ -261,15 +261,15 @@ async function handleImageUpload(req, res) {
       // that contains the token
       taskLog.describe('extracting metadata from image');
       const metadata = await ImageManager.getImageMetadata(imagePath);
-      const url = getFileURL(imagePath);
+      const fileURL = getFileURL(imagePath);
       taskLog.merge({
-        url,
+        url: fileURL,
         format: metadata.format,
         width: metadata.width,
         height: metadata.height,
         title: metadata.title,
       });
-      const result = { url };
+      const result = { url: fileURL };
       sendJSON(res, result);
       await taskLog.finish('main');
     } catch (err) {

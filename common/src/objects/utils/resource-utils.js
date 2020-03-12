@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { BlobManager } from '../../transport/blob-manager.js';
 import { extractMosaic } from '../../media/media-loader.js';
+import { centerSquare } from '../../media/image-cropping.js';
 
 import { mergeObjects } from '../../data/merger.js';
 
@@ -117,6 +118,10 @@ function getClippingRect(res, params) {
   if (params.hasOwnProperty('clip')) {
     // override the one stored in res
     clip = params.clip;
+  } else {
+    if (!clip) {
+      clip = centerSquare(res.width, res.height);
+    }
   }
   return clip;
 }
