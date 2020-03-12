@@ -16,14 +16,15 @@ export function PopUpMenu(props) {
   const containerRef = useRef();
   const menuRef = useRef();
   const popOutContainer = useMemo(() => {
-    if (popOut) {
+    // create the pop-out container as needed
+    if (popOut && open) {
       const node = document.createElement('DIV');
       node.style.left = '0';
       node.style.top = '0';
       node.style.position = 'absolute';
       return node;
     }
-  }, [ popOut ]);
+  }, [ popOut, open ]);
 
   const handleButtonClick = useListener((evt) => {
     if (!disabled) {
@@ -46,6 +47,7 @@ export function PopUpMenu(props) {
 
   useEffect(() => {
     if (popOutContainer) {
+      // attach the container and remove it afterward
       const page = getPageNode();
       page.appendChild(popOutContainer);
       return () => {
@@ -133,13 +135,12 @@ export function PopUpMenu(props) {
       const element = (
         <div {...props}>
           <div className="container">
-            <div ref={menuRef} className="menu" onClick={handleMenuClick}>
+            <div ref={menuRef} className="menu">
               {renderContents('menu')}
             </div>
           </div>
         </div>
       );
-      const popOutContainer = addPopOutContainer();
       return ReactDOM.createPortal(element, popOutContainer);
     } else {
       return (

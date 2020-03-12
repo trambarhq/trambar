@@ -1444,7 +1444,7 @@ export class RemoteDataSource extends EventEmitter {
             resultsAfter.splice(index, 1);
           }
         } else if (op instanceof Storage) {
-          const match = matchSearchCriteria(search.table, object, search.criteria);
+          let match = matchSearchCriteria(search.table, object, search.criteria);
           if (object.deleted) {
             if (!_.get(this.options.discoveryFlags, 'include_deleted')) {
               match = false;

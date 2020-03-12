@@ -330,7 +330,7 @@ export class Story extends ExternalData {
       const storyBefore = storiesBefore[index];
       this.checkWritePermission(storyReceived, storyBefore, credentials);
 
-      const row = await super.importOne(db, schema, storyReceived, storyBefore, credentials);
+      let row = await super.importOne(db, schema, storyReceived, storyBefore, credentials);
       // set language_codes
       if (storyReceived.details) {
         row.language_codes = _.filter(_.keys(storyReceived.details.text), { length: 2 });

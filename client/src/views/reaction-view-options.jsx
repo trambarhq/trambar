@@ -31,6 +31,7 @@ export function ReactionViewOptions(props) {
     if (onChange) {
       onChange({ options: newOptions });
     }
+    setOpenMenu('');
   });
   const handleEditClick = useListener((evt) => {
     const newOptions = { ...options };
@@ -38,6 +39,7 @@ export function ReactionViewOptions(props) {
     if (onChange) {
       onChange({ options: newOptions });
     }
+    setOpenMenu('');
   });
   const handleRemoveClick = useListener((evt) => {
     const newOptions = { ...options };
@@ -45,6 +47,7 @@ export function ReactionViewOptions(props) {
     if (onChange) {
       onChange({ options: newOptions });
     }
+    setOpenMenu('');
   });
 
   let active = false;

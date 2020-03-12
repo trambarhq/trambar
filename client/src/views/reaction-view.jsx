@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import { useListener } from 'relaks';
+import { useListener, useSaveBuffer } from 'relaks';
 import { renderPlainText } from 'common/utils/plain-text.js';
 import { renderMarkdown } from 'common/utils/markdown.js';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -17,7 +17,7 @@ import { ReactionViewOptions } from '../views/reaction-view-options.jsx';
 
 // custom hooks
 import {
-  useMarkdownResources
+  useMarkdownResources,
 } from '../hooks.js';
 
 import './reaction-view.scss';
@@ -27,21 +27,28 @@ import './reaction-view.scss';
  */
 export function ReactionView(props) {
   const { reaction, respondent, story, currentUser } = props;
-  const { env, route, repo, highlighting, access } = props;
+  const { env, database, route, repo, highlighting, access } = props;
   const { t, p, g } = env.locale;
-  const [ options, setOptions ] = useState({});
+  const options = useSaveBuffer({
+    original: {
+      editReaction: !reaction.published,
+      removeReaction: !!reaction.deleted,
+      hideReaction: !reaction.public,
+    }
+  });
   const markdownResources = useMarkdownResources(reaction?.details?.resources);
 
   const handleOptionsChange = useListener((evt) => {
+    const oldOptions = options.current;
     const newOptions = evt.options;
-    setOptions(newOptions)
-    if (newOptions.editReaction && !options.editReaction) {
+    options.update(newOptions);
+    if (newOptions.editReaction && !oldOptions.editReaction) {
       publishReaction();
     }
-    if (newOptions.removeReaction && !options.removeReaction) {
+    if (newOptions.removeReaction && !oldOptions.removeReaction) {
       removeReaction();
     }
-    if (newOptions.hideReaction !== options.hideReaction) {
+    if (newOptions.hideReaction !== oldOptions.hideReaction) {
       hideReaction(newOptions.hideReaction);
     }
   });
@@ -213,7 +220,7 @@ export function ReactionView(props) {
       reaction,
       story,
       env,
-      options,
+      options: options.current,
       onChange: handleOptionsChange,
     };
     return <ReactionViewOptions {...props} />;
