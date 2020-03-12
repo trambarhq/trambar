@@ -87,7 +87,7 @@ export function TopNavigation(props) {
     let contents;
     if (selectedControl) {
       const { name, component: Control } = selectedControl;
-      const controlSettings = settings?.name ?? {};
+      const controlSettings = settings?.[name] ?? {};
       let props = {
         settings: controlSettings,
         database,
