@@ -104,7 +104,7 @@ export function SocialNetworkPanel(props) {
 
   function renderGitlabURLInput() {
     const props = {
-      id: 'github',
+      id: 'gitlab',
       value: userDraft.get('details.gitlab_url'),
       env,
       onChange: handleGitlabURLChange,

@@ -70,7 +70,7 @@ export function UserInfoPanel(props) {
 
   function renderPhoneInput() {
     const props = {
-      id: 'email',
+      id: 'phone',
       value: userDraft.get('details.phone'),
       env,
       onChange: handlePhoneChange,
