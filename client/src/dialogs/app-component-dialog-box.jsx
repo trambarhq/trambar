@@ -1,5 +1,6 @@
 import React from 'react';
 import { parse } from 'mark-gor';
+import { translateClass4To5 } from 'common/utils/fa-compatibility.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -36,7 +37,7 @@ export const AppComponentDialogBox = Overlay.create((props) => {
       );
     } else {
       const icon = component.icon || {};
-      const iconClass = icon.class || 'fas fa-cubes';
+      const iconClass = translateClass4To5(icon.class) || 'fas fa-cubes';
       const style = {
         color: icon.color,
         backgroundColor: icon.backgroundColor,

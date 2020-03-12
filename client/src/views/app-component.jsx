@@ -2,6 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
 import { parse } from 'mark-gor/react';
+import { translateClass4To5 } from 'common/utils/fa-compatibility.js';
 
 // widgets
 import { ResourceView } from 'common/widgets/resource-view.jsx';
@@ -37,7 +38,7 @@ export function AppComponent(props) {
       );
     } else {
       const icon = component.icon || {};
-      const iconClassName = icon.class || 'fa-cubes';
+      const iconClassName = translateClass4To5(icon.class) || 'fas fa-cubes';
       const style = {
         color: icon.color,
         backgroundColor: icon.backgroundColor,
@@ -45,7 +46,7 @@ export function AppComponent(props) {
       return (
         <div className="picture">
           <div className="icon" style={style}>
-            <i className={`fa fa-fw ${iconClassName}`} />
+            <i className={`${iconClassName} fa-fw`} />
           </div>
         </div>
       );

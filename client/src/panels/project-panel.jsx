@@ -149,7 +149,7 @@ export function ProjectPanel(props) {
         onClick: (isApplying) ? handleCancelJoinClick : handleJoinClick,
       };
       const signOutProps = {
-        icon: 'sign-out',
+        icon: 'sign-out-alt',
         label: t('project-management-sign-out'),
         onClick: handleSignOutClick,
       };
