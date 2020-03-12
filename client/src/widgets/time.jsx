@@ -63,9 +63,12 @@ export function Time(props) {
 
   useEffect(() => {
     if (updateAfter) {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         setUpdateTime(new Date);
       }, updateAfter * 1000);
+      return () => {
+        clearTimeout(timeout);
+      };
     }
   }, [ updateAfter ]);
 
