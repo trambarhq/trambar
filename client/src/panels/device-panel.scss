@@ -46,37 +46,35 @@
     font-size: 1.8em;
     text-align: center;
 
-    .fa {
-      &.background {
-        display: block;
-        color: $mobile-device-icon-color;
+    .background {
+      display: block;
+      color: $mobile-device-icon-color;
+    }
+
+    .icon-overlay {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0.5em;
+      font-size: 0.4em;
+      height: 1em;
+      width: 1em;
+      text-align: center;
+      margin: auto;
+
+      &.fa-android {
+        color: $mobile-device-android-icon-color;
       }
 
-      &.icon-overlay {
-        position: absolute;
-        left: 0;
-        top: 0;
-        right: 0;
-        bottom: 0.5em;
-        font-size: 0.4em;
-        height: 1em;
-        width: 1em;
-        text-align: center;
-        margin: auto;
+      &.fa-windows {
+        color: $mobile-device-windows-icon-color;
+        font-size: 0.35em;
+      }
 
-        &.fa-android {
-          color: $mobile-device-android-icon-color;
-        }
-
-        &.fa-windows {
-          color: $mobile-device-windows-icon-color;
-          font-size: 0.35em;
-        }
-
-        &.fa-apple {
-          color: $mobile-device-ios-icon-color;
-          bottom: 0.4em;
-        }
+      &.fa-apple {
+        color: $mobile-device-ios-icon-color;
+        bottom: 0.4em;
       }
     }
   }

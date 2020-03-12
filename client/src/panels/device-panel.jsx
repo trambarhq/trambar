@@ -74,16 +74,16 @@ export function DevicePanel(props) {
 
 function DeviceIcon(props) {
   const { type } = props;
-  let icon;
+  let iconClass;
   switch (type) {
     case 'ios':
-    case 'osx': icon = 'apple'; break;
-    default: icon = type;
+    case 'osx': iconClass = `fab fa-apple`; break;
+    default: iconClass = `fab fa-${type}`;
   }
   return (
     <div className="device-icon">
-      <i className="fas fa-tablet background" />
-      <i className={`fa fa-${icon} icon-overlay`} />
+      <i className="fas fa-tablet-alt background" />
+      <i className={`${iconClass} icon-overlay`} />
     </div>
   );
 }
