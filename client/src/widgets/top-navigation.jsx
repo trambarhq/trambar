@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import Bytes from 'bytes';
 
 // widgets
 import { Link } from './link.jsx';
@@ -148,7 +149,7 @@ function ConnectionIndicator(props) {
   const { env, uploading, searching } = props;
   const { t } = env.locale;
   if (uploading) {
-    const size = _.fileSize(uploading.bytes);
+    const size = Bytes(uploading.bytes);
     const count = uploading.files;
     const title = t('upload-progress-uploading-$count-files-$size-remaining', count, size);
     return (

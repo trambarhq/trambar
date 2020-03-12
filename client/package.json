@@ -25,6 +25,7 @@
     "b64-to-blob": "^1.2.19",
     "babel-loader": "^8.0.6",
     "bin-loader": "^0.1.0",
+    "bytes": "^3.1.0",
     "chartist": "^0.11.4",
     "css-loader": "^3.4.2",
     "diff": "^4.0.2",

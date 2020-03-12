@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
+import Bytes from 'bytes';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -67,7 +68,7 @@ export function PayloadManagerPanel(props) {
       const size = payload.getSize();
       let speed;
       if (size > 0) {
-        speed = `(${fileSize(size / elapsed)} per sec)`;
+        speed = `(${Bytes(size / elapsed)} per sec)`;
       }
       const duration = _.round(elapsed, (elapsed < 1) ? 2 : 0) + 's';
       return <div>Upload duration: {duration} {speed}</div>;
@@ -107,26 +108,12 @@ export function PayloadManagerPanel(props) {
     }
     let size;
     if (part.size > 0) {
-      size = <span className="file-size">{fileSize(part.size)}</span>;
+      size = <span className="file-size">{Bytes(part.size)}</span>;
     }
     return (
       <li key={index}>
         {type} - {name} {size}
       </li>
     );
-  }
-}
-
-function fileSize(bytes) {
-  if (bytes >= 1024 * 1024 * 1024) {
-    return `${_.round(bytes / (1024 * 1024 * 1024))} GB`;
-  } else if (bytes >= 1024 * 1024) {
-    return `${_.round(bytes / (1024 * 1024))} MB`;
-  } else if (bytes >= 1024) {
-    return `${_.round(bytes / 1024)} KB`;
-  } else if (bytes > 0) {
-    return `${bytes} bytes`;
-  } else {
-    return '0';
   }
 }
