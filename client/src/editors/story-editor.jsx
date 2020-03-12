@@ -64,7 +64,8 @@ export function StoryEditor(props) {
     original: story || createBlankStory(currentUser),
     transform: adjustStory,
   });
-  const markdownRes = useMarkdownResources(draft.get('resources'), env);
+  const resources = draft.get('details.resources', []);
+  const markdownRes = useMarkdownResources(resources, env);
   const [ error, run ] = useErrorCatcher(true);
   const [ confirmationRef, confirm ] = useConfirmation();
   const [ input ] = useState({ last: null })
@@ -243,6 +244,18 @@ export function StoryEditor(props) {
       }
     }
   }, [ draft.get('type') ]);
+  useEffect(() => {
+    const { zoomed, selected, referencedZoomable } = markdownRes;
+    if (zoomed) {
+      const selectedIndex = referencedZoomable.indexOf(selected);
+      if (selectedIndex !== -1) {
+        // switch to media preview
+        setSelectedResourceIndex(selectedIndex);
+        options.set('preview', 'media');
+      }
+      markdownRes.onClose();
+    }
+  }, [ markdownRes.zoomed, markdownRes.selected ]);
 
   const classNames = [ 'story-editor' ] ;
   if (highlighting) {
@@ -472,7 +485,7 @@ export function StoryEditor(props) {
     }
     return (
       <div className="story-contents">
-        <div className={classNames.join(' ')}>
+        <div className={classNames.join(' ')} onClick={markdownRes.onClick}>
           {markdown ? renderMarkdown(textProps) : renderPlainText(textProps)}
         </div>
       </div>

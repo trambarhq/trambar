@@ -19,7 +19,7 @@ function renderMarkdown(props) {
   } else if (type === 'task-list') {
     return renderTaskList(text, answers, onChange, onReference);
   } else {
-    return renderText(text);
+    return renderText(text, onReference);
   }
 }
 
@@ -237,7 +237,7 @@ function renderListItems(listTokens, onReference) {
 
 class CustomParser extends Parser {
   constructor(options) {
-    super({ ...options, inlineLexerClass: CustomInlineLexer });
+    super(options, { inlineLexerClass: CustomInlineLexer });
   }
 
   detect(text) {
@@ -337,17 +337,18 @@ class CustomParser extends Parser {
 }
 
 class CustomInlineLexer extends InlineLexer {
-  findRefLink(name, forImage) {
-    let link = super.findRefLink(name, forImage);
+  findRefLink(name, type) {
+    let link = super.findRefLink(name, type);
     if (link) {
       return link;
     }
+    const { onReference } = this.options;
     if (onReference) {
       link = onReference({
         type: 'reference',
         target: this,
         name,
-        forImage,
+        type,
       });
     }
     return link;

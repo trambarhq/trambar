@@ -255,11 +255,11 @@ export function ReactionView(props) {
   }
 
   function renderReferencedMediaDialog() {
-    const { zoomed, zoomable, selected, onClose } = markdownResources;
-    const selectedIndex = _.indexOf(zoomable, selected);
+    const { zoomed, referencedZoomable, selected, onClose } = markdownResources;
+    const selectedIndex = _.indexOf(referencedZoomable, selected);
     const dialogProps = {
-      show: zoomed,
-      resources: zoomable,
+      show: zoomed && (selectedIndex !== -1),
+      resources: referencedZoomable,
       selectedIndex,
       env,
       onClose,

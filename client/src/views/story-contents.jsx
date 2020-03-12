@@ -519,11 +519,11 @@ export function StoryContents(props) {
   }
 
   function renderReferencedMediaDialog() {
-    const { zoomed, zoomable, selected, onClose } = markdownRes;
-    const selectedIndex = _.indexOf(zoomable, selected);
+    const { zoomed, referencedZoomable, selected, onClose } = markdownRes;
+    const selectedIndex = _.indexOf(referencedZoomable, selected);
     const dialogProps = {
-      show: zoomed,
-      resources: zoomable,
+      show: zoomed && (selectedIndex !== -1),
+      resources: referencedZoomable,
       selectedIndex,
       env,
       onClose,

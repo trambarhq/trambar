@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import { getAudioURL, getImageURL } from 'common/objects/utils/resource-utils.js';
+import { getAudioURL, getImageURL, isZoomable } from 'common/objects/utils/resource-utils.js';
 
 // widgets
 import { MediaButton } from '../widgets/media-button.jsx';
@@ -27,13 +27,7 @@ export function MediaView(props) {
   const maxResourceIndex = resources.length - 1;
   const resourceIndex = _.min([ selectedIndex, maxResourceIndex]);
   const resource = resources[resourceIndex];
-  const zoomableResources = _.filter(resources, (res) => {
-    switch (res.type) {
-      case 'image':
-      case 'video':
-        return true;
-    }
-  });
+  const zoomableResources = _.filter(resources, isZoomable);
 
   const handleBackwardClick = useListener((evt) => {
     if (resourceIndex > 0) {

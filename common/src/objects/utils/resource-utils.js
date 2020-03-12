@@ -444,17 +444,17 @@ function getAudioURL(res, params, env) {
   return url;
 }
 
-function getMarkdownIconURL(res, forImage, env) {
-  if (forImage)  {
+function getMarkdownIconURL(res, type, env) {
+  if (type === 'image')  {
     // images are style at height = 1.5em
-    let params = {
+    const params = {
       height: 24,
       jsonURL: true
     };
     let imageURL = getImageURL(res, params, env);
     if (!imageURL) {
-      let speakerURL = require('!file-loader!../../../assets/speaker.svg');
       if (res.type === 'audio') {
+        const speakerURL = require('!file-loader!../../../assets/speaker.svg');
         imageURL = `${speakerURL}#${encodeURI(res.url)}`;
       }
     }
@@ -537,6 +537,22 @@ function getBandwidth(networkType) {
   }
 }
 
+/**
+ * Return true if the resource is an image or a video
+ *
+ * @param  {Object}  res
+ *
+ * @return {Boolean}
+ */
+function isZoomable(res) {
+  switch (res.type) {
+    case 'image':
+    case 'video':
+      return true;
+  }
+  return false;
+}
+
 export {
   mergeLists,
   getImageDimensions,
@@ -551,4 +567,5 @@ export {
   getMarkdownIconURL,
   parseJSONEncodedURL,
   attachMosaic,
+  isZoomable,
 };

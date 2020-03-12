@@ -3,7 +3,7 @@ import RelaksMediaCapture from 'relaks-media-capture';
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
 import { findReferencedResource } from 'common/utils/markdown.js';
-import { getMarkdownIconURL, getAudioURL } from 'common/objects/utils/resource-utils.js';
+import { getMarkdownIconURL, getAudioURL, isZoomable } from 'common/objects/utils/resource-utils.js';
 import { useLatest, useAfterglow, useConfirmation, useSelectionBuffer, useDraftBuffer } from 'common/hooks.js';
 import { AsyncDraftBuffer } from 'common/hooks.js';
 
@@ -73,40 +73,45 @@ function useMarkdownResources(resources, env) {
   const [ audioURL, setAudioURL ] = useState('');
   const [ zoomed, setZoomed ] = useState(false, true);
   const unreferenced = _.slice(resources);
+  const unreferencedZoomable = _.filter(unreferenced, isZoomable);
   const referenced = [];
-  const zoomable = _.filter(resources, (res) => {
-    switch (res.type) {
-      case 'image':
-      case 'video':
-        return true;
-    }
-  });
+  const referencedZoomable = [];
 
   const onReference = useListener((evt) => {
     const res = findReferencedResource(resources, evt.name);
     if (res) {
       referenced.push(res);
       _.pull(unreferenced, res);
-      _.pull(zoomable, res);
-      const url = getMarkdownIconURL(res, evt.forImage, env);
-      return { href: url, title: evt.name };
+      if (isZoomable(res)) {
+        referencedZoomable.push(res);
+        _.pull(unreferencedZoomable, res);
+      }
+      const href = getMarkdownIconURL(res, evt.type, env);
+      const hrefHTML = href;
+      const title = evt.name;
+      const titleHTML = title;
+      return { href, hrefHTML, title, titleHTML };
     }
   });
   const onClose = useListener((evt) => {
     setZoomed(false);
   });
   const onClick = useListener((evt) => {
-    // TODO: this needs to be reworked somehow
-    return;
-    evt.preventDefault();
-
     let target = evt.target;
     if (target.viewportElement) {
       target = target.viewportElement;
     }
+    const style = getComputedStyle(target);
+    if (style.cursor === 'pointer') {
+      evt.preventDefault();
+    } else {
+      // ignore it since it's not supposed to be clickable
+      return;
+    }
+
     let name;
     if (target.tagName === 'svg') {
-      let title = target.getElementsByTagName('title')[0];
+      const title = target.getElementsByTagName('title')[0];
       if (title) {
         name = title.textContent;
       }
@@ -114,13 +119,13 @@ function useMarkdownResources(resources, env) {
       name = evt.target.title;
     }
     if (name) {
-      let res = findReferencedResource(resources, name);
+      const res = findReferencedResource(resources, name);
       if (res) {
-        if (res.type === 'image' || res.type === 'video') {
+        if (isZoomable(res)) {
           setName(name);
           setZoomed(true);
         } else if (res.type === 'website') {
-          //window.open(res.url, '_blank');
+          window.open(res.url, '_blank');
         } else if (res.type === 'audio') {
           const version = _.first(_.keys(res.versions));
           const selected = getAudioURL(res, { version }, env);
@@ -128,19 +133,20 @@ function useMarkdownResources(resources, env) {
         }
       }
     } else {
-      // TODO: WTF?
-      //openPopUpWindow(target);
+      openPopUpWindow(target);
     }
   });
   const onAudioEnd = useListener((evt) => {
     setAudioURL('');
   });
+  const selected = findReferencedResource(resources, name);
   const context = {
     zoomed,
     unreferenced,
+    unreferencedZoomable,
     referenced,
-    zoomable,
-    selected: _.find(resources, name),
+    referencedZoomable,
+    selected,
 
     onReference,
     onClick,
