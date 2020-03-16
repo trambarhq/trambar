@@ -75,7 +75,7 @@ export class Change {
       this.dispatched = true;
 
       try {
-        let objects = await this.onDispatch(this);
+        const objects = await this.onDispatch(this);
         this.committed = true;
         this.received = objects;
         this.time = new Date;
@@ -135,7 +135,7 @@ export class Change {
     }
     let dependent = false;
     for (let object of this.objects) {
-      let index = _.findIndex(earlierOp.objects, { id: object.id });
+      const index = _.findIndex(earlierOp.objects, { id: object.id });
       if (index !== -1 && !earlierOp.removed[index]) {
         if (!earlierOp.dispatched || object.id >= 1) {
           let earlierObject = earlierOp.objects[index];
@@ -159,7 +159,7 @@ export class Change {
     if (dependent) {
       // we need to replace the temporary ID with a permanent one before
       // this change is dispatch; otherwise multiple objects would be created
-      let dependentPromise = this.acquirePermanentIDs(earlierOp);
+      const dependentPromise = this.acquirePermanentIDs(earlierOp);
       this.dependentPromises.push(dependentPromise);
     } else {
       // cancel the earlier op if everything was removed from it
@@ -202,7 +202,7 @@ export class Change {
    * @return {Number|undefined}
    */
   findPermanentID(temporaryID) {
-    let index = _.findIndex(this.delivered, { id: temporaryID });
+    const index = _.findIndex(this.delivered, { id: temporaryID });
     if (index !== -1) {
       if (this.received) {
         let object = this.received[index];
@@ -227,17 +227,17 @@ export class Change {
       if (this.removed[i]) {
         continue;
       }
-      let index = _.findIndex(search.results, { id: uncommittedObject.id });
+      const index = _.findIndex(search.results, { id: uncommittedObject.id });
       if (index !== -1) {
         if (uncommittedObject.deleted && !includeDeleted) {
           search.results.splice(index, 1);
         } else {
-          let match = matchSearchCriteria(search.table, uncommittedObject, search.criteria);
+          const match = matchSearchCriteria(search.table, uncommittedObject, search.criteria);
           if (match) {
             // merge the new object with the original if the new one
             // doesn't have everything
-            let originalObject = search.results[index];
-            let missingProperties = _.some(originalObject, (value, key) => {
+            const originalObject = search.results[index];
+            const missingProperties = _.some(originalObject, (value, key) => {
               if (!uncommittedObject.hasOwnProperty(key)) {
                 return true;
               }
@@ -255,7 +255,7 @@ export class Change {
         }
       } else {
         if (!(uncommittedObject.deleted && !includeDeleted)) {
-          let match = matchSearchCriteria(search.table, uncommittedObject, search.criteria);
+          const match = matchSearchCriteria(search.table, uncommittedObject, search.criteria);
           if (match) {
             search.results.push(uncommittedObject);
           }

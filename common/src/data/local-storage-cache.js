@@ -17,9 +17,9 @@ class LocalStorageCache {
   }
 
   initialize() {
-    let { databaseName } = this.options;
-    let json = localStorage.getItem(databaseName);
-    let localData = decodeJSON(json);
+    const { databaseName } = this.options;
+    const json = localStorage.getItem(databaseName);
+    const localData = decodeJSON(json);
     if (localData instanceof Object) {
       this.localData = localData;
     }
@@ -29,9 +29,9 @@ class LocalStorageCache {
   }
 
   getRows(server, schema, table) {
-    let store = (schema === 'local') ? this.localData : this.remoteData;
-    let path = [ server, schema, table ];
-    let rows = _.get(store, path);
+    const store = (schema === 'local') ? this.localData : this.remoteData;
+    const path = [ server, schema, table ];
+    const rows = _.get(store, path);
     if (!rows) {
       rows = [];
       _.set(store, path, rows);
@@ -48,8 +48,8 @@ class LocalStorageCache {
       // don't save remote data
       return;
     }
-    let { databaseName } = this.options;
-    let json = JSON.stringify(this.localData);
+    const { databaseName } = this.options;
+    const json = JSON.stringify(this.localData);
     localStorage.setItem(databaseName, json);
   }
 
@@ -63,12 +63,12 @@ class LocalStorageCache {
    * @return {Promise<Array<Object>>}
    */
   async find(query) {
-    let { server ,schema, table, criteria } = query;
+    const { server ,schema, table, criteria } = query;
     if (server == undefined) {
       server = 'localhost';
     }
-    let rows = this.getRows(server, schema, table);
-    let keyName = this.getKeyName(schema);
+    const rows = this.getRows(server, schema, table);
+    const keyName = this.getKeyName(schema);
     let objects;
     if (criteria && criteria.id !== undefined && _.size(criteria) === 1) {
       // look up by id
@@ -97,12 +97,12 @@ class LocalStorageCache {
    * @return {Promise<Array<Object>>}
    */
   async save(location, objects) {
-    let { server, schema, table } = location;
+    const { server, schema, table } = location;
     if (server == undefined) {
       server = 'localhost';
     }
-    let rows = this.getRows(server, schema, table);
-    let keyName = this.getKeyName(schema);
+    const rows = this.getRows(server, schema, table);
+    const keyName = this.getKeyName(schema);
     for (let object of objects) {
       replaceByKey(rows, _.cloneDeep(object), keyName);
     }
@@ -119,12 +119,12 @@ class LocalStorageCache {
    * @return {Promise<Array<Object>>}
    */
   async remove(location, objects) {
-    let { server, schema, table } = location;
+    const { server, schema, table } = location;
     if (server == undefined) {
       server = 'localhost';
     }
-    let rows = this.getRows(server, schema, table);
-    let keyName = this.getKeyName(schema);
+    const rows = this.getRows(server, schema, table);
+    const keyName = this.getKeyName(schema);
     for (let object of objects) {
       removeByKey(rows, object, keyName);
     }
@@ -146,12 +146,11 @@ class LocalStorageCache {
    * @return {Promise<Number>}
    */
   clean(criteria) {
-    let sql, params;
-    let store = this.remoteData;
+    const store = this.remoteData;
     let count = 0;
     if (criteria.server !== undefined) {
-      let server = criteria.server;
-      let schemas = _.get(store, server);
+      const server = criteria.server;
+      const schemas = _.get(store, server);
       _.each(schemas, (schema) => {
         _.each(schema, (table) => {
           count += table.length;
@@ -160,7 +159,7 @@ class LocalStorageCache {
       _.set(store, server, undefined);
     } else if (criteria.count !== undefined) {
       // push all objects into a list
-      let candidates = [];
+      const candidates = [];
       _.each(store, (schemas) => {
         _.each(schemas, (schema) => {
           _.each(schema, (table) => {
@@ -223,7 +222,7 @@ class LocalStorageCache {
    */
   reset(address, schema) {
     if (schema !== 'local') {
-      let path = _.filter([ address, schema ]);
+      const path = _.filter([ address, schema ]);
       _.unset(this.remoteData, path);
     }
   }
@@ -238,18 +237,18 @@ function decodeJSON(s) {
 }
 
 function findByKey(rows, key, keyName) {
-  let criteria = {};
+  const criteria = {};
   criteria[keyName] = key;
-  let index = _.sortedIndexBy(rows, criteria, keyName);
-  let target = rows[index];
+  const index = _.sortedIndexBy(rows, criteria, keyName);
+  const target = rows[index];
   if (target && target[keyName] === key) {
     return target;
   }
 }
 
 function replaceByKey(rows, object, keyName) {
-  let index = _.sortedIndexBy(rows, object, keyName);
-  let target = rows[index];
+  const index = _.sortedIndexBy(rows, object, keyName);
+  const target = rows[index];
   if (target && target[keyName] === object[keyName]) {
     rows[index] = object;
   } else {
@@ -258,8 +257,8 @@ function replaceByKey(rows, object, keyName) {
 }
 
 function removeByKey(rows, object, keyName) {
-  let index = _.sortedIndexBy(rows, object, keyName);
-  let target = rows[index];
+  const index = _.sortedIndexBy(rows, object, keyName);
+  const target = rows[index];
   if (target && target[keyName] === object[keyName]) {
     rows.splice(index, 1);
   }

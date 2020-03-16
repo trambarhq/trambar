@@ -29,7 +29,7 @@ class Database {
    */
   async findOne(query) {
     query = _.extend({ expected: 1 }, query);
-    let objects = await this.find(query);
+    const objects = await this.find(query);
     return objects[0] || null;
   }
 
@@ -68,7 +68,7 @@ class Database {
         throw new Error('saveOne() expects an object');
       }
     }
-    let objects = await this.save(location, [ object ], options);
+    const objects = await this.save(location, [ object ], options);
     return objects[0] || null;
   }
 
@@ -104,7 +104,7 @@ class Database {
         throw new Error('removeOne() expects an object');
       }
     }
-    let objects = await this.remove(location, [ object ]);
+    const objects = await this.remove(location, [ object ]);
     return objects[0] || null;
   }
 
@@ -144,7 +144,7 @@ class Database {
    * @return {Database}
    */
   use(...varSets) {
-    let newContext = {};
+    const newContext = {};
     _.assign(newContext, this.context);
     for (let varSet of varSets) {
       _.assign(newContext, varSet);

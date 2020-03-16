@@ -14,12 +14,12 @@ import _ from 'lodash';
 function matchSearchCriteria(table, object, criteria) {
   let matching = true;
   for (let name in criteria) {
-    let desiredValue = criteria[name];
+    const desiredValue = criteria[name];
     if (desiredValue === undefined) {
       continue;
     }
     if (object.hasOwnProperty(name)) {
-      let actualValue = object[name];
+      const actualValue = object[name];
       if (desiredValue instanceof Array) {
         if (actualValue instanceof Array) {
           // array value matches an array when there's overlapping
@@ -63,9 +63,9 @@ function matchSearchCriteria(table, object, criteria) {
           break;
         case 'time_range':
           if (desiredValue) {
-            let times = desiredValue.substr(1, desiredValue.length - 2).split(',');
-            let start = times[0];
-            let end = times[1];
+            const times = desiredValue.substr(1, desiredValue.length - 2).split(',');
+            const start = times[0];
+            const end = times[1];
             if (!(start <= object.ptime && object.ptime < end)) {
               matching = false;
             }
@@ -117,22 +117,22 @@ function limitSearchResults(table, objects, criteria) {
     }
     if (criteria.per_user_limit) {
       // apply per user limit
-      let limit = criteria.per_user_limit;
-      let countsByUser = {};
-      let excessObjects = [];
+      const limit = criteria.per_user_limit;
+      const countsByUser = {};
+      const excessObjects = [];
       for (let i = objects.length - 1; i >= 0; i--) {
-        let object = objects[i];
+        const object = objects[i];
         let keep = false;
         if (object.hasOwnProperty('user_id')) {
-          let userID = object.user_id;
-          let count = countsByUser[userID] || 0;
+          const userID = object.user_id;
+          const count = countsByUser[userID] || 0;
           if (count < limit) {
             countsByUser[userID] = count + 1;
             keep = true;
           }
         } else if (object.hasOwnProperty('user_ids')) {
           for (let userID of object.user_ids) {
-            let count = countsByUser[userID] || 0;
+            const count = countsByUser[userID] || 0;
             if (count < limit) {
               countsByUser[userID] = count + 1;
               keep = true;

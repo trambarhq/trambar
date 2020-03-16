@@ -81,7 +81,7 @@ export class RemoteDataSource extends EventEmitter {
     if (location.schema === 'local') {
       return 0;
     }
-    let session = this.obtainSession(location);
+    const session = this.obtainSession(location);
     if (session.token) {
       return session.user_id;
     } else {
@@ -98,7 +98,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise<Array<Object>>}
    */
   async find(query) {
-    let newSearch = new Search(query);
+    const newSearch = new Search(query);
     let blocking;
     if (query.blocking === true) {
       blocking = 'insufficient';
@@ -109,9 +109,9 @@ export class RemoteDataSource extends EventEmitter {
     } else {
       blocking = query.blocking;
     }
-    let required = query.required || false;
-    let committed = query.committed || false;
-    let refreshInterval = this.options.refreshInterval;
+    const required = query.required || false;
+    const committed = query.committed || false;
+    const refreshInterval = this.options.refreshInterval;
     let search = _.find(this.recentSearchResults, (search) => {
       return search.match(newSearch);
     });
@@ -177,7 +177,7 @@ export class RemoteDataSource extends EventEmitter {
       }
     }
 
-    let includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
+    const includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
     if (includeUncommitted && !committed) {
       search = this.applyUncommittedChanges(search);
     }
@@ -211,7 +211,7 @@ export class RemoteDataSource extends EventEmitter {
     if (objects.length === 0) {
       return [];
     }
-    let storage = this.addStorage(new Storage(location, objects, options));
+    const storage = this.addStorage(new Storage(location, objects, options));
     if (storage.local) {
       await this.updateLocalDatabase(storage);
     } else {
@@ -226,8 +226,8 @@ export class RemoteDataSource extends EventEmitter {
     if (_.get(this.options.discoveryFlags, 'include_deleted')) {
       return storage.results;
     } else {
-      let deleted = _.filter(storage.results, { deleted: true });
-      let saved = _.difference(storage.results, deleted);
+      const deleted = _.filter(storage.results, { deleted: true });
+      const saved = _.difference(storage.results, deleted);
       return saved;
     }
   }
@@ -244,7 +244,7 @@ export class RemoteDataSource extends EventEmitter {
     if (objects.length === 0) {
       return [];
     }
-    let removal = this.addRemoval(new Removal(location, objects));
+    const removal = this.addRemoval(new Removal(location, objects));
     if (removal.local) {
       await this.updateLocalDatabase(removal);
     } else {
@@ -270,7 +270,7 @@ export class RemoteDataSource extends EventEmitter {
    */
   hasAuthorization(location) {
     try {
-      let session = this.obtainSession(location);
+      const session = this.obtainSession(location);
       return (session.token) ? true : false;
     } catch (err) {
       return false;
@@ -286,7 +286,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise<Object>}
    */
   beginSession(location) {
-    let session = this.obtainSession(location);
+    const session = this.obtainSession(location);
     if (!session.establishmentPromise) {
       session.establishmentPromise = this.establishSession(session);
     }
@@ -301,7 +301,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise<Boolean>}
    */
   async checkAuthorization(location) {
-    let session = this.obtainSession(location);
+    const session = this.obtainSession(location);
     if (!session.authenticationPromise) {
       session.authenticationPromise = this.confirmAuthorization(session);
     }
@@ -317,7 +317,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise}
    */
   async authenticate(location, credentials) {
-    let session = this.obtainSession(location);
+    const session = this.obtainSession(location);
     if (!session.authenticationPromise) {
       session.authenticationPromise = this.authenticateSession(session, credentials);
     }
@@ -332,7 +332,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise}
    */
   async endSession(location) {
-    let session = this.obtainSession(location);
+    const session = this.obtainSession(location);
     this.discardSession(session);
     if (!session.establishmentPromise) {
       return;
@@ -348,7 +348,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise<String>}
    */
   async beginMobileSession(location) {
-    let mobileSession = this.obtainSession(location, 'mobile');
+    const mobileSession = this.obtainSession(location, 'mobile');
     if (!mobileSession.establishmentPromise) {
       mobileSession.establishmentPromise = this.establishMobileSession(mobileSession);
     }
@@ -387,7 +387,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise}
    */
   releaseMobileSession(location) {
-    let mobileSession = this.obtainSession(location, 'mobile');
+    const mobileSession = this.obtainSession(location, 'mobile');
     this.discardSession(mobileSession);
   }
 
@@ -400,10 +400,10 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise}
    */
   async endMobileSession(location, handle) {
-    let { address } = location;
-    let url = `${address}/srv/session/`;
-    let options = { responseType: 'json', contentType: 'json' };
-    let payload = { handle };
+    const { address } = location;
+    const url = `${address}/srv/session/`;
+    const options = { responseType: 'json', contentType: 'json' };
+    const payload = { handle };
     await performHTTPRequest('DELETE', url, payload, options);
   }
 
@@ -417,9 +417,9 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Number|undefined}
    */
   findTemporaryID(location, permanentID) {
-    let path = [ location.address, location.schema, location.table ];
-    let list = _.get(this.idMappings, path);
-    let entry = _.find(list, { permanent: permanentID });
+    const path = [ location.address, location.schema, location.table ];
+    const list = _.get(this.idMappings, path);
+    const entry = _.find(list, { permanent: permanentID });
     if (entry) {
       return entry.temporary;
     }
@@ -434,9 +434,9 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Number|undefined}
    */
   findPermanentID(location, temporaryID) {
-    let path = [ location.address, location.schema, location.table ];
-    let list = _.get(this.idMappings, path);
-    let entry = _.find(list, { temporary: temporaryID });
+    const path = [ location.address, location.schema, location.table ];
+    const list = _.get(this.idMappings, path);
+    const entry = _.find(list, { temporary: temporaryID });
     if (entry) {
       return entry.permanent;
     }
@@ -468,7 +468,7 @@ export class RemoteDataSource extends EventEmitter {
       changes = this.omitOwnChanges(changes);
     }
     await this.reconcileChanges(changes);
-    let invalidated = [];
+    const invalidated = [];
     for (let search of this.recentSearchResults) {
       if (!search.dirty) {
         let dirty;
@@ -478,8 +478,8 @@ export class RemoteDataSource extends EventEmitter {
               if (search.isMeetingExpectation()) {
                 // we have all the possible results
                 // see if the changed object is among them
-                let index = _.sortedIndexBy(search.results, { id: their.id }, 'id');
-                let object = search.results[index];
+                const index = _.sortedIndexBy(search.results, { id: their.id }, 'id');
+                const object = search.results[index];
                 if (object && object.id === their.id) {
                   dirty = true;
                   break;
@@ -550,16 +550,12 @@ export class RemoteDataSource extends EventEmitter {
    * @param  {Object} object
    */
   refresh(location, object) {
-    let relevantSearches = this.getRelevantRecentSearches(location);
+    const relevantSearches = this.getRelevantRecentSearches(location);
     for (let search of relevantSearches) {
-      let results = search.results;
-      let dirty = false;
-      let index = _.sortedIndexBy(results, object, 'id');
-      let target = results[index];
+      const results = search.results;
+      const index = _.sortedIndexBy(results, object, 'id');
+      const target = results[index];
       if (target && target.id === object.id) {
-        dirty = true;
-      }
-      if (dirty) {
         search.dirty = true;
       }
     }
@@ -596,12 +592,12 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise<Boolean>}
    */
   async waitForChange(location, object, timeout) {
-    let { address, schema, table } = location;
-    let { id } = object;
-    let monitor = new ChangeMonitor(address, schema, table, id);
+    const { address, schema, table } = location;
+    const { id } = object;
+    const monitor = new ChangeMonitor(address, schema, table, id);
     this.changeMonitors.push(monitor);
     monitor.setTimeout(timeout);
-    let result = await monitor.promise;
+    const result = await monitor.promise;
     _.pull(this.changeMonitors, monitor);
     return result;
   }
@@ -616,7 +612,7 @@ export class RemoteDataSource extends EventEmitter {
   omitOwnChanges(changes) {
     return _.filter(changes, (their) => {
       // examine changes that have been sent earlier
-      let relevantChanges = _.filter(this.changeQueue, (change) => {
+      const relevantChanges = _.filter(this.changeQueue, (change) => {
         if (change.dispatched && !change.failed) {
           if (change.matchLocation(their)) {
             return true;
@@ -670,12 +666,12 @@ export class RemoteDataSource extends EventEmitter {
         // it's in-flight already
         continue;
       }
-      let relevantChanges = _.filter(changes, (their) => {
+      const relevantChanges = _.filter(changes, (their) => {
         return change.matchLocation(their);
       });
 
       // look for uncommitted objects that were changed remotely
-      let affectedObjects = _.filter(change.objects, (own, index) => {
+      const affectedObjects = _.filter(change.objects, (own, index) => {
         if (!change.removed[index]) {
           if (!changes) {
             // we're dealing with a reconnection scenario
@@ -695,10 +691,10 @@ export class RemoteDataSource extends EventEmitter {
         continue;
       }
       // load the (possibly) new objects
-      let affectedIDs = _.map(affectedObjects, 'id');
-      let remoteObjects = await this.retrieveRemoteObjects(change.location, affectedIDs, true);
+      const affectedIDs = _.map(affectedObjects, 'id');
+      const remoteObjects = await this.retrieveRemoteObjects(change.location, affectedIDs, true);
       for (let own of affectedObjects) {
-        let their = _.find(remoteObjects, { id: own.id });
+        const their = _.find(remoteObjects, { id: own.id });
         if (their) {
           if (their.gn > own.gn) {
             let preserve = false;
@@ -716,7 +712,7 @@ export class RemoteDataSource extends EventEmitter {
             // if preventDefault() wasn't called, then the change
             // is cancelled
             if (!preserve) {
-              let index = _.indexOf(change.objects, own);
+              const index = _.indexOf(change.objects, own);
               change.removed[index] = true;
             }
           }
@@ -737,7 +733,7 @@ export class RemoteDataSource extends EventEmitter {
    */
   applyUncommittedChanges(search) {
     let newSearch;
-    let includeDeleted = _.get(this.options.discoveryFlags, 'include_deleted');
+    const includeDeleted = _.get(this.options.discoveryFlags, 'include_deleted');
     for (let change of this.changeQueue) {
       if (change.matchLocation(search)) {
         if (!change.committed && !change.canceled && !change.error) {
@@ -761,11 +757,11 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Object|null}
    */
   obtainSession(location, type) {
-    let { address } = location;
+    const { address } = location;
     if (!address) {
       throw new HTTPError(400);
     }
-    let { area } = this.options;
+    const { area } = this.options;
     if (!type) {
       type = 'primary';
     }
@@ -796,13 +792,13 @@ export class RemoteDataSource extends EventEmitter {
   }
 
   async establishSession(session) {
-    let { sessionRetryInterval } = this.options;
+    const { sessionRetryInterval } = this.options;
     for (;;) {
       try {
-        let url = `${session.address}/srv/session/`;
-        let options = { responseType: 'json', contentType: 'json' };
-        let payload = { area: session.area };
-        let res = await performHTTPRequest('POST', url, payload, options);
+        const url = `${session.address}/srv/session/`;
+        const options = { responseType: 'json', contentType: 'json' };
+        const payload = { area: session.area };
+        const res = await performHTTPRequest('POST', url, payload, options);
         session.handle = res.session.handle;
         session.info  = {
           system: res.system,
@@ -820,12 +816,12 @@ export class RemoteDataSource extends EventEmitter {
     try {
       await session.establishmentPromise;
 
-      let url = `${session.address}/srv/session/`;
-      let options = { responseType: 'json' };
-      let payload = {
+      const url = `${session.address}/srv/session/`;
+      const options = { responseType: 'json' };
+      const payload = {
         handle: session.handle
       };
-      let res = await performHTTPRequest('GET', url, payload, options);
+      const res = await performHTTPRequest('GET', url, payload, options);
       if (res && res.session) {
         this.grantAuthorization(session, res.session);
         return true;
@@ -848,7 +844,7 @@ export class RemoteDataSource extends EventEmitter {
       await session.establishmentPromise;
       let url, payload;
       if (credentials.type === 'password') {
-        let { username, password } = credentials;
+        const { username, password } = credentials;
         url = `${session.address}/srv/session/htpasswd/`;
         payload = {
           handle: session.handle,
@@ -856,8 +852,8 @@ export class RemoteDataSource extends EventEmitter {
           password
         };
       }
-      let options = { responseType: 'json', contentType: 'json' };
-      let res = await performHTTPRequest('POST', url, payload, options);
+      const options = { responseType: 'json', contentType: 'json' };
+      const res = await performHTTPRequest('POST', url, payload, options);
       this.grantAuthorization(session, res.session);
     } catch (err) {
       if (err.statusCode === 401) {
@@ -874,9 +870,9 @@ export class RemoteDataSource extends EventEmitter {
   async deauthorizeSession(session) {
     try {
       await session.establishmentPromise;
-      let url = `${session.address}/srv/session/`;
-      let options = { responseType: 'json', contentType: 'json' };
-      let payload = {
+      const url = `${session.address}/srv/session/`;
+      const options = { responseType: 'json', contentType: 'json' };
+      const payload = {
         handle: session.handle
       };
       await performHTTPRequest('DELETE', url, payload, options);
@@ -893,19 +889,19 @@ export class RemoteDataSource extends EventEmitter {
 
   async establishMobileSession(mobileSession) {
     try {
-      let parentSession = this.obtainSession(mobileSession);
+      const parentSession = this.obtainSession(mobileSession);
       if (!parentSession) {
         throw new HTTPError(400);
       }
       await parentSession.establishmentPromise;
-      let { area } = this.options;
-      let url = `${parentSession.address}/srv/session/`;
-      let options = { responseType: 'json', contentType: 'json' };
-      let payload = {
+      const { area } = this.options;
+      const url = `${parentSession.address}/srv/session/`;
+      const options = { responseType: 'json', contentType: 'json' };
+      const payload = {
         handle: parentSession.handle,
         area,
       };
-      let res = await performHTTPRequest('POST', url, payload, options);
+      const res = await performHTTPRequest('POST', url, payload, options);
       mobileSession.handle = res.session.handle;
       return mobileSession.handle;
     } catch (err) {
@@ -915,10 +911,10 @@ export class RemoteDataSource extends EventEmitter {
   }
 
   async authorizeMobileSession(session) {
-    let url = `${session.address}/srv/session/`;
-    let options = { responseType: 'json', contentType: 'json' };
-    let payload = { handle: session.handle };
-    let res = await performHTTPRequest('GET', url, payload, options);
+    const url = `${session.address}/srv/session/`;
+    const options = { responseType: 'json', contentType: 'json' };
+    const payload = { handle: session.handle };
+    const res = await performHTTPRequest('GET', url, payload, options);
     if (!res) {
       throw new HTTPError(400);
     }
@@ -932,8 +928,8 @@ export class RemoteDataSource extends EventEmitter {
    */
   clearExpiredSessions() {
     let changed = false;
-    let now = Moment().toISOString();
-    let soon = Moment().add(5, 'minute').toISOString();
+    const now = Moment().toISOString();
+    const soon = Moment().add(5, 'minute').toISOString();
     _.remove(this.sessions, (session) => {
       if (session.etime < now || (session.etime < soon && !session.token)) {
         changed = true;
@@ -955,7 +951,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {String}
    */
   getOAuthURL(location, oauthServer, type) {
-    let session = this.obtainSession(location);
+    const session = this.obtainSession(location);
     if (!session.handle) {
       return '';
     }
@@ -965,7 +961,7 @@ export class RemoteDataSource extends EventEmitter {
     } else if (type === 'test') {
       query += '&test=1';
     }
-    let url = `${session.address}/srv/session/${oauthServer.type}/?${query}`;
+    const url = `${session.address}/srv/session/${oauthServer.type}/?${query}`;
     return url;
   }
 
@@ -979,20 +975,20 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise}
    */
   async requestAuthentication(location) {
-    let session = this.obtainSession(location);
+    const session = this.obtainSession(location);
     if (session.token) {
       // user is already authenticated
       return;
     }
     // emit an event so a user-interface for authentication is shown
-    let event = new RemoteDataSourceEvent('authentication', this, { location });
+    const event = new RemoteDataSourceEvent('authentication', this, { location });
     this.triggerEvent(event);
     await event.waitForDecision();
-    let shouldWait = !event.defaultPrevented;
+    const shouldWait = !event.defaultPrevented;
     if (!shouldWait) {
       throw new HTTPError(401);
     }
-    let success = await this.waitForAuthorization(session);
+    const success = await this.waitForAuthorization(session);
     if (!success) {
       throw new HTTPError(401);
     }
@@ -1005,7 +1001,7 @@ export class RemoteDataSource extends EventEmitter {
    * @param  {Object} location
    */
   cancelAuthentication(location) {
-    let session = this.obtainSession(location);
+    const session = this.obtainSession(location);
     if (session.authorizationPromise) {
       if (session.authorizationPromise.resolve) {
         session.authorizationPromise.resolve(false);
@@ -1036,7 +1032,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {null}
    */
   grantAuthorization(session, sessionInfo) {
-    let now = Moment().toISOString();
+    const now = Moment().toISOString();
     if (!sessionInfo) {
       throw new HTTPError(500);
     }
@@ -1073,7 +1069,7 @@ export class RemoteDataSource extends EventEmitter {
   }
 
   restoreAuthorization(location, sessionInfo) {
-    let session = this.obtainSession(location);
+    const session = this.obtainSession(location);
     try {
       if (!session.establishmentPromise) {
         session.establishmentPromise = Promise.resolve(true);
@@ -1088,8 +1084,8 @@ export class RemoteDataSource extends EventEmitter {
 
   async searchLocalCache(search) {
     try {
-      let query = search.getQuery();
-      let location = search.getLocation();
+      const query = search.getQuery();
+      const location = search.getLocation();
       search.results = await this.cache.find(query);
       search.signature = await this.getCacheSignature(location);
     } catch (err) {
@@ -1098,11 +1094,11 @@ export class RemoteDataSource extends EventEmitter {
 
   async retrieveFromLocalCache(search, discovery) {
     try {
-      let location = search.getLocation();
-      let ids = search.getFetchList(discovery.ids);
+      const location = search.getLocation();
+      const ids = search.getFetchList(discovery.ids);
       if (!_.isEmpty(ids)) {
-        let query = _.assign({ criteria: { id: ids } }, location);
-        let objects = await this.cache.find(query);
+        const query = _.assign({ criteria: { id: ids } }, location);
+        const objects = await this.cache.find(query);
         search.results = insertObjects(search.results, objects);
       }
       search.signature = await this.getCacheSignature(location);
@@ -1124,7 +1120,7 @@ export class RemoteDataSource extends EventEmitter {
 
         if (!search.dirty) {
           if (search.isMeetingExpectation()) {
-            let refreshInterval = this.options.refreshInterval;
+            const refreshInterval = this.options.refreshInterval;
             if (search.isSufficientlyRecent(refreshInterval)) {
               return;
             }
@@ -1133,17 +1129,17 @@ export class RemoteDataSource extends EventEmitter {
       }
 
       search.start();
-      let location = search.getLocation();
-      let criteria = search.criteria;
-      let discovery = await this.discoverRemoteObjects(location, criteria);
+      const location = search.getLocation();
+      const criteria = search.criteria;
+      const discovery = await this.discoverRemoteObjects(location, criteria);
       if (search.remote) {
         await this.retrieveFromLocalCache(search, discovery);
         await this.verifyCacheSignature(search);
       }
       // use the list of ids and gns (generation number) to determine
       // which objects have changed and which have gone missing
-      let idsUpdated = search.getUpdateList(discovery.ids, discovery.gns);
-      let idsRemoved = search.getRemovalList(discovery.ids);
+      const idsUpdated = search.getUpdateList(discovery.ids, discovery.gns);
+      const idsRemoved = search.getRemovalList(discovery.ids);
 
       let newResults = search.results;
       if (!_.isEmpty(idsRemoved)) {
@@ -1151,7 +1147,7 @@ export class RemoteDataSource extends EventEmitter {
       }
       if (!_.isEmpty(idsUpdated)) {
         // retrieve the updated (or new) objects from server
-        let newObjects = await this.retrieveRemoteObjects(location, idsUpdated);
+        const newObjects = await this.retrieveRemoteObjects(location, idsUpdated);
         // then add them to the list
         newResults = insertObjects(newResults, newObjects);
       }
@@ -1159,7 +1155,7 @@ export class RemoteDataSource extends EventEmitter {
         newResults = [];
       }
 
-      let includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
+      const includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
       if (includeUncommitted) {
         // wait for any storage operation currently in flight to finish so
         // we don't end up with both the committed and the uncommitted copy
@@ -1197,14 +1193,14 @@ export class RemoteDataSource extends EventEmitter {
     if (!this.active || !this.options.cacheValidation) {
       return;
     }
-    let location = search.getLocation();
-    let remoteSignature = await this.getRemoteSignature(location);
+    const location = search.getLocation();
+    const remoteSignature = await this.getRemoteSignature(location);
     if (remoteSignature) {
       if (search.signature !== remoteSignature) {
         search.invalid = true;
         search.signature = remoteSignature;
 
-        let localSignature = await this.getCacheSignature(location);
+        const localSignature = await this.getCacheSignature(location);
         if (localSignature !== remoteSignature) {
           await this.clearLocalCache(search);
           await this.setCacheSignature(search, remoteSignature);
@@ -1221,10 +1217,10 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise<String>}
    */
   async getCacheSignature(location) {
-    let { address, schema } = location;
-    let key = `${address}/${schema}`;
-    let query = _.assign({}, signatureLocation, { criteria: { key } });
-    let results = await this.cache.find(query);
+    const { address, schema } = location;
+    const key = `${address}/${schema}`;
+    const query = _.assign({}, signatureLocation, { criteria: { key } });
+    const results = await this.cache.find(query);
     return _.get(results[0], 'signature', '');
   }
 
@@ -1237,9 +1233,9 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise}
    */
   async setCacheSignature(location, signature) {
-    let { address, schema } = location;
-    let key = `${address}/${schema}`;
-    let entry = { key, signature };
+    const { address, schema } = location;
+    const key = `${address}/${schema}`;
+    const entry = { key, signature };
     return this.cache.save(signatureLocation, [ entry ]);
   }
 
@@ -1272,7 +1268,7 @@ export class RemoteDataSource extends EventEmitter {
    */
   async clearLocalCache(location) {
     const { address, schema } = location;
-    let count = await this.cache.clean({ address, schema });
+    const count = await this.cache.clean({ address, schema });
     return count;
   }
 
@@ -1330,7 +1326,7 @@ export class RemoteDataSource extends EventEmitter {
    */
   async updateLocalCache(op) {
     try {
-      let location = op.getLocation();
+      const location = op.getLocation();
       if (op instanceof Search) {
         await this.cache.save(location, op.results);
         await this.cache.remove(location, op.missingResults);
@@ -1340,8 +1336,8 @@ export class RemoteDataSource extends EventEmitter {
         if (_.get(this.options.discoveryFlags, 'include_deleted')) {
           await this.cache.save(location, op.results);
         } else {
-          let deleted = _.filter(op.results, { deleted: true });
-          let saved = _.difference(op.results, deleted);
+          const deleted = _.filter(op.results, { deleted: true });
+          const saved = _.difference(op.results, deleted);
           await this.cache.save(location, saved);
           await this.cache.remove(location, deleted);
         }
@@ -1362,7 +1358,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise>}
    */
   async updateRemoteDatabase(storage) {
-    let change = new Change(storage.getLocation(), storage.objects, storage.options);
+    const change = new Change(storage.getLocation(), storage.objects, storage.options);
     // merge with uncommitted changes already in the queue
     for (let earlierOp of this.changeQueue) {
       if (!earlierOp.committed && !earlierOp.canceled) {
@@ -1375,9 +1371,9 @@ export class RemoteDataSource extends EventEmitter {
       return;
     }
     change.onDispatch = async (change) => {
-      let location = change.location;
-      let deliverables = change.deliverables();
-      let objects = _.map(deliverables, (object) => {
+      const location = change.location;
+      const deliverables = change.deliverables();
+      const objects = _.map(deliverables, (object) => {
         // replace temporary IDs with permanent ones (if created)
         if (object.id < 1) {
           let permanentID = this.findPermanentID(location, object.id);
@@ -1395,7 +1391,7 @@ export class RemoteDataSource extends EventEmitter {
         return object;
       });
       storage.start();
-      let results = await this.performRemoteAction(location, 'storage', { objects });
+      const results = await this.performRemoteAction(location, 'storage', { objects });
       this.saveIDMapping(location, deliverables, results);
       return results;
     };
@@ -1406,7 +1402,7 @@ export class RemoteDataSource extends EventEmitter {
     }
     this.triggerEvent(new RemoteDataSourceEvent('change', this));
     try {
-      let results = await change.promise;
+      const results = await change.promise;
       if (!change.canceled) {
         storage.finish(results);
       } else {
@@ -1427,14 +1423,14 @@ export class RemoteDataSource extends EventEmitter {
    * @param  {Storage|Removal} op
    */
   updateRecentSearchResults(op) {
-    let relevantSearches = this.getRelevantRecentSearches(op.getLocation());
+    const relevantSearches = this.getRelevantRecentSearches(op.getLocation());
     for (let search of relevantSearches) {
-      let resultsBefore = search.results;
+      const resultsBefore = search.results;
       let resultsAfter = resultsBefore;
       for (let object of op.results) {
-        let index = _.sortedIndexBy(resultsAfter, object, 'id');
-        let target = resultsAfter[index];
-        let present = (target && target.id === object.id);
+        const index = _.sortedIndexBy(resultsAfter, object, 'id');
+        const target = resultsAfter[index];
+        const present = (target && target.id === object.id);
         // note: Removal is a subclass of Storage
         if (op instanceof Removal) {
           if (present) {
@@ -1513,9 +1509,9 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Prmise}
    */
   async performRemoteAction(location, action, payload) {
-    let session = this.obtainSession(location);
-    let { address, schema, table } = location;
-    let { basePath } = this.options;
+    const session = this.obtainSession(location);
+    const { address, schema, table } = location;
+    const { basePath } = this.options;
     if (!schema) {
       throw new HTTPError(400, 'No schema specified');
     }
@@ -1534,8 +1530,8 @@ export class RemoteDataSource extends EventEmitter {
     if (action !== 'signature') {
       url += `${table}/`;
     }
-    let req = _.assign({}, payload, flags, { auth_token: session.token });
-    let options = { contentType: 'json', responseType: 'json' };
+    const req = _.assign({}, payload, flags, { auth_token: session.token });
+    const options = { contentType: 'json', responseType: 'json' };
     this.requestCount++;
     this.triggerEvent(new RemoteDataSourceEvent('requeststart', this));
     let result;
@@ -1717,8 +1713,8 @@ function removeObjects(objects, ids) {
   }
   objects = _.slice(objects);
   for (let id of ids) {
-    let index = _.sortedIndexBy(objects, { id }, 'id');
-    let object = (objects) ? objects[index] : null;
+    const index = _.sortedIndexBy(objects, { id }, 'id');
+    const object = (objects) ? objects[index] : null;
     if (object && object.id === id) {
       objects.splice(index, 1);
     }
@@ -1740,8 +1736,8 @@ function insertObjects(objects, newObjects) {
   }
   objects = _.slice(objects);
   for (let newObject of newObjects) {
-    let index = _.sortedIndexBy(objects, newObject, 'id');
-    let object = objects[index];
+    const index = _.sortedIndexBy(objects, newObject, 'id');
+    const object = objects[index];
     if (object && object.id === newObject.id) {
       objects[index] = newObject;
     } else {

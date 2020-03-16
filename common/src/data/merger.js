@@ -2,12 +2,12 @@ import _ from 'lodash';
 import { diffSentences } from 'diff';
 
 function mergeObjects(a, b, c, resolveFns) {
-  let d = {};
-  let keys = _.union(_.keys(a), _.keys(b));
+  const d = {};
+  const keys = _.union(_.keys(a), _.keys(b));
   for (let key of keys) {
-    let valueA = a ? a[key] : undefined;
-    let valueB = b ? b[key] : undefined;
-    let valueC = c ? c[key] : undefined;
+    const valueA = a ? a[key] : undefined;
+    const valueB = b ? b[key] : undefined;
+    const valueC = c ? c[key] : undefined;
     let valueD;
     if (_.isEqual(valueA, valueB)) {
       valueD = _.cloneDeep(valueA);
@@ -19,7 +19,7 @@ function mergeObjects(a, b, c, resolveFns) {
       valueD = _.cloneDeep(valueA);
     } else {
       // conflict
-      let resolve = resolveFns ? resolveFns[key] : undefined;
+      const resolve = resolveFns ? resolveFns[key] : undefined;
       if (isObject(valueA) && isObject(valueB)) {
         valueD = mergeObjects(valueA, valueB, valueC, resolve);
       } else if (typeof(valueA) === 'string' || typeof(valueB) === 'string') {
@@ -51,9 +51,9 @@ function mergeStrings(a, b, c) {
   if (typeof(c) !== 'string') {
     c = '';
   }
-  let diff = diffSentences(a, b);
-  let unchangedB = getUnchangedRanges(c, b);
-  let segments = [];
+  const diff = diffSentences(a, b);
+  const unchangedB = getUnchangedRanges(c, b);
+  const segments = [];
   for (let i = 0; i < diff.length; i++) {
     let snippet = diff[i];
     if (snippet.removed) {
@@ -96,13 +96,13 @@ function mergeStrings(a, b, c) {
 }
 
 function getUnchangedRanges(before, after) {
-  let ranges = [];
-  let diff = diffSentences(before, after);
+  const ranges = [];
+  const diff = diffSentences(before, after);
   let indexAfter = 0;
   let indexBefore = 0;
   for (let i = 0; i < diff.length; i++) {
-    let snippet = diff[i];
-    let len = snippet.value.length;
+    const snippet = diff[i];
+    const len = snippet.value.length;
     if (snippet.removed) {
       indexBefore += len;
     } else if (snippet.added) {

@@ -4,7 +4,7 @@
  * @return {Number}
  */
 function allocateTempoaryID() {
-  let newTemporaryID = lastTemporaryID + 0.000000001;
+  const newTemporaryID = lastTemporaryID + 0.000000001;
   lastTemporaryID = newTemporaryID;
   return newTemporaryID;
 }

@@ -99,12 +99,12 @@ export class Search extends Operation {
     if (this.invalid) {
       return false;
     }
-    let rtimes = _.map(this.results, 'rtime');
-    let minRetrievalTime = _.min(rtimes);
-    let then = new Date(minRetrievalTime);
-    let now = new Date;
+    const rtimes = _.map(this.results, 'rtime');
+    const minRetrievalTime = _.min(rtimes);
+    const then = new Date(minRetrievalTime);
+    const now = new Date;
     // see how much time has elapsed since the object was retrieved/last verified
-    let elapsed = (now - then) * (1 / 1000);
+    const elapsed = (now - then) * (1 / 1000);
     if (elapsed > refreshInterval) {
       return false;
     }
@@ -130,7 +130,7 @@ export class Search extends Operation {
     }
     // the result hasn't been invalidated via notification
     // still, we want to check with the server once in a while
-    let elapsed = this.getTimeElapsed();
+    const elapsed = this.getTimeElapsed();
     if (elapsed > refreshInterval) {
       return false;
     }
@@ -182,12 +182,12 @@ export class Search extends Operation {
    * @return {Array<Number>}
    */
   getUpdateList(ids, gns) {
-    let objects = (this.invalid || !this.results) ? [] : this.results;
-    let updated = [];
+    const objects = (this.invalid || !this.results) ? [] : this.results;
+    const updated = [];
     for (let [ i, id ] of _.entries(ids)) {
-      let gn = gns[i];
-      let index = _.sortedIndexBy(objects, { id }, 'id');
-      let object = (objects) ? objects[index] : null;
+      const gn = gns[i];
+      const index = _.sortedIndexBy(objects, { id }, 'id');
+      const object = (objects) ? objects[index] : null;
       if (!object || object.id !== id || object.gn !== gn) {
         updated.push(id);
       }
@@ -203,8 +203,8 @@ export class Search extends Operation {
    * @return {Array<Number>}
    */
   getRemovalList(ids) {
-    let objects = (!this.results) ? [] : this.results;
-    let removal = [];
+    const objects = (!this.results) ? [] : this.results;
+    const removal = [];
     for (let object of objects) {
       if (!_.includes(ids, object.id)) {
         removal.push(object.id);
@@ -221,11 +221,11 @@ export class Search extends Operation {
    * @return {Array<Number>}
    */
   getFetchList(ids) {
-    let objects = (this.invalid) ? [] : this.results;
-    let updated = [];
+    const objects = (this.invalid) ? [] : this.results;
+    const updated = [];
     for (let id of ids) {
-      let index = _.sortedIndexBy(objects, { id }, 'id');
-      let object = (objects) ? objects[index] : null;
+      const index = _.sortedIndexBy(objects, { id }, 'id');
+      const object = (objects) ? objects[index] : null;
       if (!object || object.id !== id) {
         updated.push(id);
       }
@@ -239,7 +239,7 @@ export class Search extends Operation {
   }
 
   finish(results) {
-    let previousResults = this.results || [];
+    const previousResults = this.results || [];
     super.finish(results);
 
     this.dirty = false;
@@ -248,7 +248,7 @@ export class Search extends Operation {
     this.initial = false;
 
     if (this.results !== previousResults) {
-      let missingResults = [];
+      const missingResults = [];
       let newlyRetrieved = 0;
 
       if (results) {
@@ -265,8 +265,8 @@ export class Search extends Operation {
         // meets the criteria; in both scenarios, the local copy has
         // become stale and should be removed from cache
         for (let object of previousResults) {
-          let index = _.sortedIndexBy(results, object, 'id');
-          let target = results[index];
+          const index = _.sortedIndexBy(results, object, 'id');
+          const target = results[index];
           if (!target || target.id !== object.id) {
             missingResults.push(object);
           }
@@ -288,7 +288,7 @@ export class Search extends Operation {
  */
 function countCriteria(criteria, name) {
   if (criteria) {
-    let value = criteria[name];
+    const value = criteria[name];
     if (value != undefined) {
       if (value instanceof Array) {
         return value.length;
@@ -308,7 +308,7 @@ function countCriteria(criteria, name) {
  */
 function removeUndefined(object) {
   if (object instanceof Array) {
-    let dst = [];
+    const dst = [];
     for (let i = 0; i < object.length; i++) {
       let value = object[i];
       if (value !== undefined) {
@@ -320,7 +320,7 @@ function removeUndefined(object) {
     }
     return dst;
   } else if (object instanceof Object) {
-    let dst = {};
+    const dst = {};
     for (let key in object) {
       let value = object[key];
       if (value !== undefined) {

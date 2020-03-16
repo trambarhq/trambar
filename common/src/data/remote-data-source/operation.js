@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 export class Operation {
   constructor(location) {
-    let byComponent = _.get(location, 'by.constructor.displayName')
+    const byComponent = _.get(location, 'by.constructor.displayName')
     if (location.schema !== 'local') {
       this.address =  location.address;
     }
@@ -55,7 +55,7 @@ export class Operation {
    * Set the start time of the operation to the current time
    */
   start() {
-    let now = new Date;
+    const now = new Date;
     this.startTime = now.toISOString();
   }
 
@@ -65,8 +65,8 @@ export class Operation {
    * @param  {Array<Object>} results
    */
   finish(results) {
-    let then = new Date(this.startTime);
-    let now = new Date;
+    const then = new Date(this.startTime);
+    const now = new Date;
     if (results) {
       this.results = results;
     }
@@ -98,8 +98,8 @@ export class Operation {
    * @return {Number}
    */
   getTimeElapsed() {
-    let then = new Date(this.finishTime);
-    let now = new Date;
+    const then = new Date(this.finishTime);
+    const now = new Date;
     return (now - then) * (1 / 1000);
   }
 }
