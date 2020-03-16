@@ -18,8 +18,8 @@ async function createLink(db, address, projectName) {
   const project = await findProjectByName(db, projectName);
   const name = project.details.title;
   const atime = (new Date).toISOString();
-  const key = `${address}/${schema}`;
-  const link = { key, address, schema, name, atime };
+  const key = `${address}/${projectName}`;
+  const link = { key, address, schema: projectName, name, atime };
   const linkAfter = await db.saveOne({ schema, table }, link);
   return linkAfter;
 }

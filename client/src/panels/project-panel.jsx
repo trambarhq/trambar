@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useListener, useErrorCatcher } from 'relaks';
 import { removeLinks } from 'common/objects/savers/project-link-saver.js';
 import { isMember } from 'common/objects/utils/user-utils.js';
@@ -26,10 +26,9 @@ import './project-panel.scss';
 export function ProjectPanel(props) {
   const { database, route, env, userDraft, system, project, projectLinks } = props;
   const { t, p } = env.locale;
-  const memberNow = isMember(userDraft.current, project);
-  const [ memberBefore, setMemberBefore ] = useState(memberNow);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
+  const membership = useRef();
 
   const handleProjectOptionClick = useListener((evt) => {
     const key = evt.currentTarget.getAttribute('data-key');
@@ -74,8 +73,10 @@ export function ProjectPanel(props) {
     // redirect to start page if the current project was removed
     const { address, schema } = route.context;
     const removingCurrent = _.includes(evt.selection, `${address}/${schema}`);
-    const links = _.map(evt.selection, (key) => { return { key } });
-    await db.remove({ schema: 'local', table: 'project_link' }, links);
+    const serverLinks = _.filter(projectLinks, (link) => {
+      return _.includes(evt.selection, link.key);
+    });
+    await removeLinks(database, serverLinks);
     if (removingCurrent) {
       await route.replace('start-page', {}, { schema: null });
     } else {
@@ -90,11 +91,18 @@ export function ProjectPanel(props) {
   useEffect(() => {
     // Check if current user has gained membership and if so, bring up a
     // dialog box with a message
-    if (!memberBefore && memberNow) {
-      confirm(t('membership-request-$you-are-now-member', name), true);
-      setMemberBefore(true);
+    if (project) {
+      if (isMember(userDraft.current, project)) {
+        if (membership.current === false) {
+          console
+          confirm(t('membership-request-$you-are-now-member', name), false);
+        }
+        membership.current = true;
+      } else {
+        membership.current = false;
+      }
     }
-  }, [ memberBefore, memberNow ]);
+  }, [ project ]);
 
   return (
     <SettingsPanel className="project">
@@ -127,29 +135,29 @@ export function ProjectPanel(props) {
         }
       }
       const serverProps = {
-        icon: 'home',
+        iconClass: 'fas fa-home',
         label: link.address,
         onClick: handleSystemClick,
       };
       const descriptionProps = {
-        icon: 'info-circle',
+        iconClass: 'fas fa-info-circle',
         label: t('project-management-description'),
         onClick: handleProjectClick,
       };
       const mobileProps = {
-        icon: 'qrcode',
+        iconClass: 'fas fa-qrcode',
         label: t('project-management-mobile-set-up'),
         hidden: (env.platform === 'cordova'),
         onClick: handleActivateClick,
       };
       const membershipProps = {
-        icon: isApplying ? 'clock-o' : 'user-circle-o',
+        iconClass: (isApplying) ? 'fas fa-clock' : 'fas fa-user-circle',
         label: t(`project-management-${isApplying ? 'withdraw-request' : 'join-project'}`),
         hidden: isMemberOf,
         onClick: (isApplying) ? handleCancelJoinClick : handleJoinClick,
       };
       const signOutProps = {
-        icon: 'sign-out-alt',
+        iconClass: 'fas fa-sign-out-alt',
         label: t('project-management-sign-out'),
         onClick: handleSignOutClick,
       };
@@ -256,14 +264,15 @@ export function ProjectPanel(props) {
 }
 
 function SupplementalProjectOption(props) {
-  if (props.hidden) {
+  const { hidden, label, iconClass, onClick } = props;
+  if (hidden) {
     return null;
   }
   return (
     <div className="item">
-      <span className="button" onClick={props.onClick}>
-        <i className={`fa fa-fw fa-${props.icon}`} />
-        <span className="label">{props.label}</span>
+      <span className="button" onClick={onClick}>
+        <i className={`${iconClass} fa-fw`} />
+        <span className="label">{label}</span>
       </span>
     </div>
   );

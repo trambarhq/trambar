@@ -45,13 +45,10 @@ class IndexedDBCache {
    * @return {Promise<Array<Object>>}
    */
   async find(query) {
-    let { address, schema, table, criteria } = query;
-    if (address == undefined) {
-      address = '';
-    }
-    let objects = await this.fetchTable(address, schema, table);
-    let keyName = this.getObjectKeyName(schema);
-    let results = [];
+    const { address = '', schema, table, criteria } = query;
+    const objects = await this.fetchTable(address, schema, table);
+    const keyName = this.getObjectKeyName(schema);
+    const results = [];
     if (_.isEqual(_.keys(criteria), [ keyName ])) {
       let keys = criteria[keyName];
       if (keys instanceof Array) {
@@ -61,10 +58,10 @@ class IndexedDBCache {
       }
       // look up by sorted key
       for (let key of keys) {
-        let keyObj = {};
+        const keyObj = {};
         keyObj[keyName] = key;
-        let index = _.sortedIndexBy(objects, keyObj, keyName);
-        let object = objects[index];
+        const index = _.sortedIndexBy(objects, keyObj, keyName);
+        const object = objects[index];
         if (object && object[keyName] === key) {
           results.push(object);
         }
@@ -90,17 +87,14 @@ class IndexedDBCache {
    * @return {Promise<Array<Object>>}
    */
   async save(location, objects) {
-    let { address, schema, table } = location;
-    if (address == undefined) {
-      address = '';
-    }
-    let db = await this.open();
+    const { address = '', schema, table } = location;
+    const db = await this.open();
     await new Promise((resolve, reject) => {
-      let path = this.getTablePath(address, schema, table);
-      let pk = this.getPrimaryKeyGenerator(address, schema, table);
-      let storeName = this.getObjectStoreName(schema);
-      let transaction = db.transaction(storeName, 'readwrite');
-      let objectStore = transaction.objectStore(storeName);
+      const path = this.getTablePath(address, schema, table);
+      const pk = this.getPrimaryKeyGenerator(address, schema, table);
+      const storeName = this.getObjectStoreName(schema);
+      const transaction = db.transaction(storeName, 'readwrite');
+      const objectStore = transaction.objectStore(storeName);
       transaction.oncomplete = (evt) => {
         resolve(objects);
       };
@@ -108,8 +102,8 @@ class IndexedDBCache {
         reject(new Error(evt.message));
       };
       for (let object of objects) {
-        let key = pk(object);
-        let record = {
+        const key = pk(object);
+        const record = {
           address: address,
           location: path,
           data: object,
@@ -132,17 +126,15 @@ class IndexedDBCache {
    * @return {Promise<Array<Object>>}
    */
   async remove(location, objects) {
-    let { address, schema, table } = location;
-    if (address == undefined) {
-      address = '';
-    }
-    let db = await this.open();
+    const { address = '', schema, table } = location;
+    const db = await this.open();
     await new Promise((resolve, reject) => {
-      let pk = this.getPrimaryKeyGenerator(address, schema, table);
-      let path = this.getTablePath(address, schema, table);
-      let storeName = this.getObjectStoreName(schema);
-      let transaction = db.transaction(storeName, 'readwrite');
-      let objectStore = transaction.objectStore(storeName);
+      const pk = this.getPrimaryKeyGenerator(address, schema, table);
+      const path = this.getTablePath(address, schema, table);
+      const storeName = this.getObjectStoreName(schema);
+      const transaction = db.transaction(storeName, 'readwrite');
+      const objectStore = transaction.objectStore(storeName);
+
       transaction.oncomplete = (evt) => {
         resolve(objects);
       };
@@ -150,7 +142,7 @@ class IndexedDBCache {
         reject(new Error(evt.message));
       };
       for (let object of objects) {
-        let key = pk(object);
+        const key = pk(object);
         objectStore.delete(key);
       }
     });
@@ -418,7 +410,7 @@ class IndexedDBCache {
    * @return {Function}
    */
   getPrimaryKeyGenerator(address, schema, table) {
-    let path = this.getTablePath(address, schema, table);
+    const path = this.getTablePath(address, schema, table);
     if (schema === 'local') {
       return (object) => {
         return `${path}/${object.key}`;
@@ -499,7 +491,7 @@ class IndexedDBCache {
    * @return {Promise<Array<Object>>}
    */
   async fetchTable(address, schema, table) {
-    let tbl = this.getTableEntry(address, schema, table);
+    const tbl = this.getTableEntry(address, schema, table);
     if (!tbl.promise) {
       tbl.promise = this.loadTable(address, schema, table, tbl);
     }
@@ -517,22 +509,22 @@ class IndexedDBCache {
    * @return {Promise<Object>}
    */
   async loadTable(address, schema, table, tbl) {
-    let db = await this.open();
-    let objects = await new Promise((resolve, reject) => {
-      let storeName = this.getObjectStoreName(schema);
-      let keyName = this.getObjectKeyName(schema);
-      let transaction = db.transaction(storeName, 'readonly');
-      let objectStore = transaction.objectStore(storeName);
-      let index = objectStore.index('location');
-      let path = this.getTablePath(address, schema, table);
-      let req = index.openCursor(path);
-      let results = [];
+    const db = await this.open();
+    const objects = await new Promise((resolve, reject) => {
+      const storeName = this.getObjectStoreName(schema);
+      const keyName = this.getObjectKeyName(schema);
+      const transaction = db.transaction(storeName, 'readonly');
+      const objectStore = transaction.objectStore(storeName);
+      const index = objectStore.index('location');
+      const path = this.getTablePath(address, schema, table);
+      const req = index.openCursor(path);
+      const results = [];
       req.onsuccess = (evt) => {
-        let cursor = evt.target.result;
+        const cursor = evt.target.result;
         if(cursor) {
-          let record = cursor.value;
-          let object = record.data;
-          let index = _.sortedIndexBy(results, object, keyName);
+          const record = cursor.value;
+          const object = record.data;
+          const index = _.sortedIndexBy(results, object, keyName);
           results.splice(index, 0, object);
           cursor.continue();
         } else {
@@ -551,18 +543,18 @@ class IndexedDBCache {
    * @param  {Number} delay
    */
   updateRecordCount(schema, delay) {
-    let storeName = this.getObjectStoreName(schema);
-    let timeoutPath = `updateRecordCountTimeouts.${storeName}`;
+    const storeName = this.getObjectStoreName(schema);
+    const timeoutPath = `updateRecordCountTimeouts.${storeName}`;
     let timeout = _.get(this, timeoutPath);
     if (timeout) {
       clearTimeout(timeout);
     }
     timeout = setTimeout(async () => {
       try {
-        let db = await this.open();
-        let transaction = db.transaction(storeName, 'readonly');
-        let objectStore = transaction.objectStore(storeName);
-        let req = objectStore.count();
+        const db = await this.open();
+        const transaction = db.transaction(storeName, 'readonly');
+        const objectStore = transaction.objectStore(storeName);
+        const req = objectStore.count();
         req.onsuccess = (evt) => {
           this.recordCounts[storeName] = evt.target.result;
         };

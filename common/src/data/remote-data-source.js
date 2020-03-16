@@ -1251,14 +1251,14 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise<String>}
    */
   async getRemoteSignature(location) {
-    let { address, schema } = location;
+    const { address, schema } = location;
     let cacheSignature = _.find(this.cacheSignatures, { address, schema });
     if (!cacheSignature) {
       cacheSignature = new CacheSignature(address, schema);
       cacheSignature.promise = this.performRemoteAction(location, 'signature');
       this.cacheSignatures.push(cacheSignature);
     }
-    let result = await cacheSignature.promise;
+    const result = await cacheSignature.promise;
     cacheSignature.signature = _.get(result, 'signature', '');
     return cacheSignature.signature;
   }
@@ -1271,7 +1271,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Promise<Number>}
    */
   async clearLocalCache(location) {
-    let { address, schema } = location;
+    const { address, schema } = location;
     let count = await this.cache.clean({ address, schema });
     return count;
   }
@@ -1290,13 +1290,13 @@ export class RemoteDataSource extends EventEmitter {
     });
 
     // clear the objects first
-    let location = { address: session.address, schema: '*' };
+    const location = { address: session.address, schema: '*' };
     await this.clearLocalCache(location);
 
     // remove the signatures
-    let prefix = `${session.address}/`;
-    let rows = await this.cache.find(signatureLocation)
-    let matchingRows = _.filter(rows, (row) => {
+    const prefix = `${session.address}/`;
+    const rows = await this.cache.find(signatureLocation)
+    const matchingRows = _.filter(rows, (row) => {
       return _.startsWith(row.key, prefix);
     });
     await this.cache.remove(location, matchingRows);
@@ -1311,13 +1311,13 @@ export class RemoteDataSource extends EventEmitter {
    */
   async updateLocalDatabase(op) {
     op.start();
-    let location = op.getLocation();
+    const location = op.getLocation();
     if (op instanceof Removal) {
       op.promise = this.cache.remove(location, op.objects);
     } else {
       op.promise = this.cache.save(location, op.objects);
     }
-    let objects = await op.promise;
+    const objects = await op.promise;
     op.finish(objects);
   }
 
