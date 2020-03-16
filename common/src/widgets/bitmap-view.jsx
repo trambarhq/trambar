@@ -34,13 +34,17 @@ export const BitmapView = React.forwardRef((props, ref) => {
       image.orientation = orientation;
       return image;
     };
+    let unmounted = false;
     load().then((loadedImage) => {
-      setImage(loadedImage);
+      if (!unmounted) {
+        setImage(loadedImage);
+      }
     }).catch((err) => {
-      if (onError) {
+      if (!unmounted && onError) {
         onError({ type: 'error', target: instance });
       }
     });
+    return () => { unmounted = true };
   }, [ url ]);
   useEffect(() => {
     const canvas = canvasRef.current;
