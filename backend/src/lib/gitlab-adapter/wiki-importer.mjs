@@ -8,7 +8,7 @@ import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
 import { TaskLog } from '../task-log.mjs';
 import { getDefaultLanguageCode } from '../localization.mjs';
 import { convertMarkdownToJSON, convertHTMLToJSON } from '../text-utils.mjs';
-import { findLink, inheritLink, extendLink } from '../external-data-utils.mjs';
+import { findLink, inheritLink, extendLink, importProperty } from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
 import * as MediaImporter from '../media-server/media-importer.mjs';

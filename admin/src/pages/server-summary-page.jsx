@@ -6,7 +6,7 @@ import { findActiveRoles } from 'common/objects/finders/role-finder.js';
 import { getRoleName } from 'common/objects/utils/role-utils.js';
 import { findServer } from 'common/objects/finders/server-finder.js';
 import { disableServer, removeServer, restoreServer, saveServer } from 'common/objects/savers/server-saver.js';
-import { getServerName } from 'common/objects/utils/server-utils.js';
+import { getServerName, getServerIconClass } from 'common/objects/utils/server-utils.js';
 import { ServerTypes, IntegratedServerTypes } from 'common/objects/types/server-types.js';
 import { findSystem } from 'common/objects/finders/system-finder.js';
 
@@ -380,17 +380,10 @@ function ServerSummaryPageSync(props) {
       selected: typeCurr === type,
       previous: typePrev === type,
     };
-    let icon;
-    switch (type) {
-      case 'facebook':
-        icon = 'facebook-official';
-        break;
-      default:
-        icon = type;
-    }
+    const iconClass = getServerIconClass(draft.current);
     return (
       <option key={i} {...props}>
-        <i className={`fa fa-${icon} fa-fw`} key={0}/>
+        <i className={`${iconClass} fa-fw`} key={0}/>
         {' '}
         {t(`server-type-${type}`)}
       </option>
@@ -582,7 +575,7 @@ function ServerSummaryPageSync(props) {
       warning = t('server-summary-system-address-missing');
     }
     const props = {
-      id: 'oauth_callback',
+      id: 'oauth_site_url',
       value: address,
       readOnly: true,
       env,

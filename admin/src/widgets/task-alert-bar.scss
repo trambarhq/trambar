@@ -5,11 +5,16 @@
   left: 0;
   right: 0;
   bottom: 0;
+  height: 1.8em;
+  overflow: hidden;
   background-color: $navigation-background-color;
-  padding: 0.4em 0.5em 0.3em 0.5em;
   border-left: 1px solid $navigation-background-color;
-  text-align: right;
-  transition: bottom 0.4s 0.5s;
+  transition: height 0.4s 0.5s;
+
+  .inner-frame {
+    padding: 0.4em 0.5em 0.3em 0.5em;
+    text-align: right;
+  }
 
   .progress-bar-frame {
     display: inline-block;
@@ -27,6 +32,7 @@
     color: $alert-bar-text-color;
 
     &:link, &:visited {
+      color: $alert-bar-text-color;
       text-decoration: none;
     }
 
@@ -36,7 +42,7 @@
   }
 
   &.hidden {
-    bottom: -1.8em;
+    height: 0;
   }
 
   &.initial {

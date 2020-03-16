@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useProgress, useListener } from 'relaks';
 import { findActiveTasks, findFailedTasks } from 'common/objects/finders/task-finder.js';
 import { markTasksAsSeen } from 'common/objects/savers/task-saver.js';
@@ -42,9 +42,11 @@ function TaskAlertBarSync(props) {
   const { t } = env.locale;
   const selectedTask = _.first(activeTasks) || _.first(failedTasks);
 
-  const handleClick = useListener(async () => {
+  const handleClick = useListener(() => {
     if (!_.isEmpty(failedTasks)) {
-      await markTasksAsSeen(database, failedTasks);
+      setTimeout(async() => {
+        await markTasksAsSeen(database, failedTasks);
+      }, 1000);
     }
   });
 
@@ -71,10 +73,13 @@ function TaskAlertBarSync(props) {
   } else {
     classNames.push('hidden');
   }
+
   return (
     <div className={classNames.join(' ')}>
-      {renderMessage()}
-      {renderProgressBar()}
+      <div className="inner-frame">
+        {renderMessage()}
+        {renderProgressBar()}
+      </div>
     </div>
   );
 
