@@ -47,7 +47,7 @@ export function StoryContents(props) {
   const { database, env, access } = props;
   const { t, p, g, f } = env.locale;
   const audioPlayerRef = useRef();
-  const [ selectedComponent, setSelectedComponent ] = useState('');
+  const [ selectedComponent, setSelectedComponent ] = useState();
   const [ error, run ] = useErrorCatcher();
   const originalAnswers = useMemo(() => {
     return extractUserAnswers(story, env.locale);

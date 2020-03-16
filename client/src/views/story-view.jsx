@@ -271,7 +271,7 @@ export function StoryView(props) {
       return '\u00a0';
     }
     return (
-      <span className="reaction-link" onClick={this.handleExpansionClick}>
+      <span className="reaction-link" onClick={handleExpansionClick}>
         {t('story-$count-reactions', count)}
       </span>
     );
