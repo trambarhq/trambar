@@ -108,14 +108,14 @@ export function UserViewOptions(props) {
       };
       const ichatProps = {
         label: t('action-contact-by-ichat'),
-        icon: 'fab fa-apple',
+        iconClass: 'fab fa-apple',
         url: `ichat:${ichatUsername}`,
         hidden: !ichatUsername,
         onClick: handleLinkClick,
       };
       const twitterProps = {
         label: t('action-contact-by-twitter'),
-        icon: 'fab fa-twitter-square',
+        iconClass: 'fab fa-twitter-square',
         url: `https://twitter.com/${twitterUsername}`,
         target: '_blank',
         hidden: !twitterUsername,
@@ -123,7 +123,7 @@ export function UserViewOptions(props) {
       };
       const gitlabProps = {
         label: t('action-view-gitlab-page'),
-        icon: 'fab fa-gitlab',
+        iconClass: 'fab fa-gitlab',
         url: gitlabURL,
         target: '_blank',
         hidden: !gitlabURL,
@@ -131,7 +131,7 @@ export function UserViewOptions(props) {
       };
       const githubProps = {
         label: t('action-view-github-page'),
-        icon: 'fab fa-github-square',
+        iconClass: 'fab fa-github-square',
         url: githubURL,
         target: '_blank',
         hidden: !githubURL,
@@ -139,7 +139,7 @@ export function UserViewOptions(props) {
       };
       const linkedInProps = {
         label: t('action-view-linkedin-page'),
-        icon: 'fab fa-linkedin',
+        iconClass: 'fab fa-linkedin',
         url: linkedinURL,
         target: '_blank',
         hidden: !linkedinURL,
@@ -147,7 +147,7 @@ export function UserViewOptions(props) {
       };
       const stackOverflowProps = {
         label: t('action-view-stackoverflow-page'),
-        icon: 'fab fa-stack-overflow',
+        iconClass: 'fab fa-stack-overflow',
         url: stackoverflowURL,
         target: '_blank',
         hidden: !stackoverflowURL,
