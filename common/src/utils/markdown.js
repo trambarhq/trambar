@@ -103,7 +103,8 @@ function renderSurvey(text, answers, onChange, onReference) {
       return <div key={index}>{listItems}</div>;
     } else {
       // regular text
-      return listToken.react;
+      const { children } = listToken.react.props;
+      return <React.Fragment key={index}>{children}</React.Fragment>;
     }
   });
 }
@@ -147,7 +148,8 @@ function renderSurveyResults(text, voteCounts, onReference) {
       });
       return <div key={index}>{listItems}</div>;
     } else {
-      return listToken.react;
+      const { children } = listToken.react.props;
+      return <React.Fragment key={index}>{children}</React.Fragment>;
     }
   });
 }
@@ -200,7 +202,8 @@ function renderTaskList(text, answers, onChange, onReference) {
       });
       return <div key={index}>{listItems}</div>;
     } else {
-      return listToken.react;
+      const { children } = listToken.react.props;
+      return <React.Fragment key={index}>{children}</React.Fragment>;
     }
   });
 }
@@ -267,14 +270,7 @@ class CustomParser extends Parser {
           }
           break;
         case 'list':
-          for (let itemToken of bToken.children) {
-            const child = itemToken.children[0];
-            if (child && /^\s*\[/.test(child.markdown)) {
-              // it might be a task-list or survey item
-              break;
-            }
-          }
-          return true;
+          break;
         default:
           return true;
       }

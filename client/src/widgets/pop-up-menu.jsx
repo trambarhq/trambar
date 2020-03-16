@@ -104,7 +104,7 @@ export function PopUpMenu(props) {
   function renderButton() {
     const classNames = [ 'button' ];
     if (!disabled) {
-      classNames.join('active');
+      classNames.push('active');
     }
     const props = {
       className: classNames.join(' '),

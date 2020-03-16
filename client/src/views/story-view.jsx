@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import { FocusManager }  from 'common/utils/focus-manager.js';
-import { addLike, removeReaction, startComment } from 'common/objects/savers/reaction-saver.js';
+import { addLike, removeReaction, saveReaction, startComment } from 'common/objects/savers/reaction-saver.js';
 import { findRobot, isSaved } from 'common/objects/utils/story-utils.js';
 import { findLinkByRelative } from 'common/objects/utils/external-data-utils.js';
 
@@ -386,7 +386,7 @@ export function StoryView(props) {
       published: true,
       public: true,
     };
-    await saveReaction(like);
+    await saveReaction(database, like);
   }
 
   async function addComment() {
@@ -403,7 +403,7 @@ export function StoryView(props) {
         published: false,
         public: true,
       };
-      await saveReaction(comment);
+      await saveReaction(database, comment);
     }
     FocusManager.focus({
       type: 'ReactionEditor',

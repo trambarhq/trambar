@@ -36,7 +36,7 @@ export function ReactionEditor(props) {
   const { reaction, story, currentUser } = props;
   const { database, env, payloads, onFinish } = props;
   const { t, languageCode } = env.locale;
-  const [ capturing, capture ] = useState(false);
+  const [ capturing, capture ] = useState();
   const importerRef = useRef();
   const textAreaRef = useRef();
   const draft = useDraftBuffer({
@@ -94,7 +94,7 @@ export function ReactionEditor(props) {
     capture(evt.mediaType);
   });
   const handleCaptureEnd = useListener((evt) => {
-    capture(null);
+    capture(undefined);
   });
   const handleAction = useListener((evt) => {
     switch (evt.action) {

@@ -165,7 +165,7 @@ export function MediaView(props) {
     const classNames = [ 'audio' ];
     const poster = renderImageElement();
     if (!poster) {
-      classNames.join('posterless');
+      classNames.push('posterless');
     }
     const action = (!audioURL) ? 'play' : 'stop';
     return (
