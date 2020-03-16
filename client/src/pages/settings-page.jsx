@@ -71,8 +71,8 @@ function SettingsPageSync(props) {
     original: currentUser || {},
   });
 
-  useAutoSave(userDraft, autosave, () => {
-    const userAfter = saveUser(database, userDraft.current);
+  useAutoSave(userDraft, autosave, async () => {
+    const userAfter = await saveUser(database, userDraft.current);
     payloads.dispatch(userAfter);
   });
   useEffect(() => {

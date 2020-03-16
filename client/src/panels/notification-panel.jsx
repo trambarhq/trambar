@@ -30,7 +30,7 @@ export function NotificationPanel(props) {
       `mobile_alert.${optionName}`,
     ];
     const settingsBefore = userDraft.get('settings', {});
-    const settings = { ...settingsBefore };
+    const settings = _.cloneDeep(settingsBefore);
     const enabled = !_.get(settings, optionPaths[0]);
     for (let optionPath of optionPaths) {
       if (!enabled) {
