@@ -145,30 +145,29 @@ class LocalStorageCache {
    *
    * @return {Promise<Number>}
    */
-  clean(criteria) {
+  async clean(criteria) {
     const store = this.remoteData;
     let count = 0;
     if (criteria.server !== undefined) {
-      const server = criteria.server;
-      const schemas = _.get(store, server);
-      _.each(schemas, (schema) => {
-        _.each(schema, (table) => {
+      const schemas = store[criteria.server];
+      for (let schema of Object.values(schemas)) {
+        for (let table of Object.values(schema)) {
           count += table.length;
-        });
-      });
-      _.set(store, server, undefined);
+        }
+      }
+      delete store[criteria.server];
     } else if (criteria.count !== undefined) {
       // push all objects into a list
       const candidates = [];
-      _.each(store, (schemas) => {
-        _.each(schemas, (schema) => {
-          _.each(schema, (table) => {
-            for (let i = 0; i < table.length; i++) {
+      for (let schemas of Object.values(store)) {
+        for (let schema of Object.values(schemas)) {
+          for (let table of Object.values(table)) {
+            for (let row of table) {
               candidates.push(table[i]);
             }
-          });
-        });
-      });
+          }
+        }
+      }
       // sort by rtime
       candidates.sort(function(a, b) {
         if (a.rtime < b.rtime) {
@@ -182,36 +181,34 @@ class LocalStorageCache {
       // leave only the least recent
       candidates.splice(criteria.count);
       // remove objects on the list
-      _.each(store, (schemas) => {
-        _.each(schemas, (schema) => {
-          _.each(schema, (table) => {
+      for (let schemas of Object.values(store)) {
+        for (let schema of Object.values(schemas)) {
+          for (let table of Object.values(table)) {
             for (let i = table.length - 1; i >= 0; i--) {
-              let object = table[i];
-              if (candidates.indexOf(object) !== -1) {
+              if (candidates.indexOf(table[i]) !== -1) {
                 table.splice(i, 1);
                 count++;
               }
             }
-          });
-        });
-      });
+          }
+        }
+      }
     } else if (criteria.before !== undefined) {
       // go through every table
-      _.each(store, (schemas) => {
-        _.each(schemas, (schema) => {
-          _.each(schema, (table) => {
+      for (let schemas of Object.values(store)) {
+        for (let schema of Object.values(schemas)) {
+          for (let table of Object.values(table)) {
             for (let i = table.length - 1; i >= 0; i--) {
-              let object = table[i];
-              if (object.rtime < criteria.before) {
+              if (table[i].rtime < criteria.before) {
                 table.splice(i, 1);
                 count++;
               }
             }
-          });
-        });
-      });
+          }
+        }
+      }
     }
-    return Promise.resolve(count);
+    return count;
   }
 
   /**

@@ -48,39 +48,35 @@ class SQLiteCache {
    * @return {Promise<Array<Object>>}
    */
   async find(query) {
-    let { address, schema, table, criteria } = query;
-    if (address == undefined) {
-      address = '';
-    }
-    let objects = await this.fetchTable(address, schema, table);
-    let keyName = this.getObjectKeyName(schema);
-    let results = [];
+    const { address = '', schema, table, criteria } = query;
+    const objects = await this.fetchTable(address, schema, table);
+    const keyName = this.getObjectKeyName(schema);
+    const results = [];
     if (_.isEqual(_.keys(criteria), [ keyName ])) {
       let keys = criteria[keyName];
       if (keys instanceof Array) {
-        keys = _.sortBy(_.slice(keys));
+        keys = keys.slice().sort();
       } else {
         keys = [ keys ];
       }
       // look up by sorted key
-      _.each(keys, (key) => {
-        let keyObj = {};
+      for (let key of keys) {
+        const keyObj = {};
         keyObj[keyName] = key;
-        let index = _.sortedIndexBy(objects, keyObj, keyName);
-        let object = objects[index];
+        const index = _.sortedIndexBy(objects, keyObj, keyName);
+        const object = objects[index];
         if (object && object[keyName] === key) {
           results.push(object);
         }
-      });
+      }
       return results;
     } else {
-      _.each(objects, (object) => {
+      for (let object of objects) {
         if (matchSearchCriteria(table, object, criteria)) {
           results.push(object);
         }
-      });
+      }
     }
-
     limitSearchResults(table, results, query.criteria);
     this.readCount += results.length;
     return results;
@@ -95,13 +91,10 @@ class SQLiteCache {
    * @return {Promise<Array<Object>>}
    */
   async save(location, objects) {
-    let { address, schema, table } = location;
-    if (address == undefined) {
-      address = '';
-    }
-    let statements = [], paramSets = [];
-    _.each(objects, (object) => {
-      let json = JSON.stringify(object);
+    const { address = '', schema, table } = location;
+    const statements = [], paramSets = [];
+    for (let object of objects) {
+      const json = JSON.stringify(object);
       if (schema === 'local') {
         statements.push(`
           INSERT OR REPLACE INTO local_data
@@ -110,7 +103,7 @@ class SQLiteCache {
         `);
         paramSets.push([ table, object.key, json ]);
       } else {
-        let rtime = (new Date(object.rtime)).getTime();
+        const rtime = (new Date(object.rtime)).getTime();
         statements.push(`
           INSERT OR REPLACE INTO remote_data
           (address, schema_name, table_name, id, json, rtime)
@@ -118,8 +111,8 @@ class SQLiteCache {
         `);
         paramSets.push([ address, schema, table, object.id, json, rtime ]);
       }
-    });
-    let affectedCount = await this.execute(statements, paramSets);
+    }
+    const affectedCount = await this.execute(statements, paramSets);
     this.writeCount += affectedCount;
     this.updateTableEntry(address, schema, table, objects, false);
     this.updateRecordCount(schema, 500);
@@ -135,12 +128,9 @@ class SQLiteCache {
    * @return {Promise<Array<Object>>}
    */
   async remove(location, objects) {
-    let { address, schema, table } = location;
-    if (address == undefined) {
-      address = '';
-    }
-    let statements = [], paramSets = [];
-    _.each(objects, (object) => {
+    const { address = '', schema, table } = location;
+    const statements = [], paramSets = [];
+    for (let object of objects) {
       if (schema === 'local') {
         statements.push(`
           DELETE FROM local_data
@@ -157,9 +147,8 @@ class SQLiteCache {
         `);
         paramSets.push([ address, schema, table, object.id ]);
       }
-    });
-
-    let affectedCount = await this.execute(statements, paramSets);
+    }
+    const affectedCount = await this.execute(statements, paramSets);
     this.deleteCount += affectedCount;
     this.updateTableEntry(address, schema, table, objects, true);
     this.updateRecordCount(schema, 500);
@@ -205,7 +194,7 @@ class SQLiteCache {
       `;
       params = [ criteria.count ];
     } else if (criteria.before !== undefined) {
-      let rtime = (new Date(criteria.before)).getTime();
+      const rtime = (new Date(criteria.before)).getTime();
       sql = `
         DELETE FROM remote_data
         WHERE rtime < ?
@@ -217,7 +206,7 @@ class SQLiteCache {
       }
       return 0;
     }
-    let affectedCount = await this.execute(sql, params);
+    const affectedCount = await this.execute(sql, params);
     if (affectedCount > 0) {
       this.deleteCount += affectedCount;
       this.updateRecordCount('remote_data');
@@ -235,13 +224,13 @@ class SQLiteCache {
    * @return {Promise<Array<Object>>}
    */
   async query(sql, params) {
-    let db = await this.open();
+    const db = await this.open();
     return new Promise((resolve, reject) => {
       // annoyingly, SQLError isn't a subclass of Error
-      let rejectT = (err) => { reject(new Error(err.message)) };
+      const rejectT = (err) => { reject(new Error(err.message)) };
       db.transaction((tx) => {
         tx.executeSql(sql, params, (tx, rs) => {
-          let rows = [];
+          const rows = [];
           for (let i = 0; i < rs.rows.length; i++) {
             rows.push(rs.rows.item(i));
           }
@@ -260,12 +249,12 @@ class SQLiteCache {
    * @return {Promise}
    */
   async execute(sql, params) {
-    let db = await this.open();
+    const db = await this.open();
     return new Promise((resolve, reject) => {
       let affected = 0;
-      let rejectT = (err) => { reject(new Error(err.message)) };
-      let resolveT = () => { resolve(affected) };
-      let callback = (tx, rs) => {
+      const rejectT = (err) => { reject(new Error(err.message)) };
+      const resolveT = () => { resolve(affected) };
+      const callback = (tx, rs) => {
         affected += rs.rowsAffected ;
       };
       db.transaction((tx) => {
@@ -290,7 +279,7 @@ class SQLiteCache {
    * @return {Promise<Array<Object>>}
    */
   fetchTable(address, schema, table) {
-    let tbl = this.getTableEntry(address, schema, table);
+    const tbl = this.getTableEntry(address, schema, table);
     if (!tbl.promise) {
       tbl.promise = this.loadTable(address, schema, table, tbl);
     }
@@ -326,10 +315,8 @@ class SQLiteCache {
       `;
       params = [ address, schema, table ];
     }
-    let rows = await this.query(sql, params);
-    let objects = _.map(rows, (row) => {
-      return decodeJSON(row.json);
-    });
+    const rows = await this.query(sql, params);
+    const objects = rows.map(r => decodeJSON(r.json));
     tbl.objects = objects;
     return objects;
   }
@@ -342,9 +329,9 @@ class SQLiteCache {
   open() {
     if (!this.databasePromise) {
       this.databasePromise = new Promise((resolve, reject) => {
-        let { databaseName } = this.options;
-        let db = openDatabase(databaseName, '', '', 50 * 1048576);
-        let sql = [
+        const { databaseName } = this.options;
+        const db = openDatabase(databaseName, '', '', 50 * 1048576);
+        const sql = [
           `
             CREATE TABLE IF NOT EXISTS remote_data (
               address text,
@@ -399,8 +386,8 @@ class SQLiteCache {
           sql.unshift(`DROP TABLE IF EXISTS local_data`);
         }
 
-        let resolveS = () => { resolve(db) };
-        let rejectS = (err) => { reject(new Error(err.message)) };
+        const resolveS = () => { resolve(db) };
+        const rejectS = (err) => { reject(new Error(err.message)) };
         db.transaction((tx) => {
           for (let line of sql) {
             tx.executeSql(line);
@@ -479,12 +466,12 @@ class SQLiteCache {
    * @param  {Boolean} remove
    */
   updateTableEntry(address, schema, table, objects, remove) {
-    let tbl = this.getTableEntry(address, schema, table);
+    const tbl = this.getTableEntry(address, schema, table);
     if (tbl.objects) {
-      let keyName = this.getObjectKeyName(schema);
+      const keyName = this.getObjectKeyName(schema);
       for (let object of objects) {
-        let index = _.sortedIndexBy(tbl.objects, object, keyName);
-        let target = tbl.objects[index];
+        const index = _.sortedIndexBy(tbl.objects, object, keyName);
+        const target = tbl.objects[index];
         if (target && target[keyName] === object[keyName]) {
           if (!remove) {
             tbl.objects[index] = object;
@@ -507,16 +494,16 @@ class SQLiteCache {
    * @param  {Number} delay
    */
   updateRecordCount(schema, delay) {
-    let cacheTableName = (schema === 'local') ? 'local_data' : 'remote_data';
-    let timeoutPath = `updateRecordCountTimeouts.${cacheTableName}`;
+    const cacheTableName = (schema === 'local') ? 'local_data' : 'remote_data';
+    const timeoutPath = `updateRecordCountTimeouts.${cacheTableName}`;
     let timeout = _.get(this, timeoutPath);
     if (timeout) {
       clearTimeout(timeout);
     }
     timeout = setTimeout(async () => {
       try {
-        let sql = `SELECT COUNT(*) as count FROM ${cacheTableName}`;
-        let rows = await this.query(sql);
+        const sql = `SELECT COUNT(*) as count FROM ${cacheTableName}`;
+        const rows = await this.query(sql);
         this.recordCounts[cacheTableName] = rows[0].count;
       } catch (err) {
       }

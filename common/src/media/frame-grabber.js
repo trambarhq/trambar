@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 /**
  * Capture a frame from a video element
  *
@@ -8,96 +6,71 @@ import _ from 'lodash';
  *
  * @return {Promise<Blob>}
  */
-function captureFrame(video, options) {
+async function captureFrame(video, options) {
+  const { start = 0, timeout = 1000 } = options;
+  const { videoWidth, videoHeight } = video;
+  const canvas = document.createElement('CANVAS');
+  canvas.width = videoWidth;
+  canvas.height = videoHeight;
+  const context = canvas.getContext('2d');
+  const limitReached = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      reject(new Error('Unable to obtain an image within time limit'));
+    }, timeout);
+  });
+  const live = (video.duration === Infinity);
+
+  let biggest = null;
+  try {
+    for (let i = 0, time = start; i < 10; i++, time += 1000) {
+      if (!live) {
+        await Promise.race([ seekVideo(start), limitReached ]);
+      }
+      context.drawImage(video, 0, 0, videoWidth, videoHeight);
+      const blob = await saveCanvasContents(canvas, 'image/jpeg', 0.75);
+      if (!biggest || biggest.size < blob.size) {
+        biggest = blob;
+      }
+
+      // check compression ratio to see if image is mostly blank
+      const uncompressedSize = videoWidth * videoHeight * 3;
+      const compressedSize = blob.size;
+      const compressionRatio = compressedSize / uncompressedSize;
+      if (compressionRatio > (1 / 50) || live) {
+        break;
+      }
+    }
+  } catch (err) {
+    if (!biggest) {
+      throw err;
+    }
+  }
+  return biggest;
+}
+
+async function seekVideo(video, time) {
+  video.currentTime = time;
   return new Promise((resolve, reject) => {
-    let width = video.videoWidth;
-    let height = video.videoHeight;
-    let canvas = document.createElement('CANVAS');
-    canvas.width = width;
-    canvas.height = height;
-    let attempts = 1;
-    let biggest = null;
-    let live = (video.duration === Infinity);
-    let startTime = _.get(options, 'start', 0);
-    let timeLimit = _.get(options, 'timeout', 1000);
+    attach();
 
-    function onBlob(blob) {
-      if (live) {
-        onSuccess(blob);
-      } else {
-        if (blob) {
-          // check compression ratio to see if image is mostly blank
-          let uncompressedSize = width * height * 3;
-          let compressedSize = blob.size;
-          let compressionRatio = compressedSize / uncompressedSize;
-          if (compressionRatio > 1 / 50) {
-            onSuccess(blob);
-          } else {
-            if (!biggest || biggest.size < blob.size) {
-              biggest = blob;
-            }
-            if (attempts > 10) {
-              onSuccess(biggest);
-            } else {
-              // move the playhead by a second
-              video.currentTime += 1000;
-              attempts++;
-            }
-          }
-        } else {
-          onFailure(new Error('Unable to obtain a frame'));
-        }
-      }
+    function onSeek() {
+      detach();
+      resolve();
     }
 
-    function onSeeked(evt) {
-      try {
-        // draw the current video frame on the canvas and encode as
-        // jpeg file
-        let context = canvas.getContext('2d');
-  		  context.drawImage(video, 0, 0, width, height);
-        saveCanvasContents(canvas, 'image/jpeg', 0.75, onBlob);
-  		} catch(err) {
-        onFailure(err);
-  		}
+    function onEnded() {
+      detach();
+      reject(new Error('Unable to obtain an image before video ended'));
     }
 
-    function onSuccess(blob) {
-      cleanUp();
-      resolve(blob);
-    }
-
-    function onFailure(err) {
-      cleanUp();
-      if (biggest) {
-        resolve(biggest);
-      } else {
-        reject(err);
-      }
-    }
-
-    let timeout;
-    if (live) {
-      onSeeked();
-    } else {
-      // perform capture when video playhead has reached the desired time
+    function attach() {
       video.addEventListener('seeked', onSeeked);
-      video.addEventListener('ended', () => {
-        onFailure(new Error('Unable to obtain an image before video ended'));
-      });
-      video.currentTime = startTime;
-
-      // set a timeout, in case we're not getting expected events from video
-      timeout = setTimeout(() => {
-        onFailure(new Error('Unable to obtain an image within time limit'));
-      }, timeLimit);
+      video.addEventListener('ended', onEnded);
     }
 
-    function cleanUp() {
-      if (live) {
-        video.removeEventListener('seeked', onSeeked);
-        clearTimeout(timeout);
-      }
+    function detach() {
+      video.removeEventListener('seeked', onSeeked);
+      video.removeEventListener('ended', onEnded);
     }
   });
 }
@@ -109,18 +82,20 @@ function captureFrame(video, options) {
  * @param  {HTMLCanvasElement} canvas
  * @param  {String} mimeType
  * @param  {Number} quality
- * @param  {Function} cb
  */
-function saveCanvasContents(canvas, mimeType, quality, cb) {
+async function saveCanvasContents(canvas, mimeType, quality) {
+  let blob;
   if (typeof(canvas.toBlob) === 'function') {
-    canvas.toBlob(cb, mimeType, 90);
+    blob = await new Promise((resolve) => {
+      canvas.toBlob(resolve, mimeType, 90)
+    });
   } else {
-    let B64toBlob = require('b64-to-blob');
-    let dataURL = canvas.toDataURL(mimeType, quality);
-    let base64Data = dataURL.replace('data:image/jpeg;base64,', '');
-    let blob = B64toBlob(base64Data, 'image/jpeg');
-    cb(blob);
+    const { default: b64toBlob } = await import('b64-to-blob');
+    const dataURL = canvas.toDataURL(mimeType, quality);
+    const base64Data = dataURL.replace('data:image/jpeg;base64,', '');
+    blob = b64toBlob(base64Data, 'image/jpeg');
   }
+  return blob;
 }
 
 export {
