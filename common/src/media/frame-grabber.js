@@ -7,7 +7,7 @@
  * @return {Promise<Blob>}
  */
 async function captureFrame(video, options) {
-  const { start = 0, timeout = 1000 } = options;
+  const { start = 0, timeout = 1000, toDataURL = false } = options;
   const { videoWidth, videoHeight } = video;
   const canvas = document.createElement('CANVAS');
   canvas.width = videoWidth;
@@ -24,10 +24,10 @@ async function captureFrame(video, options) {
   try {
     for (let i = 0, time = start; i < 10; i++, time += 1000) {
       if (!live) {
-        await Promise.race([ seekVideo(start), limitReached ]);
+        await Promise.race([ seekVideo(video, start), limitReached ]);
       }
       context.drawImage(video, 0, 0, videoWidth, videoHeight);
-      const blob = await saveCanvasContents(canvas, 'image/jpeg', 0.75);
+      const blob = await saveCanvasContents(canvas, 'image/jpeg', 0.90, toDataURL);
       if (!biggest || biggest.size < blob.size) {
         biggest = blob;
       }
@@ -53,7 +53,7 @@ async function seekVideo(video, time) {
   return new Promise((resolve, reject) => {
     attach();
 
-    function onSeek() {
+    function onSeeked() {
       detach();
       resolve();
     }
@@ -82,18 +82,22 @@ async function seekVideo(video, time) {
  * @param  {HTMLCanvasElement} canvas
  * @param  {String} mimeType
  * @param  {Number} quality
+ * @param  {Boolean} toDataURL
  */
-async function saveCanvasContents(canvas, mimeType, quality) {
+async function saveCanvasContents(canvas, mimeType, quality, toDataURL) {
   let blob;
-  if (typeof(canvas.toBlob) === 'function') {
+  if (typeof(canvas.toBlob) === 'function' && !toDataURL) {
     blob = await new Promise((resolve) => {
-      canvas.toBlob(resolve, mimeType, 90)
+      canvas.toBlob(resolve, mimeType, quality)
     });
   } else {
-    const { default: b64toBlob } = await import('b64-to-blob');
+    const { default: b64toBlob } = await import('b64-to-blob' /* webpackChunkName: "b64-to-blob" */);
     const dataURL = canvas.toDataURL(mimeType, quality);
     const base64Data = dataURL.replace('data:image/jpeg;base64,', '');
     blob = b64toBlob(base64Data, 'image/jpeg');
+    if (toDataURL) {
+      blob.fromDataURL = true;
+    }
   }
   return blob;
 }

@@ -31,6 +31,9 @@ module.exports = function(config) {
     reporters: [ 'spec' ],
     webpack: {
       mode: 'development',
+      resolve: {
+        modules: [ Path.resolve('./node_modules'), 'node_modules' ],
+      },
       module: {
         rules: [
           {

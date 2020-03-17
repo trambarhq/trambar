@@ -31,7 +31,7 @@ class LocalStorageCache {
   getRows(server, schema, table) {
     const store = (schema === 'local') ? this.localData : this.remoteData;
     const path = [ server, schema, table ];
-    const rows = _.get(store, path);
+    let rows = _.get(store, path);
     if (!rows) {
       rows = [];
       _.set(store, path, rows);
@@ -63,10 +63,7 @@ class LocalStorageCache {
    * @return {Promise<Array<Object>>}
    */
   async find(query) {
-    const { server ,schema, table, criteria } = query;
-    if (server == undefined) {
-      server = 'localhost';
-    }
+    const { server = 'localhost', schema, table, criteria } = query;
     const rows = this.getRows(server, schema, table);
     const keyName = this.getKeyName(schema);
     let objects;
@@ -97,10 +94,7 @@ class LocalStorageCache {
    * @return {Promise<Array<Object>>}
    */
   async save(location, objects) {
-    const { server, schema, table } = location;
-    if (server == undefined) {
-      server = 'localhost';
-    }
+    const { server = 'localhost', schema, table } = location;
     const rows = this.getRows(server, schema, table);
     const keyName = this.getKeyName(schema);
     for (let object of objects) {
@@ -119,10 +113,7 @@ class LocalStorageCache {
    * @return {Promise<Array<Object>>}
    */
   async remove(location, objects) {
-    const { server, schema, table } = location;
-    if (server == undefined) {
-      server = 'localhost';
-    }
+    const { server = 'localhost', schema, table } = location;
     const rows = this.getRows(server, schema, table);
     const keyName = this.getKeyName(schema);
     for (let object of objects) {
@@ -161,9 +152,9 @@ class LocalStorageCache {
       const candidates = [];
       for (let schemas of Object.values(store)) {
         for (let schema of Object.values(schemas)) {
-          for (let table of Object.values(table)) {
+          for (let table of Object.values(schema)) {
             for (let row of table) {
-              candidates.push(table[i]);
+              candidates.push(row);
             }
           }
         }
@@ -183,7 +174,7 @@ class LocalStorageCache {
       // remove objects on the list
       for (let schemas of Object.values(store)) {
         for (let schema of Object.values(schemas)) {
-          for (let table of Object.values(table)) {
+          for (let table of Object.values(schema)) {
             for (let i = table.length - 1; i >= 0; i--) {
               if (candidates.indexOf(table[i]) !== -1) {
                 table.splice(i, 1);
@@ -197,7 +188,7 @@ class LocalStorageCache {
       // go through every table
       for (let schemas of Object.values(store)) {
         for (let schema of Object.values(schemas)) {
-          for (let table of Object.values(table)) {
+          for (let table of Object.values(schema)) {
             for (let i = table.length - 1; i >= 0; i--) {
               if (table[i].rtime < criteria.before) {
                 table.splice(i, 1);
