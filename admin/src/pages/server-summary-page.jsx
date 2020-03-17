@@ -61,7 +61,6 @@ function ServerSummaryPageSync(props) {
   const { t, p, languageCode } = env.locale;
   const availableLanguageCodes = system?.settings?.input_languages ?? [];
   const readOnly = !(editing || creating);
-  const [ adding, setAdding ] = useState(false);
   const [ credentialsChanged, setCredentialsChanged ] = useState(false);
   const draft = useDraftBuffer({
     original: server || {},
@@ -136,11 +135,12 @@ function ServerSummaryPageSync(props) {
         reportProblems(problems);
 
         const serverAfter = await saveServer(database, draft.current);
-        if (creating) {
-          setAdding(true);
-        }
         warnDataLoss(false);
-        route.replace({ editing: undefined, serverID: serverAfter.id });
+        route.replace({
+          editing: undefined,
+          adding: (creating) ? true : undefined,
+          serverID: serverAfter.id
+        });
       } catch (err) {
         if (err.statusCode === 409) {
           reportProblems({ name: 'validation-duplicate-server-name' });
@@ -282,7 +282,7 @@ function ServerSummaryPageSync(props) {
         } else if (hasOAuthCredentials && credentialsChanged) {
           preselected = 'test';
         } else {
-          preselected = (adding) ? 'add' : 'return';
+          preselected = (route.params.adding) ? 'add' : 'return';
         }
       } else {
         preselected = 'reactivate';

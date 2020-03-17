@@ -57,7 +57,6 @@ function RoleSummaryPageSync(props) {
   const { t, p } = env.locale;
   const availableLanguageCodes = system?.settings?.input_languages ?? [];
   const readOnly = !editing && !creating;
-  const [ adding, setAdding ] = useState(false);
   const draft = useDraftBuffer({
     original: role || {},
     reset: readOnly,
@@ -126,11 +125,12 @@ function RoleSummaryPageSync(props) {
         await assignRole(database, adding, roleAfter);
         await stripRole(database, removing, roleAfter);
 
-        if (creating) {
-          setAdding(true);
-        }
         warnDataLoss(false);
-        route.replace({ editing: undefined, roleID: roleAfter.id });
+        route.replace({
+          editing: undefined,
+          adding: (creating) ? true : undefined,
+          roleID: roleAfter.id
+        });
       } catch (err) {
         if (err.statusCode === 409) {
           reportProblems({ name: 'validation-duplicate-role-name' });
@@ -178,7 +178,7 @@ function RoleSummaryPageSync(props) {
       const active = !role?.deleted && !role?.disabled;
       let preselected;
       if (active) {
-        preselected = (adding) ? 'add' : 'return';
+        preselected = (route.params.adding) ? 'add' : 'return';
       } else {
         preselected = 'reactivate';
       }

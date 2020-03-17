@@ -58,7 +58,6 @@ function ProjectSummaryPageSync(props) {
   const { t, p } = env.locale;
   const availableLanguageCodes = system?.settings?.input_languages ?? [];
   const readOnly = !(editing || creating);
-  const [ adding, setAdding ] = useState(false);
   const draft = useDraftBuffer({
     original: project || {},
     reset: readOnly,
@@ -119,11 +118,13 @@ function ProjectSummaryPageSync(props) {
 
         const projectAfter = await saveProject(database, draft.current);
         payloads.dispatch(projectAfter);
-        if (creating) {
-          setAdding(true);
-        }
+
         warnDataLoss(false);
-        route.replace({ editing: undefined, projectID: projectAfter.id });
+        route.replace({
+          editing: undefined,
+          adding: (creating) ? true : undefined,
+          projectID: projectAfter.id
+        });
       } catch (err) {
         if (err.statusCode === 409) {
           reportProblems({ name: 'validation-duplicate-project-name' });
@@ -177,7 +178,7 @@ function ProjectSummaryPageSync(props) {
       const active = (project) ? !project.deleted && !project.archived : true;
       let preselected;
       if (active) {
-        preselected = (adding) ? 'add' : 'return';
+        preselected = (route.params.adding) ? 'add' : 'return';
       } else {
         preselected = 'restore';
       }

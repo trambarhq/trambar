@@ -66,7 +66,6 @@ function UserSummaryPageSync(props) {
   const { database, route, env, payloads, projectID, editing } = props;
   const { t, p } = env.locale;
   const readOnly = !(editing || creating);
-  const [ adding, setAdding ] = useState(false);
   const [ problems, setProblems ] = useState({});
   const [ showingSocialLinks, setShowingSocialLinks ] = useState(false);
   const draft = useDraftBuffer({
@@ -149,10 +148,11 @@ function UserSummaryPageSync(props) {
           }
 
           warnDataLoss(false);
-          if (creating) {
-            setAdding(true);
-          }
-          route.replace({ editing: undefined, userID: userAfter.id });
+          route.replace({
+            editing: undefined,
+            adding: true,
+            userID: userAfter.id
+          });
         }
       } catch (err) {
         if (err.statusCode === 409) {
@@ -245,7 +245,7 @@ function UserSummaryPageSync(props) {
       const membership = (project) ? _.includes(project.user_ids, user.id) : undefined;
       let preselected;
       if (active) {
-        preselected = (adding) ? 'add' : 'return';
+        preselected = (route.params.adding) ? 'add' : 'return';
         if (membership === false) {
           preselected = 'restore-membership';
         }

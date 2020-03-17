@@ -24,7 +24,7 @@ const routes = {
     query: {
       edit: '${editing}',
     },
-    params: { projectID: Number, userID: NumberOrNew, editing: Boolean },
+    params: { projectID: Number, userID: NumberOrNew, editing: Boolean, adding: Boolean },
     load: async (match) => {
       match.params.key = match.name;
       match.params.module = await import('./pages/user-summary-page.jsx' /* webpackChunkName: "page-user-summary" */);
@@ -45,8 +45,9 @@ const routes = {
     path: '/projects/${projectID}/',
     query: {
       edit: '${editing}',
+      add: '${adding}',
     },
-    params: { projectID: NumberOrNew, editing: Boolean },
+    params: { projectID: NumberOrNew, editing: Boolean, adding: Boolean },
     load: async (match) => {
       match.params.key = match.name;
       match.params.module = await import('./pages/project-summary-page.jsx' /* webpackChunkName: "page-project-summary" */);
@@ -78,8 +79,9 @@ const routes = {
     path: '/projects/${projectID}/website/',
     query: {
       edit: '${editing}',
+      add: '${adding}',
     },
-    params: { projectID: Number, editing: Boolean },
+    params: { projectID: Number, editing: Boolean, adding: Boolean },
     load: async (match) => {
       match.params.key = match.name;
       match.params.module = await import('./pages/website-summary-page.jsx' /* webpackChunkName: "page-website-summary" */);
@@ -100,8 +102,9 @@ const routes = {
     path: '/projects/${projectID}/website/wikis/${wikiID}/',
     query: {
       edit: '${editing}',
+      add: '${adding}',
     },
-    params: { projectID: Number, wikiID: Number, editing: Boolean },
+    params: { projectID: Number, wikiID: Number, editing: Boolean, adding: Boolean },
     load: async (match) => {
       match.params.key = match.name;
       match.params.module = await import('./pages/wiki-summary-page.jsx' /* webpackChunkName: "page-wiki-summary" */);
@@ -122,8 +125,9 @@ const routes = {
     path: '/projects/${projectID}/website/spreadsheets/${spreadsheetID}/',
     query: {
       edit: '${editing}',
+      add: '${adding}',
     },
-    params: { projectID: Number, spreadsheetID: NumberOrNew, editing: Boolean },
+    params: { projectID: Number, spreadsheetID: NumberOrNew, editing: Boolean, adding: Boolean },
     load: async (match) => {
       match.params.key = match.name;
       match.params.module = await import('./pages/spreadsheet-summary-page.jsx' /* webpackChunkName: "page-spreadsheet-summary" */);
@@ -144,8 +148,9 @@ const routes = {
     path: '/projects/${projectID}/website/rest/${restID}/',
     query: {
       edit: '${editing}',
+      add: '${adding}',
     },
-    params: { projectID: Number, restID: NumberOrNew, editing: Boolean },
+    params: { projectID: Number, restID: NumberOrNew, editing: Boolean, adding: Boolean },
     load: async (match) => {
       match.params.key = match.name;
       match.params.module = await import('./pages/rest-summary-page.jsx' /* webpackChunkName: "page-rest-summary" */);
@@ -166,8 +171,9 @@ const routes = {
     path: '/roles/${roleID}/',
     query: {
       edit: '${editing}',
+      add: '${adding}',
     },
-    params: { roleID: NumberOrNew, editing: Boolean },
+    params: { roleID: NumberOrNew, editing: Boolean, adding: Boolean },
     load: async (match) => {
       match.params.key = match.name;
       match.params.module = await import('./pages/role-summary-page.jsx' /* webpackChunkName: "page-role-summary" */);
@@ -188,9 +194,10 @@ const routes = {
     path: '/servers/${serverID}/',
     query: {
       edit: '${editing}',
+      add: '${adding}',
     },
     hash: 'T${scrollToTaskID}',
-    params: { serverID: NumberOrNew, editing: Boolean, scrollToTaskID: Number },
+    params: { serverID: NumberOrNew, editing: Boolean, adding: Boolean, scrollToTaskID: Number },
     load: async (match) => {
       match.params.key = match.name;
       match.params.module = await import('./pages/server-summary-page.jsx' /* webpackChunkName: "page-server-summary" */);
@@ -238,8 +245,9 @@ const routes = {
     path: '/users/${userID}/',
     query: {
       edit: '${editing}',
+      add: '${adding}',
     },
-    params: { userID: NumberOrNew, editing: Boolean },
+    params: { userID: NumberOrNew, editing: Boolean, adding: Boolean },
     load: async (match) => {
       match.params.key = match.name;
       match.params.module = await import('./pages/user-summary-page.jsx' /* webpackChunkName: "page-user-summary" */);

@@ -55,7 +55,6 @@ function RestSummaryPageSync(props) {
   const { database, route, env, editing } = props;
   const { t, p } = env.locale;
   const readOnly = !editing && !creating;
-  const [ adding, setAdding ] = useState(false);
   const draft = useDraftBuffer({
     original: rest || { type: 'wordpress' },
     reset: readOnly,
@@ -112,11 +111,12 @@ function RestSummaryPageSync(props) {
         reportProblems(problems);
 
         const restAfter = await saveRest(database, schema, draft.current);
-        if (creating) {
-          setAdding(true);
-        }
         warnDataLoss(false);
-        route.replace({ editing: undefined, restID: restAfter.id });
+        route.replace({
+          editing: undefined,
+          adding: (creating) ? true : undefined,
+          restID: restAfter.id
+        });
       } catch (err) {
         if (err.statusCode === 409) {
           reportProblems({ name: 'validation-duplicate-source-name' });
@@ -186,7 +186,7 @@ function RestSummaryPageSync(props) {
       const active = !rest?.deleted && !rest?.disabled;
       let preselected;
       if (active) {
-        preselected = (adding) ? 'add' : 'return';
+        preselected = (route.params.adding) ? 'add' : 'return';
       } else {
         preselected = 'reactivate';
       }

@@ -76,7 +76,6 @@ function SpreadsheetSummaryPageSync(props) {
   const { database, route, env, editing } = props;
   const { t, p, localeCode } = env.locale;
   const readOnly = !editing && !creating;
-  const [ adding, setAdding ] = useState(false);
   const draft = useDraftBuffer({
     original: spreadsheet || {},
     reset: readOnly,
@@ -141,11 +140,12 @@ function SpreadsheetSummaryPageSync(props) {
           requestUpdate(project, spreadsheetAfter, env);
         }
 
-        if (creating) {
-          setAdding(true);
-        }
         warnDataLoss(false);
-        route.replace({ editing: undefined, spreadsheetID: spreadsheetAfter.id });
+        route.replace({
+          editing: undefined,
+          adding: (creating) ? true : undefined,
+          spreadsheetID: spreadsheetAfter.id
+        });
       } catch (err) {
         if (err.statusCode === 409) {
           reportProblems({ name: 'validation-duplicate-spreadsheet-name' });
@@ -197,7 +197,7 @@ function SpreadsheetSummaryPageSync(props) {
       const active = (spreadsheet) ? !spreadsheet.deleted && !spreadsheet.disabled : true;
       let preselected;
       if (active) {
-        preselected = (adding) ? 'add' : 'return';
+        preselected = (route.params.adding) ? 'add' : 'return';
       } else {
         preselected = 'reactivate';
       }
