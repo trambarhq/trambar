@@ -76,7 +76,7 @@ export function ResourceView(props) {
     const classNames = [ 'resource-view' ];
     let style;
     if (remoteURLLoaded !== remoteURL && showMosaic) {
-      const mosaic = (clip) ? _.get(resource, 'mosaic') : null;
+      const mosaic = (clip) ? resource.mosaic : null;
       classNames.push('loading');
       style = getMosaicStyle(mosaic, width, height);
     }
