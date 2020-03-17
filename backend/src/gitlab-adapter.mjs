@@ -154,6 +154,7 @@ function handleServerChangeEvent(event) {
   const disabled = event.current.deleted || event.current.disabled;
   if (event.diff.settings) {
     if (!disabled) {
+      taskQueue.add(new TaskInstallServerHooks(serverID));
       taskQueue.add(new TaskImportRepos(serverID));
       taskQueue.add(new TaskImportUsers(serverID));
     }
