@@ -195,13 +195,14 @@ function isWrapping(nodes) {
 }
 
 function extractTags(dailyActivities, env) {
-  if (!dailyActivities) {
+  if (!dailyActivities || !dailyActivities.daily) {
     return [];
   }
   // score the tags based on how often they are used
-  let scores = {}, frequency = {};
-  _.each(dailyActivities.daily, (activities, date) => {
-    _.each(activities, (count, key) => {
+  const scores = {};
+  const frequency = {};
+  for (let [ date, activities ] of Object.entries(dailyActivities.daily)) {
+    for (let [ key, count ] of Object.entries(activities)) {
       // more recent usage count for more
       let multiplier;
       if (date === env.date) {
@@ -216,40 +217,44 @@ function extractTags(dailyActivities, env) {
         multiplier = 0.25;
       }
       if (/^#/.test(key)) {
-        let score = count * multiplier;
+        const score = count * multiplier;
         scores[key] = (scores[key] || 0) + score;
         frequency[key] = (frequency[key] || 0) + count;
       }
-    });
-  });
+    }
+  }
+
   // compare tags that only differ in case
-  let nameLists = {};
-  let scoresLC = {};
-  _.each(scores, (score, name) => {
-    let nameLC = _.toLower(name);
+  const nameLists = {};
+  const scoresLC = {};
+  for (let [ name, score ] of Object.entries(scores)) {
+    const nameLC = name.toLowerCase();
     let names = nameLists[nameLC];
     if (!names) {
       names = nameLists[nameLC] = [];
     }
     names.push(name);
     scoresLC[nameLC] = (scoresLC[nameLC] || 0) + score;
-  });
-  let scoresMC = {};
-  _.each(scoresLC, (score, nameLC) => {
-    let names = nameLists[nameLC];
+  }
+
+  const scoresMC = {};
+  for (let [ nameLC, score ] of scoresLC) {
+    const names = nameLists[nameLC];
     if (names.length > 1) {
-      // choice the more frequently used name
+      // choose the more frequently used name
       names = _.orderBy(names, (name) => {
         return frequency[name];
       }, 'desc');
     }
-    let name = names[0];
+    const name = names[0];
     scoresMC[name] = score;
-  });
+  }
 
-  let hashTags = _.transform(scoresMC, (list, score, name) => {
-    list.push({ name, score });
-  }, []);
+  const hashTags = [];
+  for (let [ name, score ] of Object.entries(scoresMC)) {
+    hashTags.push({ name, score });
+  }
+
   // sort in case-sensitive manner, as it's done in Gitlab
   return _.sortBy(hashTags, 'name');
 }

@@ -96,11 +96,14 @@ async function retrieve(project, identifier, slug) {
 
     // trim resource URLs
     const mediaBaseURL = '/srv/media/';
-    _.each(wiki.details.resources, (res) => {
-      if (_.startsWith(res.url, mediaBaseURL)) {
-        res.url = res.url.substr(mediaBaseURL.length);
+    const { resources } = wiki.details;
+    if (resources) {
+      for (let res of resources) {
+        if (_.startsWith(res.url, mediaBaseURL)) {
+          res.url = res.url.substr(mediaBaseURL.length);
+        }
       }
-    });
+    }
 
     const title = createTitle(wiki.details.title || '');
     const contents = {

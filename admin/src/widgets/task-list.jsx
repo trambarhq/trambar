@@ -248,21 +248,19 @@ const sortTasks = memoizeWeak(null, function(tasks) {
 });
 
 function formatAddedDeleteChanged(object) {
-  let list = [];
-  _.each(object.deleted, (s) => {
-    pushItem(list, s, 'item deleted')
-  });
-  _.each(object.modified, (s) => {
-    pushItem(list, s, 'item modified')
-  });
-  _.each(object.added, (s) => {
-    pushItem(list, s, 'item added')
-  });
+  const list = [];
+  for (let key of [ 'deleted', 'modified', 'added' ]) {
+    if (object[key] instanceof Array) {
+      for (let s of object[key]) {
+        pushItem(list, s, `item ${key}`);
+      }
+    }
+  }
   return list;
 }
 
 function pushItem(list, text, className) {
-  let key = list.length;
+  const key = list.length;
   list.push(
     <span className={className} key={key}>
       {text}

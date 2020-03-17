@@ -195,35 +195,36 @@ let favIcons;
 function changeFavIcon(count) {
   if (!favIcons) {
     // get the post-WebPack filenames of the favicons
-    let paths = require.context('../../assets/favicon-notification', true, /\.png$/).keys();
-    favIcons = _.map(paths, (path) => {
+    const context = require.context('../../assets/favicon-notification', true, /\.png$/);
+    favIcons = context.keys().map((path) => {
       // make the file extension part of the expression passed to require()
       // so WebPack will filter out other files
-      let name = path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'));
-      let withoutBadge = require(`../../assets/favicon/${name}.png`);
-      let withBadge = require(`../../assets/favicon-notification/${name}.png`);
+      const name = path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'));
+      const withoutBadge = require(`../../assets/favicon/${name}.png`);
+      const withBadge = require(`../../assets/favicon-notification/${name}.png`);
       return { withoutBadge, withBadge };
     });
   }
-  let links = _.filter(document.head.getElementsByTagName('LINK'), (link) => {
+
+  const links = document.head.getElementsByTagName('LINK');
+  for (let link of links) {
     if (link.rel === 'icon' || link.rel === 'apple-touch-icon-precomposed') {
-      return true;
-    }
-  });
-  _.each(links, (link) => {
-    let currentFilename = link.getAttribute('href');
-    if (count > 0) {
-      let icon = _.find(favIcons, { withoutBadge: currentFilename });
-      if (icon) {
-        link.href = icon.withBadge;
+      const currentFilename = link.getAttribute('href');
+      if (count > 0) {
+        // replace badgeless with badge
+        const icon = favIcons.find(i => i.withoutBadge === currentFilename);
+        if (icon) {
+          link.href = icon.withBadge;
+        }
+      } else {
+        // replace badge with badgeless
+        const icon = favIcons.find(i => i.withBadge === currentFilename);
+        if (icon) {
+          link.href = icon.withoutBadge;
+        }
       }
-    } else {
-      let icon = _.find(favIcons, { withBadge: currentFilename });
-      if (icon) {
-        link.href = icon.withoutBadge;
-      }
     }
-  });
+  }
 }
 
 /**
@@ -233,7 +234,7 @@ function changeFavIcon(count) {
  * @param  {Number} count
  */
 function changeDocumentTitle(count) {
-  let title = _.replace(document.title, /^\(\d+\)\s*/, '');
+  let title = document.title.replace(/^\(\d+\)\s*/, '');
   if (count > 0) {
     title = `(${count}) ${title}`;
   }

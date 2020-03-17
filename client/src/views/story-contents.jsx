@@ -570,18 +570,24 @@ export function StoryContents(props) {
 
 const countVotes = memoizeWeak({}, function(reactions) {
   let tallies = {};
-  _.each(reactions, (reaction) => {
+  for (let reaction of reactions) {
     if (reaction.type === 'vote' ) {
-      _.forIn(reaction.details.answers, (value, name) => {
-        let totalPath = [ name, 'total' ];
-        let newTotal = _.get(tallies, totalPath, 0) + 1;
-        _.set(tallies, totalPath, newTotal);
-        let countPath = [ name, 'answers', value ];
-        let newCount = _.get(tallies, countPath, 0) + 1;
-        _.set(tallies, countPath, newCount);
-      });
+      const { answers } of reaction.details;
+      if (answers) {
+        for (let [ name, value ] of Object.entries(answers)) {
+          let tally = tallies[name];
+          if (!tally) {
+            tally = tallies[name] = {
+              total: 0,
+              answers: {}
+            };
+          }
+          tally.total = tally.total + 1;
+          tally.answers[value] = (tally.answers[value] || 0) + 1;
+        }
+      }
     }
-  });
+  }
   return tallies;
 });
 

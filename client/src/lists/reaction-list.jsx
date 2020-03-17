@@ -132,9 +132,9 @@ const sortReactions = memoizeWeak(null, function(reactions, currentUser) {
   const ownUnpublished = _.remove(sortedReactions, { user_id: currentUser, ptime: null });
   // move unpublished comment of current user to beginning, so it shows up
   // at the bottom
-  _.each(ownUnpublished, (reaction) => {
+  for (let reaction of ownUnpublished) {
     sortedReactions.unshift(reaction);
-  });
+  }
   return sortedReactions;
 });
 

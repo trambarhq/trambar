@@ -224,11 +224,11 @@ export class Server extends Data {
  * @return {Object}
  */
 function obscure(object, paths) {
-  let clone = _.cloneDeep(object);
-  _.each(paths, (path) => {
-    let value = _.get(clone, path);
+  const clone = _.cloneDeep(object);
+  for (let path of paths) {
+    const value = _.get(clone, path);
     _.set(clone, path, obscureValue(value));
-  });
+  }
   return clone;
 }
 

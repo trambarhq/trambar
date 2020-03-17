@@ -150,11 +150,11 @@ async function retrieve(project, identifier) {
     // trim resource URLs
     const mediaBaseURL = '/srv/media/';
     const mediaImports = findMediaImports(spreadsheet.details.sheets);
-    _.each(mediaImports, (res) => {
+    for (let res of mediaImports) {
       if (_.startsWith(res.url, mediaBaseURL)) {
         res.url = res.url.substr(mediaBaseURL.length);
       }
-    });
+    }
 
     const contents = {
       title: spreadsheet.details.title || '',

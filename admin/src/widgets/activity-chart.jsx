@@ -96,11 +96,11 @@ export const ActivityChart = React.memo((props) => {
     }
     const stats = statistics.to_date;
     const indices = {};
-    _.each(StoryTypes, (type, index) => {
+    for (let [ index, type ] of StoryTypes.entries()) {
       if (stats[type] > 0) {
         indices[type] = index;
       }
-    });
+    }
     const items = _.map(indices, (index, type) => {
       const props = {
         series: String.fromCharCode('a'.charCodeAt(0) + index),
@@ -190,21 +190,21 @@ const getUpperRange = memoizeWeak(0, function(series, additive) {
   let highest = 0;
   if (additive) {
     const sums = [];
-    _.each(series, (values) => {
-      _.each(values, (value, index) => {
+    for (let values of series) {
+      for (let [ index, value ] of values.entries()) {
         sums[index] = (sums[index]) ? sums[index] + value : value;
-      });
-    });
+      }
+    }
     if (!_.isEmpty(sums)) {
       highest = _.max(sums);
     }
   } else {
-    _.each(series, (values) => {
+    for (let values of series) {
       const max = _.max(values);
       if (max > highest) {
         highest = max;
       }
-    });
+    }
   }
   if (highest <= 20) {
     return 20;
