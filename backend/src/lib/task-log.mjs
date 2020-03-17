@@ -124,10 +124,10 @@ export class TaskLog {
    * @param  {String|undefined} unit
    */
   set(path, value, unit) {
-    _.set(this.details, path, value);
     if (unit === 'byte') {
       value = Bytes(value);
     }
+    _.set(this.details, path, value);
     this.noop = false;
     this.saved = false;
   }

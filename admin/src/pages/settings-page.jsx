@@ -43,13 +43,13 @@ function SettingsPageSync(props) {
   const { system, editing } = props;
   const { database, route, env, payloads } = props;
   const { t, p, directory } = env.locale;
-  const availableLanguageCodes = system?.settings?.input_languages ?? [];
   const readOnly = !editing;
   const draft = useDraftBuffer({
     original: system,
     prefill: getDefaultSystem,
     reset: readOnly,
   });
+  const availableLanguageCodes = draft.get('settings.input_languages', []);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
   const warnDataLoss = useDataLossWarning(route, env, confirm);

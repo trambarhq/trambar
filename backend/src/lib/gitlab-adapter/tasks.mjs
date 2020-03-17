@@ -176,7 +176,7 @@ class TaskRemoveServerHooks extends BasicTask {
   async run() {
     const db = await Database.open();
     const host = this.host || await getSystemAddress(db);
-    const server = await getServer(db, this.serverID);
+    const server = await getServer(db, this.serverID, true);
     const repos = await getServerRepos(db, server);
     const projects = await getReposProjects(db, repos);
     if (host && server) {
@@ -618,12 +618,13 @@ async function getSystemAddress(db) {
   return _.trimEnd(address, ' /');
 }
 
-async function getServer(db, serverID) {
+async function getServer(db, serverID, includeDisabled) {
   const criteria = {
     id: serverID,
     type: 'gitlab',
-    disabled: false,
-    deleted: false,
+  };
+  if (!includeDisabled) {
+    criteria.disabled = criteria.deleted = false;
   }
   const server = await Server.findOne(db, 'global', criteria, '*');
   if (hasAccessToken(server)) {

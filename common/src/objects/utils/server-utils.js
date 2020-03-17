@@ -12,6 +12,8 @@ function getServerName(server, env) {
 function getServerIconClass(server) {
   const type = _.get(server, 'type', '');
   switch (type) {
+    case 'dropbox':
+      return 'fab fa-dropbox';
     case 'facebook':
       return 'fab fa-facebook-square';
     case 'github':

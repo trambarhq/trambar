@@ -163,7 +163,7 @@ async function handleDatabaseChanges(events) {
 async function addSearchIndices(db, schema, table, languages) {
   const taskLog = TaskLog.start('search-indices-add', { schema });
   try {
-    cosnt accessors = getAccessors(schema);
+    const accessors = getAccessors(schema);
     const accessor = _.find(accessors, { table });
     // make sure we have indices for these languages
     const existing = await accessor.getTextSearchLanguages(db, schema);
@@ -315,7 +315,7 @@ async function createSchema(db, schema) {
     }
 
     taskLog.describe(`creating tables`);
-    const accessors = Accessors.get(schema);
+    const accessors = getAccessors(schema);
     for (let accessor of accessors) {
       await accessor.create(db, schema);
       taskLog.append('created', accessor.table);

@@ -18,10 +18,14 @@ export class Database {
   }
 
   async connect() {
-    if (!this.connectionPromise) {
-      this.connectionPromise = this.connectUncached();
-    }
-    return this.connectionPromise;
+    do {
+      if (!this.connectionPromise) {
+        this.connectionPromise = this.connectUncached();
+      }
+      await this.connectionPromise;
+
+      // in theory, the connection could be closed immediately
+    } while (!this.client);
   }
 
   async connectUncached() {
@@ -67,6 +71,7 @@ export class Database {
   async execute(sql, parameters) {
     await this.connect();
     try {
+
       const result = await this.client.query(sql, parameters);
       return result;
     } catch (err) {
