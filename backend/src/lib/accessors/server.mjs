@@ -107,11 +107,6 @@ export class Server extends Data {
       object.type = row.type;
       object.name = row.name;
       if (credentials.unrestricted || process.env.ADMIN_GUEST_MODE) {
-        const sensitiveSettings = [
-          'api.access_token',
-          'api.refresh_token',
-          'oauth.client_secret',
-        ];
         object.settings = obscure(row.settings, sensitiveSettings);
         object.disabled = row.disabled;
       } else {
@@ -245,3 +240,9 @@ function obscureValue(value) {
       }
   }
 }
+
+const sensitiveSettings = [
+  'api.access_token',
+  'api.refresh_token',
+  'oauth.client_secret',
+];

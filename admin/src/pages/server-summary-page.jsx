@@ -380,7 +380,7 @@ function ServerSummaryPageSync(props) {
       selected: typeCurr === type,
       previous: typePrev === type,
     };
-    const iconClass = getServerIconClass(draft.current);
+    const iconClass = getServerIconClass({ type });
     return (
       <option key={i} {...props}>
         <i className={`${iconClass} fa-fw`} key={0}/>
