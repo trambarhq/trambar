@@ -325,7 +325,7 @@ function ProjectSummaryPageSync(props) {
 
   function renderOption(option, optsCurr, optsPrev, i) {
     const noneCurr = !_.some(optsCurr);
-    const nonePrev = (creating) ? !_.some(optsPrev) : undefined;
+    const nonePrev = (creating) ? undefined : !_.some(optsPrev);
     const props = {
       name: option.name,
       selected: (option.none) ? noneCurr : optsCurr[option.name],
