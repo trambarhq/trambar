@@ -7,7 +7,7 @@ import { associateRepos } from 'common/objects/savers/project-saver.js';
 import { findExistingRepos } from 'common/objects/finders/repo-finder.js';
 import { getRepoName } from 'common/objects/utils/repo-utils.js';
 import { findRepoServers } from 'common/objects/finders/server-finder.js';
-import { getServerName } from 'common/objects/utils/server-utils.js';
+import { getServerName, getServerIconClass } from 'common/objects/utils/server-utils.js';
 import { findDailyActivitiesOfRepos } from 'common/objects/finders/statistics-finder.js';
 import { findLink } from 'common/objects/utils/external-data-utils.js';
 
@@ -230,6 +230,7 @@ function RepoListPageSync(props) {
       let contents;
       if (server) {
         const title = getServerName(server, env);
+        const iconClass = getServerIconClass(server);
         let url;
         if (!selection.shown) {
           url = route.find('server-summary-page', {
@@ -238,7 +239,7 @@ function RepoListPageSync(props) {
         }
         contents = (
           <a href={url}>
-            <i className={`fa fa-${server.type} fa-fw`} />
+            <i className={`${iconClass} fa-fw`} />
             {' '}
             {title}
           </a>
