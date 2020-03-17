@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 
 class EnvironmentMonitor extends EventEmitter {
@@ -74,19 +73,19 @@ class EnvironmentMonitor extends EventEmitter {
     // monitor network connectivity
     toggleEventListener(window, 'online', this.handleOnline, enabled);
     toggleEventListener(window, 'offline', this.handleOffline, enabled);
-    let network = getNetworkAPI();
+    const network = getNetworkAPI();
     toggleEventListener(network, 'typechange', this.handleConnectionTypeChange, enabled);
 
     // monitor for device changes
     toggleEventListener(navigator.mediaDevices, 'devicechange', this.handleDeviceChange, enabled);
 
     // monitor battery
-    let battery = await getBattery();
+    const battery = await getBattery();
     if (battery) {
       toggleEventListener(battery, 'levelchange', this.handleBatteryChange, enabled);
       toggleEventListener(battery, 'chargingchange', this.handleBatteryChange, enabled);
 
-      let { charging, level } = battery;
+      const { charging, level } = battery;
       this.battery = { charging, level };
     }
 
@@ -98,9 +97,9 @@ class EnvironmentMonitor extends EventEmitter {
       clearInterval(this.dateCheckInterval);
       this.dateCheckInterval = 0;
     }
-    let now = new Date;
+    const now = new Date;
     // let the handler at the beginning of a minute
-    let millisec = now.getSeconds() * 1000 + now.getMilliseconds();
+    const millisec = now.getSeconds() * 1000 + now.getMilliseconds();
     setTimeout(() => {
       this.dateCheckInterval = setInterval(this.handleDateChange, 60 * 1000);
     }, 60 * 1000 - millisec + 50);
@@ -191,7 +190,7 @@ class EnvironmentMonitor extends EventEmitter {
    * @param  {Event} evt
    */
   handleWindowResize = (evt) => {
-    let viewport = document.body.parentNode;
+    const viewport = document.body.parentNode;
     this.screenWidth = screen.width;
     this.screenHeight = screen.height;
     this.viewportWidth = viewport.clientWidth;
@@ -217,7 +216,7 @@ class EnvironmentMonitor extends EventEmitter {
    * @param  {Event} evt
    */
   handleBatteryChange = (evt) => {
-    let { charging, level} = evt.target;
+    const { charging, level} = evt.target;
     this.battery = { charging, level };
     this.triggerEvent(new EnvironmentMonitorEvent('change', this));
   }
@@ -240,13 +239,13 @@ class EnvironmentMonitor extends EventEmitter {
   }
 
   handleDateChange = () => {
-    let now = new Date;
-    let date = getDate(now);
+    const now = new Date;
+    const date = getDate(now);
     if (date !== this.date) {
       this.date = date;
       this.triggerEvent(new EnvironmentMonitorEvent('change', this));
     }
-    let sec = now.getSeconds();
+    const sec = now.getSeconds();
     if (sec >= 5) {
       // interval has drifted--reschedule it
       this.scheduleDateCheck();
@@ -254,9 +253,9 @@ class EnvironmentMonitor extends EventEmitter {
   }
 
   handleDeviceChange = async (evt) => {
-    let { mediaDevices } = navigator;
+    const { mediaDevices } = navigator;
     if (mediaDevices) {
-      let devices = await mediaDevices.enumerateDevices();
+      const devices = await mediaDevices.enumerateDevices();
       this.devices = devices;
       this.recorders = getRecordingSupport(devices);
       this.triggerEvent(new EnvironmentMonitorEvent('change', this));
@@ -265,7 +264,7 @@ class EnvironmentMonitor extends EventEmitter {
 }
 
 function getConnectionType() {
-  let connection = getNetworkAPI();
+  const connection = getNetworkAPI();
   if (connection) {
     if (connection.type) {
       return connection.type;
@@ -287,10 +286,10 @@ async function getBattery() {
 }
 
 function getOrientation() {
-  return _.get(screen, 'orientation.type', 'unknown');
+  return screen.orientation?.type || 'unknown';
 }
 
-let uaFragmentsBrowser = {
+const uaFragmentsBrowser = {
   firefox: 'Firefox',
   opera: 'Opera',
   ie: 'Trident',
@@ -300,7 +299,7 @@ let uaFragmentsBrowser = {
 };
 
 function detectBrowser() {
-  let ua = navigator.userAgent;
+  const ua = navigator.userAgent;
   for (let name in uaFragmentsBrowser) {
     if (ua.indexOf(uaFragmentsBrowser[name]) > -1) {
       return name;
@@ -309,7 +308,7 @@ function detectBrowser() {
   return 'unknown';
 }
 
-let uaFragmentsOS = {
+const uaFragmentsOS = {
   wp: 'Windows Phone',
   windows: 'Windows',
   ios: 'iPhone OS',
@@ -319,7 +318,7 @@ let uaFragmentsOS = {
 };
 
 function detectOS() {
-  let ua = navigator.userAgent;
+  const ua = navigator.userAgent;
   for (let name in uaFragmentsOS) {
     if (ua.indexOf(uaFragmentsOS[name]) > -1) {
       return name;
@@ -329,10 +328,10 @@ function detectOS() {
 }
 
 function isWebpSupported() {
-  let canvas = document.createElement('CANVAS');
+  const canvas = document.createElement('CANVAS');
   canvas.width = canvas.height = 1;
   if (canvas.toDataURL) {
-    let url = canvas.toDataURL('image/webp');
+    const url = canvas.toDataURL('image/webp');
     if (url.indexOf('image/webp') === 5) {
       return true;
     }
@@ -341,8 +340,10 @@ function isWebpSupported() {
 }
 
 function getRecordingSupport(devices) {
-  let recorders = [];
-  if (_.some(devices, { kind: 'videoinput' })) {
+  const recorders = [];
+  const videoDevice = devices.find(d => d.kind === 'videoinput');
+  const audioDevice = devices.find(d => d.kind === 'audioinput');
+  if (videoDevice) {
     if (canSavePhoto()) {
       recorders.push('image');
     }
@@ -350,7 +351,7 @@ function getRecordingSupport(devices) {
       recorders.push('video');
     }
   }
-  if (_.some(devices, { kind: 'audioinput' })) {
+  if (audioDevice) {
     if (canSaveAudio()) {
       recorders.push('audio');
     }
@@ -359,7 +360,7 @@ function getRecordingSupport(devices) {
 }
 
 function getCordovaRecordingSupport() {
-  let recorders = [];
+  const recorders = [];
   if (navigator.camera) {
     recorders.push('image');
   }
@@ -374,9 +375,9 @@ function getCordovaRecordingSupport() {
 }
 
 function canSavePhoto() {
-  let { mediaDevices } = navigator;
+  const { mediaDevices } = navigator;
   if (mediaDevices && mediaDevices.getUserMedia) {
-    let { toBlob, toDateURL } = HTMLCanvasElement.prototype;
+    const { toBlob, toDateURL } = HTMLCanvasElement.prototype;
     if (typeof(toBlob) === 'function') {
       return true;
     } else if (typeof(toDataURL) === 'function') {
@@ -387,7 +388,7 @@ function canSavePhoto() {
 }
 
 function canSaveAudio() {
-  let { mediaDevices } = navigator;
+  const { mediaDevices } = navigator;
   if (mediaDevices && mediaDevices.getUserMedia) {
     if (typeof(MediaRecorder) === 'function') {
       if (typeof(AudioContext) === 'function') {
@@ -399,7 +400,7 @@ function canSaveAudio() {
 }
 
 function canSaveVideo() {
-  let { mediaDevices } = navigator;
+  const { mediaDevices } = navigator;
   if (mediaDevices && mediaDevices.getUserMedia) {
     if (typeof(MediaRecorder) === 'function') {
       return true;

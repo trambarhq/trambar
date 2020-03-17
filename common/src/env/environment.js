@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import { memoizeStrong } from '../utils/memoize.js';
 
@@ -26,10 +25,7 @@ class Environment {
     this.devices = envMonitor.devices;
     this.recorders = envMonitor.recorders;
     this.androidKeyboard = this.detectAndroidKeyboard();
-
-    for (let name in extra) {
-      this[name] = extra[name];
-    }
+    Object.assign(this, extra);
   }
 
   isWiderThan(dim) {
@@ -58,7 +54,7 @@ class Environment {
       return false;
     }
 
-    let heightWithoutKeyboard = androidViewportHeights[this.orientation];
+    const heightWithoutKeyboard = androidViewportHeights[this.orientation];
     if (hasFocusedInput()) {
       // focus likely means keyboard is present--assume that it is, unless
       // the viewport height hasn't changed
