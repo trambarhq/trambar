@@ -55,7 +55,7 @@ module.exports = function(config) {
             }
           },
           {
-            test: /\.jpg|\.mp4/,
+            test: /\.(jpg|mp3|mp4)$/,
             loader: 'bin-loader',
           },
           {
