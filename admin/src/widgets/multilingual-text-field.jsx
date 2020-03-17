@@ -15,9 +15,11 @@ export const MultilingualTextField = React.forwardRef((props, ref) => {
   const { t, languageCode, directory } = env.locale;
   const [ selectedLanguageCode, setSelectedLanguageCode ] = useState();
   const currentLanguageCode = useMemo(() => {
-    // use selected language if it's among the ones available
-    if (_.includes(availableLanguageCodes, selectedLanguageCode)) {
-      return selectedLanguageCode;
+    if (!readOnly) {
+      // use selected language if it's among the ones available
+      if (_.includes(availableLanguageCodes, selectedLanguageCode)) {
+        return selectedLanguageCode;
+      }
     }
 
     const existingLanguageCodes = _.keys(value);
@@ -38,7 +40,7 @@ export const MultilingualTextField = React.forwardRef((props, ref) => {
       // if all else failed, use current language
       return languageCode;
     }
-  }, [ selectedLanguageCode, languageCode, availableLanguageCodes ]);
+  }, [ selectedLanguageCode, languageCode, availableLanguageCodes, readOnly ]);
   const [ hoverState, setHoverState ] = useState(null);
   const languageCodes = useMemo(() => {
     let existingLanguageCodes = _.keys(value);
