@@ -10,6 +10,15 @@ function getRepoURL(repo) {
   return _.get(repo, 'details.web_url', '');
 }
 
+function getRepoIconClass(repo) {
+  const type = _.get(repo, 'type', '');
+  switch (type) {
+    case 'gitlab':
+      return 'fab fa-gitlab';
+  }
+  return '';
+}
+
 function getMembershipPageURL(repo) {
   let projectURL = getRepoURL(repo)
   if (projectURL) {
@@ -153,6 +162,7 @@ function isBright(color) {
 export {
   getRepoName,
   getRepoURL,
+  getRepoIconClass,
   getMembershipPageURL,
   getIssueNumber,
   getIssueURL,
