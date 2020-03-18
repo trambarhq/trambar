@@ -200,6 +200,7 @@ export function StoryContents(props) {
   }
 
   function renderMemberText() {
+    const { action } = story.details;
     const url = (repoAccess) ? getMembershipPageURL(repo) : undefined
     const target = (repoAccess) ? repo.type : undefined;
     return (
@@ -571,8 +572,8 @@ export function StoryContents(props) {
 const countVotes = memoizeWeak({}, function(reactions) {
   let tallies = {};
   for (let reaction of reactions) {
-    if (reaction.type === 'vote' ) {
-      const { answers } of reaction.details;
+    if (reaction.type === 'vote') {
+      const { answers } = reaction.details;
       if (answers) {
         for (let [ name, value ] of Object.entries(answers)) {
           let tally = tallies[name];
