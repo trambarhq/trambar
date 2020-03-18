@@ -60,6 +60,7 @@ async function start() {
     .get(handleOAuthTestRequest)
     .get(handleOAuthActivationRequest)
     .get(handleOAuthRequest);
+  app.use(handleError);
   server = app.listen(80);
 
   cleanUpInterval = setInterval(deleteExpiredSessions, 60 * 60 * 1000);
@@ -71,78 +72,13 @@ async function stop() {
 };
 
 /**
- * Send HTML to browser
- *
- * @param  {Response} res
- * @param  {String} html
- */
-function sendHTML(res, html) {
-  res.type('html').send(html);
-}
-
-/**
- * Send error to browser as HTML
- *
- * @param  {Response} res
- * @param  {Error} err
- */
-function sendErrorHTML(res, err) {
-  err = sanitizeError(err);
-  const html = `
-    <h1>${err.statusCode} ${err.name}</h1>
-    <p>${err.message}</p>
-  `;
-  res.status(err.statusCode).type('html').send(html);
-}
-
-/**
- * Send JSON object to browser
- *
- * @param  {Response} res
- * @param  {Object} object
- */
-function sendJSON(res, object) {
-  res.json(object);
-}
-
-/**
- * Send error to browser as JSON
- *
- * @param  {Response} res
- * @param  {Error} err
- */
-function sendErrorJSON(res, err) {
-  err = sanitizeError(err);
-  res.status(err.statusCode).json(_.omit(err, 'statusCode'));
-}
-
-/**
- * Replace unexpected error with generic one on production to avoid leaking
- * sensitive information
- *
- * @param  {Error} err
- *
- * @return {Error}
- */
-function sanitizeError(err) {
-  if (!err.statusCode) {
-    // not an expected error
-    let message = err.message;
-    if (process.env.NODE_ENV === 'production') {
-      message = 'The application has encountered an unexpected fault';
-    }
-    err = new HTTPError(500, { message });
-  }
-  return err;
-}
-
-/**
  * Create a new session object
  *
  * @param  {Request} req
  * @param  {Response} res
+ * @param  {Function} next
  */
-async function handleSessionStart(req, res) {
+async function handleSessionStart(req, res, next) {
   const taskLog = TaskLog.start('session-start');
   try {
     const area = _.toLower(req.body.area);
@@ -183,10 +119,10 @@ async function handleSessionStart(req, res) {
       taskLog.set('type', 'mobile');
     }
     taskLog.set('area', area);
-    sendJSON(res, result);
+    res.json(result);
     await taskLog.finish();
   } catch (err) {
-    sendErrorJSON(res, err);
+    next(err);
     await taskLog.abort(err);
   }
 }
@@ -196,8 +132,9 @@ async function handleSessionStart(req, res) {
  *
  * @param  {Request} req
  * @param  {Response} res
+ * @param  {Function} next
  */
-async function handleHTPasswdRequest(req, res) {
+async function handleHTPasswdRequest(req, res, next) {
   const taskLog = TaskLog.start('password-check');
   try {
     const handle = _.toLower(req.body.handle);
@@ -211,11 +148,11 @@ async function handleHTPasswdRequest(req, res) {
     const result = {
       session: _.pick(sessionAfter, 'token', 'user_id', 'etime')
     };
-    sendJSON(res, result);
+    res.json(result);
     taskLog.set('user', user.username);
     await taskLog.finish();
   } catch (err) {
-    sendErrorJSON(res, err);
+    next(err);
     await taskLog.abort(err);
   }
 }
@@ -226,8 +163,9 @@ async function handleHTPasswdRequest(req, res) {
  *
  * @param  {Request} req
  * @param  {Response} res
+ * @param  {Function} next
  */
-async function handleSessionRetrieval(req, res) {
+async function handleSessionRetrieval(req, res, next) {
   const taskLog = TaskLog.start('session-retrieve');
   try {
     const handle = _.toLower(req.query.handle);
@@ -251,15 +189,15 @@ async function handleSessionRetrieval(req, res) {
       }
       result = null;
     }
-    sendJSON(res, result);
-    if (sessionAfter.token) {
+    res.json(result);
+    if (sessionAfter && sessionAfter.token) {
       const user = await findUser(session.user_id);
       taskLog.set('user', user.username);
       taskLog.set('expiration', sessionAfter.etime);
     }
     await taskLog.finish();
   } catch (err) {
-    sendErrorJSON(res, err);
+    next(err);
     await taskLog.abort(err);
   }
 }
@@ -269,17 +207,18 @@ async function handleSessionRetrieval(req, res) {
  *
  * @param  {Request} req
  * @param  {Response} res
+ * @param  {Function} next
  */
-async function handleSessionTermination(req, res) {
+async function handleSessionTermination(req, res, next) {
   const taskLog = TaskLog.start('session-terminate');
   try {
     const handle = _.toLower(req.body.handle);
     const session = await removeSession(handle);
     const devices = await removeDevices(session.handle);
-    sendJSON(res, {});
+    res.json({});
     await taskLog.finish();
   } catch (err) {
-    sendErrorJSON(res, err);
+    next(err);
     await taskLog.abort(err);
   }
 }
@@ -289,9 +228,9 @@ async function handleSessionTermination(req, res) {
  *
  * @param  {Request}   req
  * @param  {Response}  res
- * @param  {Function} done
+ * @param  {Function} next
  */
-async function handleOAuthRequest(req, res, done) {
+async function handleOAuthRequest(req, res, next) {
   const taskLog = TaskLog.start('oauth-authenticate');
   try {
     const query = extractQueryVariables(req.query);
@@ -317,9 +256,9 @@ async function handleOAuthRequest(req, res, done) {
       await saveSession(session);
     }
     const html = `<script> close() </script>`;
-    sendHTML(res, html);
+    res.type('html').send(html);
   } catch (err) {
-    sendErrorHTML(res, err);
+    next(err);
   }
 }
 
@@ -328,12 +267,12 @@ async function handleOAuthRequest(req, res, done) {
  *
  * @param  {Request}   req
  * @param  {Response}  res
- * @param  {Function}  done
+ * @param  {Function}  next
  */
-async function handleOAuthTestRequest(req, res, done) {
+async function handleOAuthTestRequest(req, res, next) {
   const query = extractQueryVariables(req.query);
   if (!query.test) {
-    return done();
+    return next();
   }
   const taskLog = TaskLog.start('oauth-test');
   try {
@@ -348,10 +287,10 @@ async function handleOAuthTestRequest(req, res, done) {
     taskLog.set('email', _.map(account.profile.emails, 'value'));
     taskLog.set('server', server.name);
     const html = `<h1>OK</h1>`;
-    sendHTML(res, html);
+    res.type('html').send(html);
     await taskLog.finish();
   } catch (err) {
-    sendErrorHTML(res, err);
+    next(err);
     await taskLog.abort(err);
   }
 }
@@ -361,12 +300,12 @@ async function handleOAuthTestRequest(req, res, done) {
  *
  * @param  {Request}   req
  * @param  {Response}  res
- * @param  {Function}  done
+ * @param  {Function}  next
  */
-async function handleOAuthActivationRequest(req, res, done) {
+async function handleOAuthActivationRequest(req, res, next) {
   const query = extractQueryVariables(req.query);
   if (!query.activation) {
-    return done();
+    return next();
   }
   const taskLog = TaskLog.start('oauth-access-acquire');
   try {
@@ -400,11 +339,11 @@ async function handleOAuthActivationRequest(req, res, done) {
     };
     await saveServer(server);
     const html = `<h1>OK</h1>`;
-    sendHTML(res, html);
+    res.type('html').send(html);
     taskLog.set('server', server.name);
     await taskLog.finish();
   } catch (err) {
-    sendErrorHTML(res, err);
+    next(err);
     await taskLog.abort(err);
   }
 }
@@ -415,9 +354,9 @@ async function handleOAuthActivationRequest(req, res, done) {
  *
  * @param  {Request}   req
  * @param  {Response}  res
- * @param  {Function}  done
+ * @param  {Function}  next
  */
-async function handleOAuthDeauthorizationRequest(req, res, done) {
+async function handleOAuthDeauthorizationRequest(req, res, next) {
   const taskLog = TaskLog.start('oauth-access-deauthorize');
   try {
     const provider = req.params.provider;
@@ -448,13 +387,13 @@ async function handleOAuthDeauthorizationRequest(req, res, done) {
         throw lastError;
       }
     }
-    sendJSON(res, { status: 'ok' });
+    res.json({ status: 'ok' });
     if (user) {
       taskLog.set('user', user.username);
     }
     await taskLog.finish();
   } catch (err) {
-    sendErrorJSON(res, err);
+    next(next);
     await taskLog.abort(err);
   }
 }
@@ -464,8 +403,9 @@ async function handleOAuthDeauthorizationRequest(req, res, done) {
  *
  * @param  {Request}   req
  * @param  {Response}  res
+ * @param  {Function}  next
  */
-async function handleLegalDocumentRequest(req, res) {
+async function handleLegalDocumentRequest(req, res, next) {
   try {
     const db = await Database.open();
     const system = await System.findOne(db, 'global', { deleted: false }, 'details');
@@ -475,9 +415,45 @@ async function handleLegalDocumentRequest(req, res) {
     const text = await FS.readFileAsync(path, 'utf-8');
     const fn = _.template(text);
     const html = fn({ company });
-    sendHTML(res, html);
+    res.type('html').send(html);
   } catch (err) {
-    sendErrorHTML(res, err);
+    next(err);
+  }
+}
+
+/**
+ * Handle error
+ *
+ * @param  {Error}     err
+ * @param  {Request}   req
+ * @param  {Response}  res
+ * @param  {Function}  next
+ */
+function handleError(err, req, res, next) {
+  if (!err.statusCode) {
+    // not an expected error
+    let message = err.message;
+    if (process.env.NODE_ENV === 'production') {
+      message = 'The application has encountered an unexpected fault';
+    }
+    err = new HTTPError(500, { message });
+  }
+  if (!res.headersSent) {
+    res.status(err.statusCode);
+
+    if (/\btext\/html\b/.test(req.headers.accept)) {
+      const html = `
+        <h1>${err.statusCode} ${err.name}</h1>
+        <p>${err.message}</p>
+      `;
+      res.type('html').send(html);
+    } else {
+      const json = _.omit(err, 'statusCode');
+      res.json(json);
+    }
+  } else {
+    console.log(`Error occurred after HTTP headers have already been sent`);
+    console.error(err);
   }
 }
 
