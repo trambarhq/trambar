@@ -30,10 +30,11 @@ async function findUser(db, id) {
  * @return {Promise<User>}
  */
 async function findUsers(db, ids) {
-  if (_.isEmpty(ids)) {
+  const ids = _.uniq(ids);
+  if (ids.length === 0) {
     return emptyArray;
   }
-  ids = _.sortBy(_.uniq(ids));
+  ids.sort();
   return db.find({
     schema,
     table,

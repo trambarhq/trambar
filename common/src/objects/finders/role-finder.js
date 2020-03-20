@@ -68,11 +68,11 @@ async function findActiveRoles(db, minimum) {
  */
 async function findRolesOfUsers(db, users) {
   // load roles that members have
-  let roleIDs = _.flatten(_.map(users, 'role_ids'));
-  if (_.isEmpty(roleIDs)) {
+  const roleIDs = _.uniq(_.flatten(_.map(users, 'role_ids')));
+  if (roleIDs.length === 0) {
     return emptyArray;
   }
-  roleIDs = _.sortBy(_.uniq(roleIDs));
+  roleIDs.sort();
   return db.find({
     schema,
     table,

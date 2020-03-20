@@ -143,15 +143,15 @@ async function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
   }
   const schema = project.name;
   // load story-date-range statistics
-  const currentUsers = _.filter(users, (user) => {
-    return !user.deleted;
-  });
-  const rangeFilters = _.map(currentUsers, (user) => {
-    return {
-      user_ids: [ user.id ],
-      public: publicOnly || undefined,
-    };
-  });
+  const rangeFilters = [];
+  for (let user of users) {
+    if (!user.deleted) {
+      rangeFilters.push({
+        user_ids: [ user.id ],
+        public: publicOnly || undefined,
+      });
+    }
+  }
   const rangeQuery = {
     schema: project.name,
     table,
@@ -159,21 +159,26 @@ async function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
     prefetch: true,
   };
   const dateRanges = _.filter(await db.find(rangeQuery), isValidRange);
+
   // load daily-activities statistics
-  const filterLists = _.map(dateRanges, (dateRange) => {
-    const timeRanges = getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
-    const tzOffset = getTimeZoneOffset();
-    return _.map(timeRanges, (timeRange) => {
-      return {
-        user_ids: dateRange.filters.user_ids,
-        time_range: timeRange,
-        tz_offset: tzOffset,
-        public: publicOnly || undefined,
-      };
-    });
-  });
-  const filters = _.flatten(filterLists);
-  if (_.isEmpty(filters)) {
+  const filters = [];
+  for (let dateRange of dateRanges) {
+    if (isValidRange(dateRange)) {
+      const startTime = dateRange.details.start_time;
+      const endTime = dateRange.details.end_time;
+      const timeRanges = getMonthRanges(startTime, endTime);
+      const tzOffset = getTimeZoneOffset();
+      for (let timeRange of timeRanges) {
+        filters.push({
+          user_ids: dateRange.filters.user_ids,
+          time_range: timeRange,
+          tz_offset: tzOffset,
+          public: publicOnly || undefined,
+        });
+      }
+    }
+  }
+  if (filters.length === 0) {
     return {};
   }
   const query = {
@@ -226,32 +231,37 @@ async function findDailyNotificationsOfUsers(db, project, users) {
   }
   const schema = project.name;
   // load notification-date-range statistics
-  const currentUsers = _.filter(users, (user) => {
-    return !user.deleted;
-  });
-  const rangeFilters = _.map(currentUsers, (user) => {
-    return { target_user_id: user.id };
-  });
+  const rangeFilters = [];
+  for (let user of users) {
+    if (!user.deleted) {
+      rangeFilters.push({ target_user_id: user.id });
+    }
+  }
   const rangeQuery = {
     schema,
     table,
     criteria: { type: 'notification-date-range', filters: rangeFilters }
   };
-  const dateRanges = _.filter(await db.find(rangeQuery), isValidRange);
+  const dateRanges = await db.find(rangeQuery);
+
   // load daily-activities statistics
-  const filterLists = _.map(dateRanges, (dateRange) => {
-    const timeRanges = getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
-    const tzOffset = getTimeZoneOffset();
-    return _.map(timeRanges, (timeRange) => {
-      return {
-        target_user_id: dateRange.filters.target_user_id,
-        time_range: timeRange,
-        tz_offset: tzOffset,
-      };
-    });
-  });
-  const filters = _.flatten(filterLists);
-  if (_.isEmpty(filters)) {
+  const filters = [];
+  for (let dateRange of dateRanges) {
+    if (isValidRange(dateRange)) {
+      const startTime = dateRange.details.start_time;
+      const endTime = dateRange.details.end_time;
+      const timeRanges = getMonthRanges(startTime, endtime);
+      const tzOffset = getTimeZoneOffset();
+      for (let timeRange of timeRanges) {
+        filters.push({
+          target_user_id: dateRange.filters.target_user_id,
+          time_range: timeRange,
+          tz_offset: tzOffset,
+        });
+      }
+    }
+  }
+  if (filters.length === 0) {
     return {};
   }
   const query = {
@@ -303,33 +313,38 @@ async function findDailyActivitiesOfRepos(db, project, repos) {
   }
   const schema = project.name;
   // load story-date-range statistics
-  const currentRepos = _.filter(repos, (repo) => {
-    return !repo.deleted;
-  });
-  const rangeFilters = _.map(currentRepos, (repo) => {
-    let link = _.find(repo.external, { type: repo.type });
-    return { external_object: link };
-  });
+  const rangeFilters = [];
+  for (let repo of repos) {
+    if (!repo.deleted) {
+      const link = _.find(repo.external, { type: repo.type });
+      rangeFilters.push({ external_object: link });
+    }
+  }
   const rangeQuery = {
     schema,
     table,
     criteria: { type: 'story-date-range', filters: rangeFilters },
   };
-  const dateRanges = _.filter(await db.find(rangeQuery), isValidRange);
+  const dateRanges = await db.find(rangeQuery);
+
   // load daily-activities statistics
-  const filterLists = _.map(dateRanges, (dateRange) => {
-    const timeRanges = getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
-    const tzOffset = getTimeZoneOffset();
-    return _.map(timeRanges, (timeRange) => {
-      return {
-        external_object: dateRange.filters.external_object,
-        time_range: timeRange,
-        tz_offset: tzOffset,
-      };
-    });
-  });
-  const filters = _.flatten(filterLists);
-  if (_.isEmpty(filters)) {
+  const filters = [];
+  for (let dateRange of dateRanges) {
+    if (isValidRange(dateRange)) {
+      const startTime = dateRange.details.start_time;
+      const endTime = dateRange.details.end_time;
+      const timeRanges = getMonthRanges(startTime, endTime);
+      const tzOffset = getTimeZoneOffset();
+      for (let timeRange of timeRanges) {
+        filters.push({
+          external_object: dateRange.filters.external_object,
+          time_range: timeRange,
+          tz_offset: tzOffset,
+        });
+      }
+    }
+  }
+  if (filters.length === 0) {
     return {};
   }
   const query = {

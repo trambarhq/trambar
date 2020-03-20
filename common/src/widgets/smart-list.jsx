@@ -261,7 +261,7 @@ export function SmartList(props) {
     }
     if (estimatedHeight === undefined) {
       const heights = _.filter(_.map(slots, 'height'));
-      if (!_.isEmpty(heights)) {
+      if (heights.length > 0) {
         const estimatedHeight = Math.round(_.mean(heights));
         if (estimatedHeight > 0) {
           setEstimatedHeight(estimatedHeight);

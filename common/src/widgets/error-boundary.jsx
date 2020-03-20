@@ -73,6 +73,6 @@ function compareElements(e1, e2) {
   if (e1.type !== e2.type) {
     return false;
   }
-  let diff = _.shallowDiff(e1.props, e2.props);
-  return _.isEmpty(diff);
+  const diff = _.shallowDiff(e1.props, e2.props);
+  return (diff.length === 0);
 }

@@ -70,11 +70,11 @@ async function findExistingRepos(db, minimum) {
  */
 async function findProjectRepos(db, projects) {
   if (projects instanceof Array) {
-    let ids = _.flatten(_.map(projects, 'repo_ids'));
-    if (_.isEmpty(ids)) {
+    const ids = _.uniq(_.flatten(_.map(projects, 'repo_ids')));
+    if (ids.length === 0) {
       return emptyArray;
     }
-    ids = _.sortBy(_.uniq(ids));
+    ids.sort();
     return db.find({
       schema,
       table,

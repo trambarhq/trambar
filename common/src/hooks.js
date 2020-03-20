@@ -105,10 +105,11 @@ class AsyncSelectionBuffer extends AsyncSaveBuffer {
 
 function useSelectionBuffer(params) {
   const selection = useSaveBuffer({
+    original: [],
     compare: (a, b) => {
       const idsA = _.map(a, 'id');
       const idsB = _.map(b, 'id');
-      return _.isEmpty(_.xor(idsA, idsB));
+      return (_.xor(idsA, idsB).length === 0);
     },
     ...params,
   }, AsyncSelectionBuffer);

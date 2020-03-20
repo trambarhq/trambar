@@ -67,7 +67,7 @@ export class Change {
       this.dispatching = true;
       return;
     }
-    if (!_.isEmpty(this.dependentPromises)) {
+    if (this.dependentPromises.length > 0) {
       await Promise.all(this.dependentPromises);
     }
     let retryInterval = 1000;
@@ -283,7 +283,7 @@ export class Change {
    * @return {Boolean}
    */
   noop() {
-    if (!_.isEmpty(this.dependentPromises)) {
+    if (this.dependentPromises.length > 0) {
       // an earlier operation has already been dispatched--we can't
       // drop this one since a new object will be created
       return false;
@@ -294,7 +294,7 @@ export class Change {
       }
       return true;
     });
-    return _.isEmpty(this.objects);
+    return (this.objects.length === 0);
   }
 
   /**

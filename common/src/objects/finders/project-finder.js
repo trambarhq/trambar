@@ -101,11 +101,11 @@ async function findActiveProjects(db, minimum) {
  * @return {Promise<Array<Project>>}
  */
 async function findProjectsWithMembers(db, users, minimum) {
-  let ids = _.map(users, 'id');
-  if (_.isEmpty(ids)) {
+  const ids = _.map(users, 'id');
+  if (ids.length === 0) {
     return emptyArray;
   }
-  ids = _.sortBy(_.uniq(ids));
+  ids.sort();
   return db.find({
     schema,
     table,

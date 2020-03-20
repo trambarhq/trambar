@@ -153,12 +153,12 @@ class LocaleManager extends EventEmitter {
           const engKeys = _.keys(engTable);
           const missing = _.difference(engKeys, targetKeys);
           const extra = _.difference(targetKeys, engKeys);
-          if (!_.isEmpty(missing)) {
+          if (missing.length > 0) {
             console.log(`The following phrases are missing [${localeCode}]:`);
             for (let name of missing) {
               console.log(name);
             }
-          } else if (!_.isEmpty(extra)) {
+          } else if (extra.length > 0) {
             console.log(`The following phrases are extraneous [${localeCode}]:`);
             for (let name of extra) {
               console.log(name);

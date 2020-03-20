@@ -47,16 +47,17 @@ async function findAllServers(db, minimum) {
  * @return {Promise<Array<Server>>}
  */
 async function findRepoServers(db, repos) {
-  let ids = _.filter(_.map(repos, (repo) => {
+  const ids = [];
+  for (let repo of repos) {
     const link = findLinkByServerType(repo, repo.type);
-    if (link) {
-      return link.server_id;
+    if (link && ids.indexOf(link.server_id) === -1) {
+      ids.push(link.server_id);
     }
-  }));
-  if (_.isEmpty(ids)) {
+  }
+  if (ids.length === 0) {
     return emptyArray;
   }
-  ids = _.sortBy(_.uniq(ids));
+  ids.sort();
   return db.find({
     schema,
     table,

@@ -103,10 +103,10 @@ class PayloadManager extends EventEmitter {
    * @param  {Array<String>} ids
    */
   abandon(ids) {
-    let payloads = _.filter(this.payloads, (payload) => {
+    const payloads = _.filter(this.payloads, (payload) => {
       return _.includes(ids, payload.id);
     });
-    if (!_.isEmpty(payloads)) {
+    if (payloads.length > 0) {
       for (let payload of payloads) {
         payload.cancel();
       }

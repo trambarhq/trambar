@@ -29,10 +29,11 @@ async function findStory(db, id) {
  * @return {Promise<Story>}
  */
 async function findStories(db, ids) {
-  if (_.isEmpty(ids)) {
+  ids = _.uniq(ids);
+  if (ids.length === 0) {
     return emptyArray;
   }
-  ids = _.sortBy(_.uniq(ids));
+  ids.sort();
   return db.find({
     table,
     criteria: { id: ids },
@@ -49,10 +50,11 @@ async function findStories(db, ids) {
  * @return {Promise<Story>}
  */
 async function findViewableStories(db, ids, currentUser) {
-  if (_.isEmpty(ids) || !currentUser) {
+  ids = _.uniq(ids);
+  if (ids.length === 0 || !currentUser) {
     return emptyArray;
   }
-  ids = _.sortBy(_.uniq(ids));
+  ids.sort();
   return db.find({
     table,
     criteria: {
@@ -235,7 +237,7 @@ async function findStoriesInListing(db, type, currentUser, blockIfStale) {
     // shouldn't happen, since listings are created on demand
     throw new Error('No story listing');
   }
-  if (_.isEmpty(listing.story_ids) && listing.dirty) {
+  if (listing.story_ids.length === 0 && listing.dirty) {
     // wait for the listing to become populated then try again
     let changed = await db.waitForChange({ table: 'listing' }, listing, 5000);
     if (!changed) {
@@ -362,7 +364,7 @@ async function findStoriesByUserInListing(db, type, user, currentUser, blockIfSt
   if (!listing) {
     return null;
   }
-  if (_.isEmpty(listing.story_ids) && listing.dirty) {
+  if (listing.story_ids.length === 0 && listing.dirty) {
     // wait for the listing to become populated then try again
     let changed = await db.waitForChange({ table: 'listing' }, listing, 5000);
     if (!changed) {
@@ -404,12 +406,16 @@ async function findStoriesByUsersInListings(db, type, users, currentUser, perUse
   if (blockIfStale) {
     query.blocking = 'stale';
   }
-  let listings = await db.find(query);
-  let storyIDs = _.flatten(_.map(listings, (listing) => {
-    return _.slice(listing.story_ids, - perUserLimit);
-  }));
-  if (_.isEmpty(storyIDs)) {
-    if (_.some(listings, { dirty: true })) {
+  const listings = await db.find(query);
+  const storyIDs = [];
+  for (let listing of listings) {
+    for (let storyID of listing.story_ids.slice(-perUserLimit)) {
+      storyIDs.push(storyID);
+    }
+  }
+  if (storyIDs.length === 0) {
+    const dirty = listings.find(l => l.dirty === true);
+    if (dirty) {
       return null;
     }
   }
@@ -431,7 +437,7 @@ async function findStoriesWithRolesInListing(db, type, roleIDs, currentUser, blo
   if (!currentUser) {
     return emptyArray;
   }
-  let query = {
+  const query = {
     table: 'listing',
     criteria: {
       type: type,
@@ -450,7 +456,7 @@ async function findStoriesWithRolesInListing(db, type, roleIDs, currentUser, blo
   if (!listing) {
     return null;
   }
-  if (_.isEmpty(listing.story_ids) && listing.dirty) {
+  if (listing.story_ids.length === 0 && listing.dirty) {
     return null;
   }
   return findViewableStories(db, listing.story_ids, currentUser);

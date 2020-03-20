@@ -471,7 +471,7 @@ function canReceiveNotification(user, repos, type) {
   if (_.includes(GitNotificationTypes, type)) {
     // assume user can receive notification if loading isn't done
     if (repos) {
-      if (_.isEmpty(repos)) {
+      if (repos.length === 0) {
         return false;
       }
       if (_.includes(GitNotificationTypes.membership, type)) {

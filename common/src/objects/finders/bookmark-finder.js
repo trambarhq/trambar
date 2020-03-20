@@ -14,11 +14,11 @@ const emptyArray = [];
  * @return {Promise<Array<Bookmark>>}
  */
 async function findBookmarksByUser(db, user, stories, minimum) {
-  let storyIds = _.map(stories, 'id');
-  storyIds = _.sortBy(_.uniq(storyIds));
-  if (_.isEmpty(storyIds) || !user) {
+  const storyIds = _.uniq(_.map(stories, 'id'));
+  if (storyIds.length === 0 || !user) {
     return emptyArray;
   }
+  storyIds.sort();
   return db.find({
     table,
     criteria: {

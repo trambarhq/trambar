@@ -14,10 +14,13 @@ const emptyArray = [];
  * @return {Promise<Array<Reaction>>}
  */
 async function findReactionsToStories(db, stories, currentUser, minimum) {
-  let storyIDs = _.filter(_.uniq(_.map(stories, 'id')), (id) => {
-    return (id >= 1);
-  });
-  if (_.isEmpty(storyIDs) || !currentUser) {
+  const storyIDs = [];
+  for (let story of stories) {
+    if (story.id >= 1 && storyIDs.indexOf(story.id) === -1) {
+      storyIDs.push(story.id);
+    }
+  }
+  if (storyIDs.length === 0 || !currentUser) {
     return emptyArray;
   }
   return db.find({
