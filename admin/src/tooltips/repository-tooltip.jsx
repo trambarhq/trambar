@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import { getRepoName } from 'common/objects/utils/repo-utils.js';
+import { getRepoName, getRepoIconClass } from 'common/objects/utils/repo-utils.js';
 
 // widgets
 import { Tooltip } from '../widgets/tooltip.jsx';
@@ -22,12 +22,12 @@ export function RepositoryTooltip(props) {
       projectID: project.id,
       repoID: repo.id,
     });
-    const iconName = repo.type;
+    const iconClass = getRepoIconClass(repo);
     const name = getRepoName(repo, env);
     return (
       <div className="item" key={repo.id}>
         <a href={url}>
-          <i className={`fa fa-${iconName}`}/> {name}
+          <i className={iconClass}/> {name}
         </a>
       </div>
     );

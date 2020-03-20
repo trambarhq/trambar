@@ -223,7 +223,7 @@ class TaskRemoveProjectHook extends BasicTask {
     const db = await Database.open();
     const host = await getSystemAddress(db);
     const repo = await getRepo(db, this.repoID);
-    const project = await getProject(db, this.projectID);
+    const project = await getProject(db, this.projectID, true);
     const server = await getRepoServer(db, repo);
     if (host && repo && project && server) {
       await HookManager.removeProjectHook(host, server, repo, project);
@@ -688,12 +688,13 @@ async function getTemplateRepos(db) {
   return Repo.find(db, 'global', criteria, '*');
 }
 
-async function getProject(db, projectID) {
+async function getProject(db, projectID, includeDisabled) {
   const criteria = {
     id : projectID,
-    archived: false,
-    deleted: false,
   };
+  if (!includeDisabled) {
+    criteria.archived = criteria.deleted = false;
+  }
   return Project.findOne(db, 'global', criteria, '*');
 }
 

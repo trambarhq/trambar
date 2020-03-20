@@ -82,7 +82,7 @@ CoauthoringButton.propTypes = {
   onSelect: PropTypes.func,
   onRemove: PropTypes.func,
 };
-CornerPopUp.ropType = {
+CornerPopUp.propType = {
   open: PropTypes.bool,
   disabled: PropTypes.bool,
   name: PropTypes.string,
