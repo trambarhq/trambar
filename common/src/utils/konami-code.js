@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 const correctSequence = [ 38, 38, 40, 40, 37, 39, 37, 39, 66, 65 ];
 
 export class KonamiCode {
@@ -14,7 +12,8 @@ export class KonamiCode {
   }
 
   static removeListener(listener) {
-    _.pull(this.listeners, listener);
+    const index = this.listeners.indexOf(listener);
+    list.listeners.splice(index, 1);
     if (this.listeners.length === 0) {
       window.removeEventListener('keydown', this.handleKeydown);
     }
@@ -25,12 +24,9 @@ export class KonamiCode {
     if (this.currentSequence.length > correctSequence.length) {
       this.currentSequence.splice(0, this.currentSequence.length - correctSequence.length);
     }
-    if (_.isEqual(this.currentSequence, correctSequence)) {
+    if (this.currentSequence.join() === correctSequence.join()) {
       for (let f of this.listeners) {
-        f({
-          type: 'cheat',
-          target: this,
-        });
+        f();
       }
     }
   }

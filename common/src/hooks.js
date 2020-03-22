@@ -1,7 +1,7 @@
-import _ from 'lodash';
 import React from 'react';
 import { useSaveBuffer, AsyncSaveBuffer } from 'relaks';
 import { Cancellation } from './errors.js';
+import { isEqual, decoupleSet, decoupleUnset } from './utils/object.js';
 
 const { useState, useMemo, useRef, useCallback } = React;
 
@@ -56,11 +56,11 @@ function useConfirmation() {
 
 class AsyncSelectionBuffer extends AsyncSaveBuffer {
   isExisting(object) {
-    return _.some(this.original, { id: object.id });
+    return !!this.original.find(x => x.id === object.id);
   }
 
   isKeeping(object) {
-    return _.some(this.current, { id: object.id });
+    return !!this.current.find(c => c.id === object.id);
   }
 
   isAdding(object) {
@@ -92,12 +92,12 @@ class AsyncSelectionBuffer extends AsyncSaveBuffer {
   }
 
   toggle(object) {
-    const existing = _.find(this.current, { id: object.id });
-    let newList;
-    if (existing) {
-      newList = _.without(this.current, existing);
+    const newList = this.current.slice();
+    const index = newList.findIndex(c => c.id === object.id);
+    if (index !== -1) {
+      newList.splice(index, 1);
     } else {
-      newList = _.concat(this.current, object);
+      newList.push(object);
     }
     this.update(newList);
   }
@@ -107,9 +107,9 @@ function useSelectionBuffer(params) {
   const selection = useSaveBuffer({
     original: [],
     compare: (a, b) => {
-      const idsA = _.map(a, 'id');
-      const idsB = _.map(b, 'id');
-      return (_.xor(idsA, idsB).length === 0);
+      const idsA = a.map(obj => obj.id).sort();
+      const idsB = a.map(obj => obj.id).sort();
+      return isEqual(idsA, idsB);
     },
     ...params,
   }, AsyncSelectionBuffer);
@@ -119,11 +119,11 @@ function useSelectionBuffer(params) {
 
 class AsyncDraftBuffer extends AsyncSaveBuffer {
   getCurrent(key, def) {
-    return _.get(this.current, key, def);
+    return get(this.current, key, def);
   }
 
   getOriginal(key, def) {
-    return _.get(this.original, key, def);
+    return get(this.original, key, def);
   }
 
   get(key, def) {
@@ -134,18 +134,18 @@ class AsyncDraftBuffer extends AsyncSaveBuffer {
     if (value === undefined) {
       this.unset(key);
     } else {
-      this.update(_.decoupleSet(this.current, key, value));
+      this.update(decoupleSet(this.current, key, value));
     }
   };
 
   unset(key, value) {
-    this.update(_.decoupleUnset(this.current, key, value));
+    this.update(decoupleUnset(this.current, key, value));
   };
 }
 
 function useDraftBuffer(params) {
   const draft = useSaveBuffer({
-    compare: _.isEqual,
+    compare: isEqual,
     ...params,
   }, AsyncDraftBuffer);
   return draft;

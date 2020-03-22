@@ -1,8 +1,8 @@
-import _ from 'lodash';
 import React from 'react';
 import EmojiRegex from 'emoji-regex';
 import ReactEasyEmoji from 'react-easy-emoji';
 import { extractListItems } from './list-parser.js';
+import { get } from './object-utils.js';
 
 function renderPlainText(props) {
   const { type, text, answers, results, onChange } = props;
@@ -38,9 +38,9 @@ function renderPlainText(props) {
  */
 function renderSurvey(text, answers, onChange) {
   const listTokens = extractListItems(text);
-  return _.map(listTokens, (listToken, index) => {
+  return listTokens.map((listToken, index) => {
     if (listToken instanceof Array) {
-      return _.map(listToken, (item, key) => {
+      return listToken.map((item, key) => {
         let checked = item.checked;
         if (answers) {
           // override radio-button state indicated in text
@@ -87,12 +87,12 @@ function renderSurvey(text, answers, onChange) {
  */
 function renderSurveyResults(text, voteCounts) {
   const listTokens = extractListItems(text);
-  return _.map(listTokens, (listToken, index) => {
+  return listTokens.map((listToken, index) => {
     if (listToken instanceof Array) {
-      return _.map(listToken, (item, key) => {
+      return listToken.map((item, key) => {
         const tally = voteCounts[item.list];
-        const total = _.get(tally, 'total', 0);
-        const count = _.get(tally, [ 'answers', item.key ], 0);
+        const total = get(tally, 'total', 0);
+        const count = get(tally, [ 'answers', item.key ], 0);
         const percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
         const color = `color-${item.key % 12}`;
         const className = 'vote-count';
@@ -132,9 +132,9 @@ function renderSurveyResults(text, voteCounts) {
  */
 function renderTaskList(text, answers, onChange) {
   const listTokens = extractListItems(text);
-  return _.map(listTokens, (listToken, index) => {
+  return listTokens.map((listToken, index) => {
     if (listToken instanceof Array) {
-      return _.map(listToken, (item, key) => {
+      return listToken.map((item, key) => {
         let checked = item.checked;
         if (answers) {
           // override checkbox/radio-button state indicated in text
@@ -191,7 +191,7 @@ function renderEmoji(text, options) {
     return [ text ];
   }
   // use custom function so we can add prefix to key
-  const parentKey = _.get(options, 'key');
+  const parentKey = (options) ? options.key : undefined;
   return ReactEasyEmoji(text, renderEmojiImage.bind(null, parentKey));
 }
 

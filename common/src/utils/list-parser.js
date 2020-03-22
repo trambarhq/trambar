@@ -13,7 +13,7 @@ const regExp = /^([ \t]*)\*\s+\[([ xхχ])\]([ \t]*)(.*?)([ \t]*?)$/mig;
 function extractListItems(text) {
   text = (text) ? text : '';
 
-  let tokens = [];
+  const tokens = [];
   let si = 0;
   let m;
   let currentList = null;
@@ -24,26 +24,26 @@ function extractListItems(text) {
     if (textBefore) {
       // if there's text before the item, then close out then current list
       if (currentList) {
-        if (_.trim(textBefore)) {
+        if (textBefore.trim()) {
           currentList = null;
           list++;
           tokens.push({ text: textBefore });
         } else {
           // append the whitespaces onto the last time
-          let lastItem = _.last(currentList);
+          const lastItem = currentList[currentList.length - 1];
           lastItem.after += textBefore;
         }
       } else {
         tokens.push({ text: textBefore });
       }
     }
-    let before = m[1];
-    let answer = m[2];
-    let checked = !!_.trim(answer);
-    let between = m[3]
-    let label = m[4];
-    let after = m[5];
-    let item = { label, checked, answer, before, between, after, list, key };
+    const before = m[1];
+    const answer = m[2];
+    const checked = !!answer.trim();
+    const between = m[3]
+    const label = m[4];
+    const after = m[5];
+    const item = { label, checked, answer, before, between, after, list, key };
     if (currentList) {
       currentList.push(item);
     } else {
@@ -53,7 +53,7 @@ function extractListItems(text) {
     si = m.index + m[0].length;
     key++;
   }
-  let textAfter = text.substring(si);
+  const textAfter = text.substring(si);
   if (textAfter) {
     tokens.push({ text: textAfter });
   }
@@ -69,13 +69,21 @@ function extractListItems(text) {
  */
 function isList(text) {
   if (typeof(text) === 'object') {
-    return _.some(text, isList);
+    for (let langText of Object.values(text)) {
+      if (isList(langText)) {
+        return true;
+      }
+    }
+    return false;
   }
   const tokens = extractListItems(text);
-  return _.some(tokens, (token) => {
+  for (let tokens of token) {
     // lists are arrays
-    return token instanceof Array;
-  });
+    if (token instanceof Array) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -135,13 +143,10 @@ function updateListItem(item, checked) {
 function findListItem(tokens, list, key) {
   for (let token of tokens) {
     if (token instanceof Array) {
-      let result = _.find(token, (item) => {
+      for (let item of token) {
         if (item.list == list && item.key == key) {
-          return true;
+          return item;
         }
-      });
-      if (result) {
-        return result;
       }
     }
   }
@@ -178,14 +183,16 @@ function countListItems(tokens, checked) {
  * @return {String}
  */
 function stringifyList(tokens) {
-  // concatenate tokens into a string again
-  tokens = _.flattenDeep(tokens);
-  let lines = [];
+  const lines = [];
   for (let token of tokens) {
-    if (token.list) {
-      lines.push(token.before + '* [' + token.answer + ']' + token.between + token.label + token.after);
+    if (token instanceof Array) {
+      for (let item of token) {
+        const { before, answer, between, label, after } = token;
+        lines.push(before + '* [' + answer + ']' + between + label + after);
+      }
     } else {
-      lines.push(token.text);
+      const { text } = token;
+      lines.push(text);
     }
   }
   return lines.join('');

@@ -1,9 +1,9 @@
-import _ from 'lodash';
 import React from 'react';
 import { Parser, InlineLexer, ReactRenderer } from 'mark-gor';
 import { extractListItems } from './list-parser.js';
 import { renderEmoji } from './plain-text.js';
 import { parseJSONEncodedURL } from '../objects/utils/resource-utils.js';
+import { get } from './object-utils.js';
 
 // widgets
 import { ResourceView } from '../widgets/resource-view.jsx';
@@ -33,7 +33,12 @@ function renderMarkdown(props) {
  */
 function isMarkdown(text, onReference) {
   if (typeof(text) === 'object') {
-    return _.some(text, isMarkdown);
+    for (let langText of Object.values(text)) {
+      if (isMarkdown(langText)) {
+        return true;
+      }
+    }
+    return false;
   }
   const parser = new CustomParser({ onReference });
   return parser.detect(text);
@@ -46,7 +51,7 @@ function findReferencedResource(resources, name) {
     if (type === 'picture' || type === 'photo') {
       type = 'image';
     }
-    const matchingResources = _.filter(resources, { type });
+    const matchingResources = resources.filter(r => r.type === type);
     const number = parseInt(match[3]) || 1;
     const res = matchingResources[number - 1];
     if (res) {
@@ -71,10 +76,10 @@ function renderSurvey(text, answers, onChange, onReference) {
   renderListItems(listTokens, onReference);
 
   // create text nodes and list items
-  return _.map(listTokens, (listToken, index) => {
+  return listTokens.map((listToken, index) => {
     if (listToken instanceof Array) {
       // it's a list
-      const listItems = _.map(listToken, (item, key) => {
+      const listItems = listToken.map((item, key) => {
         let checked = item.checked;
         if (answers) {
           // override radio-button state indicated in text
@@ -123,12 +128,12 @@ function renderSurveyResults(text, voteCounts, onReference) {
   renderListItems(listTokens, onReference);
 
   // create text nodes and list items
-  return _.map(listTokens, (listToken, index) => {
+  return listTokens.map((listToken, index) => {
     if (listToken instanceof Array) {
-      const listItems = _.map(listToken, (item, key) => {
+      const listItems = listToken.map((item, key) => {
         const tally = voteCounts[item.list];
-        const total = _.get(tally, 'total', 0);
-        const count = _.get(tally, [ 'answers', item.key ], 0);
+        const total = get(tally, 'total', 0);
+        const count = get(tally, [ 'answers', item.key ], 0);
         const percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
         const color = `color-${item.key % 12}`;
         let className = 'vote-count';
@@ -169,9 +174,9 @@ function renderTaskList(text, answers, onChange, onReference) {
   renderListItems(listTokens, onReference);
 
   // create text nodes and list items
-  return _.map(listTokens, (listToken, index) => {
+  return listTokens.map((listToken, index) => {
     if (listToken instanceof Array) {
-      const listItems = _.map(listToken, (item, key) => {
+      const listItems = listToken.map((item, key) => {
         let checked = item.checked;
         if (answers) {
           // override checkbox state indicated in text

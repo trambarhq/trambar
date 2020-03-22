@@ -1,4 +1,5 @@
-import _ from 'lodash';
+import { remove } from './array-utils.js';
+import { isMatch } from './object-utils.js';
 
 export class FocusManager {
   static entries = [];
@@ -8,8 +9,8 @@ export class FocusManager {
     this.entries.unshift({ component, props });
 
     // see if a request for focus has been made
-    _.remove(this.requests, (request) => {
-      if (_.isMatch(props, request)) {
+    remove(this.requests, (request) => {
+      if (isMatch(props, request)) {
         component.focus();
         return true;
       }
@@ -17,11 +18,11 @@ export class FocusManager {
   }
 
   static unregister(component) {
-    _.remove(this.entries, { component });
+    remove(this.entries, r => r.component === component);
   }
 
   static focus(props) {
-    const entry = _.find(this.entries, { props });
+    const entry = this.entries.find(r => isMatch(r, props));
     if (entry) {
       entry.component.focus()
     } else {

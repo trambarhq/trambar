@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 export class TopLevelMouseTrap {
   static listeners = [];
 
@@ -8,7 +6,10 @@ export class TopLevelMouseTrap {
   }
 
   static removeEventListener(type, handle) {
-    _.remove(this.listeners, { type, handle });
+    const index = this.listeners.findIndex((listener) => {
+      return (listener.type === type && listener.handle === handle);
+    });
+    this.listeners.splice(index, 1);
   }
 
   static dispatchEvent(evt) {
@@ -20,10 +21,10 @@ export class TopLevelMouseTrap {
   }
 
   static handleMouseDown = (evt) => {
-    TopLevelMouseTrap.dispatchEvent(evt);
+    this.dispatchEvent(evt);
   }
 
   static handleMouseUp = (evt) => {
-    TopLevelMouseTrap.dispatchEvent(evt);
+    this.dispatchEvent(evt);
   }
 }

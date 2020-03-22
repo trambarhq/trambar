@@ -8,14 +8,13 @@ import _ from 'lodash';
  * @return {Object|null}
  */
 function parseLink(text) {
-  let props = {};
-  let re = /^(\w+)=(.*)/g;
-  let lines = _.split(text, /[\r\n]+/);
+  const props = {};
+  const lines = text.split(/[\r\n]+/);
   for (let line of lines) {
-    let match = /^(\w+)\s*=\s*(.*)/.exec(line);
-    if (match) {
-      let name = _.lowerCase(match[1]);
-      let value = _.trim(match[2]);
+    const m = /^(\w+)\s*=\s*(.*)/.exec(line);
+    if (m) {
+      const name = m[1].toLowerCase();
+      const value = m[2].trim();
       props[name] = value;
     }
   }

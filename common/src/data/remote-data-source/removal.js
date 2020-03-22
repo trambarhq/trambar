@@ -5,7 +5,7 @@ export class Removal extends Storage {
     super(location, objects, { onConflict: false });
     if (!this.local) {
       // removal of remote objects is implemented as setting its deleted flag
-      this.objects = _.map(objects, (object) => {
+      this.objects = objects.map((object) => {
         return {
           id: object.id,
           deleted: true,
