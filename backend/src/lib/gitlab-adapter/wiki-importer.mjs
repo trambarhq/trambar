@@ -7,7 +7,13 @@ import loadLanguages from 'prismjs/components/index.js';
 import { AsyncParser, JSONRenderer } from 'mark-gor/html.mjs';
 import { TaskLog } from '../task-log.mjs';
 import { getDefaultLanguageCode } from '../localization.mjs';
-import { convertMarkdownToJSON, convertHTMLToJSON } from '../text-utils.mjs';
+import {
+  convertMarkdownToJSON,
+  convertHTMLToJSON,
+  getResourcesFromJSON,
+  getReferencesFromJSON,
+  getLanguagesFromJSON,
+} from '../text-utils.mjs';
 import { findLink, inheritLink, extendLink, importProperty } from '../external-data-utils.mjs';
 
 import * as Transport from './transport.mjs';
@@ -251,52 +257,9 @@ async function parseGitlabWiki(glWiki, baseURL) {
   }
 
   // look for references and import images
-  const references = [];
-  const resources = [];
-  const languages = [];
-  const getText = (elements) => {
-    const strings = [];
-    if (elements instanceof Array) {
-      for (let element of elements) {
-        if (typeof(element) === 'string') {
-          strings.push(element);
-        } else if (typeof(element) === 'object') {
-          strings.push(getText(element.children));
-        }
-      }
-    }
-    return strings.join('');
-  };
-  const scanElements = (elements) => {
-    if (elements instanceof Array) {
-      for (let element of elements) {
-        if (typeof(element) === 'object') {
-          const { type, props, children } = element;
-          if (type === 'a') {
-            if (props.href) {
-              references.push(props.href);
-            }
-          } else if (type === 'img') {
-            if (props.src) {
-              resources.push({ src: props.src });
-            }
-          } else if (/^h[1-6]$/.test(type)) {
-            const text = getText(children);
-            const m = /^\s*([a-z]{2})(-[a-z]{2})?\b/i.exec(text);
-            if (m) {
-              const code = _.toLower(m[1]);
-              if (!_.includes(languages, code) && code !== 'zz') {
-                languages.push(code);
-              }
-            }
-
-          }
-          scanElements(children);
-        }
-      }
-    }
-  };
-  scanElements(json);
+  const references = getReferencesFromJSON(json);
+  const resources = getResourcesFromJSON(json);
+  const languages = getLanguagesFromJSON(json);
 
   return {
     slug,

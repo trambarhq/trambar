@@ -30,7 +30,7 @@ async function findUser(db, id) {
  * @return {Promise<User>}
  */
 async function findUsers(db, ids) {
-  const ids = _.uniq(ids);
+  ids = _.uniq(ids);
   if (ids.length === 0) {
     return emptyArray;
   }
@@ -68,12 +68,21 @@ async function findAllUsers(db, minimum) {
  * @return {Promise<User>}
  */
 async function findProjectMembers(db, projects) {
-  let userIDs;
+  const userIDs = [];
   if (projects instanceof Array) {
-    userIDs = _.flatten(_.map(projects, 'user_ids'));
+    for (let project of projects) {
+      for (let userID of project.user_ids) {
+        if (userIDs.indexOf(userID) === -1) {
+          userIDs.push(userID);
+        }
+      }
+    }
   } else {
-    let project = projects;
-    userIDs = _.get(project, 'user_ids');
+    for (let userID of projects.user_ids) {
+      if (userIDs.indexOf(userID) === -1) {
+        userIDs.push(userID);
+      }
+    }
   }
   return findUsers(db, userIDs);
 }

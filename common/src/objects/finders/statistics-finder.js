@@ -190,11 +190,13 @@ async function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
   const dailyActivitiesAllUsers = await db.find(query);
   const results = {};
   for (let dateRange of dateRanges) {
-    const userID = dateRange.filters.user_ids[0];
-    const dailyActivities = _.filter(dailyActivitiesAllUsers, (d) => {
-      return (d.filters.user_ids[0] === userID);
-    });
-    results[userID] = summarizeStatistics(dailyActivities, dateRange);
+    if (isValidRange(dateRange)) {
+      const userID = dateRange.filters.user_ids[0];
+      const dailyActivities = _.filter(dailyActivitiesAllUsers, (d) => {
+        return (d.filters.user_ids[0] === userID);
+      });
+      results[userID] = summarizeStatistics(dailyActivities, dateRange);
+    }
   }
   return results;
 }
@@ -272,11 +274,13 @@ async function findDailyNotificationsOfUsers(db, project, users) {
   const dailyNotificationsAllUsers = await db.find(query);
   const results = {};
   for (let dateRange of dateRanges) {
-    const userID = dateRange.filters.target_user_id;
-    const dailyNotifications = _.filter(dailyNotificationsAllUsers, (d) => {
-      return (d.filters.target_user_id === userID);
-    });
-    results[userID] = summarizeStatistics(dailyNotifications, dateRange);
+    if (isValidRange(dateRange)) {
+      const userID = dateRange.filters.target_user_id;
+      const dailyNotifications = _.filter(dailyNotificationsAllUsers, (d) => {
+        return (d.filters.target_user_id === userID);
+      });
+      results[userID] = summarizeStatistics(dailyNotifications, dateRange);
+    }
   }
   return results;
 }
@@ -355,16 +359,18 @@ async function findDailyActivitiesOfRepos(db, project, repos) {
   const dailyActivitiesAllRepos = await db.find(query);
   const results = {};
   for (let dateRange of dateRanges) {
-    // find stats associated with data range object
-    const link = dateRange.filters.external_object;
-    const dailyActivities = _.filter(dailyActivitiesAllRepos, (d) => {
-      return _.isEqual(d.filters.external_object, link);
-    });
-    // find repo with external id
-    const repo = _.find(repos, (repo) => {
-      return _.some(repo.external, link);
-    });
-    results[repo.id] = summarizeStatistics(dailyActivities, dateRange);
+    if (isValidRange(dateRange)) {
+      // find stats associated with data range object
+      const link = dateRange.filters.external_object;
+      const dailyActivities = _.filter(dailyActivitiesAllRepos, (d) => {
+        return _.isEqual(d.filters.external_object, link);
+      });
+      // find repo with external id
+      const repo = _.find(repos, (repo) => {
+        return _.some(repo.external, link);
+      });
+      results[repo.id] = summarizeStatistics(dailyActivities, dateRange);
+    }
   }
   return results;
 }
@@ -373,7 +379,7 @@ function isValidRange(dateRange) {
   return dateRange && !!dateRange.details.start_time && !!dateRange.details.end_time;
 }
 
-const summarizeStatistics = memoizeWeak(null, function(dailyActivities, dateRange, project) {
+const summarizeStatistics = memoizeWeak(null, (dailyActivities, dateRange, project) => {
   const lastMonth = Moment().subtract(1, 'month').format('YYYY-MM');
   const thisMonth = Moment().format('YYYY-MM');
   const dailyStats = mergeDailyActivities(dailyActivities);

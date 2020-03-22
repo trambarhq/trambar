@@ -40,8 +40,78 @@ function findTagsInMarkdown(markdown) {
   return findTags(strings);
 }
 
+function getText(elements) {
+  const strings = [];
+  if (elements instanceof Array) {
+    for (let element of elements) {
+      if (typeof(element) === 'string') {
+        strings.push(element);
+      } else if (typeof(element) === 'object') {
+        strings.push(getText(element.children));
+      }
+    }
+  }
+  return strings.join('');
+}
+
+function scanElements(elements, f) {
+  if (elements instanceof Array) {
+    for (let element of elements) {
+      if (typeof(element) === 'object') {
+        const { type, props, children } = element;
+        f(type, props, children);
+        scanElements(children, f);
+      }
+    }
+  }
+}
+
+function getResourcesFromJSON(json) {
+  const resources = [];
+  scanElements(json, (type, props) => {
+    if (type === 'img') {
+      if (props.src) {
+        resources.push({ src: props.src });
+      }
+    }
+  });
+  return resources;
+}
+
+function getReferencesFromJSON(json) {
+  const references = [];
+  scanElements(json, (type, props) => {
+    if (type === 'a') {
+      if (props.href) {
+        references.push(props.href);
+      }
+    }
+  });
+  return references;
+}
+
+function getLanguagesFromJSON(json) {
+  const languages = [];
+  scanElements(json, (type, props) => {
+    if (/^h[1-6]$/.test(type)) {
+      const text = getText(children);
+      const m = /^\s*([a-z]{2})(-[a-z]{2})?\b/i.exec(text);
+      if (m) {
+        const code = m[1].toLowerCase();
+        if (languages.indexOf(code) !== -1 && code !== 'zz') {
+          languages.push(code);
+        }
+      }
+    }
+  });
+  return languages;
+}
+
 export {
   convertMarkdownToJSON,
   convertHTMLToJSON,
+  getResourcesFromJSON,
+  getReferencesFromJSON,
+  getLanguagesFromJSON,
   findTagsInMarkdown,
 };

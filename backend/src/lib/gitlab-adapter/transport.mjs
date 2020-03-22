@@ -36,10 +36,7 @@ async function fetch(server, uri, query) {
  */
 async function fetchAll(server, uri, query) {
   const objectList = [];
-  const pageQuery = _.extend({
-    page: 1,
-    per_page: PAGE_SIZE
-  }, query);
+  const pageQuery = { page: 1, per_page: PAGE_SIZE, ...query };
   let done = false;
   do {
     let objects = await fetch(server, uri, pageQuery);
@@ -72,10 +69,7 @@ async function fetchAll(server, uri, query) {
  * @return {Promise}
  */
 async function fetchEach(server, uri, query, callback) {
-  const pageQuery = _.extend({
-    page: 1,
-    per_page: PAGE_SIZE
-  }, query);
+  const pageQuery = { page: 1, per_page: PAGE_SIZE, ...query };
   let done = false;
   let total = undefined;
   let index = 0;
@@ -294,7 +288,7 @@ async function request(server, uri, method, query, payload, userToken) {
   }
   const body = (payload instanceof Object) ? JSON.stringify(payload) : undefined;
 
-  const maxAttempts = _.includes(unreachableLocations, baseURL) ? 1 : 5;
+  const maxAttempts = (unreachableLocations.indexOf(baseURL) !== -1) ? 1 : 5;
   let attempts = 1;
   let delayInterval = 500;
   while (attempts <= maxAttempts) {
@@ -318,7 +312,7 @@ async function request(server, uri, method, query, payload, userToken) {
       } else if (status === 429) {
         await Bluebird.delay(5000);
       } else if ((status >= 400 && status <= 499) || attempts >= maxAttempts) {
-        if (!_.includes(unreachableLocations, baseURL)) {
+        if (unreachableLocations.indexOf(baseURL) === -1) {
           // remember we've failed with the location after multiple attempts
           unreachableLocations.push(baseURL);
         }
