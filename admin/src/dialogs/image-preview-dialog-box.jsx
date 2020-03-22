@@ -24,19 +24,20 @@ export const ImagePreviewDialogBox = Overlay.create((props) => {
       const maxHeight = env.viewportHeight - 150;
       const maxAspectRatio = maxWidth / maxHeight;
       const aspectRation = image.width / image.height;
-      let imageWidth, imageHeight;
+      let width, height;
       if (aspectRation > maxAspectRatio) {
-        imageWidth = Math.min(maxWidth, image.width);
+        width = Math.min(maxWidth, image.width);
       } else {
-        imageHeight = Math.min(maxHeight, image.height);
+        height = Math.min(maxHeight, image.height);
       }
       const options = {
-        devicePixelRatio: env.devicePixelRatio,
-        imageWidth,
-        imageHeight,
-        imageBaseURL: env.address,
+        ratio: env.devicePixelRatio,
+        width,
+        height,
+        server: env.address,
       };
-      return image.richText(options);
+      const resized = image.transform(options);
+      return <img src={resized.url} width={resized.width} height={resized.height} />;
     }
   }
 

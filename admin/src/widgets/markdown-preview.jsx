@@ -12,7 +12,7 @@ export function MarkdownPreview(props) {
   const adjustFunc = (node) => {
     let { type, props, children } = node;
     if (type === 'a' && props.href) {
-      if (/^[\w\-]+$/.test(href)) {
+      if (/^[\w\-]+$/.test(props.href)) {
         if (onReference) {
           props = { ...props, href: onReference(props) };
         }
@@ -22,14 +22,25 @@ export function MarkdownPreview(props) {
       return { type, props, children };
     }
   };
+  const imageTransform = (node, context) => {
+    const ratio = env.devicePixelRatio;
+    const server = env.address;
+    let width, height;
+    if (context.hasText()) {
+      height = 24;
+    } else {
+      const count = context.countImages();
+      if (count === 1) {
+        width = 300;
+      } else {
+        height = 40;
+      }
+    }
+    return { width, height, ratio, server, sharpen: true }
+  };
   const rt = useRichText({
-    devicePixelRatio: env.devicePixelRatio,
-    imageHeight: 24,
-    imageFilters: {
-      sharpen: true
-    },
-    imageBaseURL: env.address,
     adjustFunc,
+    imageTransform,
   });
 
   const sections = page.content.getLanguageSpecificSections(localeCode);

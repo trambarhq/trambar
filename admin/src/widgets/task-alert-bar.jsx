@@ -3,7 +3,7 @@ import Moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { useProgress, useListener } from 'relaks';
 import { findActiveTasks, findFailedTasks } from 'common/objects/finders/task-finder.js';
-import { markTasksAsSeen } from 'common/objects/savers/task-saver.js';
+import { markTaskAsSeen, markTasksAsSeen } from 'common/objects/savers/task-saver.js';
 
 import './task-alert-bar.scss';
 

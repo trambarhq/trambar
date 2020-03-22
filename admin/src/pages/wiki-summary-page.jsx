@@ -193,7 +193,7 @@ function WikiSummaryPageSync(props) {
     const slug = wiki?.slug ?? '';
     const url = (baseURL && slug) ? `${baseURL}/wikis/${slug}` : '';
     const props = {
-      id: 'title',
+      id: 'slug',
       value: slug,
       readOnly: true,
       env,
@@ -237,7 +237,7 @@ function WikiSummaryPageSync(props) {
       }
     }
     const props = {
-      id: 'repo',
+      id: 'public',
       value: (state) ? t(`wiki-summary-public-${state}`) : '',
       readOnly: true,
       env,
@@ -351,7 +351,7 @@ function WikiContents(props) {
   const handlePreviewClick = useListener((evt) => {
     const { tagName, src } = evt.target;
     if (tagName === 'IMG') {
-      const image = page.image(src);
+      const image = page.getImage(src);
       if (image) {
         setSelectedImage(image);
       }
