@@ -254,10 +254,9 @@ async function getAudioMetadata(blob) {
  * @return {String}
  */
 function guessFileFormat(url, category) {
-  let ext;
-  let m = /\.(\w+)$/.execute(url.replace(/#.*/, '').replace(/\?.*/, ''));
+  const m = /\.(\w+)$/.execute(url.replace(/#.*/, '').replace(/\?.*/, ''));
   if (m) {
-    ext = _.toLower(m[1]);
+    const ext = m[1].toLowerCase();
     switch (ext) {
       case 'jpg': return 'jpeg';
       default: return ext;
@@ -280,8 +279,8 @@ function guessFileFormat(url, category) {
  * @return {String}
  */
 function extractFileCategory(mimeType) {
-  let parts = _.split(mimeType, '/');
-  return _.toLower(parts[0]);
+  const parts = mimeType.split('/');
+  return parts[0].toLowerCase();
 }
 
 /**
@@ -292,8 +291,8 @@ function extractFileCategory(mimeType) {
  * @return {String}
  */
 function extractFileFormat(mimeType) {
-  let parts = _.split(mimeType, '/');
-  let format = _.toLower(parts[1]);
+  const parts = mimeType.split('/');
+  const format = (parts[1]) ? parts[1].toLowerCase() : '';
   switch (format) {
     case 'svg+xml':
       return 'svg';
@@ -346,7 +345,7 @@ async function extractMosaic(blob, rect) {
 
     let imageData = microContext.getImageData(0, 0, microCanvas.width, microCanvas.height);
     let pixels = imageData.data;
-    if (_.size(pixels) >= 64) {
+    if (pixels.length >= 64) {
       let colors = [];
       for (let i = 0; i < 16; i++) {
         let r = pixels[i * 4 + 0];

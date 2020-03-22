@@ -1,6 +1,4 @@
-import _ from 'lodash';
-
-class Route {
+export class Route {
   constructor(routeManager) {
     this.routeManager = routeManager;
     this.name = routeManager.name;
@@ -15,7 +13,7 @@ class Route {
     this.history = routeManager.history;
     this.callbacks = [];
 
-    let module = routeManager.params.module;
+    const module = routeManager.params.module;
     if (process.env.NODE_ENV !== 'production') {
       if (!module) {
         if (!route.name) {
@@ -28,7 +26,11 @@ class Route {
       }
     }
     this.page = module.default;
-    this.pageParams = _.pick(this.params, _.keys(routeManager.route.params), 'key');
+    this.pageParams = {};
+    for (let key of Object.keys(routeManager.route.params)) {
+      this.pageParams[key] = this.params[key];
+    }
+    this.pageParams.key = this.params.key;
   }
 
   async change(url, options) {
@@ -63,7 +65,7 @@ class Route {
   }
 
   free(callback) {
-    let index = this.callbacks.indexOf(callback);
+    const index = this.callbacks.indexOf(callback);
     if (index !== -1) {
       this.callbacks.splice(index, 1);
     }
@@ -82,9 +84,4 @@ class Route {
       return false;
     }
   }
-};
-
-export {
-  Route as default,
-  Route,
 };
