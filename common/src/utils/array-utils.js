@@ -16,6 +16,9 @@ import uniqBy from 'lodash/uniqBy.js';
  * @return {Array}
  */
 function toggle(array, item) {
+  if (!array) {
+    return [];
+  }
   const newArray = array.slice();
   const index = newArray.indexOf(item);
   if (index === -1) {
@@ -27,10 +30,7 @@ function toggle(array, item) {
 }
 
 function findByIds(objects, ids) {
-  const hash = {};
-  for (let object of objects) {
-    hash[object.id] = object;
-  }
+  const hash = hashById(objects);
   const results = [];
   for (let id of ids) {
     const object = hash[id];
@@ -41,14 +41,24 @@ function findByIds(objects, ids) {
   return results;
 }
 
+function hashById(objects, f) {
+  const hash = {};
+  for (let object of objects) {
+    hash[object.id] = (f) ? f(object) : object;
+  }
+  return hash;
+}
+
 export {
   difference,
   pull,
   remove,
-  toggle,
   orderBy,
-  sortedIndexBy,
-  findByIds,
   uniq,
   uniqBy,
+  sortedIndexBy,
+
+  toggle,
+  findByIds,
+  hashById,
 };

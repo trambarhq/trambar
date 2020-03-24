@@ -1,13 +1,12 @@
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findProject } from 'common/objects/finders/project-finder.js';
 import { associateUsers, addUsers } from 'common/objects/savers/project-saver.js';
 import { findRolesOfUsers } from 'common/objects/finders/role-finder.js';
 import { findExistingUsers } from 'common/objects/finders/user-finder.js';
 import { getUserName } from 'common/objects/utils/user-utils.js';
 import { findDailyActivitiesOfUsers } from 'common/objects/finders/statistics-finder.js';
-import { findByIds, orderBy } from 'common/utils/array-utils.js';
+import { hashById, findByIds, orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -64,11 +63,19 @@ function MemberListPageSync(props) {
     original: members,
     reset: readOnly,
   });
+  const [ sort, handleSort ] = useSortHandler();
+  const visibleUsers = useMemo(() => {
+    const visible = (selection.shown) ? users : membersPlus;
+    return sortUsers(visible, roles, statistics, env, sort);
+  }, [ selection.shown, roles, statistics, env, sort ]);
+  const rolesOfUsers = useMemo(() => {
+    return hashById(users, user => findByIds(roles, user.role_ids));
+  });
+
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
   const warnDataLoss = useDataLossWarning(route, env, confirm);
 
-  const [ sort, handleSort ] = useSortHandler();
   const handleRowClick = useRowToggle(selection, users);
   const handleEditClick = useListener((evt) => {
     route.replace({ editing: true });
@@ -189,9 +196,7 @@ function MemberListPageSync(props) {
   }
 
   function renderRows() {
-    const visible = (selection.shown) ? users : membersPlus;
-    const sorted = sortUsers(visible, roles, statistics, env, sort);
-    return sorted?.map(renderRow);
+    return visibleUsers.map(renderRow);
   }
 
   function renderRow(user) {
@@ -281,7 +286,7 @@ function MemberListPageSync(props) {
       return <TH id="roles">{t('member-list-column-roles')}</TH>;
     } else {
       const props = {
-        roles: findRoles(roles, user),
+        roles: rolesOfUsers[user.id],
         disabled: selection.shown,
         route,
         env,
@@ -386,7 +391,10 @@ function MemberListPageSync(props) {
   }
 }
 
-const sortUsers = memoizeWeak(null, (users, roles, statistics, env, sort) => {
+function sortUsers(users, roles, statistics, env, sort) {
+  if (!users) {
+    return [];
+  }
   const columns = sort.columns.map((column) => {
     switch (column) {
       case 'name':
@@ -414,9 +422,9 @@ const sortUsers = memoizeWeak(null, (users, roles, statistics, env, sort) => {
     }
   });
   return orderBy(users, columns, sort.directions);
-});
+}
 
-const filterUsers = memoizeWeak(null, (users, project, includePending) => {
+function filterUsers(users, project, includePending) {
   const results = [];
   for (let user of users) {
     let include = false;
@@ -435,8 +443,4 @@ const filterUsers = memoizeWeak(null, (users, project, includePending) => {
     }
   }
   return results;
-});
-
-const findRoles = memoizeWeak(null, (roles, user) => {
-  return findByIds(roles, user.role_ids);
 });

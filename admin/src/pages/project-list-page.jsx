@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findAllProjects } from 'common/objects/finders/project-finder.js';
 import { archiveProjects, restoreProjects } from 'common/objects/savers/project-saver.js';
 import { getProjectName } from 'common/objects/utils/project-utils.js';
@@ -58,16 +57,23 @@ function ProjectListPageSync(props) {
   const { database, route, env, editing } = props;
   const { t, p, f } = env.locale;
   const readOnly = !editing;
-  const activeProjects = filterProjects(projects);
+  const activeProjects = useMemo(() => {
+    return projects.filter((project) => {
+      return !project.deleted && !project.archived;
+    });
+  }, [ projects ]);
   const selection = useSelectionBuffer({
     original: activeProjects,
     reset: readOnly,
   });
+  const [ sort, handleSort ] = useSortHandler();
+  const visibleProjects = useMemo(() => {
+    const visible = (selection.shown) ? projects : activeProjects;
+    return sortProjects(visible, users, repos, statistics, env, sort);
+  }, [ selection.shown, users, repos, statistics, env, sort ]);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
   const warnDataLoss = useDataLossWarning(route, env, confirm);
-
-  const [ sort, handleSort ] = useSortHandler();
   const handleRowClick = useRowToggle(selection, projects);
   const handleEditClick = useListener((evt) => {
     route.replace({ editing: true });
@@ -175,9 +181,7 @@ function ProjectListPageSync(props) {
   }
 
   function renderRows() {
-    const visible = (selection.shown) ? projects : activeProjects;
-    const sorted = sortProjects(visible, users, repos, statistics, env, sort);
-    return sorted?.map(renderRow);
+    return visibleProjects.map(renderRow);
   }
 
   function renderRow(project) {
@@ -254,7 +258,7 @@ function ProjectListPageSync(props) {
       return <TH id="users">{t('project-list-column-users')}</TH>;
     } else {
       const props = {
-        users: findUsers(users, project),
+        users: findByIds(users, project.user_ids),
         disabled: selection.shown,
         project,
         route,
@@ -272,7 +276,7 @@ function ProjectListPageSync(props) {
       return <TH id="repos">{t('project-list-column-repositories')}</TH>
     } else {
       const props = {
-        repos: findRepos(repos, project),
+        repos: findByIds(repos, project.repo_ids),
         disabled: selection.shown,
         project,
         route,
@@ -365,7 +369,10 @@ function ProjectListPageSync(props) {
   }
 }
 
-const sortProjects = memoizeWeak(null, (projects, users, repos, statistics, env, sort) => {
+function sortProjects(projects, users, repos, statistics, env, sort) => {
+  if (!projects) {
+    return [];
+  }
   const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
@@ -374,11 +381,11 @@ const sortProjects = memoizeWeak(null, (projects, users, repos, statistics, env,
         };
       case 'users':
         return (project) => {
-          return findUsers(users, project)?.length || 0;
+          return findByIds(users, project.user_ids).length;
         };
       case 'repos':
         return (project) => {
-          return findRepos(repos, project)?.length || 0;
+          return findByIds(repos, project.repo_ids).length || 0;
         };
       case 'range':
         return (project) => {
@@ -401,18 +408,4 @@ const sortProjects = memoizeWeak(null, (projects, users, repos, statistics, env,
     }
   });
   return orderBy(projects, columns, sort.directions);
-});
-
-const filterProjects = memoizeWeak(null, (projects) => {
-  return projects.filter((project) => {
-    return !project.deleted && !project.archived;
-  });
-});
-
-const findRepos = memoizeWeak(null, (repos, project) => {
-  return findByIds(repos, project.repo_ids);
-});
-
-const findUsers = memoizeWeak(null, (users, project) => {
-  return findByIds(users, project.user_ids);
-});
+}

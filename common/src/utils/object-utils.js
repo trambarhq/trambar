@@ -145,6 +145,7 @@ export {
   isEmpty,
   isEqual,
   isMatch,
+
   decouple,
   decoupleSet,
   decoupleUnset,
