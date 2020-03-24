@@ -369,7 +369,7 @@ export function StoryEditor(props) {
 
   function renderProfileImage() {
     const props = {
-      user: _.first(options.get('authors')),
+      user: options.get('authors')[0],
       size: 'medium',
       env,
     };

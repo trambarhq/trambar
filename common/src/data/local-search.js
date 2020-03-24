@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { isEqual } from '../utils/object-utils.js';
 
 /**
@@ -25,28 +24,20 @@ function matchSearchCriteria(table, object, criteria) {
         if (actualValue instanceof Array) {
           // array value matches an array when there's overlapping
           // between the two
-          if (_.intersection(desiredValue, actualValue).length === 0) {
+          if (!actualValue.some(a => matchElementOf(a, desiredValue))) {
             matching = false;
           }
         } else {
           // array value matches a scalar or object when the former
           // contains the latter
-          let containing;
-          if (actualValue instanceof Object) {
-            containing = desiredValue.some((desiredElement) => {
-              return isEqual(desiredElement, actualValue);
-            });
-          } else {
-            containing = (desiredValue.index(actualValue) !== -1);
-          }
-          if (!containing) {
+          if (!matchElementOf(actualValue)) {
             matching = false;
           }
         }
       } else if (actualValue !== desiredValue) {
         if (typeof(actualValue) === 'object' && typeof(desiredValue) === 'object') {
           // objects requires exact match
-          // (NOTE: _.isMatch() might more make sense here)
+          // (NOTE: isMatch() might more make sense here)
           if (!isEqual(actualValue, desiredValue)) {
             matching = false;
           }
@@ -74,7 +65,7 @@ function matchSearchCriteria(table, object, criteria) {
           break;
         case 'exclude':
           if (desiredValue instanceof Array) {
-            if (_.includes(desiredValue, object.id)) {
+            if (desiredValue.includes(object.id)) {
               matching = false;
             }
           } else {
@@ -106,6 +97,14 @@ function matchSearchCriteria(table, object, criteria) {
     }
   }
   return matching;
+}
+
+function matchElementOf(el, array) {
+  if (el instanceof Object) {
+    return array.some(other => isEqual(other, el));
+  } else {
+    return array.includes(el);
+  }
 }
 
 function limitSearchResults(table, objects, criteria) {
@@ -144,7 +143,10 @@ function limitSearchResults(table, objects, criteria) {
           excessObjects.push(object);
         }
       }
-      _.pullAll(objects, excessObjects);
+      for (let excessObject of excessObjects) {
+        const index = objects.indexOf(excessObject);
+        objects.splice(index, 1);
+      }
     }
   }
 }

@@ -91,17 +91,15 @@ export async function BookmarkList(props) {
   }
 
   function renderNewStoryAlert() {
-    const count = _.size(hiddenStoryIDs);
     let url;
-    if (hiddenStoryIDs.length > 0) {
-      url = route.find(route.name, {
-        highlightingStory: _.first(hiddenStoryIDs),
-      });
+    const highlightStoryID = hiddenStoryIDs[0];
+    if (highlightStoryID) {
+      url = route.find(route.name, { highlightStoryID });
     }
     const props = { url, onClick: handleNewBookmarkAlertClick };
     return (
       <NewItemsAlert {...props}>
-        {t('alert-$count-new-bookmarks', count)}
+        {t('alert-$count-new-bookmarks', hiddenStoryIDs.length)}
       </NewItemsAlert>
     );
   }

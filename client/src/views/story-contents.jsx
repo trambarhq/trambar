@@ -1,23 +1,14 @@
 import _ from 'lodash';
 import React, { useState, useMemo, useRef } from 'react';
 import { useListener, useSaveBuffer, useErrorCatcher } from 'relaks';
+import round from 'lodash/round.js';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import { renderPlainText, findEmoji } from 'common/utils/plain-text.js';
 import { renderMarkdown } from 'common/utils/markdown.js';
 import { getWebsiteAddress } from 'common/objects/utils/project-utils.js';
 import { updateTaskStatuses, saveSurveyResults } from 'common/objects/savers/reaction-saver.js';
-import {
-  getRepoName,
-  getRepoURL,
-  getMembershipPageURL,
-  getIssueNumber,
-  getIssueURL,
-  getMilestoneURL,
-  getMergeRequestURL,
-  getPushURL,
-  getBranchURL,
-  getIssueLabelStyle
-} from 'common/objects/utils/repo-utils.js';
+import { getRepoName, getRepoURL, getMembershipPageURL, getIssueNumber, getIssueURL, getMilestoneURL,
+  getMergeRequestURL, getPushURL, getBranchURL, getIssueLabelStyle } from 'common/objects/utils/repo-utils.js';
 import { saveStory } from 'common/objects/savers/story-saver.js';
 import { extractUserAnswers, insertUserAnswers } from 'common/objects/utils/story-utils.js';
 import { getUserName, getGender, canAccessRepo } from 'common/objects/utils/user-utils.js';
@@ -32,10 +23,7 @@ import { Scrollable } from '../widgets/scrollable.jsx';
 import { PushButton } from '../widgets/push-button.jsx';
 
 // custom hooks
-import {
-  useMarkdownResources,
-  useDraftBuffer,
-} from '../hooks.js';
+import { useMarkdownResources, useDraftBuffer } from '../hooks.js';
 
 import './story-contents.scss';
 
@@ -148,7 +136,7 @@ export function StoryContents(props) {
   function renderStoryText() {
     const { type } = story;
     const { text, markdown, labels } = story.details;
-    const langText = _.trimEnd(p(text));
+    const langText = p(text).trimEnd();
     const textProps = {
       type,
       text: langText,
@@ -365,20 +353,21 @@ export function StoryContents(props) {
 
   function renderWebsiteTrafficChart() {
     const total = story.details.total;
+    const byCountry = story.details.by_country;
     const countries = [];
-    for (let [ code, count ] of _.entries(story.details.by_country)) {
+    for (let [ code, count ] of Object.entries(byCountry)) {
       countries.push({ code, count });
     }
     const topCountries = _.orderBy(countries, 'count', 'desc');
     if (topCountries.length > 5) {
       const otherCountries = topCountries.splice(4);
-      const otherTotal = _.sum(_.map(otherCountries, 'count'));
-      const otherCodes = _.map(otherCountries, 'code');
+      const otherTotal = otherCountries.reduce((sum, c) => sum + c.count, 0);
+      const otherCodes = otherCountries.map(c => c.code);
       topCountries.push({ code: 'zz', count: otherTotal, others: otherCodes });
     }
-    return _.map(topCountries, (country, key) => {
+    return topCountries.map((country, key) => {
       const classNames = [ 'by-country' ];
-      const percentNum = _.round(country.count / total * 100);
+      const percentNum = round(country.count / total * 100);
       if (percentNum === 0) {
         return;
       } else if (percentNum >= 99) {
@@ -388,7 +377,7 @@ export function StoryContents(props) {
       const color = `color-${key + 1}`;
       let title;
       if (country.code === 'zz') {
-        const others = _.map(country.others, (code) => {
+        const others = country.others.map((code) => {
           return t(`country-name-${code}`);
         });
         title = others.join(', ');
@@ -412,28 +401,30 @@ export function StoryContents(props) {
       return null;
     }
     const fileChangeTypes = [ 'added', 'deleted', 'modified', 'renamed' ];
-    const fileChanges = _.transform(fileChangeTypes, (elements, type, i) => {
+    const fileChanges = [];
+    for (let [ index, type ] of fileChangeTypes.entries()) {
       const count = files[type];
       if (count > 0) {
-        elements.push(
-          <li key={i} className={type}>
+        fileChanges.push(
+          <li key={index} className={type}>
             {t(`story-push-${type}-$count-files`, count)}
           </li>
         );
       }
-    }, []);
+    }
     const lines = story.details.lines;
     const lineChangeTypes = [ 'added', 'deleted', 'modified' ];
-    const lineChanges = _.transform(lineChangeTypes, (elements, type, i) => {
+    const lineChanges = []
+    for (let [ index, type ] of lineChangeTypes) {
       const count = lines[type];
       if (count > 0) {
-        elements.push(
+        lineChanges.push(
           <li key={i} className={type}>
             {t(`story-push-${type}-$count-lines`, count)}
           </li>
         );
       }
-    }, []);
+    }
     return (
       <div>
         <ul className="files">{fileChanges}</ul>
@@ -478,7 +469,7 @@ export function StoryContents(props) {
     if (!userCanVote || userVoted) {
       return null;
     }
-    const allAnswered = _.every(userAnswers.current);
+    const allAnswered = Object.values(userAnswers.current).every(Boolean);
     const submitProps = {
       label: t('story-vote-submit'),
       emphasized: allAnswered,
@@ -542,7 +533,7 @@ export function StoryContents(props) {
       <div className="impact">
         <p className="message">{t('story-push-components-changed')}</p>
         <Scrollable>
-          {_.map(sorted, renderAppComponent)}
+          {sorted.map(renderAppComponent)}
         </Scrollable>
         {renderAppComponentDialog()}
       </div>

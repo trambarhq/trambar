@@ -120,17 +120,15 @@ export async function StoryList(props) {
   }
 
   function renderNewStoryAlert() {
-    const count = _.size(hiddenStoryIDs);
     let url;
-    if (count > 0) {
-      url = route.find(route.name, {
-        highlightStoryID: _.first(hiddenStoryIDs)
-      });
+    const highlightStoryID = hiddenStoryIDs[0];
+    if (highlightStoryID) {
+      url = route.find(route.name, { highlightStoryID });
     }
     const props = { url, onClick: handleNewStoryAlertClick };
     return (
       <NewItemsAlert {...props}>
-        {t('alert-$count-new-stories', count)}
+        {t('alert-$count-new-stories', hiddenStoryIDs.length)}
       </NewItemsAlert>
     );
   }

@@ -127,7 +127,7 @@ function useMarkdownResources(resources, env) {
         } else if (res.type === 'website') {
           window.open(res.url, '_blank');
         } else if (res.type === 'audio') {
-          const version = _.first(_.keys(res.versions));
+          const version = Object.keys(res.versions)[0];
           const selected = getAudioURL(res, { version }, env);
           setAudioURL((selected === audioURL) ? null : selected);
         }

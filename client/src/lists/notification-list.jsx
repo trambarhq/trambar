@@ -106,17 +106,15 @@ export async function NotificationList(props) {
   }
 
   function renderNewNotificationAlert() {
-    const count = _.size(hiddenNotificationIDs);
     let url;
-    if (hiddenNotificationIDs.length > 0) {
-      url  = route.find(route.name, {
-        highlightingNotification: _.first(hiddenNotificationIDs)
-      });
+    const scrollToNotificationID = hiddenNotificationIDs[0];
+    if (scrollToNotificationID) {
+      url  = route.find(route.name, { scrollToNotificationID });
     }
     const props = { url, onClick: handleNewNotificationAlertClick };
     return (
       <NewItemsAlert {...props}>
-        {t('alert-$count-new-notifications', count)}
+        {t('alert-$count-new-notifications', hiddenNotificationIDs.length)}
       </NewItemsAlert>
     );
   }

@@ -41,7 +41,7 @@ export function MediaView(props) {
   });
   const handleAudioClick = useListener((evt) => {
     if (!audioURL) {
-      const version = _.first(_.keys(resource.versions)) || null;
+      const version = Object.keys(resource.versions)[0];
       const audioURL = getAudioURL(resource, { version }, env);
       setAudioURL(audioURL);
     } else {

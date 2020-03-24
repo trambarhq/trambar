@@ -77,7 +77,7 @@ export function DevelopmentPanel(props) {
   }
 
   function renderDeploymentOption(name, index) {
-    const deploymentName = selectedDeploymentName || _.first(deploymentNames);
+    const deploymentName = selectedDeploymentName || deploymentNames[0];
     const buttonProps = {
       label: t(`development-code-push-$deployment`, name),
       selected: (name === deploymentName),
