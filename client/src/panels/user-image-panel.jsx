@@ -134,7 +134,7 @@ export function UserImagePanel(props) {
       };
       const takeProps = {
         label: t('user-image-snap'),
-        hidden: !_.includes(env.recorders, 'image'),
+        hidden: !env.recorders.includes('image'),
         onClick: handleTakeClick,
       };
       const selectProps = {
@@ -167,7 +167,7 @@ export function UserImagePanel(props) {
     } else {
       const takeProps = {
         label: t('user-image-snap'),
-        hidden: !_.includes(env.recorders, 'image'),
+        hidden: !env.recorders.includes('image'),
         onClick: handleTakeClick,
       };
       const selectProps = {

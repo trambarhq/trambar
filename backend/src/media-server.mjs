@@ -579,7 +579,7 @@ async function getFileType(path) {
     const info = FileType.fromBuffer(buffer);
     if (info.mime === 'application/xml') {
       const text = buffer.toString('utf-8');
-      if (text.indexOf('<svg')) {
+      if (text.includes('<svg')) {
         info.mime = 'image/svg+xml';
       }
     }

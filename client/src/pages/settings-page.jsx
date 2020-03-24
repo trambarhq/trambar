@@ -196,7 +196,7 @@ function SettingsPageSync(props) {
   }
 
   function renderMobileAlertPanel() {
-    if (_.isEmpty(devices)) {
+    if (devices.length === 0) {
       return null;
     }
     const props = {

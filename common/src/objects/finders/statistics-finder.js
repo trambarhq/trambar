@@ -1,7 +1,7 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import { memoizeWeak } from '../../utils/memoize.js';
 import { getMonthRanges, getTimeZoneOffset } from '../../utils/date-utils.js';
+import { isEqual, isMatch } from '../../utils/object-utils.js';
 
 const table = 'statistics';
 
@@ -57,7 +57,7 @@ async function findDailyActivitiesOfProject(db, project, publicOnly) {
     return null;
   }
   // load story-date-range statistics
-  let rangeQuery = {
+  const rangeQuery = {
     schema: project.name,
     table,
     criteria: {
@@ -68,20 +68,20 @@ async function findDailyActivitiesOfProject(db, project, publicOnly) {
     },
     prefetch: true,
   };
-  let dateRange = await db.findOne(rangeQuery);
+  const dateRange = await db.findOne(rangeQuery);
   if (!isValidRange(dateRange)) {
     return null;
   }
-  let timeRanges = getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
-  let tzOffset = getTimeZoneOffset();
-  let filters = _.map(timeRanges, (timeRange) => {
+  const timeRanges = getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
+  const tzOffset = getTimeZoneOffset();
+  const filters = timeRanges.map((timeRange) => {
     return {
       time_range: timeRange,
       tz_offset: tzOffset,
       public: publicOnly || undefined,
     };
   });
-  let query = {
+  const query = {
     schema: project.name,
     table,
     criteria: {
@@ -90,7 +90,7 @@ async function findDailyActivitiesOfProject(db, project, publicOnly) {
     },
     prefetch: true,
   };
-  let dailyActivities = await db.find(query);
+  const dailyActivities = await db.find(query);
   return summarizeStatistics(dailyActivities, dateRange);
 }
 
@@ -103,7 +103,7 @@ async function findDailyActivitiesOfProject(db, project, publicOnly) {
  * @return {Promise<Object>}
  */
 async function findDailyActivitiesOfProjects(db, projects) {
-  let results = {};
+  const results = {};
   for (let project of projects) {
     results[project.id] = await findDailyActivitiesOfProject(db, project);
   }
@@ -123,8 +123,8 @@ async function findDailyActivitiesOfUser(db, project, user, publicOnly) {
   if (!user || user.deleted) {
     return null;
   }
-  let results = await findDailyActivitiesOfUsers(db, project, [ user ], publicOnly);
-  return _.get(results, user.id, null);
+  const results = await findDailyActivitiesOfUsers(db, project, [ user ], publicOnly);
+  return results[user.id] || null;
 }
 
 /**
@@ -158,7 +158,7 @@ async function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
     criteria: { type: 'story-date-range', filters: rangeFilters },
     prefetch: true,
   };
-  const dateRanges = _.filter(await db.find(rangeQuery), isValidRange);
+  const dateRanges = await db.find(rangeQuery);
 
   // load daily-activities statistics
   const filters = [];
@@ -192,7 +192,7 @@ async function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
   for (let dateRange of dateRanges) {
     if (isValidRange(dateRange)) {
       const userID = dateRange.filters.user_ids[0];
-      const dailyActivities = _.filter(dailyActivitiesAllUsers, (d) => {
+      const dailyActivities = dailyActivitiesAllUsers.filter((d) => {
         return (d.filters.user_ids[0] === userID);
       });
       results[userID] = summarizeStatistics(dailyActivities, dateRange);
@@ -215,7 +215,7 @@ async function findDailyNotificationsOfUser(db, project, user) {
     return null;
   }
   let results = await findDailyNotificationsOfUsers(db, project, [ user ]);
-  return _.get(results, user.id, null);
+  return results[user.id] || null;
 }
 
 /**
@@ -276,7 +276,7 @@ async function findDailyNotificationsOfUsers(db, project, users) {
   for (let dateRange of dateRanges) {
     if (isValidRange(dateRange)) {
       const userID = dateRange.filters.target_user_id;
-      const dailyNotifications = _.filter(dailyNotificationsAllUsers, (d) => {
+      const dailyNotifications = dailyNotificationsAllUsers.filter((d) => {
         return (d.filters.target_user_id === userID);
       });
       results[userID] = summarizeStatistics(dailyNotifications, dateRange);
@@ -299,7 +299,7 @@ async function findDailyActivitiesOfRepo(db, project, repo) {
     return null;
   }
   let results = await findDailyActivitiesOfRepos(db, project, [ repo ]);
-  return _.get(results, repo.id, null);
+  return results[repo.id] || null;
 }
 
 /**
@@ -320,7 +320,7 @@ async function findDailyActivitiesOfRepos(db, project, repos) {
   const rangeFilters = [];
   for (let repo of repos) {
     if (!repo.deleted) {
-      const link = _.find(repo.external, { type: repo.type });
+      const link = repo.external.find(lnk => lnk.type === repo.type);
       rangeFilters.push({ external_object: link });
     }
   }
@@ -362,12 +362,12 @@ async function findDailyActivitiesOfRepos(db, project, repos) {
     if (isValidRange(dateRange)) {
       // find stats associated with data range object
       const link = dateRange.filters.external_object;
-      const dailyActivities = _.filter(dailyActivitiesAllRepos, (d) => {
-        return _.isEqual(d.filters.external_object, link);
+      const dailyActivities = dailyActivitiesAllRepos.filter((d) => {
+        return isEqual(d.filters.external_object, link);
       });
       // find repo with external id
-      const repo = _.find(repos, (repo) => {
-        return _.some(repo.external, link);
+      const repo = repos.find((repo) => {
+        return repo.external.some(l => isMatch(l, link));
       });
       results[repo.id] = summarizeStatistics(dailyActivities, dateRange);
     }
@@ -408,12 +408,12 @@ function summarizeDailyActivities(dailyActivities, month) {
   const stats = { total: 0 };
   for (let monthlyStats of dailyActivities) {
     const dateRange = monthlyStats.filters.time_range;
-    const dates = _.split(dateRange.slice(1, -1), ',');
+    const dates = dateRange.slice(1, -1).split(',');
     const startMonth = Moment(dates[0]).format('YYYY-MM');
     const endMonth = Moment(dates[1]).format('YYYY-MM');
     if (!month || (startMonth <= month && month <= endMonth)) {
-      for (let [ date, dailyCounts ] of _.entries(monthlyStats.details)) {
-        for (let [ type, value ] of _.entries(dailyCounts)) {
+      for (let [ date, dailyCounts ] of Object.entries(monthlyStats.details)) {
+        for (let [ type, value ] of Object.entries(dailyCounts)) {
           if (type.charAt(0) !== '#') {
             stats.total += value;
           }
@@ -435,7 +435,7 @@ function summarizeDailyActivities(dailyActivities, month) {
 function mergeDailyActivities(dailyActivities) {
   const stats = {};
   for (let monthlyStats of dailyActivities) {
-    _.assign(stats, monthlyStats.details);
+    Object.assign(stats, monthlyStats.details);
   }
   return stats;
 }

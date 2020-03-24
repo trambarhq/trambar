@@ -56,7 +56,7 @@ export const UserStatistics = React.memo((props) => {
     return getActivityIndices(activities, dates);
   }, [ dates, activities ]);
   const selectedDateIndex = useMemo(() => {
-    return _.indexOf(dates, date);
+    return dates.indexOf(date);
   }, [ dates, date ]);
   const selectedDateLabel = useMemo(() => {
     if (selectedDate) {
@@ -97,7 +97,7 @@ export const UserStatistics = React.memo((props) => {
       return null;
     }
     let items = _.map(indices, renderLegendItem);
-    if (_.isEmpty(items)) {
+    if (items.length === 0) {
       items = '\u00a0';
     }
     return <div className="legend">{items}</div>;
@@ -315,7 +315,7 @@ const getUpperRange = memoizeWeak(null, function(series, additive) {
         sums[index] = (sums[index]) ? sums[index] + value : value;
       }
     }
-    if (!_.isEmpty(sums)) {
+    if (sums.length > 0) {
       highest = _.max(sums);
     }
   } else {

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import 'moment-timezone';
 import React, { useMemo } from 'react';
@@ -9,6 +8,7 @@ import { saveProject } from 'common/objects/savers/project-saver.js';
 import { findTemplates } from 'common/objects/finders/repo-finder.js';
 import { getRepoName } from 'common/objects/utils/repo-utils.js';
 import { findSnapshots } from 'common/objects/finders/snapshot-finder.js';
+import { orderBy, uniqBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -41,7 +41,7 @@ export default async function WebsiteSummaryPage(props) {
   const project = await findProject(database, projectID);
   render();
   const repos = await findTemplates(database);
-  const template = _.find(repos, { id: project.template_repo_id }) || null;
+  const template = repos.find(r => r.id === project.template_repo_id) || null;
   render();
   const snapshots = await findSnapshots(database, template, 100);
   render();
@@ -64,26 +64,27 @@ function WebsiteSummaryPageSync(props) {
   const timezoneOptions = useMemo(() => {
     const options = [];
     for (let timezone of Moment.tz.names()) {
-      const parts = _.map(_.split(timezone, '/'), (part) => {
-        return _.replace(part, /_/g, ' ');
+      const parts = timezone.split('/').map((part) => {
+        return part.replace(/_/g, ' ');
       });
       if (parts.length === 1 || parts[0] === 'Etc') {
         continue;
       }
-      const names = _.map(parts, (part) => {
-        return t(`tz-name-${_.kebabCase(part)}`);
+      const names = parts.map((part) => {
+        const id = part.toLowerCase().replace(/ /g, '-');
+        return t(`tz-name-${id}`);
       });
       const label = names.join(' / ');
       options.push({ label, timezone });
     }
-    return _.uniqBy(options, 'label');
+    return uniqBy(options, 'label');
   }, [ env ]);
   const timezoneLabels = useMemo(() => {
-    return _.sortBy(_.map(timezoneOptions, 'label'));
+    return timezoneOptions.map(opt => opt.label).sort();
   }, [ timezoneOptions ]);
   const selectedTimezoneLabel = useMemo(() => {
     const timezone = project?.settings?.timezone;
-    const option = _.find(timezoneOptions, { timezone })
+    const option = timezoneOptions.find(tz => tz.timezone === timezone);
     return option?.label ?? '';
   }, [ timezoneOptions, project ]);
   const timezoneBuf = useSaveBuffer({
@@ -105,14 +106,14 @@ function WebsiteSummaryPageSync(props) {
   });
   const handleSaveClick = useListener((evt) => {
     run(async () => {
-      const domains = _.uniq(_.filter(draft.get('settings.domains', [])));
+      const domains = uniq(draft.get('settings.domains', [])).filter(Boolean);
       draft.set('settings.domains', domains);
 
       const problems = {};
-      if (_.includes(domains, location.hostname)) {
+      if (domains.includes(location.hostname)) {
         problems.domains = 'validation-used-by-trambar';
       }
-      if (!draft.get('settings.timezone') && _.trim(timezoneBuf.current)) {
+      if (!draft.get('settings.timezone') && timezoneBuf.current.trim()) {
         problems.timezone = 'validation-invalid-timezone';
       }
       reportProblems(problems);
@@ -124,8 +125,9 @@ function WebsiteSummaryPageSync(props) {
     });
   });
   const handleDomainChange = useListener((evt) => {
-    const text = _.replace(_.toLower(evt.target.value), /[;,]/g, ' ');
-    const domains = _.split(text, /\s/);
+    const text = evt.target.value;
+    const cleaned = text.toLowerCase().replace(/[;,]/g, ' ');
+    const domains = cleaned.split(/\s/);
     draft.set('settings.domains', domains);
   });
   const handleTemplateChange = useListener((evt) => {
@@ -142,8 +144,8 @@ function WebsiteSummaryPageSync(props) {
     draft.set('settings.traffic_report_time', time);
   });
   const handleTimeZoneChange = useListener((evt) => {
-    const label = _.trim(evt.target.value);
-    const option = _.find(timezoneOptions, { label });
+    const label = evt.target.value.trim();
+    const option = timezoneOptions.find(tz.label === label);
     draft.set('settings.timezone', option?.timezone);
     timezoneBuf.set(evt.target.value);
   });
@@ -251,7 +253,7 @@ function WebsiteSummaryPageSync(props) {
           {' '}
           {renderRepoLink()}
         </label>
-        {_.map(list, renderTemplateOption)}
+        {list?.map(renderTemplateOption)}
       </OptionList>
     );
   }
@@ -358,6 +360,6 @@ function WebsiteSummaryPageSync(props) {
   }
 }
 
-const sortSnapshots = memoizeWeak(null, function(snapshots) {
-  return _.orderBy(snapshots, 'ptime', 'desc');
+const sortSnapshots = memoizeWeak(null, (snapshots) => {
+  return orderBy(snapshots, 'ptime', 'desc');
 });

@@ -1,10 +1,9 @@
 function findChanges(before, after, omit) {
-  var diff = {};
-  var changes = false;
-  var keys = Object.keys((before) ? before : after);
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    if (!omit || omit.indexOf(key) === -1) {
+  const diff = {};
+  const keys = Object.keys((before) ? before : after);
+  let changes = false;
+  for (let key of keys) {
+    if (!omit || !omit.includes(key)) {
       var b = (before) ? before[key] : null;
       var a = (after) ? after[key] : null;
       if (!isEqual(b, a)) {
@@ -24,7 +23,7 @@ function isEqual(before, after) {
     if (before.length !== after.length) {
       return false;
     }
-    for (var i = 0; i < before.length; i++) {
+    for (let i = 0; i < before.length; i++) {
       if (!isEqual(before[i], after[i])) {
         return false;
       }
@@ -33,16 +32,15 @@ function isEqual(before, after) {
   } else if (before instanceof Date && after instanceof Date) {
     return before.getTime() === after.getTime();
   } else if (before instanceof Object && after instanceof Object) {
-    var keysB = Object.keys(before);
-    var keysA = Object.keys(after);
+    const keysB = Object.keys(before);
+    const keysA = Object.keys(after);
     if (keysB.length !== keysA.length) {
       return false;
     }
-    for (var i = 0; i < keysB.length; i++) {
+    for (let key of keysB) {
       // JSON doesn't allow undefined, so if before has a key that
-      // after doesn't have, before[name] will never equal after[name]
-      var name = keysB[i];
-      if (!isEqual(before[name], after[name])) {
+      // after doesn't have, before[key] will never equal after[key]
+      if (!isEqual(before[key], after[key])) {
         return false;
       }
     }
@@ -54,36 +52,35 @@ function isEqual(before, after) {
 
 function sendNotification(channel, info) {
   try {
-    var msg = JSON.stringify(info);
-    var sql = `NOTIFY ${channel}, ${plv8.quote_literal(msg)}`;
+    const msg = JSON.stringify(info);
+    const sql = `NOTIFY ${channel}, ${plv8.quote_literal(msg)}`;
     plv8.execute(sql);
   } catch(err) {
     // store the message in the table message_queue if it's too large
     // for NOTIFY
-    var sql = `
+    const sql = `
       INSERT INTO "message_queue" (message)
       VALUES ($1)
       RETURNING id
     `;
-    var rows = plv8.execute(sql, [ info ]);
+    const rows = plv8.execute(sql, [ info ]);
     if (rows.length > 0) {
       // send the id
-      var sql = `NOTIFY ${channel}, '${rows[0].id}'`;
+      const sql = `NOTIFY ${channel}, '${rows[0].id}'`;
       plv8.execute(sql);
     }
   }
 }
 
 function sendChangeNotification(op, schema, table, before, after, changes, propNames) {
-  var id = (after) ? after.id : before.id;
-  var gn = (after) ? after.gn : before.gn;
-  var diff = {}, previous = {}, current = {};
+  const id = (after) ? after.id : before.id;
+  const gn = (after) ? after.gn : before.gn;
+  const diff = {}, previous = {}, current = {};
   // indicate which property is different
-  for (var name in changes) {
+  for (let name in changes) {
     diff[name] = true;
   }
-  for (var i = 0; i < propNames.length; i++) {
-    var name = propNames[i];
+  for (let name of propNames) {
     if (after) {
       current[name] = after[name];
     }
@@ -93,18 +90,18 @@ function sendChangeNotification(op, schema, table, before, after, changes, propN
       }
     }
   }
-  var info = { op, schema, table, id, gn, diff, previous, current };
-  var channel = table + '_change';
+  const info = { op, schema, table, id, gn, diff, previous, current };
+  const channel = table + '_change';
   sendNotification(channel, info);
 }
 
 function sendCleanNotification(op, schema, table, after) {
-  var id = after.id;
-  var gn = after.gn;
-  var atime = after.atime;
-  var sample_count = after.sample_count || 0;
-  var info = { op, schema, table, id, gn, atime, sample_count };
-  var channel = table + '_clean';
+  const id = after.id;
+  const gn = after.gn;
+  const atime = after.atime;
+  const sample_count = after.sample_count || 0;
+  const info = { op, schema, table, id, gn, atime, sample_count };
+  const channel = table + '_clean';
   sendNotification(channel, info);
 }
 
@@ -123,22 +120,21 @@ function matchObject(filters, object) {
         // names as the filters operating on them
         //
         // so the external array is in "external_object"
-        var objectExternal = object[name];
-        var filterObject = filters[name];
-        var filterExternal = [ filterObject ];
-        var serverType = filterObject.type || '';
-        var objectNames = [];
-        for (var name in filterObject) {
-          var link = filterObject[name];
+        const objectExternal = object[name];
+        const filterObject = filters[name];
+        const filterExternal = [ filterObject ];
+        const serverType = filterObject.type || '';
+        const objectNames = [];
+        for (let [ name, link ] of filterObject) {
           if (link.id || link.ids instanceof Array) {
             objectNames.push(name);
           }
         }
-        var filterIdStrings = externalIdStrings(filterExternal, serverType, objectNames);
-        var objectIdStrings = externalIdStrings(objectExternal, serverType, objectNames);
+        const filterIdStrings = externalIdStrings(filterExternal, serverType, objectNames);
+        const objectIdStrings = externalIdStrings(objectExternal, serverType, objectNames);
         if (filterIdStrings && objectIdStrings) {
-          for (var i = 0; i < filterIdStrings.length; i++) {
-            if (objectIdStrings.indexOf(filterIdStrings[i]) !== -1) {
+          for (let filterIdString of filterIdStrings) {
+            if (objectIdStrings.includes(filterIdString)) {
               return true;
             }
           }
@@ -154,47 +150,41 @@ function matchObject(filters, object) {
 }
 
 function externalIdStrings(external, type, names) {
-  var strings = [];
+  const strings = [];
   if (external) {
-    for (var i = 0; i < external.length; i++) {
-      var link = external[i];
+    for (let link of external) {
       if (link.type === type || !type) {
-        var valid = true;
-        var idLists = [];
+        let idLists = [];
         if (type) {
           idLists.push([ link.server_id ]);
         } else {
           idLists.push([]);
         }
-        for (var j = 0; j < names.length; j++) {
-          var name = names[j];
-          var object = link[name];
+        let valid = true;
+        for (let name of names) {
+          const object = link[name];
           if (!object) {
             valid = false;
             break;
           }
           if (object.ids instanceof Array) {
             // multiple the lists
-            var ids = object.ids;
-            var newIdLists = [];
-            for (var k = 0; k < idLists.length; k++) {
-              var idList = idLists[k];
-              for (var m = 0; m < ids.length; m++) {
-                newIdLists.push(idList.concat(ids[m]));
+            const newIdLists = [];
+            for (let idList of idLists) {
+              for (let id of object.ids) {
+                newIdLists.push(idList.concat(id));
               }
             }
             idLists = newIdLists;
           } else {
             // add id to each list
-            for (var k = 0; k < idLists.length; k++) {
-              var idList = idLists[k];
+            for (let idList of idLists) {
               idList.push(object.id);
             }
           }
         }
         if (valid) {
-          for (var k = 0; k < idLists.length; k++) {
-            var idList = idLists[k];
+          for (let idList of idLists) {
             strings.push(idList.join(','));
           }
         }
@@ -205,7 +195,7 @@ function externalIdStrings(external, type, names) {
 }
 
 function transferProps(src, dst) {
-  for (var name in src) {
+  for (let name in src) {
     // copy property unless it's set already
     if (dst[name] == null) {
       dst[name] = src[name];
@@ -215,8 +205,8 @@ function transferProps(src, dst) {
 
 function matchTimeRanges(a, b) {
   // check if start-time or end-time of B is inside A
-  var ar = parseRange(a), as = ar[0], ae = ar[1];
-  var br = parseRange(b), bs = br[0], be = br[1];
+  const ar = parseRange(a), as = ar[0], ae = ar[1];
+  const br = parseRange(b), bs = br[0], be = br[1];
   if ((ae && bs > ae) || (as && be < as)) {
     return false;
   }
@@ -225,7 +215,7 @@ function matchTimeRanges(a, b) {
 
 function parseRange(r) {
   if (r) {
-    if (r.charAt(0) === '[' && r.charAt(r.length - 1) === ']' && r.indexOf(',') !== -1) {
+    if (r.charAt(0) === '[' && r.charAt(r.length - 1) === ']' && r.includes(',')) {
       return r.substr(1, r.length - 1).split(',')
     } else {
       // it's actually a timestamp
@@ -240,12 +230,12 @@ function matchScalars(a, b) {
   if (typeof(a) !== 'object' && typeof(b) !== 'object') {
     return a === b;
   } else if (a instanceof Array && typeof(b) !== 'object') {
-    return a.indexOf(b) !== -1;
+    return a.includes(b);
   } else if (typeof(a) !== 'object' && b instanceof(Array)) {
-    return b.indexOf(a) !== -1;
+    return b.includes(a);
   } else if (a instanceof Array && b instanceof Array) {
     for (var i = 0; i < a.length; i++) {
-      if (b.indexOf(a[i]) !== -1) {
+      if (b.includes(a[i])) {
         return true;
       }
     }
@@ -254,7 +244,7 @@ function matchScalars(a, b) {
 }
 
 function broadcastLogMessage(type, ...args) {
-  var channel = `console_${type}`;
+  const channel = `console_${type}`;
   sendNotification(channel, args);
 }
 

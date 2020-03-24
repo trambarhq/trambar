@@ -14,9 +14,9 @@ import './media-toolbar.scss';
 export function MediaToolbar(props) {
   const { env, story, capturing, onAction } = props;
   const { t } = env.locale;
-  const canCaptureImage = _.includes(env.recorders, 'image');
-  const canCaptureVideo = _.includes(env.recorders, 'video');
-  const canCaptureAudio = _.includes(env.recorders, 'audio');
+  const canCaptureImage = env.recorders.includes('image');
+  const canCaptureVideo = env.recorders.includes('video');
+  const canCaptureAudio = env.recorders.includes('audio');
   const resources = story?.details?.resources ?? [];
 
   const handleClick = useListener((evt) => {
@@ -33,7 +33,7 @@ export function MediaToolbar(props) {
   const handleFileChange = useListener((evt) => {
     const files = evt.target.files;
     if (onAction) {
-      if (!_.isEmpty(files)) {
+      if (files.length > 0) {
         onAction({ action: 'file-import', files });
       }
     }

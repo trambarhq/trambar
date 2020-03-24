@@ -14,7 +14,7 @@ import './language-panel.scss';
 export function LanguagePanel(props) {
   const { env } = props;
   const { t, languageCode, countryCode, directory } = env.locale;
-  const languages = _.filter(directory, (language) => {
+  const languages = directory.filter((language) => {
     return !!language.module;
   });
 

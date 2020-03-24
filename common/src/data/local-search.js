@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { isEqual } from '../utils/object-utils.js';
 
 /**
  * Check if an object matches the provided criteria
@@ -32,11 +33,11 @@ function matchSearchCriteria(table, object, criteria) {
           // contains the latter
           let containing;
           if (actualValue instanceof Object) {
-            containing = _.some(desiredValue, (desiredElement) => {
-              return _.isEqual(desiredElement, actualValue);
+            containing = desiredValue.some((desiredElement) => {
+              return isEqual(desiredElement, actualValue);
             });
           } else {
-            containing = _.includes(desiredValue, actualValue);
+            containing = (desiredValue.index(actualValue) !== -1);
           }
           if (!containing) {
             matching = false;
@@ -46,7 +47,7 @@ function matchSearchCriteria(table, object, criteria) {
         if (typeof(actualValue) === 'object' && typeof(desiredValue) === 'object') {
           // objects requires exact match
           // (NOTE: _.isMatch() might more make sense here)
-          if (!_.isEqual(actualValue, desiredValue)) {
+          if (!isEqual(actualValue, desiredValue)) {
             matching = false;
           }
         } else {

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useListener } from 'relaks';
 
@@ -42,9 +41,9 @@ export const SortableTable = React.memo((props) => {
     if (th && onSort) {
       const column = th.id;
       let dir = 'asc';
-      const columns = _.slice(sortColumns);
-      const directions = _.slice(sortDirections);
-      const index = _.indexOf(sortColumns, column);
+      const columns = [ ...sortColumns ];
+      const directions = [ ...sortDirections ];
+      const index = sortColumns.indexOf(column);
       if (index !== -1) {
         if (index === 0) {
           if (sortDirections[0] === 'asc') {
@@ -97,10 +96,10 @@ export const SortableTable = React.memo((props) => {
     const sortDirection = sortDirections?.[0] || 'asc';
     const tr = findChild(thead.props.children, 'tr');
     const children = React.Children.toArray(tr.props.children);
-    const newChildren = _.map(children, (child) => {
+    const newChildren = children.map((child) => {
       if (child.props.id === sortColumn) {
-        const c = child.props.className || '';
-        const className = _.trim(`${c} ${sortDirection}`);
+        let { className } = child.props;
+        className = (className) ? `${className} ${sortDirection}` : sortDirection;
         child = React.cloneElement(child, { className });
       }
       return child;
@@ -114,7 +113,7 @@ export const SortableTable = React.memo((props) => {
     // not using React.Children.toArray() on the rows, as that
     // leads to new keys and messes up CSS transition
     const trs = tbody.props.children;
-    const newTrs = _.map(trs, (tr, i) => {
+    const newTrs = trs.map((tr, i) => {
       if (!tr) {
         return null;
       }
@@ -125,18 +124,20 @@ export const SortableTable = React.memo((props) => {
         return (expanded) ? tr : null;
       }
       const tds = React.Children.toArray(tr.props.children);
-      const c = tr.props.className;
+      let { className } = tr.props;
       let open = expanded;
+      let state;
       if (action === 'expanding') {
         // render in the closed state at start of transition
         open = false;
+        state = 'expanded';
       } else if (action === 'collapsing') {
         // render in the open state at start of transition
         open = true;
+        state = 'collapsed';
       }
-      const state = (open) ? 'expanded' : 'collapsed';
-      const className = _.trim(`${c} ${state}`);
-      const newTds = _.map(tds, (td, j) => {
+      className = (className) ? `${className} ${state}` : state;
+      const newTds = tds.map((td, j) => {
         const container = (
           <CollapsibleContainer open={open} animateIn={transition}>
             {td.props.children}
@@ -153,7 +154,7 @@ export const SortableTable = React.memo((props) => {
 
 function findChild(children, tagName) {
   children = React.Children.toArray(children);
-  return _.find(children, { type: tagName });
+  return children.find(c => c.type === tagName);
 }
 
 function findHeaderNode(node) {

@@ -27,10 +27,12 @@ export class Route {
     }
     this.page = module.default;
     this.pageParams = {};
-    for (let key of Object.keys(routeManager.route.params)) {
-      this.pageParams[key] = this.params[key];
+    if (this.params) {
+      for (let key of Object.keys(this.params)) {
+        this.pageParams[key] = this.params[key];
+      }
+      this.pageParams.key = this.params.key;
     }
-    this.pageParams.key = this.params.key;
   }
 
   async change(url, options) {

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -6,6 +5,7 @@ import { findProject } from 'common/objects/finders/project-finder.js';
 import { findAllSpreadsheets } from 'common/objects/finders/spreadsheet-finder.js';
 import { disableSpreadsheets, restoreSpreadsheets } from 'common/objects/savers/spreadsheet-saver.js';
 import { getSpreadsheetName } from 'common/objects/utils/spreadsheet-utils.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -167,7 +167,7 @@ function SpreadsheetListPageSync(props) {
   function renderRows() {
     const visible = (selection.shown) ? spreadsheets : activeSpreadsheets;
     const sorted = sortSpreadsheets(visible, env, sort);
-    return _.map(sorted, renderRow);
+    return sorted?.map(renderRow);
   }
 
   function renderRow(spreadsheet) {
@@ -279,13 +279,11 @@ function SpreadsheetListPageSync(props) {
   }
 }
 
-const sortSpreadsheets = memoizeWeak(null, function(spreadsheets, env, sort) {
-  const columns = _.map(sort.columns, (column) => {
+const sortSpreadsheets = memoizeWeak(null, (spreadsheets, env, sort) => {
+  const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
-        return (spreadsheet) => {
-          return _.toLower(getSpreadsheetName(spreadsheet, env));
-        };
+        return s => getSpreadsheetName(s, env).toLowerCase();
       case 'sheets':
         return 'details.filename';
       case 'sheets':
@@ -294,11 +292,11 @@ const sortSpreadsheets = memoizeWeak(null, function(spreadsheets, env, sort) {
         return column;
     }
   });
-  return _.orderBy(spreadsheets, columns, sort.directions);
+  return orderBy(spreadsheets, columns, sort.directions);
 });
 
-const filterSpreadsheets = memoizeWeak(null, function(spreadsheets) {
-  return _.filter(spreadsheets, (spreadsheet) => {
+const filterSpreadsheets = memoizeWeak(null, (spreadsheets) => {
+  return spreadsheets.filter((spreadsheet) => {
     return !spreadsheet.deleted && !spreadsheet.disabled;
   });
 });

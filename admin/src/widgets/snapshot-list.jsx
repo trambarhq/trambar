@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
 import { useProgress, useListener } from 'relaks';
@@ -32,7 +31,7 @@ export async function SnapshotList(props) {
     if (template === null) {
       return renderGeneric();
     } else {
-      return _.map(snapshots, renderItem);
+      return snapshots.map(renderItem);
     }
   }
 
@@ -56,7 +55,7 @@ export async function SnapshotList(props) {
       id = commit.substr(0, 8);
     }
 
-    const author = _.find(authors, { id: snapshot.user_id });
+    const author = authors.find(u => u.id === snapshot.user_id);
     const authorName = getUserName(author, env);
 
     const classNames = [ 'snapshot' ];

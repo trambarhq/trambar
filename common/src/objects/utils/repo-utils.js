@@ -88,7 +88,7 @@ function getIssueLabelStyle(repo, label) {
   if (repo) {
     const labels = _.get(repo, 'details.labels');
     const colors = _.get(repo, 'details.label_colors');
-    const index = _.indexOf(repo.details.labels, label);
+    const index = repo.details.labels.indexOf(label);
     const backgroundColor = _.get(colors, index);
     if (backgroundColor) {
       const style = { backgroundColor };

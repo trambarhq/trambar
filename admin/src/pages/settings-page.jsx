@@ -1,8 +1,8 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { findSystem } from 'common/objects/finders/system-finder.js';
 import { saveSystem } from 'common/objects/savers/system-saver.js';
+import { toggle } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -95,7 +95,7 @@ function SettingsPageSync(props) {
   const handleLanguageOptionClick = useListener((evt) => {
     const lang = evt.name;
     const listBefore = draft.get('settings.input_languages', []);
-    const list = _.toggle(listBefore, lang);
+    const list = toggle(listBefore, lang);
     draft.set('settings.input_languages', list);
   });
 
@@ -261,7 +261,7 @@ function SettingsPageSync(props) {
     return (
       <OptionList {...listProps}>
         <label>{t('settings-input-languages')}</label>
-        {_.map(directory, renderInputLanguage)}
+        {directory.map(renderInputLanguage)}
       </OptionList>
     );
   }
@@ -269,15 +269,15 @@ function SettingsPageSync(props) {
   function renderInputLanguage(language, i) {
     const listCurr = draft.getCurrent('settings.input_languages', []);
     const listPrev = draft.getOriginal('settings.input_languages', []);
-    const pos = _.indexOf(listCurr, language.code) + 1;
+    const pos = listCurr.indexOf(language.code) + 1;
     let badge;
     if (pos) {
       badge = <span className="language-badge">{pos}</span>;
     }
     const props = {
       name: language.code,
-      selected: _.includes(listCurr, language.code),
-      previous: _.includes(listPrev, language.code),
+      selected: listCurr.includes(language.code),
+      previous: listPrev.includes(language.code),
     };
     return (
       <option key={i} {...props}>
@@ -302,7 +302,7 @@ function SettingsPageSync(props) {
 }
 
 function getDefaultSystem(base) {
-  if (_.isEmpty(base)) {
+  if (!base) {
     // use timezone to determine default relay
     const tzOffset = (new Date()).getTimezoneOffset() / 60;
     let defaultRelay;

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { usePlainText, useRichText } from 'trambar-www';
 import { detectDirection } from 'common/utils/plain-text.js';
@@ -37,7 +36,7 @@ export function ExcelPreview(props) {
     if (sheet) {
       columns = sheet.columns;
       if (sheet.rows.length > limit) {
-        rows = _.slice(sheet.rows, 0, limit);
+        rows = sheet.rows.slice(0, limit);
       } else {
         rows = sheet.rows;
       }
@@ -46,11 +45,11 @@ export function ExcelPreview(props) {
       <table>
         <thead>
           <tr>
-            {_.map(columns, renderHeader)}
+            {columns.map(renderHeader)}
           </tr>
         </thead>
         <tbody>
-          {_.map(rows, renderRow)}
+          {rows.map(renderRow)}
         </tbody>
       </table>
     );
@@ -70,10 +69,10 @@ export function ExcelPreview(props) {
   }
 
   function renderColumnFlags(flags) {
-    if (!_.isEmpty(flags)) {
+    if (flags?.length > 0) {
       return (
         <span class="flags">
-          ({_.join(flags, ', ')})
+          ({flags.join(', ')})
         </span>
       );
     }
@@ -82,7 +81,7 @@ export function ExcelPreview(props) {
   function renderRow(row, i) {
     return (
       <tr key={i}>
-        {_.map(row.cells, renderCell)}
+        {row.cells.map(renderCell)}
       </tr>
     );
   }

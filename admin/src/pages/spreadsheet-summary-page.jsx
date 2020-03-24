@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { ExcelFile } from 'trambar-www';
@@ -156,7 +155,8 @@ function SpreadsheetSummaryPageSync(props) {
     });
   });
   const handleNameChange = useListener((evt) => {
-    const name = _.toLower(evt.target.value).replace(/[^\w\-]+/g, '');
+    const text = evt.target.value;
+    const name = text.toLowerCase().replace(/[^\w\-]+/g, '');
     draft.set('name', name);
   });
   const handleURLChange = useListener((evt) => {
@@ -352,7 +352,7 @@ function SpreadsheetSummaryPageSync(props) {
         <label>
           {t('spreadsheet-summary-hidden')}
         </label>
-        {_.map([ false, true ], renderHiddenOption)}
+        {[ false, true ].map(renderHiddenOption)}
       </OptionList>
     );
   }
@@ -388,8 +388,8 @@ function SpreadsheetSummaryPageSync(props) {
 
   function renderSheets() {
     if (excel) {
-      if (!_.isEmpty(excel.sheets)) {
-        return _.map(excel.sheets, renderSheet);
+      if (excel.sheets.length > 0) {
+        return excel.sheets.map(renderSheet);
       } else {
         const error = spreadsheet?.details?.error;
         if (!error) {
@@ -456,8 +456,8 @@ function Sheet(props) {
     const dir = (open) ? 'up' : 'down';
     const { name, flags } = sheet;
     let label = name;
-    if (!_.isEmpty(flags)) {
-      label += ` (${_.join(flags, ', ')})`;
+    if (flags.length > 0) {
+      label += ` (${flags.join(', ')})`;
     }
     return (
       <h2>

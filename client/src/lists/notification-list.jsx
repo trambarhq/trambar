@@ -108,7 +108,7 @@ export async function NotificationList(props) {
   function renderNewNotificationAlert() {
     const count = _.size(hiddenNotificationIDs);
     let url;
-    if (!_.isEmpty(hiddenNotificationIDs)) {
+    if (hiddenNotificationIDs.length > 0) {
       url  = route.find(route.name, {
         highlightingNotification: _.first(hiddenNotificationIDs)
       });
@@ -125,9 +125,9 @@ export async function NotificationList(props) {
     if (!env.focus || !env.visible)  {
       return;
     }
-    const unread = _.filter(notifications, (notification) => {
+    const unread = notifications.filter((notification) => {
       if (!notification.seen) {
-        if (!_.includes(hiddenNotificationIDs, notification.id)) {
+        if (!hiddenNotificationIDs.includes(notification.id)) {
           return true;
         }
       }
@@ -149,7 +149,7 @@ export async function NotificationList(props) {
       const viewDuration = viewDurations[notification.id] || 0;
       return (viewDuration > requiredDuration);
     });
-    if (allReady && !_.isEmpty(unread)) {
+    if (allReady && unread.length > 0) {
       markAsSeen(unread);
     }
   }

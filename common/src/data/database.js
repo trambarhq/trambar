@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 class Database {
   constructor(remoteDataSource, context) {
     this.context = context || {};
@@ -16,7 +14,7 @@ class Database {
    * @return {Promise<Array<Object>>}
    */
   async find(query) {
-    query = merge(this.context, query);
+    query = { ...this.context, ...query };
     return this.remoteDataSource.find(query);
   }
 
@@ -28,7 +26,7 @@ class Database {
    * @return {Promise<Object>}
    */
   async findOne(query) {
-    query = _.extend({ expected: 1 }, query);
+    query = { ...query, expected: 1 };
     const objects = await this.find(query);
     return objects[0] || null;
   }
@@ -44,12 +42,7 @@ class Database {
    * @return {Promise<Array<Object>>}
    */
   async save(location, objects, options) {
-    if (process.env.NODE_ENV !== 'production') {
-      if (!_.isArray(objects) || !_.every(objects, _.isObject)) {
-        throw new Error('save() expects an array of objects');
-      }
-    }
-    location = merge(this.context, location);
+    location = { ...this.context, ...location };
     return this.remoteDataSource.save(location, objects, options);
   }
 
@@ -63,11 +56,6 @@ class Database {
    * @return {Promise<Object>}
    */
   async saveOne(location, object, options) {
-    if (process.env.NODE_ENV !== 'production') {
-      if (!_.isObject(object)) {
-        throw new Error('saveOne() expects an object');
-      }
-    }
     const objects = await this.save(location, [ object ], options);
     return objects[0] || null;
   }
@@ -81,12 +69,7 @@ class Database {
    * @return {Promise<Array<Object>>}
    */
   async remove(location, objects) {
-    if (process.env.NODE_ENV !== 'production') {
-      if (!_.isArray(objects) || !_.every(objects, _.isObject)) {
-        throw new Error('remove() expects an array of objects');
-      }
-    }
-    location = merge(this.context, location);
+    location = { ...this.context, ...location };
     return this.remoteDataSource.remove(location, objects);
   }
 
@@ -99,11 +82,6 @@ class Database {
    * @return {Promise<Object>}
    */
   async removeOne(location, object) {
-    if (process.env.NODE_ENV !== 'production') {
-      if (!_.isObject(object)) {
-        throw new Error('removeOne() expects an object');
-      }
-    }
     const objects = await this.remove(location, [ object ]);
     return objects[0] || null;
   }
@@ -118,7 +96,7 @@ class Database {
    * @return {Promise<Boolean>}
    */
   async waitForChange(location, object, timeout) {
-    location = merge(this.context, location);
+    location = { ...this.context, ...location };
     return this.remoteDataSource.waitForChange(location, object, timeout);
   }
 
@@ -131,7 +109,7 @@ class Database {
    * @return {Promise<Boolean>}
    */
   async refresh(location, object) {
-    location = merge(this.context, location);
+    location = { ...this.context, ...location };
     return this.remoteDataSource.refresh(location, object);
   }
 
@@ -144,10 +122,9 @@ class Database {
    * @return {Database}
    */
   use(...varSets) {
-    const newContext = {};
-    _.assign(newContext, this.context);
+    const newContext = { ...this.context };
     for (let varSet of varSets) {
-      _.assign(newContext, varSet);
+      Object.assign(newContext, varSet);
     }
     return new Database(this.remoteDataSource, newContext);
   }
@@ -161,7 +138,7 @@ class Database {
    * @return {Promise<Number>}
    */
   async start(location) {
-    location = merge(this.context, location);
+    location = { ...this.context, ...location };
     return this.remoteDataSource.start(location);
   }
 
@@ -276,7 +253,7 @@ class Database {
    * @return {Number|undefined}
    */
   findTemporaryID(location, id) {
-    location = merge(this.context, location);
+    location = { ...this.context, ...location };
     return this.remoteDataSource.findTemporaryID(location, id);
   }
 
@@ -289,13 +266,9 @@ class Database {
    * @return {Number|undefined}
    */
   findPermanentID(location, id) {
-    location = merge(this.context, location);
+    location = { ...this.context, ...location };
     return this.remoteDataSource.findPermanentID(location, id);
   }
-}
-
-function merge(context, query) {
-  return _.assign({}, context, query);
 }
 
 export {

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 import { StoryTypes, StoryIcons } from 'common/objects/types/story-types.js';

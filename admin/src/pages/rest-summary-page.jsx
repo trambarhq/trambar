@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { findProject } from 'common/objects/finders/project-finder.js';
@@ -127,7 +126,8 @@ function RestSummaryPageSync(props) {
     });
   });
   const handleNameChange = useListener((evt) => {
-    const name = _.toLower(evt.target.value).replace(/[^\w\-]+/g, '');
+    const text = evt.target.value;
+    const name = text.toLowerCase().replace(/[^\w\-]+/g, '');
     draft.set('name', name);
   });
   const handleURLChange = useListener((evt) => {
@@ -156,7 +156,7 @@ function RestSummaryPageSync(props) {
     draft.set('type', type);
   });
   const handleMaxAgeChange = useListener((evt) => {
-    const text = _.trim(evt.target.value);
+    const text = evt.target.value.trim();
     if (text) {
       const maxAge = parseInt(text);
       if (maxAge === maxAge) {
@@ -289,7 +289,7 @@ function RestSummaryPageSync(props) {
           {t('rest-summary-type')}
           <InputError>{t(problems.type)}</InputError>
         </label>
-        {_.map(RestTypes, renderTypeOption)}
+        {RestTypes.map(renderTypeOption)}
       </OptionList>
     );
   }

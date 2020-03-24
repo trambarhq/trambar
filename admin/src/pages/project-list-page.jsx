@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -8,6 +7,7 @@ import { getProjectName } from 'common/objects/utils/project-utils.js';
 import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
 import { findProjectMembers } from 'common/objects/finders/user-finder.js';
 import { findDailyActivitiesOfProjects } from 'common/objects/finders/statistics-finder.js';
+import { findByIds, orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -109,7 +109,7 @@ function ProjectListPageSync(props) {
 
   function renderButtons() {
     if (readOnly) {
-      const empty = _.isEmpty(projects);
+      const empty = !projects?.length;
       return (
         <div className="buttons">
           <ComboButton>
@@ -177,7 +177,7 @@ function ProjectListPageSync(props) {
   function renderRows() {
     const visible = (selection.shown) ? projects : activeProjects;
     const sorted = sortProjects(visible, users, repos, statistics, env, sort);
-    return _.map(sorted, renderRow);
+    return sorted?.map(renderRow);
   }
 
   function renderRow(project) {
@@ -365,20 +365,20 @@ function ProjectListPageSync(props) {
   }
 }
 
-const sortProjects = memoizeWeak(null, function(projects, users, repos, statistics, env, sort) {
-  const columns = _.map(sort.columns, (column) => {
+const sortProjects = memoizeWeak(null, (projects, users, repos, statistics, env, sort) => {
+  const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
         return (project) => {
-          return _.toLower(getProjectName(project, env))
+          return getProjectName(project, env).toLowerCase();
         };
       case 'users':
         return (project) => {
-          return _.size(findUsers(users, project));
+          return findUsers(users, project)?.length || 0;
         };
       case 'repos':
         return (project) => {
-          return _.size(findRepos(repos, project));
+          return findRepos(repos, project)?.length || 0;
         };
       case 'range':
         return (project) => {
@@ -386,39 +386,33 @@ const sortProjects = memoizeWeak(null, function(projects, users, repos, statisti
         };
       case 'last_month':
         return (project) => {
-          return statistics?.[project.id]?.last_month?.total ?? 0;
+          return statistics?.[project.id]?.last_month?.total || 0;
         };
       case 'this_month':
         return (project) => {
-          return statistics?.[project.id]?.this_month?.total ?? 0;
+          return statistics?.[project.id]?.this_month?.total || 0;
         };
       case 'to_date':
         return (project) => {
-          return statistics?.[project.id]?.to_date?.total ?? 0;
+          return statistics?.[project.id]?.to_date?.total || 0;
         };
       default:
         return column;
     }
   });
-  return _.orderBy(projects, columns, sort.directions);
+  return orderBy(projects, columns, sort.directions);
 });
 
-const filterProjects = memoizeWeak(null, function(projects) {
-  return _.filter(projects, (project) => {
+const filterProjects = memoizeWeak(null, (projects) => {
+  return projects.filter((project) => {
     return !project.deleted && !project.archived;
   });
 });
 
-const findRepos = memoizeWeak(null, function(repos, project) {
-  const hash = _.keyBy(repos, 'id');
-  return _.filter(_.map(project.repo_ids, (id) => {
-    return hash[id];
-  }));
+const findRepos = memoizeWeak(null, (repos, project) => {
+  return findByIds(repos, project.repo_ids);
 });
 
-const findUsers = memoizeWeak(null, function(users, project) {
-  const hash = _.keyBy(users, 'id');
-  return _.filter(_.map(project.user_ids, (id) => {
-    return hash[id];
-  }));
+const findUsers = memoizeWeak(null, (users, project) => {
+  return findByIds(users, project.user_ids);
 });

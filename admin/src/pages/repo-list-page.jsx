@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -10,6 +9,7 @@ import { findRepoServers } from 'common/objects/finders/server-finder.js';
 import { getServerName, getServerIconClass } from 'common/objects/utils/server-utils.js';
 import { findDailyActivitiesOfRepos } from 'common/objects/finders/statistics-finder.js';
 import { findLink } from 'common/objects/utils/external-data-utils.js';
+import { findByIds, orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -102,7 +102,7 @@ function RepoListPageSync(props) {
 
   function renderButtons() {
     if (readOnly) {
-      const empty = _.isEmpty(repos);
+      const empty = !repos?.length;
       return (
         <div className="buttons">
           <PushButton className="emphasis" disabled={empty} onClick={handleEditClick}>
@@ -163,7 +163,7 @@ function RepoListPageSync(props) {
   function renderRows() {
     const visible = (selection.shown) ? repos : linkedRepos;
     const sorted = sortRepos(visible, servers, statistics, env, sort);
-    return _.map(sorted, renderRow);
+    return sorted?.map(renderRow);
   }
 
   function renderRow(repo, i) {
@@ -339,55 +339,49 @@ function RepoListPageSync(props) {
   }
 }
 
-const sortRepos = memoizeWeak(null, function(repos, servers, statistics, env, sort) {
-  const columns = _.map(sort.columns, (column) => {
+const sortRepos = memoizeWeak(null, (repos, servers, statistics, env, sort) => {
+  const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
         return (repo) => {
-          return _.toLower(getRepoName(repo, env));
+          return getRepoName(repo, env).toLowerCase();
         };
       case 'server':
         return (repo) => {
           let server = findServer(servers, repo);
-          return _.toLower(getServerName(server, env));
+          return getServerName(server, env).toLowerCase();
         };
       case 'issue_tracker':
         return 'details.issues_enabled';
       case 'range':
         return (repo) => {
-          return statistics?.[repo.id]?.range?.start ?? '';
+          return statistics?.[repo.id]?.range?.start || '';
         };
       case 'last_month':
         return (repo) => {
-          return statistics?.[repo.id]?.last_month?.total ?? 0;
+          return statistics?.[repo.id]?.last_month?.total || 0;
         };
       case 'this_month':
         return (repo) => {
-          return statistics?.[repo.id]?.this_month?.total ?? 0;
+          return statistics?.[repo.id]?.this_month?.total || 0;
         };
       case 'to_date':
         return (repo) => {
-          return statistics?.[repo.id]?.to_date?.total ?? 0;
+          return statistics?.[repo.id]?.to_date?.total || 0;
         };
       default:
         return column;
     }
   });
-  return _.orderBy(repos, columns, sort.directions);
+  return orderBy(repos, columns, sort.directions);
 });
 
 const findServer = memoizeWeak(null, function(servers, repo) {
-  return _.find(servers, (server) => {
-    let link = findLink(repo, server);
-    return !!link;
+  return servers.find((server) => {
+    return findLink(repo, server);
   });
 });
 
 const findRepos = memoizeWeak(null, function(repos, project) {
-  if (project) {
-    let hash = _.keyBy(repos, 'id');
-    return _.filter(_.map(project.repo_ids, (id) => {
-      return hash[id];
-    }));
-  }
+  return findByIds(repos, project.repo_ids);
 });

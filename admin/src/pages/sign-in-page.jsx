@@ -1,7 +1,7 @@
-import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { getServerName, getServerIconClass } from 'common/objects/utils/server-utils.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -33,7 +33,7 @@ function SignInPageSync(props) {
   const [ error, run ] = useErrorCatcher();
   const [ oauthErrors, setOAuthErrors ] = useState({});
   const [ savedCredentials, setSavedCredentials ] = useState(false);
-  const credentialsValid = !!_.trim(username) && !!_.trim(password);
+  const credentialsValid = !!username.trim() && !!password.trim();
 
   const handleOAuthButtonClick = useListener(async (evt) => {
     evt.preventDefault();
@@ -158,15 +158,15 @@ function SignInPageSync(props) {
   }
 
   function renderOAuthButtons() {
-    if (_.isEmpty(servers)) {
+    if (!servers?.length) {
       return null;
     }
-    const sorted = _.sortBy(servers, [ 'type' ]);
+    const sorted = orderBy(servers, 'type', 'asc');
     return (
       <section>
         <h2>{t('sign-in-oauth')}</h2>
         <div className="oauth-buttons">
-          {_.map(sorted, renderOAuthButton)}
+          {sorted?.map(renderOAuthButton)}
         </div>
       </section>
     );
@@ -201,10 +201,10 @@ function SignInPageSync(props) {
 
 function openPopUpWindow(url) {
   return new Promise((resolve, reject) => {
-    let width = 800;
-    let height = 600;
-    let { screenLeft, screenTop, outerWidth, outerHeight } = window;
-    let options = {
+    const width = 800;
+    const height = 600;
+    const { screenLeft, screenTop, outerWidth, outerHeight } = window;
+    const options = {
       width,
       height,
       left: screenLeft + Math.round((outerWidth - width) / 2),
@@ -213,10 +213,11 @@ function openPopUpWindow(url) {
       menubar: 'no',
       status: 'no',
     };
-    let pairs = _.map(options, (value, name) => {
-      return `${name}=${value}`;
-    });
-    let win = window.open(url, 'sign-in', pairs.join(','));
+    const pairs = [];
+    for (let [ name, value ] of Object.entries(options)) {
+      pairs.push(`${name}=${value}`);
+    }
+    const win = window.open(url, 'sign-in', pairs.join(','));
     if (win) {
       win.location = url;
       let interval = setInterval(() => {

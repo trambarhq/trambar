@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -6,6 +5,7 @@ import { findProject } from 'common/objects/finders/project-finder.js';
 import { findAllRests } from 'common/objects/finders/rest-finder.js';
 import { disableRests, restoreRests } from 'common/objects/savers/rest-saver.js';
 import { saveRepo } from 'common/objects/utils/rest-utils.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -166,7 +166,7 @@ function RestListPageSync(props) {
   function renderRows() {
     const visible = (selection.shown) ? rests : activeRests;
     const sorted = sortRests(visible, env, sort);
-    return _.map(sorted, renderRow);
+    return sorted?.map(renderRow);
   }
 
   function renderRow(rest) {
@@ -273,12 +273,12 @@ function RestListPageSync(props) {
   }
 }
 
-const sortRests = memoizeWeak(null, function(rests, env, sort) {
-  const columns = _.map(sort.columns, (column) => {
+const sortRests = memoizeWeak(null, (rests, env, sort) => {
+  const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
         return (rest) => {
-          return _.toLower(getRestName(rest, env));
+          return getRestName(rest, env).toLowerCase();
         };
       case 'sheets':
         return 'details.filename';
@@ -288,11 +288,11 @@ const sortRests = memoizeWeak(null, function(rests, env, sort) {
         return column;
     }
   });
-  return _.orderBy(rests, columns, sort.directions);
+  return orderBy(rests, columns, sort.directions);
 });
 
-const filterRests = memoizeWeak(null, function(rests) {
-  return _.filter(rests, (rest) => {
+const filterRests = memoizeWeak(null, (rests) => {
+  return rests.filter((rest) => {
     return !rest.deleted && !rest.disabled;
   });
 });

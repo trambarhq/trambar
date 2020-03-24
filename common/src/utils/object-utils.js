@@ -1,11 +1,11 @@
-import {
-  clone,
-  get,
-  set,
-  unset,
-  isEqual,
-  isEmpty,
-} from lodash;
+import clone from 'lodash/clone.js'
+import cloneDeep from 'lodash/cloneDeep.js';
+import get from 'lodash/get.js';
+import set from 'lodash/set.js';
+import unset from 'lodash/unset.js';
+import isEmpty from 'lodash/isEmpty.js';
+import isEqual from 'lodash/isEqual.js';
+import isMatch from 'lodash/isMatch.js';
 
 const emptyObject = {};
 
@@ -138,13 +138,13 @@ function normalizePath(path) {
 
 export {
   clone,
+  cloneDeep,
   get,
   set,
   unset,
-  isEqual,
   isEmpty,
-  get,
-  set,
+  isEqual,
+  isMatch,
   decouple,
   decoupleSet,
   decoupleUnset,

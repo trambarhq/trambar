@@ -23,7 +23,7 @@ export async function StoryList(props) {
   const { access, acceptNewStory } = props;
   const { highlightStoryID, scrollToStoryID, highlightReactionID, scrollToReactionID } = props;
   const { t } = env.locale;
-  const allStories = _.filter(_.concat(pendingStories, draftStories, stories));
+  const allStories = _.concat(pendingStories.filter(draftStories, stories));
   const [ hiddenStoryIDs, setHiddenStoryIDs ] = useState([]);
   const [ show ] = useProgress();
 
@@ -178,7 +178,7 @@ export async function StoryList(props) {
       );
     } else {
       if (needed) {
-        const pending = !_.includes(stories, story);
+        const pending = !stories.includes(story);
         const storyProps = {
           highlighting,
           pending,
@@ -215,7 +215,7 @@ export async function StoryList(props) {
 }
 
 const sortStories = memoizeWeak(null, function(stories, pendingStories) {
-  if (!_.isEmpty(pendingStories)) {
+  if (pendingStories.length > 0) {
     stories = _.slice(stories);
     for (let story of pendingStories) {
       if (!story.published_version_id) {
@@ -238,7 +238,7 @@ const sortStories = memoizeWeak(null, function(stories, pendingStories) {
 
 const attachDrafts = memoizeWeak([ null ], function(stories, drafts, currentUser) {
   // add new drafts (drafts includes published stories being edited)
-  let newDrafts = _.filter(drafts, (story) => {
+  let newDrafts = drafts.filter((story) => {
     return !story.published_version_id && !story.published;
   });
 
@@ -267,14 +267,14 @@ const getStoryTime = function(story) {
 
 const findReactions = memoizeWeak(null, function(reactions, story) {
   if (story) {
-    return _.filter(reactions, { story_id: story.id });
+    return reactions.filter({ story_id: story.id });
   }
 });
 
 const findAuthors = memoizeWeak(null, function(users, story) {
   if (story) {
     const hash = _.keyBy(users, 'id');
-    const list = _.filter(_.map(story.user_ids, (userID) => {
+    const list = _.map(story.user_ids.filter((userID) => {
       return hash[userID];
     }));
     return list;
@@ -291,7 +291,7 @@ const findDraftAuthors = memoizeWeak(null, function(currentUser, users, story) {
 const findRespondents = memoizeWeak(null, function(users, reactions) {
   const respondentIDs = _.uniq(_.map(reactions, 'user_id'));
   const hash = _.keyBy(users, 'id');
-  return _.filter(_.map(respondentIDs, (userID) => {
+  return _.map(respondentIDs.filter((userID) => {
     return hash[userID];
   }));
 });
@@ -299,7 +299,7 @@ const findRespondents = memoizeWeak(null, function(users, reactions) {
 const findBookmarks = memoizeWeak(null, function(bookmarks, story, currentUser) {
   if (story) {
     let storyID = story.published_version_id || story.id;
-    return _.filter(bookmarks, (bookmark) => {
+    return bookmarks.filter((bookmark) => {
       if (bookmark.story_id === storyID) {
         // omit those hidden by the current user
         if (!(bookmark.hidden && bookmark.target_user_id === currentUser.id)) {
@@ -312,7 +312,7 @@ const findBookmarks = memoizeWeak(null, function(bookmarks, story, currentUser) 
 
 const findRecipients = memoizeWeak(null, function(recipients, bookmarks, story, currentUser) {
   const storyBookmarks = findBookmarks(bookmarks, story, currentUser);
-  return _.filter(recipients, (recipient) => {
+  return recipients.filter((recipient) => {
     return _.some(storyBookmarks, { target_user_id: recipient.id });
   });
 });

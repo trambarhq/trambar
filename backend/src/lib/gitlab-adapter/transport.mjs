@@ -288,7 +288,7 @@ async function request(server, uri, method, query, payload, userToken) {
   }
   const body = (payload instanceof Object) ? JSON.stringify(payload) : undefined;
 
-  const maxAttempts = (unreachableLocations.indexOf(baseURL) !== -1) ? 1 : 5;
+  const maxAttempts = (unreachableLocations.includes(baseURL)) ? 1 : 5;
   let attempts = 1;
   let delayInterval = 500;
   while (attempts <= maxAttempts) {
@@ -312,7 +312,7 @@ async function request(server, uri, method, query, payload, userToken) {
       } else if (status === 429) {
         await Bluebird.delay(5000);
       } else if ((status >= 400 && status <= 499) || attempts >= maxAttempts) {
-        if (unreachableLocations.indexOf(baseURL) === -1) {
+        if (unreachableLocations.includes(baseURL)) {
           // remember we've failed with the location after multiple attempts
           unreachableLocations.push(baseURL);
         }

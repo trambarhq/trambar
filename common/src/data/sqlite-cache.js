@@ -1,5 +1,6 @@
-import _ from 'lodash';
 import { matchSearchCriteria, limitSearchResults } from './local-search.js';
+import { sortedIndexBy } from '../utils/array-utils.js';
+import { isEqual, unset } from '../utils/object-utils.js';
 
 let openDatabase = window.openDatabase;
 if (window.sqlitePlugin) {
@@ -21,12 +22,13 @@ class SQLiteCache {
   }
 
   constructor(options) {
-    this.options = _.defaults({}, options, defaultOptions);
+    this.options = { ...defaultOptions, ...options };
     this.tables = {};
     this.recordCounts = {};
     this.writeCount = 0;
     this.readCount = 0;
     this.deleteCount = 0;
+    this.recordCountTimeout = 0;
   }
 
   initialize() {
@@ -52,7 +54,7 @@ class SQLiteCache {
     const objects = await this.fetchTable(address, schema, table);
     const keyName = this.getObjectKeyName(schema);
     const results = [];
-    if (_.isEqual(_.keys(criteria), [ keyName ])) {
+    if (criteria?.hasOwnProperty(keyName) && Object.keys(criteria) === 1) {
       let keys = criteria[keyName];
       if (keys instanceof Array) {
         keys = keys.slice().sort();
@@ -63,7 +65,7 @@ class SQLiteCache {
       for (let key of keys) {
         const keyObj = {};
         keyObj[keyName] = key;
-        const index = _.sortedIndexBy(objects, keyObj, keyName);
+        const index = sortedIndexBy(objects, keyObj, keyName);
         const object = objects[index];
         if (object && object[keyName] === key) {
           results.push(object);
@@ -405,13 +407,19 @@ class SQLiteCache {
    * @param  {String|undefined} schema
    */
   reset(address, schema) {
-    let path;
+    const path = [];
     if (schema === 'local') {
-      path = [ 'local' ];
+      path.push('local');
     } else {
-      path = _.filter([ 'remote', address, schema ]);
+      path.push('remote');
+      if (address) {
+        path.push(address);
+        if (schema) {
+          path.push(schema);
+        }
+      }
     }
-    _.unset(this.tables, path);
+    unset(this.tables, path);
   }
 
   /**
@@ -439,19 +447,19 @@ class SQLiteCache {
    * @return {Object}
    */
   getTableEntry(address, schema, table) {
-    let path;
+    const path = [];
     if (schema === 'local') {
-      path = [ 'local', table ];
+      path.push('local', table);
     } else {
-      path = [ 'remote', address, schema, table ];
+      path.push('remote', address, schema, table);
     }
-    let tbl = _.get(this.tables, path);
+    const tbl = get(this.tables, path);
     if (!tbl) {
       tbl = {
         promise: null,
         objects: null,
       };
-      _.set(this.tables, path, tbl);
+      set(this.tables, path, tbl);
     }
     return tbl;
   }
@@ -470,7 +478,7 @@ class SQLiteCache {
     if (tbl.objects) {
       const keyName = this.getObjectKeyName(schema);
       for (let object of objects) {
-        const index = _.sortedIndexBy(tbl.objects, object, keyName);
+        const index = sortedIndexBy(tbl.objects, object, keyName);
         const target = tbl.objects[index];
         if (target && target[keyName] === object[keyName]) {
           if (!remove) {
@@ -495,21 +503,18 @@ class SQLiteCache {
    */
   updateRecordCount(schema, delay) {
     const cacheTableName = (schema === 'local') ? 'local_data' : 'remote_data';
-    const timeoutPath = `updateRecordCountTimeouts.${cacheTableName}`;
-    let timeout = _.get(this, timeoutPath);
-    if (timeout) {
-      clearTimeout(timeout);
+    if (this.recordCountTimeout) {
+      clearTimeout(this.recordCountTimeout);
     }
-    timeout = setTimeout(async () => {
+    this.recordCountTimeout = setTimeout(async () => {
       try {
         const sql = `SELECT COUNT(*) as count FROM ${cacheTableName}`;
         const rows = await this.query(sql);
         this.recordCounts[cacheTableName] = rows[0].count;
       } catch (err) {
       }
-      _.set(this, timeoutPath, 0);
+      this.recordCountTimeout = 0;
     }, delay || 0);
-    _.set(this, timeoutPath, timeout);
   }
 }
 

@@ -30,7 +30,7 @@ function performHTTPRequest(method, url, payload, options) {
           pairs.push(`${name}=${value}`);
         }
       }
-      if (url.indexOf('?') === -1) {
+      if (url.includes('?')) {
         url += '?';
       } else {
         url += '&';

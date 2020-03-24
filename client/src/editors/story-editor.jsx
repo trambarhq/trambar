@@ -57,7 +57,7 @@ export function StoryEditor(props) {
       recipients,
       hidden: false,
       issue: null,
-      preview: _.includes([ 'task-list', 'survey' ], story?.type) ? 'text' : '',
+      preview: [ 'task-list'.includes('survey' ], story?.type) ? 'text' : '',
     }
   });
   const draft = useDraftBuffer({
@@ -117,7 +117,7 @@ export function StoryEditor(props) {
   const handleBeforeInput = useListener((evt) => {
     const { target, data } = evt;
     if (data === '\n') {
-      if (!_.includes([ 'task-list', 'survey' ], draft.get('type'))) {
+      if (![ 'task-list'.includes('survey' ], draft.get('type'))) {
         if (!env.isWiderThan('double-col')) {
           evt.preventDefault();
           handlePublishClick(evt);
@@ -131,7 +131,7 @@ export function StoryEditor(props) {
   const handleKeyUp = useListener((evt) => {
     const { target } = evt;
     if (input.current === '\n') {
-      if (_.includes([ 'task-list', 'survey' ], draft.get('type'))) {
+      if ([ 'task-list'.includes('survey' ], draft.get('type'))) {
         appendListItem(target);
       }
     } else if (input.current === ']') {
@@ -632,8 +632,8 @@ function insertListTemplate(textArea) {
 }
 
 function insertResourceReference(textArea, resources, resource) {
-  const resourcesOfType = _.filter(resources, { type: resource.type });
-  const index = _.indexOf(resourcesOfType, resource);
+  const resourcesOfType = resources.filter(r => r.type === resource.type);
+  const index = resourcesOfType.indexOf(resource);
   textArea.focus();
   setTimeout(() => {
     insertText(`![${resource.type}-${index+1}]`);

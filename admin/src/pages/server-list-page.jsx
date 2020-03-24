@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -6,6 +5,7 @@ import { findAllServers } from 'common/objects/finders/server-finder.js';
 import { disableServers, restoreServers } from 'common/objects/savers/server-saver.js';
 import { getServerName, getServerIconClass } from 'common/objects/utils/server-utils.js';
 import { findActiveUsers } from 'common/objects/finders/user-finder.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -102,7 +102,7 @@ function ServerListPageSync(props) {
   function renderButtons() {
     if (readOnly) {
       const preselected = 'add';
-      const empty = _.isEmpty(servers);
+      const empty = !servers?.length;
       return (
         <div className="buttons">
           <ComboButton preselected={preselected}>
@@ -168,7 +168,7 @@ function ServerListPageSync(props) {
   function renderRows() {
     const visible = (selection.shown) ? servers : activeServers;
     const sorted = sortServers(visible, users, env, sort);
-    return _.map(sorted, renderRow);
+    return sorted?.map(renderRow);
   }
 
   function renderRow(server) {
@@ -305,18 +305,18 @@ function ServerListPageSync(props) {
   }
 }
 
-const filterServers = memoizeWeak(null, function(servers) {
-  return _.filter(servers, (server) => {
+const filterServers = memoizeWeak(null, (servers) => {
+  return servers.filter((server) => {
     return !server.deleted && !server.disabled;
   });
 });
 
-const sortServers = memoizeWeak(null, function(servers, users, env, sort) {
-  const columns = _.map(sort.columns, (column) => {
+const sortServers = memoizeWeak(null, (servers, users, env, sort) => {
+  const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
         return (server) => {
-          return _.toLower(getServerName(server, env));
+          return getServerName(server, env).toLowerCase();
         };
       case 'type':
         return (server) => {
@@ -324,7 +324,7 @@ const sortServers = memoizeWeak(null, function(servers, users, env, sort) {
         };
       case 'users':
         return (server) => {
-          return _.size(findUsers(users, server));
+          return findUsers(users, server)?.length || 0;
         };
       case 'api':
         return (server) => {
@@ -334,7 +334,7 @@ const sortServers = memoizeWeak(null, function(servers, users, env, sort) {
         return column;
     }
   });
-  return _.orderBy(servers, columns, sort.directions);
+  return orderBy(servers, columns, sort.directions);
 });
 
 function hasOAuthCredentials(server) {
@@ -353,12 +353,10 @@ function hasAPICredentials(server) {
   return false;
 }
 
-const findUsers = memoizeWeak(null, function(users, server) {
-  return _.filter(users, (user) => {
-    return _.some(user.external, (link) => {
-      if (link.server_id === server.id) {
-        return true;
-      }
+const findUsers = memoizeWeak(null, (users, server) => {
+  return users.filter((user) => {
+    return user.external.some((link) => {
+      return (link.server_id === server.id);
     });
   });
 });

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useProgress } from 'relaks';
 import { findProject } from 'common/objects/finders/project-finder.js';
@@ -50,28 +49,28 @@ export async function NavigationTree(props) {
   let project, user, role, repo, server, spreadsheet, wiki, rest;
   if (database.authorized) {
     const currentUserID = await database.start();
-    if (_.isFinite(projectID)) {
+    if (typeof(projectID) === 'number') {
       project =  await findProject(database, projectID);
     }
-    if (_.isFinite(userID)) {
+    if (typeof(userID) === 'number') {
       user = await findUser(database, userID);
     }
-    if (_.isFinite(roleID)) {
+    if (typeof(roleID) === 'number') {
       role = await findRole(database, roleID);
     };
-    if (_.isFinite(repoID)) {
+    if (typeof(repoID) === 'number') {
       repo = await findRepo(database, repoID);
     }
-    if (_.isFinite(serverID)) {
+    if (typeof(serverID) === 'number') {
       server = await findServer(database, serverID);
     }
-    if (_.isFinite(spreadsheetID) && project) {
+    if (typeof(spreadsheetID) === 'number' && project) {
       spreadsheet = await findSpreadsheet(database, project.name, spreadsheetID);
     }
-    if (_.isFinite(wikiID) && project) {
+    if (typeof(wikiID) === 'number' && project) {
       wiki = await findWiki(database, project.name, wikiID);
     }
-    if (_.isFinite(restID) && project) {
+    if (typeof(restID) === 'number' && project) {
       rest = await findRest(database, project.name, restID);
     }
   }
@@ -86,7 +85,7 @@ export async function NavigationTree(props) {
     const rootNodes = getRootNodes();
     show(
       <div ref={container} className={classNames.join(' ')}>
-        {_.map(rootNodes, renderNode)}
+        {rootNodes.map(renderNode)}
         {renderArrow()}
       </div>
     );
@@ -95,7 +94,7 @@ export async function NavigationTree(props) {
   function renderNode(node, key) {
     let url;
     if (!disabled && node.page) {
-      const params = _.omit(route.params, 'editing');
+      const { editing, ...params } = route.params;
       url = route.find(node.page, params);
     }
     return (
@@ -107,11 +106,11 @@ export async function NavigationTree(props) {
   }
 
   function renderChildNodes(node) {
-    const children = _.filter(node.children);
-    const open = !_.isEmpty(children);
+    const children = node.children?.filter(Boolean) || [];
+    const open = (children.length > 0);
     return (
       <CollapsibleContainer open={open}>
-        {_.map(children, renderNode)}
+        {children.map(renderNode)}
       </CollapsibleContainer>
     );
   }
@@ -409,9 +408,11 @@ function findLink(container, url) {
     url = url.substr(0, qi);
   }
   const links = container.getElementsByTagName('A');
-  return _.find(links, (link) => {
-    return url === link.getAttribute('href');
-  });
+  for (let link of links) {
+    if (link.getAttribute('href') === url) {
+      return link;
+    }
+  }
 }
 
 function calculateArrowPosition(arrow, container, link) {

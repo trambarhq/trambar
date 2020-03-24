@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { EnvironmentMonitor } from './env/environment-monitor.js';
 import { LocaleManager } from './locale/locale-manager.js';
 import { RouteManager } from 'relaks-route-manager';
@@ -10,6 +9,7 @@ import { RemoteDataSource } from './data/remote-data-source.js';
 import { IndexedDBCache } from './data/indexed-db-cache.js';
 import { LocalStorageCache } from './data/local-storage-cache.js';
 import { BlobManager } from './transport/blob-manager.js';
+import { isEqual, isMatch } from './utils/object-utils.js';
 
 import languages from './languages.js';
 
@@ -37,6 +37,9 @@ let codePush;
 let currentLocation = {};
 let currentConnection = {};
 let currentSubscription = {};
+
+let signInPageName;
+let startPageName;
 
 async function start(cfg) {
   applicationArea = cfg.area;
@@ -84,6 +87,13 @@ async function start(cfg) {
     });
     codePush.check();
   }
+  for (let [ name, route ] of Object.entries(routeManager.routes)) {
+    if (route.signIn) {
+      signInPageName = name;
+    } else if (route.start) {
+      startPageName = name;
+    }
+  }
 
   // set up basic plumbing
   envMonitor.addEventListener('change', (evt) => {
@@ -122,7 +132,6 @@ async function start(cfg) {
             if (!dataSource.restoreAuthorization(location, session)) {
               // there was none or it's expired--show the sign-in page
               if (!route.signIn) {
-                let signInPageName = _.findKey(routeManager.routes, { signIn: true });
                 await evt.substitute(signInPageName);
                 // ask the data-source to request authentication
                 await dataSource.requestAuthentication(location);
@@ -158,7 +167,6 @@ async function start(cfg) {
     // remove the expired session
     await removeSession(evt.session);
     // redirect to start page
-    let startPageName = _.findKey(routeManager.routes, { start: true });
     await routeManager.push(startPageName, {}, { schema: undefined });
   });
   notifier.addEventListener('connection', (evt) => {
@@ -178,10 +186,11 @@ async function start(cfg) {
     // invalidate database queries
     dataSource.invalidate(evt.changes);
 
-    let taskChanges = _.filter(evt.changes, { table: 'task' });
-    for (let change of taskChanges) {
-      let destination = _.pick(change, 'address', 'schema');
-      payloadManager.updatePayloadsBackendProgress(destination);
+    for (let change of evt.changes) {
+      if (change.table === 'task') {
+        const { address, schema } = change;
+        payloadManager.updatePayloadsBackendProgress({ address, schema });
+      }
     }
   });
   notifier.addEventListener('revalidation', (evt) => {
@@ -383,15 +392,17 @@ async function changeNotification() {
   } else if (notifier instanceof PushNotifier) {
     if (dataSource.hasAuthorization(currentLocation)) {
       // get the push relay address from the server first
-      let query = {
+      const query = {
         address,
         schema: 'global',
         table: 'system',
         criteria: {}
       };
-      let systems = await dataSource.find(query);
-      let relayURL = _.get(systems, '0.settings.push_relay', '');
-      notifier.connect(address, relayURL);
+      const [ system ] = await dataSource.find(query);
+      const relayURL = system?.settings.push_relay;
+      if (relayURL) {
+        notifier.connect(address, relayURL);
+      }
     }
   }
 }
@@ -429,8 +440,7 @@ async function changeSubscription() {
     details,
   };
   if (currentSubscription.record) {
-    let oldRecord = _.pick(currentSubscription.record, _.keys(record));
-    if (_.isEqual(oldRecord, record)) {
+    if (isMatch(currentSubscription.record, record)) {
       // no need to update
       return;
     }
@@ -557,18 +567,18 @@ async function updateBackendProgress(destination, payloads) {
     schema: destination.schema,
     table: 'task',
     criteria: {
-      token: _.map(payloads, 'id'),
+      token: payloads.map(p => p.id),
     }
   };
   const tasks = await dataSource.find(query);
   let changed = false;
   for (let task of tasks) {
-    let payload = _.find(payloads, { id: task.token });
+    const payload = payloads.find(p => p.id === task.token);
     if (payload) {
       if (payload.type === 'unknown') {
         // this is a payload from another session
         // restore its type
-        payload.type = _.replace(this.action, /^add\-/, '');
+        payload.type = this.action?.replace(/^add\-/, '');
         payload.sent = (task.completion > 0);
         changed = true;
       }

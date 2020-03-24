@@ -55,7 +55,7 @@ export default async function NotificationsPage(props) {
   }
 
   function renderEmptyMessage() {
-    if (!_.isEmpty(notifications)) {
+    if (notifications.length > 0) {
       return null;
     }
     if (!notifications) {

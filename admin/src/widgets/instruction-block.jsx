@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress } from 'relaks';
 import { parseAsync } from 'mark-gor';
@@ -130,7 +129,7 @@ async function loadImages(element, folder) {
     } else {
       return React.cloneElement(element, { target: '_blank' });
     }
-  } else if (!_.isEmpty(element.props?.children)) {
+  } else if (element.props?.children?.length > 0) {
     const newChildren = [];
     for (let child of element.props.children) {
       const newChild = await loadImages(child, folder);

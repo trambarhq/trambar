@@ -1,9 +1,9 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState, useRef, useEffect } from 'react';
 import { useProgress, useListener } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import { findServerTasks } from 'common/objects/finders/task-finder.js';
+import { orderBy, toggle } from 'common/utils/array-utils.js';
 
 // widgets
 import { SmartList } from 'common/widgets/smart-list.jsx';
@@ -32,8 +32,8 @@ export async function TaskList(props) {
     }
   });
   const handleTaskClick = useListener((evt) => {
-    let taskID = parseInt(evt.currentTarget.getAttribute('data-task-id'));
-    const list = _.toggle(expandedTaskIDs, taskID);
+    const taskID = parseInt(evt.currentTarget.getAttribute('data-task-id'));
+    const list = toggle(expandedTaskIDs, taskID);
     setExpandedTaskIDs(list);
   });
 
@@ -71,7 +71,7 @@ export async function TaskList(props) {
     if (task.failed) {
       classNames.push('failure');
     }
-    if (_.includes(expandedTaskIDs, task.id)) {
+    if (expandedTaskIDs.includes(task.id)) {
       classNames.push('expanded');
     }
     return (
@@ -126,7 +126,7 @@ export async function TaskList(props) {
   }
 
   function renderDetails(task) {
-    if (!_.includes(expandedTaskIDs, task.id)) {
+    if (!expandedTaskIDs.includes(task.id)) {
       return null;
     }
     const message = getDetails(task);
@@ -151,9 +151,9 @@ export async function TaskList(props) {
     if (task.completion === 100) {
       const repo = task.options.repo;
       const branch = task.options.branch;
-      const added = _.size(task.details.added);
-      const deleted = _.size(task.details.deleted);
-      const modified = _.size(task.details.modified);
+      const added = task.details.added || 0;
+      const deleted = task.details.deleted || 0;
+      const modified = task.details.modified || 0;
       switch (task.action) {
         case 'gitlab-repo-import':
           if (added) {
@@ -244,7 +244,7 @@ export async function TaskList(props) {
 }
 
 const sortTasks = memoizeWeak(null, function(tasks) {
-  return _.orderBy(tasks, 'id', 'desc');
+  return orderBy(tasks, 'id', 'desc');
 });
 
 function formatAddedDeleteChanged(object) {

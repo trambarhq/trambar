@@ -54,7 +54,7 @@ export default async function BookmarksPage(props) {
   }
 
   function renderEmptyMessage() {
-    if (!_.isEmpty(bookmarks)) {
+    if (bookmarks.length > 0) {
       return null;
     }
     if (!bookmarks) {

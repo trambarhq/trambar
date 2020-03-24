@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener } from 'relaks';
 
@@ -106,7 +105,7 @@ export function Tooltip(props) {
 
 function findElement(children, tagName) {
   children = React.Children.toArray(children);
-  return _.find(children, { type: tagName });
+  return children.find(c => c.type === tagName);
 }
 
 function hasContents(children, props) {

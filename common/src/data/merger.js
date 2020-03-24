@@ -1,26 +1,31 @@
-import _ from 'lodash';
 import { diffSentences } from 'diff';
+import { isEqual, cloneDeep } from '../utils/object-utils.js';
 
 function mergeObjects(a, b, c, resolveFns) {
   const d = {};
-  const keys = _.union(_.keys(a), _.keys(b));
+  const keys = Object.keys(a);
+  for (let keyB of Object.keys(b)) {
+    if (keys.includes(keyB)) {
+      keys.push(keyB);
+    }
+  }
   for (let key of keys) {
-    const valueA = a ? a[key] : undefined;
-    const valueB = b ? b[key] : undefined;
-    const valueC = c ? c[key] : undefined;
+    const valueA = a?.[key];
+    const valueB = b?.[key];
+    const valueC = c?.[key];
     let valueD;
-    if (_.isEqual(valueA, valueB)) {
-      valueD = _.cloneDeep(valueA);
-    } else if (_.isEqual(valueA, valueC)) {
+    if (isEqual(valueA, valueB)) {
+      valueD = cloneDeep(valueA);
+    } else if (isEqual(valueA, valueC)) {
       // not changed in A, use B
-      valueD = _.cloneDeep(valueB);
-    } else if (_.isEqual(valueB, valueC)) {
+      valueD = cloneDeep(valueB);
+    } else if (isEqual(valueB, valueC)) {
       // not changed in B, use A
-      valueD = _.cloneDeep(valueA);
+      valueD = cloneDeep(valueA);
     } else {
       // conflict
-      const resolve = resolveFns ? resolveFns[key] : undefined;
-      if (isObject(valueA) && isObject(valueB)) {
+      const resolve = resolveFns?.[key];
+      if (valueA instanceof Object && valueB instanceof Object) {
         valueD = mergeObjects(valueA, valueB, valueC, resolve);
       } else if (typeof(valueA) === 'string' || typeof(valueB) === 'string') {
         valueD = mergeStrings(valueA, valueB, valueC);

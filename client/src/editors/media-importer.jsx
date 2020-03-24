@@ -69,7 +69,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
     };
     const oldList = originalResourceList || resources;
     const newList = appendResources(oldList, [ resource ], limit);
-    const newIndex = _.indexOf(newList, resource);
+    const newIndex = newList.indexOf(resource);
     triggerChangeEvent(newList, newIndex);
   });
 
@@ -82,11 +82,11 @@ export const MediaImporter = React.forwardRef((props, ref) => {
 
   async function importFiles(files) {
     // filter for acceptable files
-    const acceptable = _.filter(files, (file) => {
+    const acceptable = files.filter((file) => {
       const type = extractFileCategory(file.type);
-      return _.includes(types, type);
+      return types.includes(type);
     });
-    if (_.isEmpty(acceptable)) {
+    if (acceptable.length === 0) {
       return 0;
     }
     // add placeholders first
@@ -97,8 +97,8 @@ export const MediaImporter = React.forwardRef((props, ref) => {
         imported: true,
       };
     });
-    let newList = appendResources(resources, placeholders, limit);
-    let newIndex = _.indexOf(newList, placeholders[0]);
+    const newList = appendResources(resources, placeholders, limit);
+    const newIndex = newList.indexOf(placeholders[0]);
     triggerChangeEvent(newList, newIndex);
 
     // import each file, replacing its placeholder
@@ -108,7 +108,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
       try {
         const resource = await importFile(file);
         const placeholder = placeholders[index];
-        const placeholderIndex = _.indexOf(newList, placeholder);
+        const placeholderIndex = newList.indexOf(placeholder);
         newList = _.slice(newList);
         newList[placeholderIndex] = resource;
         imported.push(resource);
@@ -121,7 +121,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
       if (imported) {
         // add only those that were successfully imported
         newList = appendResources(resources, imported, limit);
-        newIndex = _.indexOf(newList, imported[0]);
+        newIndex = newList.indexOf(imported[0]);
         triggerChangeEvent(newList, newIndex);
       } else {
         // restore the original list
@@ -132,7 +132,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
 
   async function importFile(file) {
     const type = extractFileCategory(file.type);
-    if (_.includes(types, type)) {
+    if (types.includes(type)) {
       switch (type) {
         case 'image':
           return importImageFile(file);
@@ -241,7 +241,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
     const strings = await retrieveDataItemTexts(items);
     const html = strings['text/html'];
     // see if it's an image being dropped
-    if (/<img\b/i.test(html) && _.includes(types, 'image')) {
+    if (/<img\b/i.test(html) && types.includes('image')) {
       const m = /<img\b.*?\bsrc="(.*?)"/.exec(html);
       if (m) {
         const url = _.unescape(m[1]);
@@ -253,7 +253,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
           filename: filename,
         };
         const newList = appendResources(resources, [ resource ], limit);
-        const newIndex = _.indexOf(newList, resource);
+        const newIndex = newList.indexOf(resource);
         triggerChangeEvent(newList, newIndex);
         addResources([ resource ]);
       }
@@ -354,18 +354,22 @@ async function retrieveDataItemTexts(items) {
 
 function appendResources(originalList, resources, limit) {
   if (limit === 1) {
-    const newList = _.slice(originalList);
+    const newList = [ ...originalList ];
     const added = {};
     for (let resource of resources) {
       if (!added[resource.type]) {
-        _.remove(newList, { type: resource.type });
-        newList.push(resource);
+        const index = newList.findIndex(r => r.type === resource.type);
+        if (index !== -1) {
+          newList[index] = resource;
+        } else {
+          newList.push(resource);
+        }
         added[resource.type] = true;
       }
     }
     return newList;
   } else {
-    return _.concat(originalList, resources);
+    return [ ...originalList, ...resources ];
   }
 }
 

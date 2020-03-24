@@ -232,7 +232,7 @@ export class Database {
   }
 
   async processNotification(listener, msg) {
-    if (listener.channels.indexOf(msg.channel) !== -1) {
+    if (listener.channels.includes(msg.channel)) {
       let event = JSON.parse(msg.payload);
       if (typeof(event) === 'number') {
         // we received the id of an oversized message

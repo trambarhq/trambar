@@ -164,7 +164,7 @@ function SearchBarSync(props) {
     const params = { search: tag.name, ...settings.route };
     const url = route.find(route.name, params);
     const classNames = [ 'tag' ];
-    if (_.includes(selectedHashTags, _.toLower(tag.name))) {
+    if (selectedHashTags.includes(_.toLower(tag.name))) {
       classNames.push('selected');
     }
     const props = {

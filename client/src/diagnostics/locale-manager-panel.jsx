@@ -12,11 +12,7 @@ import './locale-manager-panel.scss';
  */
 export function LocaleManagerPanel(props) {
   const { localeManager } = props;
-  const {
-    browserLocaleCode,
-    localeCode,
-    missingPhrases,
-  } = localeManager;
+  const { browserLocaleCode, localeCode, missingPhrases } = localeManager;
   return (
     <SettingsPanel className="locale-manager">
       <header>
@@ -27,14 +23,14 @@ export function LocaleManagerPanel(props) {
           <div>Current: {localeCode}</div>
           <div>Browser: {browserLocaleCode}</div>
         </DiagnosticsSection>
-        <DiagnosticsSection label="Missing phrases" hidden={_.isEmpty(missingPhrases)}>
-          {_.map(missingPhrases, renderMissingPhrase)}
+        <DiagnosticsSection label="Missing phrases" hidden={missingPhrases.length === 0}>
+          {missingPhrases.map(renderMissingPhrase)}
         </DiagnosticsSection>
       </body>
     </SettingsPanel>
   );
 
-  function renderMissingPhrase(phrase) {
+  function renderMissingPhrase(phrase, i) {
     return <div key={i}>{phrase}</div>;
   }
 }

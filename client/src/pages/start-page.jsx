@@ -529,14 +529,14 @@ export default async function StartPage(props) {
 
   function renderEmptyMessage() {
     if (!database.authorized) {
-      if (!_.isEmpty(servers)) {
+      if (servers.length > 0) {
         return null;
       }
       if (servers) {
         return <EmptyMessage phrase="start-no-servers" env={env} />;
       }
     } else {
-      if (!_.isEmpty(projects)) {
+      if (projects.length > 0) {
         return null;
       }
       if (!projects) {
@@ -548,7 +548,7 @@ export default async function StartPage(props) {
   }
 
   function renderAvailableServers() {
-    if (_.isEmpty(projectLinks)) {
+    if (projectLinks.length === 0) {
       return null;
     }
     const addresses = _.uniq(_.map(projectLinks, 'address')).sort();

@@ -12,7 +12,7 @@ import './story-emblem.scss';
 export function StoryEmblem(props) {
   const { story } = props;
   const { type, tags } = story;
-  if (_.includes(tags, '#yippeekiyay')) {
+  if (tags.includes('#yippeekiyay')) {
     return (
       <div className="story-emblem die-hard">
         <img src={require('../../assets/explosion.gif')} />
@@ -21,7 +21,7 @@ export function StoryEmblem(props) {
   }
 
   const classNames = [ 'story-emblem' ];
-  if (_.includes(GitStoryTypes, type)) {
+  if (GitStoryTypes.includes(type)) {
     classNames.push('git');
   } else {
     return null;

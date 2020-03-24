@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useEventTime } from 'relaks';
 import { CORSRewriter } from 'common/routing/cors-rewriter.js';

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -8,6 +7,7 @@ import { getRepoName } from 'common/objects/utils/repo-utils.js';
 import { findAllWikis } from 'common/objects/finders/wiki-finder.js';
 import { selectWikis, deselectWikis } from 'common/objects/savers/wiki-saver.js';
 import { findLinkByRelative } from 'common/objects/utils/external-data-utils.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -157,7 +157,7 @@ function WikiListPageSync(props) {
   function renderRows() {
     const visible = (selection.shown) ? wikis : publicWikis;
     const sorted = sortWikis(visible, env, sort);
-    return _.map(sorted, renderRow);
+    return sorted?.map(renderRow);
   }
 
   function renderRow(wiki) {
@@ -274,14 +274,11 @@ function WikiListPageSync(props) {
   }
 }
 
-const sortWikis = memoizeWeak(null, function(wikis, env, sort) {
-  const columns = _.map(sort.columns, (column) => {
+const sortWikis = memoizeWeak(null, (wikis, env, sort) => {
+  const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
-        return (wiki) => {
-          return _.toLower(wiki.details.title);
-        };
-        return 'details.title';
+        return w =>  w.details.title?.toLowerCase() || '';
       case 'public':
         return (wiki) => {
           if (wiki.public) {
@@ -298,20 +295,19 @@ const sortWikis = memoizeWeak(null, function(wikis, env, sort) {
         return column;
     }
   });
-  return _.orderBy(wikis, columns, sort.directions);
+  return orderBy(wikis, columns, sort.directions);
 });
 
-const filterWikis = memoizeWeak(null, function(wikis, chosen) {
-  return _.filter(wikis, (wiki) => {
+const filterWikis = memoizeWeak(null, (wikis, chosen) => {
+  return wikis.filter((wiki) => {
     if (wiki.public) {
       return wiki.chosen || !chosen;
     }
   });
 });
 
-const findRepo = memoizeWeak(null, function(repos, wiki) {
-  return _.find(repos, (repo) => {
-    const link = findLinkByRelative(repo, wiki, 'project');
-    return !!link;
+const findRepo = memoizeWeak(null, (repos, wiki) => {
+  return repos.find((repo) => {
+    return findLinkByRelative(repo, wiki, 'project');
   });
 });

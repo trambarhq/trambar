@@ -27,7 +27,7 @@ export const IssueDialogBox = Overlay.create((props) => {
   const { t, p } = env.locale;
   const textFieldRef = useRef();
   const availableRepos = useMemo(() => {
-    const accessible = _.filter(repos, (repo) => {
+    const accessible = repos.filter((repo) => {
       return canAddIssue(currentUser, story, repo, 'read-write');
     });
     const sorted = _.sortBy(repos, (repo) => {
@@ -140,7 +140,7 @@ export const IssueDialogBox = Overlay.create((props) => {
   function renderLabel(label, i) {
     const classNames = [ 'tag' ];
     const selectedLabels = draft.get('labels', []);
-    if (_.includes(selectedLabels, label)) {
+    if (selectedLabels.includes(label)) {
       classNames.push('selected');
     }
     const props = {
@@ -200,9 +200,9 @@ export const IssueDialogBox = Overlay.create((props) => {
 
     // look for tags that match labels
     const allLabels = _.uniq(_.flatten(_.map(repos, 'details.labels')));
-    const labels = _.filter(allLabels, (label) => {
+    const labels = allLabels.filter((label) => {
       let tag = `#${_.replace(label, /\s+/g, '-')}`;
-      return _.includes(story.tags, tag);
+      return story.tags.includes(tag);
     });
 
     // choose the last one selected

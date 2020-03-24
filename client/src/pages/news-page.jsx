@@ -37,7 +37,7 @@ export default async function NewsPage(props) {
     }
     filtering = true;
   }
-  if (date || !_.isEmpty(roleIDs)) {
+  if (date || roleIDs.length > 0) {
     filtering = true;
   }
 
@@ -53,7 +53,7 @@ export default async function NewsPage(props) {
     stories = await findStoriesMatchingText(database, search, env, currentUser);
   } else if (date) {
     stories = await findStoriesOnDate(database, date, currentUser);
-  } else if (!_.isEmpty(roleIDs)) {
+  } else if (roleIDs.length > 0) {
     stories = await findStoriesWithRolesInListing(database, 'news', roleIDs, currentUser);
   } else {
     stories = await findStoriesInListing(database, 'news', currentUser);
@@ -116,7 +116,7 @@ export default async function NewsPage(props) {
   }
 
   function renderEmptyMessage() {
-    if (!_.isEmpty(stories)) {
+    if (stories.length > 0) {
       return null;
     }
     if (!stories) {
@@ -126,7 +126,7 @@ export default async function NewsPage(props) {
       let phrase;
       if (date) {
         phrase = 'news-no-stories-on-date';
-      } else if (!_.isEmpty(roleIDs)) {
+      } else if (roleIDs.length > 0) {
         phrase = 'news-no-stories-by-role';
       } else if (search) {
         phrase = 'news-no-stories-found';

@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
+import { isEqual } from 'common/utils/object-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -18,7 +19,7 @@ export const ProjectManagementDialogBox = Overlay.create((props) => {
   const { t, p } = env.locale;
   const projectSelection = useSaveBuffer({
     original: [],
-    compare: _.isEqual,
+    compare: isEqual,
   });
 
   const handleProjectClick = useListener((evt) => {
@@ -46,7 +47,7 @@ export const ProjectManagementDialogBox = Overlay.create((props) => {
       id: link.key,
       label: p(link.name),
       iconOn: 'times-circle',
-      selected: _.includes(projectSelection.current, link.key),
+      selected: projectSelection.current.includes(link.key),
       onClick: handleProjectClick,
     };
     return <OptionButton key={i} {...props} />;

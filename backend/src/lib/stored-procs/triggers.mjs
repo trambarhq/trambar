@@ -1,6 +1,6 @@
 function indicateDataChange(OLD, NEW) {
-  var omit = [ 'id', 'gn', 'ctime', 'mtime' ];
-  var changes = findChanges(OLD, NEW, omit);
+  const omit = [ 'id', 'gn', 'ctime', 'mtime' ];
+  const changes = findChanges(OLD, NEW, omit);
   if (changes) {
     NEW.gn += 1;
     NEW.mtime = new Date;
@@ -11,10 +11,10 @@ indicateDataChange.args = '';
 indicateDataChange.ret = 'trigger';
 
 function indicateDataChangeEx(OLD, NEW) {
-  var omit = [ 'id', 'gn', 'ctime', 'mtime', 'itime', 'etime' ];
-  var changes = findChanges(OLD, NEW, omit);
+  const omit = [ 'id', 'gn', 'ctime', 'mtime', 'itime', 'etime' ];
+  const changes = findChanges(OLD, NEW, omit);
   if (changes) {
-    var date = new Date;
+    const date = new Date;
     NEW.gn += 1;
     NEW.mtime = date;
 
@@ -36,8 +36,8 @@ indicateDataChangeEx.args = '';
 indicateDataChangeEx.ret = 'trigger';
 
 function notifyDataChange(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
-  var omit = [ 'id', 'gn', 'ctime', 'mtime' ];
-  var changes = findChanges(OLD, NEW, omit);
+  const omit = [ 'id', 'gn', 'ctime', 'mtime' ];
+  const changes = findChanges(OLD, NEW, omit);
   if (changes) {
     sendChangeNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, OLD, NEW, changes, TG_ARGV);
   }
@@ -46,8 +46,8 @@ notifyDataChange.args = '';
 notifyDataChange.ret = 'trigger';
 
 function notifyDataChangeEx(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
-  var omit = [ 'id', 'gn', 'ctime', 'mtime', 'itime', 'etime' ];
-  var changes = findChanges(OLD, NEW, omit);
+  const omit = [ 'id', 'gn', 'ctime', 'mtime', 'itime', 'etime' ];
+  const changes = findChanges(OLD, NEW, omit);
   if (changes) {
     sendChangeNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, OLD, NEW, changes, TG_ARGV);
   }
@@ -56,8 +56,8 @@ notifyDataChangeEx.args = '';
 notifyDataChangeEx.ret = 'trigger';
 
 function indicateLiveDataChange(OLD, NEW) {
-  var omit = [ 'id', 'gn', 'ctime', 'mtime', 'dirty', 'ltime', 'atime' ];
-  var changes = findChanges(OLD, NEW, omit);
+  const omit = [ 'id', 'gn', 'ctime', 'mtime', 'dirty', 'ltime', 'atime' ];
+  const changes = findChanges(OLD, NEW, omit);
   if (changes) {
     NEW.gn += 1;
     NEW.mtime = new Date;
@@ -68,8 +68,8 @@ indicateLiveDataChange.args = '';
 indicateLiveDataChange.ret = 'trigger';
 
 function notifyLiveDataChange(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
-  var omit = [ 'id', 'gn', 'ctime', 'mtime', 'dirty', 'ltime', 'atime' ];
-  var changes = findChanges(OLD, NEW, omit);
+  const omit = [ 'id', 'gn', 'ctime', 'mtime', 'dirty', 'ltime', 'atime' ];
+  const changes = findChanges(OLD, NEW, omit);
   if (changes) {
     sendChangeNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, OLD, NEW, changes, TG_ARGV);
   }
@@ -102,14 +102,14 @@ notifyLiveDataChange.ret = 'trigger';
  * with matching payload id
  */
 function updateResource(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
-  var payload = {
+  const payload = {
     token: NEW.token,
     details: NEW.details,
     completion: NEW.completion,
     etime: NEW.etime,
   };
-  var params = [];
-  var sql = `
+  const params = [];
+  const sql = `
     UPDATE "${TG_TABLE_SCHEMA}"."${TG_ARGV[0]}"
     SET details = "updatePayload"(details, $${params.push(payload)})
     WHERE "payloadTokens"(details) @> $${params.push([ payload.token ])}
@@ -125,7 +125,7 @@ updateResource.flags = 'SECURITY DEFINER';
  * doesn't get overridden by stale data
  */
 function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
-  var resources = NEW.details.resources;
+  const resources = NEW.details.resources;
   if (!resources) {
     // a single resource is stored in the details column
     if (NEW.details.payload_token) {
@@ -133,46 +133,55 @@ function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_A
     }
   }
 
-  var allReady = true;
+  let allReady = true;
   if (resources instanceof Array) {
-    var tokens = resources.map((res) => { return res.payload_token }).filter(Boolean);
+    // look for payload tokens
+    const tokens = [];
+    for (let res of resources) {
+      if (res.payload_token) {
+        tokens.push(res.payload_token);
+      }
+    }
     if (tokens.length > 0) {
       // load tasks
-      var params = [];
-      var sql = `
+      const params = [];
+      const sql = `
         SELECT * FROM "${TG_TABLE_SCHEMA}"."task"
         WHERE token = ANY($${params.push(tokens)})
         AND deleted = false
       `;
-      var rows = plv8.execute(sql, params);
+      const rows = plv8.execute(sql, params);
 
-      resources.forEach((res) => {
+      // remove payload token if it's been uploaded
+      for (let res of resources) {
         if (res.payload_token) {
-          var row = rows.find((row) => {
+          const row = rows.find((row) => {
             return row.token === res.payload_token;
           });
           if (row) {
+            // copy media metadata into resource
             transferProps(row.details, res);
             if (row.completion === 100 && row.etime !== null) {
               delete res.payload_token;
+            } else {
+              allReady = false;
             }
+          } else {
+            transferProps({ error: `Missing task: ${res.payload_token}` }, res);
+            delete res.payload_token;
           }
         }
-      });
+      }
     }
-
-    allReady = resources.every((res) => {
-      return !res.payload_token;
-    });
   }
 
   // set ready column when all resources are ready
-  var readyColumn = TG_ARGV[0];
+  const readyColumn = TG_ARGV[0];
   if (readyColumn) {
     NEW[readyColumn] = allReady;
   }
   // update the publication time
-  var ptimeColumn = TG_ARGV[1];
+  const ptimeColumn = TG_ARGV[1];
   if (ptimeColumn && OLD) {
     if (NEW[readyColumn] && !OLD[readyColumn]) {
       if (NEW[ptimeColumn]) {

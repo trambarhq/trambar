@@ -250,7 +250,7 @@ async function parseSpreadsheet(buffer) {
               const column = columnNameFlags;
               sheet.columns.push(column);
               using[c] = true;
-              importing[c] = (column.flags && column.flags.indexOf('import') !== -1);
+              importing[c] = (column.flags && column.flags.includes('import'));
               flagLists.push(column.flags);
             }
           }

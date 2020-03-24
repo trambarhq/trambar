@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -8,6 +7,7 @@ import { getRoleName } from 'common/objects/utils/role-utils.js';
 import { findSystem } from 'common/objects/finders/system-finder.js';
 import { findActiveUsers } from 'common/objects/finders/user-finder.js';
 import { assignRole, stripRole } from 'common/objects/savers/user-saver.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -61,8 +61,8 @@ function RoleSummaryPageSync(props) {
     original: role || {},
     reset: readOnly,
   });
-  const members = _.filter(users, (user) => {
-    return (role) ? _.includes(user.role_ids, role.id) : false;
+  const members = users.filter((user) => {
+    return (role) ? user.role_ids.includes(role.id) : false;
   });
   const userSelection = useSelectionBuffer({
     original: members,
@@ -155,7 +155,7 @@ function RoleSummaryPageSync(props) {
   });
   const handleUserOptionClick = useListener((evt) => {
     const userID = parseInt(evt.name);
-    const user = _.find(users, { id: userID });
+    const user = users.find(u => u.id === userID);
     userSelection.toggle(user);
   });
 
@@ -293,7 +293,7 @@ function RoleSummaryPageSync(props) {
     return (
       <OptionList {...listProps}>
         <label>{t('role-summary-rating')}</label>
-        {_.map(messageRatings, renderRatingOption)}
+        {messageRatings.map(renderRatingOption)}
       </OptionList>
     );
   }
@@ -319,7 +319,7 @@ function RoleSummaryPageSync(props) {
     return (
       <OptionList {...listProps}>
         <label>{t('role-summary-users')}</label>
-        {_.map(usersSorted, renderUserOption)}
+        {usersSorted?.map(renderUserOption)}
       </OptionList>
     );
   }
@@ -349,12 +349,12 @@ function RoleSummaryPageSync(props) {
   }
 }
 
-const sortUsers = memoizeWeak(null, function(users, env) {
+const sortUsers = memoizeWeak(null, (users, env) => {
   const { p } = env.locale;
   const name = (user) => {
     return p(user.details.name) || user.username;
   };
-  return _.sortBy(users, name);
+  return orderBy(users, name, 'asc');
 });
 
 const messageRatings = {

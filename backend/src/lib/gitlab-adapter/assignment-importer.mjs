@@ -141,7 +141,7 @@ async function findAssignmentsFromNotes(db, server, glObject, glNotes) {
   const usernames = _.uniq(_.map(assignments, 'username'));
   const users = await UserImporter.findUsersByName(db, server, usernames);
   for (let assignment of assignments) {
-    const usernameIndex = _.indexOf(usernames, assignment.username);
+    const usernameIndex = usernames.indexOf(assignment.username);
     assignment.user = users[usernameIndex];
   }
 

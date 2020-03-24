@@ -16,7 +16,7 @@ const emptyArray = [];
 async function findReactionsToStories(db, stories, currentUser, minimum) {
   const storyIDs = [];
   for (let story of stories) {
-    if (story.id >= 1 && storyIDs.indexOf(story.id) === -1) {
+    if (story.id >= 1 && storyIDs.includes(story.id)) {
       storyIDs.push(story.id);
     }
   }

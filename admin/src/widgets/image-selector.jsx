@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useImperativeHandle } from 'react';
 import { useListener } from 'relaks';
 import { getImageMetadata } from 'common/media/media-loader.js';
@@ -23,7 +22,7 @@ export const ImageSelector = React.forwardRef((props, ref) => {
   const [ cropping, setCropping ] = useState(false);
   const [ showingAlbum, setShowingAlbum ] = useState(false);
   const [ instance ] = useState({ value: resources });
-  const image = _.find(resources, { type: 'image' });
+  const image = resources.find(res => res.type === 'image');
 
   useImperativeHandle(ref, () => {
     return instance;
@@ -259,8 +258,8 @@ function updateResource(resources, image, desiredWidth, desiredHeight) {
       image = { clip, ...image };
     }
   }
-  resources = _.slice(resources);
-  const index = _.findIndex(resources, { type: 'image' });
+  resources = [ ...resources ];
+  const index = resources.findIndex(res => res.type === 'image');
   if (index !== -1) {
     if (image) {
       resources[index] = image;

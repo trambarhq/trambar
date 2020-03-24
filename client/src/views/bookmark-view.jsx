@@ -31,7 +31,7 @@ export function BookmarkView(props) {
 
   function renderSenderNames() {
     const isOwner = _.some(senders, { id: currentUser.id });
-    const others = _.filter(senders, (sender) => {
+    const others = senders.filter((sender) => {
       return sender.id !== currentUser.id;
     });
     let contents;

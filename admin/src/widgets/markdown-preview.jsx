@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { usePlainText, useRichText } from 'trambar-www';
 import { detectDirection } from 'common/utils/plain-text.js';
@@ -33,7 +32,7 @@ export function MarkdownPreview(props) {
       if (count === 1) {
         width = 300;
       } else {
-        height = 40;
+        height = 100;
       }
     }
     return { width, height, ratio, server, sharpen: true }
@@ -46,7 +45,7 @@ export function MarkdownPreview(props) {
   const sections = page.content.getLanguageSpecificSections(localeCode);
   return (
     <div className="markdown-preview">
-      {_.map(sections, renderSection)}
+      {sections.map(renderSection)}
     </div>
   );
 
@@ -63,7 +62,7 @@ export function MarkdownPreview(props) {
     return (
       <div key={i} className={classNames.join(' ')}>
         <div className="languages">
-          {_.map(languages, renderLanguageTag)}
+          {languages.map(renderLanguageTag)}
         </div>
         {rt(section.content)}
       </div>

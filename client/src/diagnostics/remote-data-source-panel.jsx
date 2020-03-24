@@ -27,10 +27,10 @@ export function RemoteDataSourcePanel(props) {
         <DiagnosticsSection label="Recent searches">
           <RecentSearchTable searches={recentSearchResults} />
         </DiagnosticsSection>
-        <DiagnosticsSection label="Recent storage" hidden={_.isEmpty(recentStorageResults)}>
+        <DiagnosticsSection label="Recent storage" hidden={recentStorageResults.length === 0}>
           <RecentStorageTable stores={recentStorageResults} />
         </DiagnosticsSection>
-        <DiagnosticsSection label="Recent removal" hidden={_.isEmpty(recentRemovalResults)}>
+        <DiagnosticsSection label="Recent removal" hidden={recentRemovalResults.length === 0}>
           <RecentRemovalTable stores={recentRemovalResults} />
         </DiagnosticsSection>
       </body>
@@ -40,7 +40,7 @@ export function RemoteDataSourcePanel(props) {
 
 function RecentSearchTable(props) {
   const { searches } = props;
-  const remoteSearches = _.filter(searches, (search) => {
+  const remoteSearches = searches.filter((search) => {
     return search.schema !== 'local';
   });
   return (
@@ -88,7 +88,7 @@ function RecentSearchTable(props) {
 
 function RecentStorageTable(props) {
   const { stores } = props;
-  const remoteStores = _.filter(stores, (store) => {
+  const remoteStores = stores.filter((store) => {
     return store.schema !== 'local';
   });
   return (

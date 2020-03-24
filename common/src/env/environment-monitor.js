@@ -300,8 +300,8 @@ const uaFragmentsBrowser = {
 
 function detectBrowser() {
   const ua = navigator.userAgent;
-  for (let name in uaFragmentsBrowser) {
-    if (ua.indexOf(uaFragmentsBrowser[name]) > -1) {
+  for (let [ name, fragment ] of Object.entries(uaFragmentsBrowser)) {
+    if (ua.includes(fragment)) {
       return name;
     }
   }
@@ -319,8 +319,8 @@ const uaFragmentsOS = {
 
 function detectOS() {
   const ua = navigator.userAgent;
-  for (let name in uaFragmentsOS) {
-    if (ua.indexOf(uaFragmentsOS[name]) > -1) {
+  for (let [ name, fragment ] of Object.entries(uaFragmentsOS)) {
+    if (ua.includes(fragment)) {
       return name;
     }
   }

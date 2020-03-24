@@ -1,8 +1,8 @@
-import _ from 'lodash';
 import React from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
 import { centerSquare } from 'common/media/image-cropping.js';
 import { getImageURL } from 'common/objects/utils/resource-utils.js';
+import { isEqual } from 'common/utils/object-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -21,7 +21,7 @@ export const ImageCroppingDialogBox = Overlay.create((props) => {
   const ratio = desiredWidth / desiredHeight;
   const clippingRect = useSaveBuffer({
     original: getDefault(image, ratio),
-    compare: _.isEqual,
+    compare: isEqual,
   });
 
   const handleChange = useListener((evt) => {
@@ -111,7 +111,7 @@ export const ImageCroppingDialogBox = Overlay.create((props) => {
   function canZoom(amount) {
     const rect = clippingRect.current;
     const newRect = resize(rect, amount, ratio, image);
-    return !_.isEqual(rect, newRect);
+    return isEqual(rect, newRect);
   }
 });
 
@@ -140,9 +140,11 @@ function resize(rect, amount, ratio, image) {
 }
 
 function round(rect) {
-  return _.mapValues(rect, (value) => {
-    return Math.round(value);
-  });
+  const result = {};
+  for (let [ name, value ] of Object.entries(rect)) {
+    result[name] = Math.round(value);
+  }
+  return result;
 }
 
 function getDefault(image) {

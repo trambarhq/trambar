@@ -1,5 +1,6 @@
-import _ from 'lodash';
 import { Operation } from './operation.js';
+import { sortedIndexBy } from '../../utils/array-utils.js';
+import { isEqual } from '../../utils/object-utils.js';
 
 export class Search extends Operation {
   constructor(query) {
@@ -43,7 +44,8 @@ export class Search extends Operation {
    * @return {Object}
    */
   getQuery() {
-    return _.pick(this, 'address', 'schema', 'table', 'criteria');
+    const { address, schema, table, criteria } = this;
+    return { address, schema, table, criteria };
   }
 
   /**
@@ -74,7 +76,7 @@ export class Search extends Operation {
    * @return {Boolean}
    */
   matchCriteria(other) {
-    return _.isEqual(this.criteria, other.criteria);
+    return isEqual(this.criteria, other.criteria);
   }
 
   matchOptions(other) {
@@ -99,8 +101,8 @@ export class Search extends Operation {
     if (this.invalid) {
       return false;
     }
-    const rtimes = _.map(this.results, 'rtime');
-    const minRetrievalTime = _.min(rtimes);
+    const rtimes = this.results.map(r => r.rtime);
+    const minRetrievalTime = Math.min.apply(null, rtimes);
     const then = new Date(minRetrievalTime);
     const now = new Date;
     // see how much time has elapsed since the object was retrieved/last verified
@@ -184,9 +186,9 @@ export class Search extends Operation {
   getUpdateList(ids, gns) {
     const objects = (this.invalid || !this.results) ? [] : this.results;
     const updated = [];
-    for (let [ i, id ] of _.entries(ids)) {
+    for (let [ i, id ] of ids.entries()) {
       const gn = gns[i];
-      const index = _.sortedIndexBy(objects, { id }, 'id');
+      const index = sortedIndexBy(objects, { id }, 'id');
       const object = (objects) ? objects[index] : null;
       if (!object || object.id !== id || object.gn !== gn) {
         updated.push(id);
@@ -206,7 +208,7 @@ export class Search extends Operation {
     const objects = (!this.results) ? [] : this.results;
     const removal = [];
     for (let object of objects) {
-      if (!_.includes(ids, object.id)) {
+      if (!ids.includes(object.id)) {
         removal.push(object.id);
       }
     }
@@ -224,7 +226,7 @@ export class Search extends Operation {
     const objects = (this.invalid) ? [] : this.results;
     const updated = [];
     for (let id of ids) {
-      const index = _.sortedIndexBy(objects, { id }, 'id');
+      const index = sortedIndexBy(objects, { id }, 'id');
       const object = (objects) ? objects[index] : null;
       if (!object || object.id !== id) {
         updated.push(id);
@@ -265,7 +267,7 @@ export class Search extends Operation {
         // meets the criteria; in both scenarios, the local copy has
         // become stale and should be removed from cache
         for (let object of previousResults) {
-          const index = _.sortedIndexBy(results, object, 'id');
+          const index = sortedIndexBy(results, object, 'id');
           const target = results[index];
           if (!target || target.id !== object.id) {
             missingResults.push(object);
@@ -309,8 +311,7 @@ function countCriteria(criteria, name) {
 function removeUndefined(object) {
   if (object instanceof Array) {
     const dst = [];
-    for (let i = 0; i < object.length; i++) {
-      let value = object[i];
+    for (let value of object) {
       if (value !== undefined) {
         if (value instanceof Object) {
           value = removeUndefined(value);
@@ -321,8 +322,7 @@ function removeUndefined(object) {
     return dst;
   } else if (object instanceof Object) {
     const dst = {};
-    for (let key in object) {
-      let value = object[key];
+    for (let [ key, value ] of Object.entries(object)) {
       if (value !== undefined) {
         if (value instanceof Object) {
           value = removeUndefined(value);
@@ -344,10 +344,11 @@ function removeUndefined(object) {
  * @return {Object}
  */
 function removeTemporaryIDs(criteria) {
-  return _.mapValues(criteria, (value, name) => {
+  const dst = {};
+  for (let [ name, value ] of Object.entries(criteria)) {
     if (value instanceof Array) {
       if (/(^|_)ids?$/.test(name)) {
-        value = _.filter(value, (v) => {
+        value = value.filter((v) => {
           if (typeof(v) === 'number') {
             if (v < 1) {
               return false;
@@ -357,6 +358,7 @@ function removeTemporaryIDs(criteria) {
         });
       }
     }
-    return value;
-  });
+    dst[name] = value;
+  }
+  return dst;
 }

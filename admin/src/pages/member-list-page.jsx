@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -8,6 +7,7 @@ import { findRolesOfUsers } from 'common/objects/finders/role-finder.js';
 import { findExistingUsers } from 'common/objects/finders/user-finder.js';
 import { getUserName } from 'common/objects/utils/user-utils.js';
 import { findDailyActivitiesOfUsers } from 'common/objects/finders/statistics-finder.js';
+import { findByIds, orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -88,16 +88,16 @@ function MemberListPageSync(props) {
   };
   const handleApproveClick = useListener((evt) => {
     run(async () => {
-      const pendingUsers = _.filter(users, (user) => {
-        return _.includes(user.requested_project_ids, project.id);
+      const pendingUsers = users.filter((user) => {
+        return user.requested_project_ids.includes(project.id);
       });
       await addUsers(database, project, pendingUser);
     });
   });
   const handleRejectClick = useListener((evt) => {
     run(async () => {
-      const pendingUsers = _.filter(users, (user) => {
-        return _.includes(user.requested_project_ids, project.id);
+      const pendingUsers = users.filter((user) => {
+        return user.requested_project_ids.includes(project.id);
       });
       await UserSaver.removeRequestedProject(database, pendingUsers, project);
     });
@@ -117,7 +117,7 @@ function MemberListPageSync(props) {
 
   function renderButtons() {
     if (readOnly) {
-      const membersPending = _.size(membersPlus) > _.size(members);
+      const membersPending = membersPlus?.length > members?.length;
       const preselected = (membersPending) ? 'approve' : 'add';
       return (
         <div key="view" className="buttons">
@@ -191,14 +191,14 @@ function MemberListPageSync(props) {
   function renderRows() {
     const visible = (selection.shown) ? users : membersPlus;
     const sorted = sortUsers(visible, roles, statistics, env, sort);
-    return _.map(sorted, renderRow);
+    return sorted?.map(renderRow);
   }
 
   function renderRow(user) {
     const classNames = [];
     let title, onClick;
     if (!selection.isExisting(user)) {
-      const pending = _.includes(user.requested_project_ids, project.id);
+      const pending = user.requested_project_ids.includes(project.id);
       if (pending) {
         classNames.push('pending');
         title = t('member-list-status-pending');
@@ -386,12 +386,12 @@ function MemberListPageSync(props) {
   }
 }
 
-const sortUsers = memoizeWeak(null, function(users, roles, statistics, env, sort) {
-  const columns = _.map(sort.columns, (column) => {
+const sortUsers = memoizeWeak(null, (users, roles, statistics, env, sort) => {
+  const columns = sort.columns.map((column) => {
     switch (column) {
       case 'name':
         return (user) => {
-          return _.toLower(getUserName(user, env));
+          return getUserName(user, env).toLowerCase();
         };
       case 'range':
         return (user) => {
@@ -413,31 +413,30 @@ const sortUsers = memoizeWeak(null, function(users, roles, statistics, env, sort
         return column;
     }
   });
-  return _.orderBy(users, columns, sort.directions);
+  return orderBy(users, columns, sort.directions);
 });
 
-const filterUsers = memoizeWeak(null, function(users, project, includePending) {
-  const existingUsers = _.filter(users, (user) => {
-    return _.includes(project.user_ids, user.id);
-  });
-  if (includePending) {
-    const pendingUsers = _.filter(users, (user) => {
-      return _.includes(user.requested_project_ids, project.id);
-    });
-    // need to use union() here, since user.requested_project_ids could contain
-    // the project id even when project.user_ids has the user id
-    //
-    // this will happen right after the project is saved and the the updated
-    // users (changed by backend) haven't been retrieved yet
-    return _.union(existingUsers, pendingUsers);
-  } else {
-    return existingUsers;
+const filterUsers = memoizeWeak(null, (users, project, includePending) => {
+  const results = [];
+  for (let user of users) {
+    let include = false;
+    if (project.user_ids.includes(user.id)) {
+      include = true;
+    }
+    if (!include && includePending) {
+      if (user.requested_project_ids) {
+        if (user.requested_project_ids?.includes(project.id)) {
+          include = true;
+        }
+      }
+    }
+    if (include) {
+      results.push(user);
+    }
   }
+  return results;
 });
 
-const findRoles = memoizeWeak(null, function(roles, user) {
-  const hash = _.keyBy(roles, 'id');
-  return _.filter(_.map(user.role_ids, (id) => {
-    return hash[id];
-  }));
+const findRoles = memoizeWeak(null, (roles, user) => {
+  return findByIds(roles, user.role_ids);
 });

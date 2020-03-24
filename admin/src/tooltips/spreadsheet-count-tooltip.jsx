@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 // widgets
@@ -15,10 +14,10 @@ export function SpreadsheetCountTooltip(props) {
     return null;
   }
   const sheets = spreadsheet.details?.sheets ?? [];
-  const list = _.map(sheets, (sheet, i) => {
+  const list = sheets.map((sheet, i) => {
     const { name, flags } = sheet;
     let label = name;
-    if (!_.isEmpty(flags)) {
+    if (flags?.length > 0) {
       label += ` (${flags.join(', ')})`;
     }
     return <div className="item" key={i}>{label}</div>;

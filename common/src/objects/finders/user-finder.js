@@ -72,14 +72,14 @@ async function findProjectMembers(db, projects) {
   if (projects instanceof Array) {
     for (let project of projects) {
       for (let userID of project.user_ids) {
-        if (userIDs.indexOf(userID) === -1) {
+        if (userIDs.includes(userID)) {
           userIDs.push(userID);
         }
       }
     }
   } else {
     for (let userID of projects.user_ids) {
-      if (userIDs.indexOf(userID) === -1) {
+      if (userIDs.includes(userID)) {
         userIDs.push(userID);
       }
     }

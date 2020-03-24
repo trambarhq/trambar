@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -11,6 +10,8 @@ import { getUserName } from 'common/objects/utils/user-utils.js';
 import { UserTypes } from 'common/objects/types/user-types.js';
 import { findDailyActivitiesOfUser } from 'common/objects/finders/statistics-finder.js';
 import { findSystem } from 'common/objects/finders/system-finder.js';
+import { findByIds, orderBy, toggle } from 'common/utils/array-utils.js';
+import { isEmpty } from 'common/utils/object-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -138,12 +139,12 @@ function UserSummaryPageSync(props) {
           problems.type = 'validation-required';
         }
         setProblems(problems);
-        if (_.isEmpty(problems)) {
+        if (isEmpty(problems)) {
           const userAfter = await saveUser(database, draft.current);
           payloads.dispatch(userAfter);
 
           // add user to member list if he's not there yet
-          if (project && !_.includes(project.user_ids, userAfter.id)) {
+          if (project && !project.user_ids.includes(userAfter.id)) {
             await addMembers(database, project, [ userAfter ]);
           }
 
@@ -187,18 +188,18 @@ function UserSummaryPageSync(props) {
   const handleRoleOptionClick = useListener((evt) => {
     const roleID = parseInt(evt.name);
     const before = draft.get('role_ids', []);
-    const after = (roleID) ? _.toggle(before, roleID) : [];
+    const after = (roleID) ? toggle(before, roleID) : [];
     draft.set('role_ids', after);
   });
   const handleSocialLinksToggleClick = useListener((evt) => {
     setShowingSocialLinks(!showingSocialLinks);
   });
   const handleSkypeUsernameChange = useListener((evt) => {
-    const username = _.trim(evt.target.value);
+    const username = evt.target.value.trim();
     draft.set(`details.skype_username`, username);
   });
   const handleIchatUsernameChange = useListener((evt) => {
-    const username = _.trim(evt.target.value);
+    const username = evt.target.value.trim();
     draft.set(`details.ichat_username`, username);
   });
   const handleTwitterUsernameChange = useListener((evt) => {
@@ -206,19 +207,19 @@ function UserSummaryPageSync(props) {
     draft.set(`details.twitter_username`, username);
   });
   const handleLinkedinURLChange = useListener((evt) => {
-    const url = _.trim(evt.target.value);
+    const url = evt.target.value.trim();
     draft.set(`details.linkedin_url`, url);
   });
   const handleGitHubURLChange = useListener((evt) => {
-    const url = _.trim(evt.target.value);
+    const url = evt.target.value.trim();
     draft.set(`details.github_url`, url);
   });
   const handleGitlabURLChange = useListener((evt) => {
-    const url = _.trim(evt.target.value);
+    const url = evt.target.value.trim();
     draft.set(`details.gitlab_url`, url);
   });
   const handleStackoverflowURLChange = useListener((evt) => {
-    const url = _.trim(evt.target.value);
+    const url = evt.target.value.trim();
     draft.set(`details.stackoverflow_url`, url);
   });
 
@@ -242,7 +243,7 @@ function UserSummaryPageSync(props) {
   function renderButtons() {
     if (readOnly) {
       const active = (user) ? !user.deleted && !user.disabled : true;
-      const membership = (project) ? _.includes(project.user_ids, user.id) : undefined;
+      const membership = (project) ? project.user_ids.includes(user.id) : undefined;
       let preselected;
       if (active) {
         preselected = (route.params.adding) ? 'add' : 'return';
@@ -405,7 +406,7 @@ function UserSummaryPageSync(props) {
           {t('user-summary-type')}
           <InputError>{t(problems.type)}</InputError>
         </label>
-        {_.map(UserTypes, renderTypeOption)}
+        {UserTypes.map(renderTypeOption)}
       </OptionList>
     );
   }
@@ -432,11 +433,11 @@ function UserSummaryPageSync(props) {
     };
 
     const sorted = sortRoles(roles, env) || [];
-    const withNone = _.concat(null, sorted);
+    const withNone = [ null, ...sorted ];
     return (
       <OptionList {...listProps}>
         <label>{t('user-summary-roles')}</label>
-        {_.map(withNone, renderRoleOption)}
+        {withNone.map(renderRoleOption)}
       </OptionList>
     );
   }
@@ -449,15 +450,15 @@ function UserSummaryPageSync(props) {
       name = t('user-summary-role-none')
       props = {
         name: 'none',
-        selected: _.isEmpty(rolesCurr),
-        previous: (creating) ? _.isEmpty(rolesPrev) : undefined,
+        selected: (rolesCurr.length === 0),
+        previous: (creating) ? (rolesPrev.length === 0) : undefined,
       };
     } else {
       name = p(role.details.title) || role.name;
       props = {
         name: String(role.id),
-        selected: _.includes(rolesCurr, role.id),
-        previous: _.includes(rolesPrev, role.id),
+        selected: rolesCurr.includes(role.id),
+        previous: rolesPrev.includes(role.id),
       };
     }
     return <option key={i} {...props}>{name}</option>;
@@ -614,23 +615,18 @@ const sortRoles = memoizeWeak(null, function(roles, env) {
   const name = (role) => {
     return p(role.details.title) || role.name;
   };
-  return _.sortBy(roles, name);
+  return orderBy(roles, name, 'asc');
 });
 
 const findRoles = memoizeWeak(null, function(roles, user) {
-  if (user.role_ids) {
-    const hash = _.keyBy(roles, 'id');
-    return _.filter(_.map(user.role_ids, (id) => {
-      return hash[id];
-    }));
-  }
+  return findByIds(roles, user.role_ids);
 });
 
 function extractUsername(text, type) {
   if (/https?:/.test(text)) {
     // remove query string
-    text = _.trim(text.replace(/\?.*/, ''));
-    let parts = _.filter(text.split('/'));
+    text = text.replace(/\?.*/, ''.trim());
+    const parts = text.split('/').filter(Boolean);
     return parts[parts.length - 1];
   }
   return text;

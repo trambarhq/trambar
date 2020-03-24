@@ -1,9 +1,9 @@
-import _ from 'lodash';
 import { useState, useCallback, useEffect } from 'react';
 import { useListener } from 'relaks';
 import { useLatest, useAfterglow, useConfirmation, useSelectionBuffer, useDraftBuffer } from 'common/hooks.js';
 import { fromPersonalName, fromTitle } from 'common/utils/slug-generator.js';
 import { Cancellation } from 'common/errors.js';
+import { isEmpty, get, decoupleSet } from 'common/utils/object-utils.js';
 
 function useDataLossWarning(route, env, confirm) {
   const { t } = env.locale;
@@ -29,12 +29,12 @@ function useValidation(reporting) {
   const [ problems, setProblems ] = useState({});
   const reportProblems = useCallback((problems) => {
     setProblems(problems);
-    if (!_.isEmpty(problems)) {
+    if (problems?.length > 0) {
       throw new Cancellation;
     }
   });
   useEffect(() => {
-    if (!reporting && !_.isEmpty(problems)) {
+    if (!reporting && !isEmpty(problems)) {
       setProblems({});
     }
   }, [ reporting ]);
@@ -53,7 +53,7 @@ function useSortHandler() {
 function useRowToggle(selection, objects) {
   const handleRowClick = useListener((evt) => {
     const id = parseInt(evt.currentTarget.getAttribute('data-id'));
-    const object = _.find(objects, { id });
+    const object = objects.find(obj => obj.id === id);
     if (object) {
       selection.toggle(object);
     }
@@ -66,23 +66,23 @@ function useAutogenID(draft, params) {
   const f = (personal) ? fromPersonalName : fromTitle;
   const handleTitleChange = useCallback((evt) => {
     const title = evt.target.value;
-    let after = _.decoupleSet(draft.current, titleKey, title);
+    let after = decoupleSet(draft.current, titleKey, title);
 
     // derive name from title
-    const titleBefore = _.get(draft.current, titleKey, {});
+    const titleBefore = get(draft.current, titleKey, {});
     const autoNameBefore = f(titleBefore);
     const autoName = f(title);
-    const nameBefore = _.get(draft.current, nameKey, '');
+    const nameBefore = get(draft.current, nameKey, '');
     if (!nameBefore || nameBefore === autoNameBefore) {
-      after = _.decoupleSet(after, nameKey, autoName);
+      after = decoupleSet(after, nameKey, autoName);
     }
     draft.update(after);
   }, []);
   const handleNameChange = useCallback((evt) => {
     const name = evt.target.value;
-    const nameTransformed = _.toLower(name).replace(/[^\w\-]+/g, '');
+    const nameTransformed = name.toLowerCase().replace(/[^\w\-]+/g, '');
     const nameLimited = nameTransformed.substr(0, 128);
-    draft.update(_.decoupleSet(draft.current, nameKey, nameLimited));
+    draft.update(decoupleSet(draft.current, nameKey, nameLimited));
   }, []);
   return [ handleTitleChange, handleNameChange ];
 }

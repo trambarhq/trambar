@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 // widgets
@@ -11,26 +10,26 @@ import './text-field.scss';
  * text input.
  */
 export function TextField(props) {
-  const { env, children, readOnly, list } = props;
+  const { env, children, readOnly, list, ...inputProps } = props;
   const { t } = env.locale;
   const classNames = [ 'text-field' ];
   let Input = 'input';
-  let inputProps = _.omit(props, 'list', 'children', 'env');
   if (props.type === 'textarea') {
     Input = AutosizeTextArea;
-    inputProps = _.omit(inputProps, 'type');
+    delete inputProps.type;
   }
   if (readOnly) {
     classNames.push('readonly');
     inputProps.placeholder = t('text-field-placeholder-none');
     inputProps.spellCheck = false;
+    inputProps.readOnly = true;
   }
   inputProps.value = inputProps.value || '';
 
   let datalist;
   if (list instanceof Array) {
     const listID = props.id + '-list';
-    const options = _.map(list, (label, key) => {
+    const options = list.map((label, key) => {
       return <option key={key}>{label}</option>
     });
     datalist = <datalist id={listID}>{options}</datalist>;

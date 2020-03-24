@@ -12,33 +12,33 @@ import './payload-manager-panel.scss';
 export function PayloadManagerPanel(props) {
   const { payloadManager } = props;
   const { payloads } = payloadManager;
-  if (_.isEmpty(payloads)) {
+  if (payloads.length === 0) {
     return null;
   }
-  const pending = _.filter(payloads, { started: false });
-  const uploading = _.filter(payloads, { started: true, sent: false, failed: false });
-  const processing =  _.filter(payloads, { sent: true, completed: false });
-  const failed = _.filter(payloads, { failed: true });
-  const completed = _.filter(payloads, { completed: true });
+  const pending = payloads.filter({ started: false });
+  const uploading = payloads.filter({ started: true, sent: false, failed: false });
+  const processing =  payloads.filter({ sent: true, completed: false });
+  const failed = payloads.filter({ failed: true });
+  const completed = payloads.filter({ completed: true });
   return (
     <SettingsPanel className="payload-manager">
       <header>
         <i className="fas fa-gear" /> Payloads
       </header>
       <body>
-        <DiagnosticsSection label="Pending payloads" hidden={_.isEmpty(pending)}>
+        <DiagnosticsSection label="Pending payloads" hidden={pending.length === 0}>
           {_.map(pending, renderPayload)}
         </DiagnosticsSection>
-        <DiagnosticsSection label="Payloads in transit" hidden={_.isEmpty(uploading)}>
+        <DiagnosticsSection label="Payloads in transit" hidden={uploading.length === 0}>
           {_.map(uploading, renderPayload)}
         </DiagnosticsSection>
-        <DiagnosticsSection label="Payloads in backend process" hidden={_.isEmpty(processing)}>
+        <DiagnosticsSection label="Payloads in backend process" hidden={processing.length === 0}>
           {_.map(processing, renderPayload)}
         </DiagnosticsSection>
-        <DiagnosticsSection label="Failed payloads" hidden={_.isEmpty(failed)}>
+        <DiagnosticsSection label="Failed payloads" hidden={failed.length === 0}>
           {_.map(failed, renderPayload)}
         </DiagnosticsSection>
-        <DiagnosticsSection label="Completed payloads" hidden={_.isEmpty(completed)}>
+        <DiagnosticsSection label="Completed payloads" hidden={completed.length === 0}>
           {_.map(completed, renderPayload)}
         </DiagnosticsSection>
       </body>

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { GitlabWiki } from 'trambar-www';
@@ -44,9 +43,8 @@ export default async function WikiSummaryPage(props) {
   const wiki = await findWiki(database, schema, wikiID);
   render();
   const repos = await findProjectRepos(database, project);
-  const repo = _.find(repos, (repo) => {
-    const link = findLinkByRelative(repo, wiki, 'project');
-    return !!link;
+  const repo = repos.find((repo) => {
+    return !!findLinkByRelative(repo, wiki, 'project');
   });
   render();
   const wikis = await findPublicWikis(database, schema);
@@ -259,7 +257,7 @@ function WikiSummaryPageSync(props) {
         <label>
           {t('wiki-summary-hidden')}
         </label>
-        {_.map([ false, true ], renderHiddenOption)}
+        {[ false, true ].map(renderHiddenOption)}
       </OptionList>
     );
   }
@@ -341,7 +339,7 @@ function WikiContents(props) {
     setOpen(!open);
   });
   const handleReference = useListener((evt) => {
-    const selected = _.find(wikis, { slug: evt.href });
+    const selected = wikis.find(w => w.slug === evt.href);
     if (selected) {
       const params = { ...route.params, wikiID: selected.id };
       const url = route.find('wiki-summary-page', params);

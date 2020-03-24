@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { useListener } from 'relaks';
 
@@ -18,11 +17,11 @@ export function SideNavigation(props) {
   const { database, route, env, disabled } = props;
   const { t, languageCode, directory, countryCode } = env.locale;
   const [ ready, setReady ] = useState(false);
-  const selectedLanguage = _.find(directory, { code: languageCode });
+  const selectedLanguage = directory.find(l => l.code === languageCode);
 
   const handleLanguageClick = useListener((evt) => {
     const code = evt.currentTarget.getAttribute('data-code');
-    const language = _.find(directory, { code });
+    const language = directory.find(l => l.code === code);
     const localeCode = `${language.code}-${language.defaultCountry}`;
     return env.locale.change(localeCode);
   });
@@ -65,10 +64,10 @@ export function SideNavigation(props) {
   }
 
   function renderLanguageButton() {
-    const languages = _.filter(directory, (language) => {
+    const languages = directory.filter((language) => {
       return !!language.module;
     });
-    const items = _.map(languages, (language, i) => {
+    const items = languages.map((language, i) => {
       const props = {
         className: 'item',
         'data-code': language.code,
@@ -101,12 +100,13 @@ export function SideNavigation(props) {
   }
 
   function renderCountryButton() {
-    if (_.size(selectedLanguage.countries) <= 1) {
+    const codes = Object.keys(selectedLanguage.countries);
+    if (codes.length <= 1) {
       return null;
     }
     const selected = countryCode || selectedLanguage.defaultCountry;
     const countryName = selectedLanguage.countries[selected];
-    const items = _.map(selectedLanguage.countries, (name, code) => {
+    const items = codes.map((code) => {
       const props = {
         className: 'item',
         'data-code': code,
@@ -118,7 +118,7 @@ export function SideNavigation(props) {
       }
       return (
         <div key={code} {...props}>
-          <i className="far fa-check-circle" /> {name}
+          <i className="far fa-check-circle" /> {selectedLanguage.countries[code]}
         </div>
       )
     });

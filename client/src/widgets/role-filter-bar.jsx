@@ -37,7 +37,7 @@ export async function RoleFilterBar(props) {
   };
 
   function renderButtons() {
-    if (!_.isEmpty(roles)) {
+    if (roles.length > 0) {
       return _.map(roles, renderButton);
     } else if (roles) {
       const props = {
@@ -58,7 +58,7 @@ export async function RoleFilterBar(props) {
       role,
       users: roleUsers,
       url,
-      selected: _.includes(roleIDsBefore, role.id),
+      selected: roleIDsBefore.includes(role.id),
       env,
     };
     return <RoleFilterButton key={role.id} {...props} />;
@@ -66,10 +66,10 @@ export async function RoleFilterBar(props) {
 }
 
 const findUsers = memoizeWeak(null, function(users, role) {
-  let list = _.filter(users, (user) => {
-    return _.includes(user.role_ids, role.id);
+  let list = users.filter((user) => {
+    return user.role_ids.includes(role.id);
   });
-  if (!_.isEmpty(list)) {
+  if (list.length > 0) {
     return list;
   }
 });

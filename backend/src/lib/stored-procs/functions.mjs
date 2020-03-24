@@ -8,18 +8,19 @@ import { externalIdStrings } from './runtime.mjs';
  * @return {Array<String>}
  */
 function lowerCase(strings) {
-  for (var i = 0; i < strings.length; i++) {
-    strings[i] = strings[i].toLowerCase();
+  const results = [];
+  for (let string of strings) {
+    results.push(strings.toLowerCase());
   }
-  return strings;
+  return results;
 }
 lowerCase.args = 'strings text[]';
 lowerCase.ret = 'text[]';
 lowerCase.flags = 'IMMUTABLE';
 
 function matchAny(filters, objects) {
-  for (var i = 0; i < objects.length; i++) {
-    if (matchObject(filters, objects[i])) {
+  for (let object of objects) {
+    if (matchObject(filters, object)) {
       return true;
     }
   }
@@ -30,7 +31,7 @@ matchAny.ret = 'boolean';
 matchAny.flags = 'IMMUTABLE';
 
 function hasFalse(details) {
-  for (var name in details) {
+  for (let name in details) {
     if (!details[name]) {
       return true;
     }
@@ -67,11 +68,10 @@ hasCandidates.flags = 'IMMUTABLE';
  * @return {Array<String>|null}
  */
 function payloadTokens(details) {
-  var tokens = [];
-  var resources = details.resources;
+  const tokens = [];
+  const resources = details.resources;
   if (resources instanceof Array) {
-    for (var i = 0; i < resources.length; i++) {
-      var res = resources[i];
+    for (let res of resources) {
       if (res.payload_token) {
         tokens.push(res.payload_token);
       }
@@ -98,18 +98,17 @@ payloadTokens.flags = 'IMMUTABLE';
 function updatePayload(details, payload) {
   // use etime to determine if resource is ready, since progress can get
   // rounded to 100 before the final step
-  var ready = (payload.completion === 100 && payload.etime !== null);
-  var resources = details.resources;
-  if (resources) {
-    for (var i = 0; i < resources.length; i++) {
-      var res = resources[i];
+  const ready = (payload.completion === 100 && payload.etime !== null);
+  const resources = details.resources;
+  if (resources instanceof Array) {
+    for (let res of resources) {
       if (res.payload_token === payload.token) {
         transferProps(payload.details, res);
       }
     }
   } else {
     // info is perhaps stored in the details object itself
-    var res = details;
+    const res = details;
     if (res.payload_token === payload.token) {
       transferProps(payload.details, res);
     }
@@ -131,14 +130,14 @@ updatePayload.flags = 'IMMUTABLE';
  * @return {Number}
  */
 function checkAuthorization(token, area) {
-  var sql = `SELECT user_id, area FROM "global"."session"
+  const sql = `SELECT user_id, area FROM "global"."session"
          WHERE token = $1
          AND (area = $2 OR $2 IS NULL)
          AND etime >= NOW()
          AND deleted = false
          AND activated = true
          LIMIT 1`;
-  var row = plv8.execute(sql, [ token, area ])[0];
+  const row = plv8.execute(sql, [ token, area ])[0];
   return (row) ? row.user_id : null;
 }
 checkAuthorization.args = 'token text, area text';
@@ -299,7 +298,7 @@ extractWikiText.flags = 'IMMUTABLE';
  * @return {String}
  */
 function extractSpreadsheetText(details, lang) {
-  var list = [];
+  const list = [];
   if (details.title) {
     list.push(details.title);
   }
@@ -309,25 +308,22 @@ function extractSpreadsheetText(details, lang) {
   if (details.subject) {
     list.push(details.subject);
   }
-  if (details.keywords) {
-    for (var i = 0; i < details.keywords.length; i++) {
-      list.push(details.keywords[i]);
+  if (details.keywords instanceof Array) {
+    for (let keyword of details.keywords) {
+      list.push(keyword);
     }
   }
-  if (details.sheets) {
-    for (var i = 0; i < details.sheets.length; i++) {
-      var sheet = details.sheets[i];
-      for (var j = 0; j < sheet.rows.length; j++) {
-        var row = sheet.rows[j];
-        for (var k = 0; k < row.length; k++) {
-          var cell = row[k];
+  if (details.sheets instanceof Array) {
+    for (let sheet of details.sheets) {
+      for (let row of sheet.rows) {
+        for (let cell of row) {
           if (typeof(cell) === 'string') {
             list.push(cell);
           } else if (typeof(cell) === 'object') {
             if (cell.richText instanceof Array) {
-              var fragments = [];
-              for (var m = 0; m < cell.richText.length; m++) {
-                fragments.push(cell.richText[m].text);
+              const fragments = [];
+              for (let token of cell.richText) {
+                fragments.push(token.text);
               }
               list.push(fragments.join(''));
             }

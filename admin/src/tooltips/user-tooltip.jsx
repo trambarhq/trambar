@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { getUserName } from 'common/objects/utils/user-utils.js';
 
@@ -18,7 +17,7 @@ export function UserTooltip(props) {
     return null;
   }
   const label = t('user-tooltip-$count', users.length);
-  const list = _.map(users, (user, i) => {
+  const list = users.map((user, i) => {
     let url;
     if (project) {
       url = route.find('member-summary-page', {

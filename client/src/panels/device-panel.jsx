@@ -91,7 +91,7 @@ function DeviceIcon(props) {
 function formatDeviceName(device) {
   const manufacturer = device.details.manufacturer;
   let name = device.details.display_name || device.details.name;
-  if (!_.includes(_.toLower(name), _.toLower(manufacturer))) {
+  if (!_.toLower(name).includes(_.toLower(manufacturer))) {
     name = `${manufacturer} ${name}`;
   }
   return name;

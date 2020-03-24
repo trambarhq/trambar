@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -9,6 +8,7 @@ import { disableServer, removeServer, restoreServer, saveServer } from 'common/o
 import { getServerName, getServerIconClass } from 'common/objects/utils/server-utils.js';
 import { ServerTypes, IntegratedServerTypes } from 'common/objects/types/server-types.js';
 import { findSystem } from 'common/objects/finders/system-finder.js';
+import { orderBy, toggle } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -59,7 +59,7 @@ function ServerSummaryPageSync(props) {
   const { system, server, roles, creating } = props;
   const { database, route, env, editing, scrollToTaskID } = props;
   const { t, p, languageCode } = env.locale;
-  const availableLanguageCodes = system?.settings?.input_languages ?? [];
+  const availableLanguageCodes = system?.settings?.input_languages || [];
   const readOnly = !(editing || creating);
   const [ credentialsChanged, setCredentialsChanged ] = useState(false);
   const draft = useDraftBuffer({
@@ -70,7 +70,7 @@ function ServerSummaryPageSync(props) {
   const [ problems, reportProblems ] = useValidation(!readOnly);
   const [ confirmationRef, confirm ] = useConfirmation();
   const warnDataLoss = useDataLossWarning(route, env, confirm);
-  const address = _.trimEnd(system?.settings?.address ?? window.location.origin, '/');
+  const address = (system?.settings?.address || window.location.origin).replace(/\/+$/, '');
 
   const handleEditClick = useListener((evt) => {
     route.replace({ editing: true });
@@ -173,8 +173,8 @@ function ServerSummaryPageSync(props) {
     const title = p(draft.get('details.title'));
     if (!title || title === autoTitleBefore) {
       let code = languageCode;
-      if (!_.isEmpty(availableLanguageCodes)) {
-        if (!_.includes(availableLanguageCodes, code)) {
+      if (availableLanguageCodes.length > 0) {
+        if (!availableLanguageCodes.includes(code)) {
           code = availableLanguageCodes[0];
         }
       }
@@ -190,7 +190,7 @@ function ServerSummaryPageSync(props) {
     }
   });
   const handleGitlabUserOptionClick = useListener((evt) => {
-    const option = _.find(gitlabImportOptions, (option) => {
+    const option = gitlabImportOptions.find((option) => {
       return evt.name === `${option.type}-${option.value}`;
     });
     const typeBefore = draft.get(`settings.user.mapping.${option.type}`);
@@ -201,9 +201,7 @@ function ServerSummaryPageSync(props) {
     draft.set(`settings.user.mapping.${option.type}`, type);
   })
   const handleOAuthUserOptionClick = useListener((evt) => {
-    const option = _.find(gitlabImportOptions, (option) => {
-      return evt.name === `${option.value}`;
-    });
+    const option = gitlabImportOptions.find(opt => opt.value === evt.name);
     const typeBefore = draft.get('settings.user.type');
     let type;
     if (option.value && typeBefore !== option.value) {
@@ -214,12 +212,12 @@ function ServerSummaryPageSync(props) {
   const handleRoleOptionClick = useListener((evt) => {
     const roleIDsBefore = draft.get('settings.user.role_ids', []);
     const options = getRoleOptions(roles, env);
-    const option = _.find(options, { name: evt.name });
+    const option = options.find(opt => opt.name === evt.name);
     let roleIDs;
     if (option.none) {
       roleIDs = [];
     } else {
-      roleIDs = _.toggle(roleIDsBefore, option.value);
+      roleIDs = toggle(roleIDsBefore, option.value);
     }
     draft.set('settings.user.role_ids', roleIDs);
   });
@@ -270,7 +268,7 @@ function ServerSummaryPageSync(props) {
   function renderButtons() {
     if (readOnly) {
       const active = !server?.deleted && !server?.disabled;
-      const hasIntegration = _.includes(IntegratedServerTypes, server?.type);
+      const hasIntegration = IntegratedServerTypes.includes(server?.type);
       const hasAccessToken = !!server?.settings?.api?.access_token;
       const hasOAuthCredentials = !!server?.settings?.oauth?.client_id
                    && !!server?.settings?.oauth?.client_secret;
@@ -367,7 +365,7 @@ function ServerSummaryPageSync(props) {
           {t('server-summary-type')}
           <InputError>{t(problems.type)}</InputError>
         </label>
-        {_.map(ServerTypes, renderServerType)}
+        {ServerTypes.map(renderServerType)}
       </OptionList>
     );
   }
@@ -439,7 +437,7 @@ function ServerSummaryPageSync(props) {
     return (
       <OptionList {...listProps}>
         <label>{t('server-summary-new-users')}</label>
-        {_.map(gitlabImportOptions, renderGitlabUserOption)}
+        {gitlabImportOptions.map(renderGitlabUserOption)}
       </OptionList>
     );
   }
@@ -477,7 +475,7 @@ function ServerSummaryPageSync(props) {
     return (
       <OptionList {...listProps}>
         <label>{t('server-summary-new-users')}</label>
-        {_.map(oauthImportOptions, renderOAuthUserOption)}
+        {oauthImportOptions.map(renderOAuthUserOption)}
       </OptionList>
     );
   }
@@ -537,7 +535,7 @@ function ServerSummaryPageSync(props) {
     return (
       <OptionList {...listProps}>
         <label>{t('server-summary-roles')}</label>
-        {_.map(options, renderRoleOption)}
+        {options.map(renderRoleOption)}
       </OptionList>
     );
   }
@@ -545,8 +543,8 @@ function ServerSummaryPageSync(props) {
   function renderRoleOption(option, i) {
     const rolesCurr = draft.getCurrent('settings.user.role_ids', []);
     const rolesPrev = draft.getOriginal('settings.user.role_ids', []);
-    const setCurr = (option.none) ? _.isEmpty(rolesCurr) : _.includes(rolesCurr, option.value);
-    const setPrev = (option.none) ? _.isEmpty(rolesPrev) : _.includes(rolesPrev, option.value);
+    const setCurr = (option.none) ? (rolesCurr.length === 0) : (rolesCurr.includes(option.value));
+    const setPrev = (option.none) ? (rolesPrev.length === 0) : (rolesPrev.includes(option.value));
     const props = {
       name: option.name,
       selected: setCurr,
@@ -610,7 +608,7 @@ function ServerSummaryPageSync(props) {
   function renderDeauthorizeCallbackURL() {
     const type = draft.get('type');
     const needed = [ 'facebook' ];
-    if (!_.includes(needed, type)) {
+    if (!needed.includes(type)) {
       return null;
     }
     const url = `${address}/srv/session/${type || '...'}/deauthorize/`;
@@ -626,7 +624,7 @@ function ServerSummaryPageSync(props) {
   function renderPrivacyPolicyURL() {
     const type = draft.get('type');
     const needed = [ 'facebook', 'google', 'windows' ];
-    if (!_.includes(needed, type)) {
+    if (!needed.includes(type)) {
       return null;
     }
     const url = `${address}/srv/session/privacy/`;
@@ -646,7 +644,7 @@ function ServerSummaryPageSync(props) {
   function renderTermsAndConditionsURL() {
     const type = draft.get('type');
     const needed = [ 'facebook', 'google', 'windows' ];
-    if (!_.includes(needed, type)) {
+    if (!needed.includes(type)) {
       return null;
     }
     const url = `${address}/srv/session/terms/`;
@@ -737,7 +735,7 @@ function ServerSummaryPageSync(props) {
   function renderAPIStatus() {
     const type = draft.get('type');
     let apiAccess;
-    if (_.includes(IntegratedServerTypes, type)) {
+    if (IntegratedServerTypes.includes(type)) {
       let token = draft.get('settings.api.access_token');
       if (token) {
         apiAccess = t('server-summary-api-access-acquired');
@@ -775,7 +773,7 @@ function ServerSummaryPageSync(props) {
     if (!server) {
       return null;
     }
-    const hasIntegration = _.includes(IntegratedServerTypes, server.type);
+    const hasIntegration = IntegratedServerTypes.includes(server.type);
     if (!hasIntegration) {
       return null;
     }
@@ -871,8 +869,11 @@ const oauthImportOptions = [
 ];
 
 function getRoleOptions(roles, env) {
+  if (!roles) {
+    return [];
+  }
   const sorted = sortRoles(roles, env);
-  const options = _.map(sorted, (role) => {
+  const options = sorted.map((role) => {
     const name = getRoleName(role, env);
     return {
       name: `role-${role.id}`,
@@ -888,11 +889,9 @@ function getRoleOptions(roles, env) {
   return options;
 }
 
-const sortRoles = memoizeWeak(null, function(roles, env) {
-  const name = (role) => {
-    return getRoleName(role, env);
-  };
-  return _.sortBy(roles, name);
+const sortRoles = memoizeWeak(null, (roles, env) => {
+  const name = r => getRoleName(r, env).toLowerCase();
+  return orderBy(roles, name, 'asc');
 });
 
 function openPopupWindow(url) {
@@ -908,8 +907,9 @@ function openPopupWindow(url) {
     menubar: 'no',
     status: 'no',
   };
-  const pairs = _.map(options, (value, name) => {
-    return `${name}=${value}`;
-  });
+  const pairs = [];
+  for (let [ name, value ] of Object.entries(options)) {
+    pairs.push(`${name}=${value}`);
+  }
   window.open(url, 'api-access-oauth', pairs.join(','));
 }

@@ -49,7 +49,7 @@ class IndexedDBCache {
     const objects = await this.fetchTable(address, schema, table);
     const keyName = this.getObjectKeyName(schema);
     const results = [];
-    if (_.isEqual(_.keys(criteria), [ keyName ])) {
+    if (criteria?.hasOwnProperty(keyName) && Object.keys(criteria).length === 1) {
       let keys = criteria[keyName];
       if (keys instanceof Array) {
         keys = _.sortBy(_.slice(keys));

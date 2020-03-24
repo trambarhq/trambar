@@ -50,7 +50,7 @@ async function findRepoServers(db, repos) {
   const ids = [];
   for (let repo of repos) {
     const link = findLinkByServerType(repo, repo.type);
-    if (link && ids.indexOf(link.server_id) === -1) {
+    if (link && ids.includes(link.server_id)) {
       ids.push(link.server_id);
     }
   }

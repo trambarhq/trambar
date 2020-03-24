@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 // widgets
@@ -14,7 +13,7 @@ export function ProfileImage(props) {
   const { env, user, size } = props;
   const classNames = [ 'profile-image', size ];
   if (user) {
-    const image = _.find(user?.details?.resources, { type: 'image' });
+    const image = user?.details?.resources?.find(res => res.type === 'image');
     if (image) {
       const imageResolutions = {
         small: 24,

@@ -33,7 +33,7 @@ export function RoleFilterButton(props) {
 
   function renderImageRow(index, count) {
     // only show user if he has a profile image
-    const visibleUsers = _.filter(users, (user) => {
+    const visibleUsers = users.filter((user) => {
       return _.some(user.details.resources, { type: 'image' });
     });
     const slice = _.slice(users, index, count);

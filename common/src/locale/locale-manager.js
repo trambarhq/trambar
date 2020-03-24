@@ -1,5 +1,5 @@
-import _ from 'lodash';
 import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
+import { difference } from '../utils/array-utils.js';
 
 const defaultOptions = {
   defaultLocale: 'en-US',
@@ -10,7 +10,14 @@ class LocaleManager extends EventEmitter {
   constructor(options) {
     super();
 
-    this.options = _.defaults({}, options, defaultOptions);
+    this.options = {};
+    for (let [ name, value ] of Object.entries(defaultOptions)) {
+      if (options && options[name]) {
+        this.options[name] = options[name];
+      } else {
+        this.options[name] = value;
+      }
+    }
     this.directory = this.options.directory;
     this.browserLocaleCode = getBrowserLocale();
     this.localeCode = '';
@@ -54,11 +61,11 @@ class LocaleManager extends EventEmitter {
    * @return {String}
    */
   translate(phrase, ...args) {
-    let entry = this.phraseTable[phrase];
+    const entry = this.phraseTable[phrase];
     if (entry != null) {
       if (typeof(entry) === 'function') {
         try {
-          let results = entry.apply(this, args);
+          const results = entry.apply(this, args);
           return results;
         } catch (err) {
           console.error(err);
@@ -85,7 +92,7 @@ class LocaleManager extends EventEmitter {
       return languageVersions;
     }
     // no support for country-specific versions
-    let currentLanguageCode = this.languageCode;
+    const currentLanguageCode = this.languageCode;
     if (overrideLanguageCode) {
       currentLanguageCode = overrideLanguageCode.substr(0, 2);
     }
@@ -94,8 +101,8 @@ class LocaleManager extends EventEmitter {
     let defaultLanguageCode = this.options.defaultLocale.substr(0, 2);
     let defaultLanguagePhrase = '';
     for (let key in languageVersions) {
-      let phrase = languageVersions[key];
-      let localeCode = _.toLower(key);
+      const phrase = languageVersions[key];
+      const localeCode = key.toLowerCase();
       if (localeCode === currentLanguageCode) {
         matchingPhrase = phrase;
       }
@@ -123,11 +130,11 @@ class LocaleManager extends EventEmitter {
    * @return {Promise<Boolean>}
    */
   async change(localeCode) {
-    localeCode = _.toLower(localeCode);
+    localeCode = localeCode.toLowerCase();
     if (localeCode === this.localeCode) {
       return true;
     }
-    const [ lc, cc ] = _.split(localeCode, '-');
+    const [ lc, cc ] = localeCode.split('-');
     const module = await this.loadModule(lc);
     this.phraseTable = this.getPhraseTable(module, cc);
     this.localeCode = localeCode;
@@ -136,13 +143,13 @@ class LocaleManager extends EventEmitter {
     this.module = module;
 
     if (process.env.NODE_ENV !== 'production') {
-      const targetKeys = _.keys(this.phraseTable);
-      const sorted = _.sortBy(targetKeys);
-      if (!_.isEqual(targetKeys, sorted)) {
+      const unsorted = Object.keys(this.phraseTable);
+      const targetKeys = unsorted.slice().sort();
+      if (isEqual(targetKeys, unsorted)) {
         console.log(`The following phrases are out of order [${localeCode}]:`);
-        for (let [ index, phrase ] of targetKeys.entries()) {
-          const sortedIndex = _.indexOf(sorted, phrase);
-          if (sorted[sortedIndex - 1] !== targetKeys[index - 1]) {
+        for (let [ index, phrase ] of unsorted.entries()) {
+          const unsortedIndex = targetKeys.indexOf(phrase);
+          if (unsorted[sortedIndex - 1] !== targetKeys[index - 1]) {
             console.log(phrase);
           }
         }
@@ -150,9 +157,9 @@ class LocaleManager extends EventEmitter {
         try {
           const eng = await this.loadModule('en');
           const engTable = this.getPhraseTable(eng, 'us');
-          const engKeys = _.keys(engTable);
-          const missing = _.difference(engKeys, targetKeys);
-          const extra = _.difference(targetKeys, engKeys);
+          const engKeys = Object.keys(engTable);
+          const missing = difference(engKeys, targetKeys);
+          const extra = difference(targetKeys, engKeys);
           if (missing.length > 0) {
             console.log(`The following phrases are missing [${localeCode}]:`);
             for (let name of missing) {
@@ -182,7 +189,7 @@ class LocaleManager extends EventEmitter {
    * @return {Promise<Boolean>}
    */
   async loadModule(languageCode) {
-    const entry = _.find(this.directory, { code: languageCode });
+    const entry = this.directory.find(e => e.code === languageCode);
     if (!entry || !entry.module) {
       throw new Error(`No module for language: ${languageCode}`);
     }
@@ -199,7 +206,7 @@ class LocaleManager extends EventEmitter {
    * @return {Object}
    */
   getPhraseTable(module, countryCode) {
-    let table = module.phrases;
+    const table = module.phrases;
     if (table instanceof Function) {
       table = table(countryCode);
     }
@@ -214,7 +221,7 @@ class LocaleManager extends EventEmitter {
    * @return {String}
    */
   getDefaultCountry(languageCode) {
-    const entry = _.find(this.directory, { code: languageCode });
+    const entry = this.directory.find(e => e.code === languageCode);
     return (entry) ? entry.defaultCountry : '';
   }
 
@@ -237,7 +244,7 @@ class LocaleManager extends EventEmitter {
    * @param  {Event} evt
    */
   handleVisibilityChange = (evt) => {
-    let browserLocale = getBrowserLocale();
+    const browserLocale = getBrowserLocale();
     if (browserLocale !== this.browserLocale) {
       this.change(browserLocale).catch((err) => {});
     }
@@ -245,15 +252,16 @@ class LocaleManager extends EventEmitter {
 }
 
 function getBrowserLocale() {
-  const list = _.union(navigator.languages, _.filter([
+  const list = [
+    ...navigator.languages,
     navigator.language,
     navigator.browserLanguage,
     navigator.systemLanguage,
     navigator.userLanguage,
-  ]));
+  ];
   for (let lang of list) {
     if (lang && lang.length >= 2) {
-      return _.toLower(lang);
+      return lang.toLowerCase();
     }
   }
   return 'en-us';

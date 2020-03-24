@@ -98,7 +98,7 @@ function getLanguagesFromJSON(json) {
       const m = /^\s*([a-z]{2})(-[a-z]{2})?\b/i.exec(text);
       if (m) {
         const code = m[1].toLowerCase();
-        if (languages.indexOf(code) !== -1 && code !== 'zz') {
+        if (!languages.includes(code) && code !== 'zz') {
           languages.push(code);
         }
       }

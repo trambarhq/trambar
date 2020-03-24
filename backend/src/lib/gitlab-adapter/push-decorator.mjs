@@ -399,7 +399,7 @@ function getFileContents(file, encoding) {
   const buffer = Buffer.from(file.content, 'base64');
   if (encoding) {
     const text = buffer.toString(encoding);
-    if (text.indexOf('<<<<<<<') !== -1) {
+    if (text.includes('<<<<<<<')) {
       // fix accidentally checked-in git conflicts
       text = text.replace(gitConflicts, '$2');
     }

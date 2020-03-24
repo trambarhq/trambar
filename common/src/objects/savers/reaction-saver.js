@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { isEqual } from '../../utils/object-utils.js';
 
 const table = 'reaction';
 
@@ -47,16 +48,16 @@ async function saveSurveyResults(db, story, user, answers)  {
 
 async function updateTaskStatuses(db, reactions, story, user, answers) {
   const reactionsAfter = [];
-  for (let [ listKey, itemStatuses ] of _.entries(answers)) {
-    for (let [ itemKey, selected ] of _.entries(itemStatuses)) {
+  for (let [ listKey, itemStatuses ] of Object.entries(answers)) {
+    for (let [ itemKey, selected ] of Object.entries(itemStatuses)) {
       const task = {
         list: parseInt(listKey),
         item: parseInt(itemKey)
       };
-      const existing = _.find(reactions, (reaction) => {
+      const existing = reactions.find((reaction) => {
         if (reaction.type === 'task-completion') {
           if (reaction.user_id === user.id) {
-            return _.isEqual(reaction.details.task, task);
+            return isEqual(reaction.details.task, task);
           }
         }
       });

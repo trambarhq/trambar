@@ -16,7 +16,7 @@ export function ReactionToolbar(props) {
   const canComment = (access === 'read-comment' || access === 'read-write');
   const userID = currentUser?.id;
   const userLike =  _.find(reactions, { type: 'like', user_id: userID });
-  const userComments = _.filter(reactions, (reaction) => {
+  const userComments = reactions.filter((reaction) => {
     if (reaction.user_id === userID) {
       if (reaction.type === 'comment' || reaction.type === 'note') {
         return true;
@@ -51,7 +51,7 @@ export function ReactionToolbar(props) {
     iconClass: 'fas fa-comment',
     label: t('story-comment'),
     hidden: !canComment,
-    highlighted: !_.isEmpty(userComments) || addingComment,
+    highlighted: (userComments?.length > 0) || addingComment,
     disabled,
     onClick: handleCommentClick,
   };

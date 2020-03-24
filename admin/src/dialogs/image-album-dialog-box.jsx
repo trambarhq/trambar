@@ -1,9 +1,9 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
 import { findPictures } from 'common/objects/finders/picture-finder.js';
 import { uploadPictures, removePictures } from 'common/objects/savers/picture-saver.js';
+import { toggle, orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -36,7 +36,7 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
     }
   });
   const handleSelectClick = useListener((evt) => {
-    const selectedPicture = _.find(pictures, { id: selectedPictureID });
+    const selectedPicture = pictures.find(p => p.id === selectedPictureID);
     if (onSelect && selectedPicture) {
       onSelect({ image: selectedPicture.details });
     }
@@ -66,8 +66,8 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
   });
   const handleRemoveClick = useListener((evt) => {
     run(async () => {
-      const removal = _.filter(pictures, (picture) => {
-        return _.includes(deletionCandidateIDs, picture.id);
+      const removal = pictures.filter((picture) => {
+        return deletionCandidateIDs.includes(picture.id);
       });
       await removePictures(database, removal);
       setDeletionCandidateIDs([]);
@@ -76,10 +76,10 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
   const handleImageClick = useListener((evt) => {
     let pictureID = parseInt(evt.currentTarget.getAttribute('data-picture-id'));
     if (managingImages) {
-      const newList = _.toggle(deletionCandidateIDs, pictureID);
+      const newList = toggle(deletionCandidateIDs, pictureID);
       setDeletionCandidateIDs(newList);
     } else {
-      const picture = _.find(pictures, { id: pictureID });
+      const picture = pictures.find(p => p.id === pictureID);
       if (!picture || image?.url === picture.details.url) {
         setSelectedPictureID(0);
       } else {
@@ -106,7 +106,7 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
     const storedPictures = sortPictures(pictures);
     return (
       <div className="scrollable">
-        {_.map(storedPictures, renderPicture)}
+        {storedPictures?.map(renderPicture)}
       </div>
     );
   }
@@ -114,7 +114,7 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
   function renderPicture(picture, i) {
     const classNames = [ 'picture' ];
     if (managingImages) {
-      if (_.includes(deletionCandidateIDs, picture.id)) {
+      if (deletionCandidateIDs.includes(picture.id)) {
         classNames.push('deleting');
       }
     } else {
@@ -151,7 +151,7 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
       };
       const removeProps = {
         className: 'remove',
-        disabled: _.isEmpty(deletionCandidateIDs),
+        disabled: (deletionCandidateIDs.length === 0),
         onClick: handleRemoveClick,
       };
       const doneProps = {
@@ -216,6 +216,6 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
   }
 });
 
-const sortPictures = memoizeWeak(null, function(pictures) {
-  return _.orderBy(pictures, 'mtime', 'desc');
+const sortPictures = memoizeWeak(null, (pictures) => {
+  return orderBy(pictures, 'mtime', 'desc');
 });

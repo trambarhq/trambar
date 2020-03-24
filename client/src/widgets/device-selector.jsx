@@ -11,7 +11,7 @@ import './device-selector.scss';
 export function DeviceSelector(props) {
   const { env, type, onSelect } = props;
   const { t } = env.locale;
-  const devices = _.filter(env.devices, { kind: `${type}input` });
+  const devices = env.devices.filter({ kind: `${type}input` });
   if (devices.length < 2) {
     return null;
   }

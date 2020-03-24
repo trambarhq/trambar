@@ -1,4 +1,8 @@
-import _ from 'lodash';
+import get from 'lodash/get.js'
+import set from 'lodash/set.js';
+import unset from 'lodash/unset.js';
+import isEqual from 'lodash/isEqual.js';
+import isMatch from 'lodash/isMatch.js';
 
 /**
  * Create a link to an external resource that exists on specified server
@@ -9,10 +13,11 @@ import _ from 'lodash';
  * @return {Object}
  */
 function createLink(server, props) {
-  return _.assign({
+  return {
     type: server.type,
-    server_id: server.id
-  }, props);
+    server_id: server.id,
+    ...props,
+  };
 }
 
 /**
@@ -25,15 +30,18 @@ function createLink(server, props) {
  * @return {Object}
  */
 function extendLink(server, parent, props) {
-  let parentLink = findLink(parent, server);
+  const parentLink = findLink(parent, server);
   if (!parentLink) {
     throw new Error('Parent object is not linked to server');
   }
   // omit fields whose names begin with underscore
-  parentLink = _.pickBy(parentLink, (value, name) => {
-    return name.charAt(0) !== '_';
-  });
-  return _.assign(parentLink, props);
+  const inherited = {};
+  for (let [ name, value ] of parentLink) {
+    if (name.charAt(0) !== '_') {
+      inherited[name] = value;
+    }
+  }
+  return { ...inherited, ...props };
 }
 
 /**
@@ -46,7 +54,7 @@ function extendLink(server, parent, props) {
  * @return {Object}
  */
 function addLink(object, server, props) {
-  let link = createLink(server, props);
+  const link = createLink(server, props);
   return attachLink(object, link);
 }
 
@@ -60,7 +68,7 @@ function addLink(object, server, props) {
  * @return {Object}
  */
 function inheritLink(object, server, parent, props) {
-  let link = extendLink(server, parent, props);
+  const link = extendLink(server, parent, props);
   return attachLink(object, link);
 }
 
@@ -73,16 +81,15 @@ function inheritLink(object, server, parent, props) {
  * @return {Object}
  */
 function attachLink(object, link) {
-  let index = -1;
   if (object.external) {
-    index = _.findIndex(object.external, { server_id: link.server_id });
+    const index = object.external.findIndex(lnk => lnk.server_id === link.server_id);
+    if (index !== -1) {
+      object.external[index] = link;
+    } else {
+      object.external.push(link);
+    }
   } else {
-    object.external = [];
-  }
-  if (index !== -1) {
-    object.external[index] = link;
-  } else {
-    object.external.push(link);
+    object.external = [ link ];
   }
   return link;
 }
@@ -97,9 +104,12 @@ function attachLink(object, link) {
  * @return {Object|null}
  */
 function findLink(object, server, props) {
-  let link = _.find(object.external, { server_id: server.id });
+  if (!object.external) {
+    return null;
+  }
+  const link = object.external.find(lnk => lnk.server_id === server.id);
   if (link) {
-    if (!props || _.isMatch(link, props)) {
+    if (!props || isMatch(link, props)) {
       return link;
     }
   }
@@ -116,9 +126,12 @@ function findLink(object, server, props) {
  * @return {Object|null}
  */
 function findLinkByServerType(object, serverType, props) {
-  let link = _.find(object.external, { type: serverType });
+  if (!object.external) {
+    return null;
+  }
+  const link = object.external.find(lnk => lnk.type === serverType);
   if (link) {
-    if (!props || _.isMatch(link, props)) {
+    if (!props || isMatch(link, props)) {
       return link;
     }
   }
@@ -129,15 +142,21 @@ function findLinkByServerType(object, serverType, props) {
  * Find a link by relations it has
  *
  * @param  {ExternalObject} object
- * @param  {String} ...relations
+ * @param  {Array<String>} ...relations
  *
  * @return {Object|null}
  */
 function findLinkByRelations(object, ...relations) {
-  let link = _.find(object.external, (link) => {
-    if (_.every(_.pick(link, relations))) {
-      return true;
+  if (!object.external) {
+    return null;
+  }
+  const link = object.external.find((link) => {
+    for (let relation of relations) {
+      if (!link[relation]) {
+        return false;
+      }
     }
+    return true;
   });
   return link || null;
 }
@@ -151,15 +170,18 @@ function findLinkByRelations(object, ...relations) {
  * @return {Object|null}
  */
 function findLinkByRelative(object, relative, ...relations) {
-  let link = _.find(object.external, (link1) => {
-    return _.find(relative.external, (link2) => {
-      if (link1.type === link2.type && link1.server_id === link2.server_id) {
-        if (_.isEmpty(relations)) {
-          return true;
+  if (!object.external || !relative.external) {
+    return null;
+  }
+  const link = object.external.find((link1) => {
+    const link = relative.external.find((link2) => {
+      if (link1.server_id === link2.server_id, link1.type === link2.type) {
+        for (let relation of relations) {
+          if (link1[relation] !== link2[relation]) {
+            return false;
+          }
         }
-        if (_.isEqual(_.pick(link1, relations), _.pick(link2, relations))) {
-          return true;
-        }
+        return true;
       }
     });
   });
@@ -174,13 +196,19 @@ function findLinkByRelative(object, relative, ...relations) {
  * @param  {Object|undefined} props
  */
 function removeLink(object, server, props) {
-  _.remove(object.external, (link) => {
+  if (!object.external) {
+    return;
+  }
+  const index = object.external.findIndex((link) => {
     if (link.server_id === server.id) {
-      if (!props || _.isMatch(link, props)) {
+      if (!props || isMatch(link, props)) {
         return true;
       }
     }
   });
+  if (index !== -1) {
+    object.external.splice(index, 1);
+  }
 }
 
 /**
@@ -191,11 +219,11 @@ function removeLink(object, server, props) {
  * @return {Number}
  */
 function countLinks(object) {
-  return _.size(object.external);
+  return (object.external) ? object.external.length : 0;
 }
 
 /**
- * Import a value into an object
+ * Import a value (from an external source) into an object
  *
  * @param  {ExternalObject} object
  * @param  {Server} server
@@ -203,40 +231,45 @@ function countLinks(object) {
  * @param  {Object} prop
  */
 function importProperty(object, server, path, prop) {
-  if (prop.ignore) {
+  const { ignore, overwrite, value } = prop;
+  if (ignore) {
     return;
   }
-  let currentValue = _.get(object, path);
-  let overwrite = prop.overwrite;
-  let exchangeKey;
-  let colonIndex = _.indexOf(overwrite, ':');
-  if (colonIndex !== -1) {
-    exchangeKey = overwrite.substr(colonIndex + 1);
-    overwrite = overwrite.substr(0, colonIndex);
-  }
+  const currentValue = get(object, path);
   if (overwrite === 'always') {
     if (prop.value !== undefined) {
-      _.set(object, path, prop.value);
+      set(object, path, value);
     } else {
-      _.unset(object, path);
+      unset(object, path);
     }
   } else if (overwrite === 'never') {
     if (currentValue === undefined) {
       if (prop.value !== undefined) {
-        _.set(object, path, prop.value);
+        set(object, path, value);
       }
     }
-  } else if (overwrite === 'match-previous') {
-    let previous = getPreviousValues(object, server);
-    let previousValue = _.get(previous, exchangeKey);
-    if (_.isEqual(currentValue, previousValue)) {
-      if (prop.value !== undefined) {
-        _.set(object, path, prop.value);
-        _.set(previous, exchangeKey, prop.value);
+  } else if (overwrite.startsWith('match-previous:')) {
+    // look up the value from the previous import
+    const exchangeKey = overwrite.substr(overwrite.indexOf(':') + 1).trim();
+    const previous = getPreviousValues(object, server);
+    const previousValue = get(previous, exchangeKey);
+    if (isEqual(currentValue, previousValue)) {
+      // okay, the current value match what was imported before, meaning
+      // it hasn't been modified by a user (probably); so we can overwrite
+      // the current value with the new value
+      if (value !== undefined) {
+        set(object, path, value);
       } else {
-        _.unset(object, path);
-        _.unset(previous, exchangeKey);
+        unset(previous, exchangeKey);
       }
+    }
+    // save the new value into the exchange object, doing so even when import
+    // didn't happen; this allows the values to sync up again if the user
+    // modifies the one at the external source to match ours
+    if (value !== undefined) {
+      set(previous, exchangeKey, value);
+    } else {
+      unset(previous, exchangeKey);
     }
   } else {
     throw new Error('Unknown option: ' + overwrite);
@@ -251,66 +284,66 @@ function importProperty(object, server, path, prop) {
  * @param  {Object} prop
  */
 function importResource(object, server, prop) {
-  if (prop.ignore) {
+  const { ignore, replace, type, value } = prop;
+  if (ignore) {
     return;
   }
-  let path = 'details.resources';
-  let exchangeKey = 'resources';
-  let resources = _.get(object, path, []);
-  let index = _.findIndex(resources, { type: prop.type });
-  let currentValue = resources[index];
-  let replace = prop.replace;
+  const path = 'details.resources';
+  const resources = get(object, path, []);
+  const index = resources.findIndex(res => res.type === type);
+  const currentValue = resources[index];
   if (replace === 'always') {
     if (currentValue === undefined) {
-      if (prop.value) {
-        resources.push(prop.value);
+      if (value) {
+        resources.push(value);
       }
     } else {
-      if (prop.value) {
-        resources[index] = prop.value;
+      if (value) {
+        resources[index] = value;
       } else {
         resources.splice(index, 1);
       }
     }
   } else if (replace === 'never') {
     if (currentValue === undefined) {
-      if (prop.value) {
-        resources.push(prop.value);
+      if (value) {
+        resources.push(value);
       }
     }
   } else if (replace === 'match-previous') {
-    let previous = getPreviousValues(object, server);
-    let previousResources = _.get(previous, exchangeKey, []);
-    let previousIndex = _.findIndex(previousResources, { type: prop.type });
-    let previousValue = previousResources[previousIndex];
-    if (_.isEqual(currentValue, previousValue)) {
+    const exchangeKey = 'resources';
+    const previous = getPreviousValues(object, server);
+    const previousResources = get(previous, exchangeKey, []);
+    const previousIndex = previousResources.findIndex(res => res.type === type);
+    const previousValue = previousResources[previousIndex];
+    if (isEqual(currentValue, previousValue)) {
       if (currentValue === undefined) {
-        if (prop.value) {
-          resources.push(prop.value);
-          previousResources.push(prop.value);
+        if (value) {
+          resources.push(value);
+          previousResources.push(value);
         }
       } else {
-        if (prop.value) {
-          resources[index] = prop.value;
-          previousResources[previousIndex] = prop.value;
+        if (value) {
+          resources[index] = value;
+          previousResources[previousIndex] = value;
         } else {
           resources.splice(index, 1);
           previousResources.splice(previousIndex, 1);
         }
       }
     }
-    if (_.isEmpty(previousResources)) {
-      _.unset(previous, exchangeKey);
+    if (previousResources.length > 0) {
+      set(previous, exchangeKey, previousResources);
     } else {
-      _.set(previous, exchangeKey, previousResources);
+      unset(previous, exchangeKey);
     }
   } else {
     throw new Error('Unknown option: ' + replace);
   }
-  if (_.isEmpty(resources)) {
-    _.unset(object, path);
+  if (resources.length > 0) {
+    set(object, path, resources);
   } else {
-    _.set(object, path, resources);
+    unset(object, path);
   }
 }
 
@@ -327,26 +360,26 @@ function exportProperty(object, server, path, dest, prop) {
   if (prop.ignore) {
     return;
   }
-  let currentValue = _.get(dest, path);
+  let currentValue = get(dest, path);
   let overwrite = prop.overwrite;
   let exchangeKey;
-  let colonIndex = _.indexOf(overwrite, ':');
+  let colonIndex = overwrite.indexOf(':');
   if (colonIndex !== -1) {
     exchangeKey = overwrite.substr(colonIndex + 1);
     overwrite = overwrite.substr(0, colonIndex);
   }
   if (overwrite === 'always') {
-    _.set(dest, path, prop.value);
+    set(dest, path, prop.value);
   } else if (overwrite === 'never') {
     if (currentValue === undefined) {
-      _.set(dest, path, prop.value);
+      set(dest, path, prop.value);
     }
   } else if (overwrite === 'match-previous') {
     let previous = getPreviousValues(object, server);
-    let previousValue = _.get(previous, exchangeKey);
-    if (_.isEqual(currentValue, previousValue)) {
-      _.set(dest, path, prop.value);
-      _.set(previous, exchangeKey, prop.value);
+    let previousValue = get(previous, exchangeKey);
+    if (isEqual(currentValue, previousValue)) {
+      set(dest, path, prop.value);
+      set(previous, exchangeKey, prop.value);
     }
   } else {
     throw new Error('Unknown option: ' + overwrite);
@@ -362,7 +395,10 @@ function exportProperty(object, server, path, dest, prop) {
  * @return {Object}
  */
 function getPreviousValues(object, server) {
-  let entry = _.find(object.exchange, { server_id: server.id });
+  let entry;
+  if (object.exchange) {
+    entry = object.exchange.find(lnk => lnk.server_id === server.id);
+  }
   if (!entry) {
     entry = {
       type: server.type,
@@ -380,26 +416,31 @@ function getPreviousValues(object, server) {
 /**
  * Return id and type of server common to specified objects
  *
- * @param  {ExternalObject} ...objects
+ * @param  {ExternalObject} first
+ * @param  {ExternalObject} ...rest
  *
  * @return {Object|null}
  */
-function findCommonServer(...objects) {
-  let first = _.first(objects);
-  let rest = _.slice(objects, 1);
-  let link = _.find(first.external, (link1) => {
-    let props = _.pick(link1, 'server_id', 'type');
-    return _.every(rest, (other) => {
-      return _.some(other.external, props);
-    });
-  });
-  if (!link) {
+function findCommonServer(first, ...rest) {
+  if (!first.external) {
     return null;
   }
-  return {
-    id: link.server_id,
-    type: link.type,
-  };
+  const link = first.external.find((link1) => {
+    // make sure the rest are linked to the same server
+    for (let other of rest) {
+      if (!other.external) {
+        return false;
+      }
+      const link2 = other.external.find((link2) => {
+        return (link2.server_id === link1.server_id) && (link2.type === link1.type);
+      });
+      if (!link2) {
+        return false;
+      }
+    }
+    return true;
+  });
+  return (link) ? { id: link.server_id, type: link.type } : null;
 }
 
 export {

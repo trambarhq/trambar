@@ -312,7 +312,7 @@ export function StoryView(props) {
   }
 
   function renderReactions() {
-    if (_.isEmpty(reactions)) {
+    if (reactions.length === 0) {
       return null;
     }
     if (!env.isWiderThan('double-col')) {

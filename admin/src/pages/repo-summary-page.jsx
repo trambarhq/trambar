@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { findProject } from 'common/objects/finders/project-finder.js';
@@ -117,7 +116,7 @@ function RepoSummaryPageSync(props) {
 
   function renderButtons() {
     if (readOnly) {
-      const active = (project && repo) ? _.includes(project.repo_ids, repo.id) : true;
+      const active = (project && repo) ? project.repo_ids.includes(repo.id) : true;
       const preselected = (!active) ? 'restore' : undefined;
       return (
         <div key="view" className="buttons">

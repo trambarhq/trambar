@@ -65,16 +65,16 @@ export function ProjectPanel(props) {
       await database.endSession();
 
       // delete links of all projects on server
-      const serverLinks = _.filter(projectLinks, { address });
+      const serverLinks = projectLinks.filter({ address });
       await removeLinks(database, serverLinks);
     });
   });
   const handleProjectDelete = useListener(async (evt) => {
     // redirect to start page if the current project was removed
     const { address, schema } = route.context;
-    const removingCurrent = _.includes(evt.selection, `${address}/${schema}`);
-    const serverLinks = _.filter(projectLinks, (link) => {
-      return _.includes(evt.selection, link.key);
+    const removingCurrent = evt.selection.includes(`${address}/${schema}`);
+    const serverLinks = projectLinks.filter((link) => {
+      return evt.selection.includes(link.key);
     });
     await removeLinks(database, serverLinks);
     if (removingCurrent) {
@@ -127,9 +127,9 @@ export function ProjectPanel(props) {
       if (project) {
         const userID = userDraft.get('id');
         const projectIDs = userDraft.get('requested_project_ids');
-        if (!_.includes(project.user_ids, userID)) {
+        if (!project.user_ids.includes(userID)) {
           isMemberOf = false;
-          if (_.includes(projectIDs, project.id)) {
+          if (projectIDs.includes(project.id)) {
             isApplying = true;
           }
         }

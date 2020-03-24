@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
 
@@ -26,8 +25,8 @@ export function OptionList(props) {
   });
 
   const array = React.Children.toArray(children);
-  const options = _.filter(array, { type: 'option' });
-  const label = _.find(array, { type: 'label' });
+  const options = array.filter(c => c.type === 'option');
+  const label = array.find(c => c.type === 'label');
   const classNames = [ 'option-list' ];
   if (readOnly) {
     classNames.push('readonly');
@@ -45,7 +44,7 @@ export function OptionList(props) {
       </label>
       <div className="container">
         <SortableTable {...tableProps}>
-          <tbody>{_.map(options, renderRow)}</tbody>
+          <tbody>{options.map(renderRow)}</tbody>
         </SortableTable>
       </div>
     </div>

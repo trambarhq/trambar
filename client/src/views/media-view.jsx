@@ -27,7 +27,7 @@ export function MediaView(props) {
   const maxResourceIndex = resources.length - 1;
   const resourceIndex = _.min([ selectedIndex, maxResourceIndex]);
   const resource = resources[resourceIndex];
-  const zoomableResources = _.filter(resources, isZoomable);
+  const zoomableResources = resources.filter(isZoomable);
 
   const handleBackwardClick = useListener((evt) => {
     if (resourceIndex > 0) {
@@ -109,7 +109,7 @@ export function MediaView(props) {
     if (!resource) {
       return null;
     }
-    const zoomableIndex = _.indexOf(zoomableResources, resource);
+    const zoomableIndex = zoomableResources.indexOf(resource);
     const dialogProps = {
       show: showingDialogBox,
       resources: zoomableResources,

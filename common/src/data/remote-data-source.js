@@ -712,7 +712,7 @@ export class RemoteDataSource extends EventEmitter {
             // if preventDefault() wasn't called, then the change
             // is cancelled
             if (!preserve) {
-              const index = _.indexOf(change.objects, own);
+              const index = change.objects.indexOf(own);
               change.removed[index] = true;
             }
           }

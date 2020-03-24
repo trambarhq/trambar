@@ -459,7 +459,7 @@ export class Data {
       for (let name of columns) {
         const value = row[name];
         if (value !== undefined) {
-          if (columnsPresent.indexOf(name) === -1) {
+          if (!columnsPresent.includes(name)) {
             columnsPresent.push(name);
             if (name === 'id') {
               // inserting primary key

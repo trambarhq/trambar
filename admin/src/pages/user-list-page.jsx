@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState, useRef } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
@@ -11,6 +10,7 @@ import { findAllUsers } from 'common/objects/finders/user-finder.js';
 import { disableUsers, restoreUsers } from 'common/objects/savers/user-saver.js';
 import { getUserName } from 'common/objects/utils/user-utils.js';
 import { UserTypes } from 'common/objects/types/user-types.js';
+import { findByIds, orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -110,7 +110,7 @@ function UserListPageSync(props) {
 
   function renderButtons() {
     if (readOnly) {
-      const empty = _.isEmpty(users);
+      const empty = !users?.length;
       return (
         <div className="buttons">
           <ComboButton>
@@ -176,7 +176,7 @@ function UserListPageSync(props) {
   function renderRows() {
     const visible = (selection.shown) ? users : activeUsers;
     const sorted = sortUsers(visible, roles, projects, env, sort);
-    return _.map(sorted, renderRow);
+    return sorted?.map(renderRow);
   }
 
   function renderRow(user) {
@@ -338,61 +338,52 @@ function UserListPageSync(props) {
   }
 }
 
-const sortUsers = memoizeWeak(null, function(users, roles, projects, env, sort) {
-  const columns = _.map(sort.columns, (column) => {
+const sortUsers = memoizeWeak(null, (users, roles, projects, env, sort) => {
+  const columns = sort.columns.map((column) => {
     switch (column) {
       case 'name':
-        return (user) => {
-          return _.toLower(getUserName(user, env));
-        };
+        return u => getUserName(u, env).toLowerCase();
       case 'username':
-        return (user) => {
-          return _.toLower(user.username);
-        };
+        return u => user.username.toLowerCase();
       case 'type':
-        return (user) => {
-          return _.indexOf(UserTypes, user.type);
-        };
+        return u => UserTypes.indexOf(u.type);
       case 'roles':
         return (user) => {
-          let role0 = _.first(findRoles(roles, user));
+          const role0 = findRoles(roles, user)?.[0];
           if (!role0) {
             return '';
           }
-          return _.toLower(getRoleName(role0, env));
+          return getRoleName(role0, env).toLowerCase();
         };
       case 'projects':
         return (user) => {
-          let project0 = _.first(findProjects(projects, user));
+          let project0 = findProjects(projects, user)?.[0];
           if (!project0) {
             return '';
           }
-          return _.toLower(getProjectName(project0, env));
+          return getProjectName(project0, env).toLowerCase();
         };
       case 'email':
-        return 'details.email';
+        return u => u.details.email || '';
       default:
         return column;
     }
   });
-  return _.orderBy(users, columns, sort.directions);
+  return orderBy(users, columns, sort.directions);
 });
 
-const filterUsers = memoizeWeak(null, function(users) {
-  return _.filter(users, (user) => {
+const filterUsers = memoizeWeak(null, (users) => {
+  return users.filter((user) => {
     return (user.disabled !== true) && (user.deleted !== true);
   });
 });
 
-const findProjects = memoizeWeak(null, function(projects, user) {
-  return _.filter(projects, (project) => {
-    return _.includes(project.user_ids, user.id);
+const findProjects = memoizeWeak(null, (projects, user) => {
+  return projects.filter((project) => {
+    return (project.user_ids.includes(user.id));
   });
 });
 
-const findRoles = memoizeWeak(null, function(roles, user) {
-  const hash = _.keyBy(roles, 'id');
-  return _.filter(_.map(user.role_ids, (id) => {
-    return hash[id];
-  }));
+const findRoles = memoizeWeak(null, (roles, user) => {
+  return findByIds(roles, user.role_ids);
 });

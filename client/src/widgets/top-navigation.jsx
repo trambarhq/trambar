@@ -21,11 +21,13 @@ export function TopNavigation(props) {
   const [ height, setHeight ] = useState();
   const containerRef = useRef();
   const selectedControl = useMemo(() => {
-    return _.find(controls, (control) => {
-      const keys = _.keys(control.params);
-      const params = _.pick(route.params, keys);
-      return !_.isEmpty(params);
-    });
+    for (let controls of control) {
+      for (let key of Object.keys(control.params)) {
+        if (route.params[key]) {
+          return control;
+        }
+      }
+    }
   }, [ route ]);
 
   useEffect(() => {

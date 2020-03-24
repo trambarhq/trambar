@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSaveBuffer, AsyncSaveBuffer } from 'relaks';
 import { Cancellation } from './errors.js';
-import { isEqual, decoupleSet, decoupleUnset } from './utils/object.js';
+import { get, isEqual, decoupleSet, decoupleUnset } from './utils/object-utils.js';
 
 const { useState, useMemo, useRef, useCallback } = React;
 

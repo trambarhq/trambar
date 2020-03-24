@@ -1,5 +1,7 @@
 import _ from 'lodash';
 import { delay } from '../../utils/delay.js';
+import { isEqual, clone } from '../../utils/object-utils.js';
+import { promiseSelf } from '../../utils/promise-self.js';
 
 import { matchSearchCriteria } from '../local-search.js';
 import { allocateTempoaryID } from './temporary-id.js';
@@ -7,9 +9,9 @@ import { allocateTempoaryID } from './temporary-id.js';
 export class Change {
   constructor(location, objects, options) {
     this.location = location;
-    this.objects = _.map(objects, (object) => {
+    this.objects = objects.map((object) => {
       if (!object.uncommitted) {
-        object = _.clone(object);
+        object = clone(object);
         if (!object.id) {
           // assign a temporary id so we can find the object again
           object.id = allocateTempoaryID();
@@ -18,19 +20,14 @@ export class Change {
       }
       return object;
     });
-    this.removed = _.map(objects, (object) => {
-      return false;
-    });
+    this.removed = objects.map(obj => false);
     this.dispatched = false;
     this.delayed = false;
     this.dispatching = false;
     this.committed = false;
     this.canceled = false;
     this.timeout = 0;
-    this.promise = new Promise((resolve, reject) => {
-      this.resolvePromise = resolve;
-      this.rejectPromise = reject;
-    });
+    this.promise = promiseSelf();
     this.dependentPromises = [];
     this.delivered = null;
     this.received = null;
@@ -80,16 +77,16 @@ export class Change {
         this.received = objects;
         this.time = new Date;
         if (!this.canceled) {
-          this.resolvePromise(objects);
+          this.promise.resolve(objects);
         } else {
           // ignore the results
-          this.resolvePromise([]);
+          this.promise.resolve([]);
         }
         return;
       } catch (err) {
         if (err.statusCode >= 400 && err.statusCode <= 499) {
           this.error = err;
-          this.rejectPromise(err);
+          this.promise.reject(err);
           this.canceled = true;
         } else {
           this.dispatched = false;
@@ -97,7 +94,7 @@ export class Change {
           retryInterval = Math.min(retryInterval * 2, 10 * 1000);
           await delay(retryInterval);
           if (this.canceled) {
-            this.resolvePromise([]);
+            this.promise.resolve([]);
             return;
           }
         }
@@ -121,7 +118,7 @@ export class Change {
     if (this.timeout) {
       clearTimeout(this.timeout);
     }
-    this.resolvePromise([]);
+    this.promise.resolve([]);
   }
 
   /**
@@ -130,7 +127,7 @@ export class Change {
    * @param  {Object} earlierOp
    */
   merge(earlierOp) {
-    if (!_.isEqual(earlierOp.location, this.location)) {
+    if (!isEqual(earlierOp.location, this.location)) {
       return;
     }
     let dependent = false;

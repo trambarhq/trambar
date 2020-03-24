@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { useProgress, useListener } from 'relaks';
@@ -40,10 +39,10 @@ function TaskAlertBarSync(props) {
   const { database, route, env } = props;
   const { activeTasks, failedTasks } = props;
   const { t } = env.locale;
-  const selectedTask = _.first(activeTasks) || _.first(failedTasks);
+  const selectedTask = activeTasks?.[0] || failedTasks?.[0];
 
   const handleClick = useListener(() => {
-    if (!_.isEmpty(failedTasks)) {
+    if (failedTasks?.length > 0) {
       setTimeout(async() => {
         await markTasksAsSeen(database, failedTasks);
       }, 1000);

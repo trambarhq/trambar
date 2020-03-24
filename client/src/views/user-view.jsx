@@ -239,7 +239,7 @@ export function UserView(props) {
         let total = 0;
         for (let stats of list) {
           for (let [ count, type] of _.entries(stats)) {
-            if (!tags || _.includes(tags, type))  {
+            if (!tags || tags.includes(type))  {
               total += count;
             }
           }

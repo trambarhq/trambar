@@ -1,7 +1,8 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
+import { orderBy } from 'common/utils/array-utils.js';
+import { isEqual } from 'common/utils/object-utils.js';
 import { getUserName } from 'common/objects/utils/user-utils.js';
 
 // widgets
@@ -31,7 +32,7 @@ export function UserList(props) {
       } catch (err){
       }
     },
-    compare: _.isEqual,
+    compare: isEqual,
   });
 
   const handleUserIdentity = useListener((evt) => {
@@ -76,7 +77,7 @@ export function UserList(props) {
         userStories = findUserStories(stories, user);
       }
       if (userStories?.length > 5) {
-        userStories = _.slice(userStories, -5);
+        userStories = userStories.slice(-5);
       }
       const userProps = {
         user,
@@ -109,38 +110,47 @@ const sortUsers = memoizeWeak(null, function(users, env) {
   const name = (user) => {
     return getUserName(user, env);
   };
-  return _.orderBy(users, [ name ], [ 'asc' ]);
+  return orderBy(users, [ name ], [ 'asc' ]);
 });
 
-const findRoles = memoizeWeak(null, function(roles, user) {
+function findRoles(roles, user) {
   if (user) {
-    return _.filter(_.map(user.role_ids, (roleId) => {
-      return _.find(roles, { id: roleId });
-    }));
+    const results = [];
+    for (let roleId of user.role_ids) {
+      const role = roles.find(r => r.id === roleId);
+      if (role) {
+        results.push(role);
+      }
+    }
+    return results;
   }
-});
+}
 
-const findListing = memoizeWeak(null, function(listings, user) {
+function findListing(listings, user) {
   if (user) {
-    return _.find(listings, (listing) => {
+    return listings.find((listing) => {
       if (listing.filters.user_ids[0] === user.id) {
         return true;
       }
     });
   }
-});
+}
 
-const findListingStories = memoizeWeak(null, function(stories, listing) {
+function findListingStories(stories, listing) {
   if (listing) {
-    let hash = _.keyBy(stories, 'id');
-    return _.filter(_.map(listing.story_ids, (id) => {
-      return hash[id];
-    }));
+    const results = [];
+    for (let id of listing.story_ids) {
+      story = stories.find(s => s.id === id);
+      if (story) {
+        results.push(story);
+      }
+    }
+    return results;
   }
-});
+}
 
-const findUserStories = memoizeWeak(null, function(stories, user) {
-  return _.filter(stories, (story) => {
-    return _.includes(story.user_ids, user.id);
+function findUserStories(stories, user) {
+  return stories.filter((story) => {
+    return (story.user_ids.includes(user.id));
   });
-});
+}

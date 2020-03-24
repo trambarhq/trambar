@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { getRepoName, getRepoIconClass } from 'common/objects/utils/repo-utils.js';
 
@@ -17,7 +16,7 @@ export function RepositoryTooltip(props) {
     return null;
   }
   const label = t('repository-tooltip-$count', repos.length);
-  const list = _.map(repos, (repo, i) => {
+  const list = repos.map((repo, i) => {
     const url = route.find('repo-summary-page', {
       projectID: project.id,
       repoID: repo.id,

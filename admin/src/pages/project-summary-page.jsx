@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { findProject } from 'common/objects/finders/project-finder.js';
@@ -6,6 +5,7 @@ import { archiveProject, removeProject, restoreProject, saveProject } from 'comm
 import { getProjectName } from 'common/objects/utils/project-utils.js';
 import { findDailyActivitiesOfProject } from 'common/objects/finders/statistics-finder.js';
 import { findSystem } from 'common/objects/finders/system-finder.js';
+import { isEmpty } from 'common/utils/object-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -111,7 +111,7 @@ function ProjectSummaryPageSync(props) {
         const name = draft.get('name');
         if (!name) {
           problems.name = 'validation-required';
-        } else if (_.includes(reservedNames, name)) {
+        } else if (reservedNames.includes(name)) {
           problems.name = 'validation-illegal-project-name';
         }
         reportProblems(problems);
@@ -313,7 +313,7 @@ function ProjectSummaryPageSync(props) {
     return (
       <OptionList {...listProps}>
         <label>{t('project-summary-new-members')}</label>
-        {_.map(membershipOptions, renderMembershipOption)}
+        {membershipOptions.map(renderMembershipOption)}
       </OptionList>
     );
   }
@@ -325,8 +325,8 @@ function ProjectSummaryPageSync(props) {
   }
 
   function renderOption(option, optsCurr, optsPrev, i) {
-    const noneCurr = !_.some(optsCurr);
-    const nonePrev = (creating) ? undefined : !_.some(optsPrev);
+    const noneCurr = isEmpty(optsCurr);
+    const nonePrev = (creating) ? undefined : !isEmpty(optsPrev);
     const props = {
       name: option.name,
       selected: (option.none) ? noneCurr : optsCurr[option.name],
@@ -344,7 +344,7 @@ function ProjectSummaryPageSync(props) {
     return (
       <OptionList {...listProps}>
         <label>{t('project-summary-access-control')}</label>
-        {_.map(accessControlOptions, renderAccessControlOption)}
+        {accessControlOptions.map(renderAccessControlOption)}
       </OptionList>
     );
   }
@@ -387,7 +387,7 @@ function ProjectSummaryPageSync(props) {
 }
 
 function toggleOption(optsBefore, list, name) {
-  const option = _.find(list, { name });
+  const option = list.find(opt => opt.name === name);
   let opts;
   if (option.none) {
     opts = {};

@@ -250,7 +250,7 @@ export function ReactionView(props) {
 
   function renderMedia() {
     const remaining = markdownResources.unreferenced;
-    if (_.isEmpty(remaining)) {
+    if (remaining.length === 0) {
       return null;
     }
     const props = {
@@ -263,7 +263,7 @@ export function ReactionView(props) {
 
   function renderReferencedMediaDialog() {
     const { zoomed, referencedZoomable, selected, onClose } = markdownResources;
-    const selectedIndex = _.indexOf(referencedZoomable, selected);
+    const selectedIndex = referencedZoomable.indexOf(selected);
     const dialogProps = {
       show: zoomed && (selectedIndex !== -1),
       resources: referencedZoomable,
@@ -305,7 +305,7 @@ const defaultOptions = {
 };
 
 const getZoomableResources = memoizeWeak(null, function(resources) {
-  return _.filter(resources, (res) => {
+  return resources.filter((res) => {
     switch (res.type) {
       case 'image':
       case 'video':

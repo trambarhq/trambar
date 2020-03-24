@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import Moment from 'moment';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -95,20 +94,17 @@ export const ActivityChart = React.memo((props) => {
       return null;
     }
     const stats = statistics.to_date;
-    const indices = {};
+    const items = [];
     for (let [ index, type ] of StoryTypes.entries()) {
       if (stats[type] > 0) {
-        indices[type] = index;
+        const props = {
+          series: String.fromCharCode('a'.charCodeAt(0) + index),
+          label: t(`activity-chart-legend-${type}`),
+        };
+        items.push(<LegendItem key={index} {...props} />);
       }
     }
-    const items = _.map(indices, (index, type) => {
-      const props = {
-        series: String.fromCharCode('a'.charCodeAt(0) + index),
-        label: t(`activity-chart-legend-${type}`),
-      };
-      return <LegendItem key={index} {...props} />;
-    });
-    if (_.isEmpty(items)) {
+    if (items.length === 0) {
       items.push('\u00a0');
     }
     return <div className="legend">{items}</div>;
@@ -172,10 +168,10 @@ const getDateLabels = memoizeWeak(null, function(startDate, endDate) {
 });
 
 const getActivitySeries = memoizeWeak(null, function(activities, dates) {
-  return _.map(StoryTypes, (type) => {
+  return StoryTypes.map((type) => {
     // don't include series that are completely empty
     let empty = true;
-    const series = _.map(dates, (date) => {
+    const series = dates.map((date) => {
       const value = activities?.[date]?.[type] ?? 0;
       if (value) {
         empty = false;
@@ -195,12 +191,12 @@ const getUpperRange = memoizeWeak(0, function(series, additive) {
         sums[index] = (sums[index]) ? sums[index] + value : value;
       }
     }
-    if (!_.isEmpty(sums)) {
-      highest = _.max(sums);
+    if (sums.length > 0) {
+      highest = Math.max.apply(null, sums);
     }
   } else {
     for (let values of series) {
-      const max = _.max(values);
+      const max = Math.max.apply(null, values);
       if (max > highest) {
         highest = max;
       }

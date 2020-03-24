@@ -104,7 +104,7 @@ export function StoryEditorOptions(props) {
           ? t('option-send-bookmarks')
           : t('option-send-bookmarks-to-$count-users', otherRecipients.length),
         hidden: !canSendBookmarks(currentUser, story, access),
-        selected: !_.isEmpty(otherRecipients) || selectingRecipients,
+        selected: (otherRecipients.length > 0) || selectingRecipients,
         onClick: handleSendBookmarkClick,
       };
       const addIssueProps = {

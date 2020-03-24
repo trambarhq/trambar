@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener } from 'relaks';
 import { useLatest } from '../hooks.js';
@@ -50,15 +49,15 @@ export function ComboButton(props) {
 
   function renderMainButton() {
     const options = React.Children.toArray(children);
-    let selectedOption = _.find(options, (option) => {
+    let selectedOption = options.find((option) => {
       return option.props.name === selected && !option.props.hidden;
     });
     if (!selectedOption) {
-      selectedOption = _.find(options, (option) => {
+      selectedOption = options.find((option) => {
         return !option.props.hidden;
       });
     }
-    const props = _.omit(selectedOption.props, 'separator');
+    const { separator, ...props } = selectedOption.props;
     props.className = props.className ? `main ${props.className}`: 'main';
     if (alert) {
       props.className += ' alert';
@@ -89,14 +88,14 @@ export function ComboButton(props) {
     return (
       <div className="container">
         <div className="menu">
-          {_.map(options, renderOption)}
+          {options.map(renderOption)}
         </div>
       </div>
     );
   }
 
   function renderOption(option, i) {
-    const { name, separator, hidden, disabled } = option.props;
+    const { name, separator, hidden, disabled, ...linkProps } = option.props;
     if (!name || hidden) {
       return null;
     }
@@ -105,7 +104,6 @@ export function ComboButton(props) {
       className: 'option',
       onClick: handleItemClick,
     };
-    const linkProps = _.omit(option.props, 'name', 'separator', 'disabled');
     if (disabled) {
       itemProps.className += ' disabled';
       itemProps.onClick = null;

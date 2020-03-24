@@ -65,7 +65,7 @@ export default async function PeoplePage(props) {
     // if we're not searching for stories, then we know which
     // users to list at this point
     if (!(search || date)) {
-      if (!_.isEmpty(roleIDs)) {
+      if (roleIDs.length > 0) {
         // show users with roles
         visibleUsers = findUsersWithRoles(props.members, roleIDs);
       } else {
@@ -93,7 +93,7 @@ export default async function PeoplePage(props) {
       }
     }
     if (users) {
-      if (!_.isEmpty(roleIDs)) {
+      if (roleIDs.length > 0) {
         visibleUsers = findUsersWithRoles(users, roleIDs);
       } else {
         visibleUsers = users;
@@ -101,7 +101,7 @@ export default async function PeoplePage(props) {
     }
   } else if (selectedUser) {
     // load statistics of selected user if he's not a member
-    if (!_.includes(members, selectedUser)) {
+    if (!members.includes(selectedUser)) {
       const selectedUserStats = await findDailyActivitiesOfUser(database, project, selectedUser, publicOnly);
       dailyActivities = { ...dailyActivities };
       dailyActivities[selectedUser.id] = selectedUserStats;
@@ -155,7 +155,7 @@ export default async function PeoplePage(props) {
       const memberIDs = _.map(members, 'id');
       const nonMemberUserIDs = _.difference(authorIDs, memberIDs);
       const publicOnly = (currentUser.type === 'guest');
-      if (!_.isEmpty(nonMemberUserIDs)) {
+      if (nonMemberUserIDs.length > 0) {
         const users = await findUsers(database, nonMemberUserIDs);
         // add non-members
         if (visibleUsers) {
@@ -233,7 +233,7 @@ export default async function PeoplePage(props) {
 
   function renderEmptyMessage() {
     if (selectedUser) {
-      if (!_.isEmpty(selectedUserStories)) {
+      if (selectedUserStories.length > 0) {
         return null;
       }
       if (!selectedUserStories) {
@@ -242,7 +242,7 @@ export default async function PeoplePage(props) {
         let phrase;
         if (date) {
           phrase = 'news-no-stories-on-date';
-        } else if (!_.isEmpty(roleIDs)) {
+        } else if (roleIDs.length > 0) {
           phrase = 'news-no-stories-by-role';
         } else if (search) {
           phrase = 'news-no-stories-found';
@@ -253,7 +253,7 @@ export default async function PeoplePage(props) {
         return <EmptyMessage {...props} />;
       }
     } else {
-      if (!_.isEmpty(visibleUsers)) {
+      if (visibleUsers.length > 0) {
         return null;
       }
       if (!visibleUsers) {
@@ -262,7 +262,7 @@ export default async function PeoplePage(props) {
         let phrase;
         if (date) {
           phrase = 'people-no-stories-on-date';
-        } else if (!_.isEmpty(roleIDs)) {
+        } else if (roleIDs.length > 0) {
           phrase = 'people-no-users-by-role';
         } else if (search) {
           phrase = 'people-no-stories-found';
@@ -293,15 +293,15 @@ export default async function PeoplePage(props) {
 }
 
 const findUsersWithRoles = memoizeWeak(null, function(users, roleIDs) {
-  return _.filter(users, (user) => {
+  return users.filter((user) => {
     return _.some(user.role_ids, (roleID) => {
-      return _.includes(roleIDs, roleID);
+      return roleIDs.includes(roleID);
     });
   });
 });
 
 const findUsersWithActivitiesOnDate = memoizeWeak(null, function(users, statistics, date) {
-  return _.filter(users, (user) => {
+  return users.filter((user) => {
     const userStats = statistics[user.id];
     if (userStats) {
       return userStats.daily[date];
@@ -310,7 +310,7 @@ const findUsersWithActivitiesOnDate = memoizeWeak(null, function(users, statisti
 });
 
 const findUsersWithStoriesWithTags = memoizeWeak(null, function(users, statistics, tags) {
-  return _.filter(users, (user) => {
+  return users.filter((user) => {
     const userStats = statistics[user.id];
     if (userStats) {
       return _.some(userStats.daily, (counts, date) => {
@@ -323,9 +323,9 @@ const findUsersWithStoriesWithTags = memoizeWeak(null, function(users, statistic
 });
 
 const findUsersWithStories = memoizeWeak(null, function(users, stories) {
-  return _.filter(users, (user) => {
+  return users.filter((user) => {
     return _.some(stories, (story) => {
-      return _.includes(story.user_ids, user.id);
+      return story.user_ids.includes(user.id);
     });
   });
 });

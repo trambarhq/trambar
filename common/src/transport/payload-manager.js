@@ -6,6 +6,7 @@ import { performHTTPRequest } from './http-request.js';
 import { CordovaFile } from './cordova-file.js';
 import { initializeBackgroundTransfer, } from './background-file-transfer.js';
 import { generateToken } from '../utils/random-token.js';
+import { isEqual } from '../utils/object-utils.js';
 import { HTTPError, FileError } from '../errors.js';
 import { delay } from '../utils/delay.js';
 
@@ -233,7 +234,7 @@ class PayloadManager extends EventEmitter {
       return uploadURL(payload.destination, payload.id, payload.type, part.name);
     } else {
       let url = uploadURL;
-      url += (url.indexOf('?') === -1) ? '?' : '&';
+      url += (url.includes('?')) ? '?' : '&';
       let queryVars = [
         `id=${payload.id}`,
         `type=${payload.type}`,
@@ -261,7 +262,7 @@ class PayloadManager extends EventEmitter {
       return streamURL(destination, id);
     } else {
       let url = uploadURL;
-      url += (url.indexOf('?') === -1) ? '?' : '&';
+      url += (url.includes('?')) ? '?' : '&';
       let queryVars = [
         `id=${id}`,
       ];
@@ -306,7 +307,7 @@ class PayloadManager extends EventEmitter {
     });
     let payloadGroups = separatePayloads(inProgressPayloads);
     for (let payloadGroup of payloadGroups) {
-      if (!destination || _.isEqual(payloadGroup.destination, destination)) {
+      if (!destination || isEqual(payloadGroup.destination, destination)) {
         let updated = await this.requestBackendUpdate(payloadGroup);
         if (updated) {
           this.triggerEvent(new PayloadManagerEvent('change', this));
@@ -507,7 +508,7 @@ class PayloadManager extends EventEmitter {
   async sendPayloadCordovaFile(payload, part) {
     let url = this.getUploadURL(payload, part);
     let file = part.cordovaFile;
-    let index = _.indexOf(this.parts, part);
+    let index = this.parts.indexOf(part);
     let token = `${this.id}-${index + 1}`;
     part.uploaded = 0;
     part.promise = new Promise((resolve, reject) => {
@@ -668,7 +669,7 @@ class PayloadManager extends EventEmitter {
    */
   async cancelPayloadCordovaFile(payload, part) {
     try {
-      let index = _.indexOf(this.parts, part);
+      let index = this.parts.indexOf(part);
       let token = `${payload.id}-${index + 1}`;
       cancelBackgroundTransfer(token)
     } catch (err) {
@@ -774,10 +775,10 @@ class PayloadManager extends EventEmitter {
  * @return {Array<Object>}
  */
 function separatePayloads(payloads) {
-  let groups = [];
+  const groups = [];
   for (let payload of payloads) {
-    let group = _.find(groups, (group) => {
-      return _.isEqual(group.destination, payload.destination);
+    let group = groups.find((group) => {
+      return isEqual(group.destination, payload.destination);
     });
     if (group) {
       group.payloads.push(payload);

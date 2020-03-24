@@ -73,7 +73,7 @@ function useMarkdownResources(resources, env) {
   const [ audioURL, setAudioURL ] = useState('');
   const [ zoomed, setZoomed ] = useState(false, true);
   const unreferenced = _.slice(resources);
-  const unreferencedZoomable = _.filter(unreferenced, isZoomable);
+  const unreferencedZoomable = unreferenced.filter(isZoomable);
   const referenced = [];
   const referencedZoomable = [];
 

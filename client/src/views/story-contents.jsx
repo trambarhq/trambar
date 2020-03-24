@@ -166,7 +166,7 @@ export function StoryContents(props) {
         classNames.push(`emoji-${emoji.length}`);
       }
     } else if (type === 'task-list') {
-      if (_.includes(story.user_ids, currentUser.id)) {
+      if (story.user_ids.includes(currentUser.id)) {
         textProps.onChange = handleTaskListItemChange;
       }
     } else if (type === 'survey') {
@@ -408,7 +408,7 @@ export function StoryContents(props) {
 
   function renderChanges() {
     const files = story.details.files;
-    if (_.isEmpty(files)) {
+    if (files.length === 0) {
       return null;
     }
     const fileChangeTypes = [ 'added', 'deleted', 'modified', 'renamed' ];
@@ -458,7 +458,7 @@ export function StoryContents(props) {
 
   function renderLabels() {
     const { labels } = story.details;
-    if (_.isEmpty(labels)) {
+    if (labels.length === 0) {
       return null;
     }
     const tags = labels.map(renderLabel);
@@ -508,7 +508,7 @@ export function StoryContents(props) {
 
   function renderMedia() {
     const remaining = markdownRes.unreferenced;
-    if (_.isEmpty(remaining)) {
+    if (remaining.length === 0) {
       return null;
     }
     const props = {
@@ -521,7 +521,7 @@ export function StoryContents(props) {
 
   function renderReferencedMediaDialog() {
     const { zoomed, referencedZoomable, selected, onClose } = markdownRes;
-    const selectedIndex = _.indexOf(referencedZoomable, selected);
+    const selectedIndex = referencedZoomable.indexOf(selected);
     const dialogProps = {
       show: zoomed && (selectedIndex !== -1),
       resources: referencedZoomable,
@@ -534,7 +534,7 @@ export function StoryContents(props) {
 
   function renderAppComponents() {
     const components = story.details.components;
-    if (_.isEmpty(components)) {
+    if (components.length === 0) {
       return null;
     }
     const sorted = sortComponents(components, env);

@@ -176,7 +176,7 @@ class LocalStorageCache {
         for (let schema of Object.values(schemas)) {
           for (let table of Object.values(schema)) {
             for (let i = table.length - 1; i >= 0; i--) {
-              if (candidates.indexOf(table[i]) !== -1) {
+              if (candidates.includes(table[i])) {
                 table.splice(i, 1);
                 count++;
               }

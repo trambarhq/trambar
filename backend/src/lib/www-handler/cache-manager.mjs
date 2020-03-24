@@ -151,7 +151,7 @@ async function loadCacheEntry(md5) {
     let entry = cacheEntryCache[md5];
     if (!entry || entry.mtime !== mtime) {
       const { key, status } = await loadCacheEntryProps(path);
-      const slashIndex = _.indexOf(key, '/');
+      const slashIndex = key.indexOf('/');
       const host = key.substr(0, slashIndex);
       const url = key.substr(slashIndex);
       entry = cacheEntryCache[md5] = { host, url, md5, mtime, size, status };
