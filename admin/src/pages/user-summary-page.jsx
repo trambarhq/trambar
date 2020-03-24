@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findProject } from 'common/objects/finders/project-finder.js';
 import { removeMembers, addMembers } from 'common/objects/savers/project-saver.js';
 import { findActiveRoles } from 'common/objects/finders/role-finder.js';
@@ -432,7 +431,7 @@ function UserSummaryPageSync(props) {
       onOptionClick: handleRoleOptionClick,
     };
 
-    const sorted = sortRoles(roles, env) || [];
+    const sorted = sortRoles(roles, env);
     const withNone = [ null, ...sorted ];
     return (
       <OptionList {...listProps}>
@@ -610,17 +609,16 @@ function UserSummaryPageSync(props) {
   }
 }
 
-const sortRoles = memoizeWeak(null, function(roles, env) {
+function sortRoles(roles, env) {
+  if (!roles) {
+    return [];
+  }
   const { p } = env.locale;
   const name = (role) => {
     return p(role.details.title) || role.name;
   };
   return orderBy(roles, name, 'asc');
-});
-
-const findRoles = memoizeWeak(null, function(roles, user) {
-  return findByIds(roles, user.role_ids);
-});
+}
 
 function extractUsername(text, type) {
   if (/https?:/.test(text)) {

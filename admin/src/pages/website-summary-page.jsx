@@ -2,13 +2,12 @@ import Moment from 'moment';
 import 'moment-timezone';
 import React, { useMemo } from 'react';
 import { useProgress, useListener, useSaveBuffer, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findProject } from 'common/objects/finders/project-finder.js';
 import { saveProject } from 'common/objects/savers/project-saver.js';
 import { findTemplates } from 'common/objects/finders/repo-finder.js';
 import { getRepoName } from 'common/objects/utils/repo-utils.js';
 import { findSnapshots } from 'common/objects/finders/snapshot-finder.js';
-import { orderBy, uniqBy } from 'common/utils/array-utils.js';
+import { uniqBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -21,14 +20,7 @@ import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
-import {
-  useDraftBuffer,
-  useSortHandler,
-  useValidation,
-  useRowToggle,
-  useConfirmation,
-  useDataLossWarning,
-} from '../hooks.js';
+import { useDraftBuffer, useSortHandler, useValidation, useRowToggle, useConfirmation, useDataLossWarning, } from '../hooks.js';
 
 import './website-summary-page.scss';
 
@@ -343,12 +335,11 @@ function WebsiteSummaryPageSync(props) {
     if (!snapshots && !!project.template_repo_id) {
       return;
     }
-    const sorted = sortSnapshots(snapshots);
     const props = {
       database,
       project,
       template,
-      snapshots: sorted,
+      snapshots,
       env,
     };
     return (
@@ -359,7 +350,3 @@ function WebsiteSummaryPageSync(props) {
     );
   }
 }
-
-const sortSnapshots = memoizeWeak(null, (snapshots) => {
-  return orderBy(snapshots, 'ptime', 'desc');
-});

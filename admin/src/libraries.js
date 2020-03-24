@@ -8,9 +8,6 @@ const libraries = {
   'hammerjs': async () => {
     await import('hammerjs');
   },
-  'lodash': async () => {
-    await import('lodash');
-  },
   'mark-gor': async () => {
     await import('mark-gor');
   },

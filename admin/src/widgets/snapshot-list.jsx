@@ -1,18 +1,22 @@
 import Moment from 'moment';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useProgress, useListener } from 'relaks';
 import { getWebsiteAddress } from 'common/objects/utils/project-utils.js';
 import { findSnapshotAuthors } from 'common/objects/finders/user-finder.js';
 import { getUserName } from 'common/objects/utils/user-utils.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 import './snapshot-list.scss';
 
 export async function SnapshotList(props) {
-  const { database, project, role, template, snapshots} = props;
+  const { database, project, role, template, snapshots } = props;
   const { env } = props;
   const { t, f, localeCode } = env.locale;
   const [ show ] = useProgress();
   const projectURL = getWebsiteAddress(project);
+  const snapshotsSorted = useMemo(() => {
+    return orderBy(snapshots, 'ptime', 'desc');
+  }, [ snapshots ]);
 
   render();
   const authors = await findSnapshotAuthors(database, snapshots);
@@ -30,7 +34,7 @@ export async function SnapshotList(props) {
     if (template === null) {
       return renderGeneric();
     } else {
-      return snapshots.map(renderItem);
+      return snapshotsSorted.map(renderItem);
     }
   }
 

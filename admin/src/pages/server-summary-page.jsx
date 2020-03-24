@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findActiveRoles } from 'common/objects/finders/role-finder.js';
 import { getRoleName } from 'common/objects/utils/role-utils.js';
 import { findServer } from 'common/objects/finders/server-finder.js';
@@ -872,7 +871,8 @@ function getRoleOptions(roles, env) {
   if (!roles) {
     return [];
   }
-  const sorted = sortRoles(roles, env);
+  const name = r => getRoleName(r, env).toLowerCase();
+  const sorted = orderBy(roles, name, 'asc');
   const options = sorted.map((role) => {
     const name = getRoleName(role, env);
     return {
@@ -888,11 +888,6 @@ function getRoleOptions(roles, env) {
   });
   return options;
 }
-
-const sortRoles = memoizeWeak(null, (roles, env) => {
-  const name = r => getRoleName(r, env).toLowerCase();
-  return orderBy(roles, name, 'asc');
-});
 
 function openPopupWindow(url) {
   const width = 800;

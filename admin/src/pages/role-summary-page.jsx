@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findRole } from 'common/objects/finders/role-finder.js';
 import { disableRole, removeRole, restoreRole, saveRole } from 'common/objects/savers/role-saver.js';
 import { getRoleName } from 'common/objects/utils/role-utils.js';
@@ -68,6 +67,10 @@ function RoleSummaryPageSync(props) {
     original: members,
     reset: readOnly,
   });
+  const usersSorted = useMemo(() => {
+    return sortUsers(users, env);
+  }, [ users, env ]);
+
   const [ problems, reportProblems ] = useValidation(!readOnly);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
@@ -311,7 +314,6 @@ function RoleSummaryPageSync(props) {
   }
 
   function renderUserSelector() {
-    const usersSorted = sortUsers(users, env);
     const listProps = {
       readOnly,
       onOptionClick: handleUserOptionClick,
@@ -349,13 +351,16 @@ function RoleSummaryPageSync(props) {
   }
 }
 
-const sortUsers = memoizeWeak(null, (users, env) => {
+function sortUsers(users, env) {
+  if (!users) {
+    return [];
+  }
   const { p } = env.locale;
   const name = (user) => {
     return p(user.details.name) || user.username;
   };
   return orderBy(users, name, 'asc');
-});
+}
 
 const messageRatings = {
   'very-high': 50,

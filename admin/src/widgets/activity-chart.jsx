@@ -1,6 +1,5 @@
 import React from 'react';
 import Moment from 'moment';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { StoryTypes } from 'common/objects/types/story-types.js';
 
 // widgets
@@ -146,15 +145,15 @@ export function LegendItem(props) {
   )
 }
 
-const getDateStrings = memoizeWeak(null, function(startDate, endDate) {
+function getDateStrings(startDate, endDate) {
   const dates = [];
   for (let d = startDate.clone(); d <= endDate; d.add(1, 'day')) {
     dates.push(d.format('YYYY-MM-DD'));
   }
   return dates;
-});
+}
 
-const getDateLabels = memoizeWeak(null, function(startDate, endDate) {
+function getDateLabels(startDate, endDate) {
   const labels = [];
   for (let d = startDate.clone(); d <= endDate; d.add(1, 'month')) {
     labels.push(d.format('ll'));
@@ -165,9 +164,9 @@ const getDateLabels = memoizeWeak(null, function(startDate, endDate) {
     }
   }
   return labels;
-});
+}
 
-const getActivitySeries = memoizeWeak(null, function(activities, dates) {
+function getActivitySeries(activities, dates) {
   return StoryTypes.map((type) => {
     // don't include series that are completely empty
     let empty = true;
@@ -180,9 +179,9 @@ const getActivitySeries = memoizeWeak(null, function(activities, dates) {
     });
     return (empty) ? [] : series;
   });
-});
+}
 
-const getUpperRange = memoizeWeak(0, function(series, additive) {
+function getUpperRange(series, additive) {
   let highest = 0;
   if (additive) {
     const sums = [];
@@ -209,7 +208,7 @@ const getUpperRange = memoizeWeak(0, function(series, additive) {
   } else {
     return Math.ceil(highest / 100) * 100;
   }
-});
+}
 
 function getDay(date) {
   return parseInt(date.substr(8));
