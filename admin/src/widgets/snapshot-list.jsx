@@ -1,7 +1,6 @@
 import Moment from 'moment';
 import React from 'react';
 import { useProgress, useListener } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { getWebsiteAddress } from 'common/objects/utils/project-utils.js';
 import { findSnapshotAuthors } from 'common/objects/finders/user-finder.js';
 import { getUserName } from 'common/objects/utils/user-utils.js';

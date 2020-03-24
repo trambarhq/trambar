@@ -21,13 +21,7 @@ import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
-import {
-  useSelectionBuffer,
-  useSortHandler,
-  useRowToggle,
-  useConfirmation,
-  useDataLossWarning,
-} from '../hooks.js';
+import { useSelectionBuffer, useSortHandler, useRowToggle, useConfirmation, useDataLossWarning } from '../hooks.js';
 
 import './project-list-page.scss';
 
@@ -58,9 +52,7 @@ function ProjectListPageSync(props) {
   const { t, p, f } = env.locale;
   const readOnly = !editing;
   const activeProjects = useMemo(() => {
-    return projects.filter((project) => {
-      return !project.deleted && !project.archived;
-    });
+    return filterProjects(projects);
   }, [ projects ]);
   const selection = useSelectionBuffer({
     original: activeProjects,
@@ -369,7 +361,7 @@ function ProjectListPageSync(props) {
   }
 }
 
-function sortProjects(projects, users, repos, statistics, env, sort) => {
+function sortProjects(projects, users, repos, statistics, env, sort) {
   if (!projects) {
     return [];
   }
@@ -408,4 +400,13 @@ function sortProjects(projects, users, repos, statistics, env, sort) => {
     }
   });
   return orderBy(projects, columns, sort.directions);
+}
+
+function filterProjects(projects) {
+  if (!projects) {
+    return [];
+  }
+  return projects.filter((project) => {
+    return !project.deleted && !project.archived;
+  });
 }

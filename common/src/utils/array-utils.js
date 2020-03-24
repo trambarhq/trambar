@@ -32,10 +32,12 @@ function toggle(array, item) {
 function findByIds(objects, ids) {
   const hash = hashById(objects);
   const results = [];
-  for (let id of ids) {
-    const object = hash[id];
-    if (object) {
-      results.push(object);
+  if (ids) {
+    for (let id of ids) {
+      const object = hash[id];
+      if (object) {
+        results.push(object);
+      }
     }
   }
   return results;
@@ -43,8 +45,10 @@ function findByIds(objects, ids) {
 
 function hashById(objects, f) {
   const hash = {};
-  for (let object of objects) {
-    hash[object.id] = (f) ? f(object) : object;
+  if (objects) {
+    for (let object of objects) {
+      hash[object.id] = (f) ? f(object) : object;
+    }
   }
   return hash;
 }

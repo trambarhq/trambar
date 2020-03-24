@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findProject } from 'common/objects/finders/project-finder.js';
 import { findAllSpreadsheets } from 'common/objects/finders/spreadsheet-finder.js';
 import { disableSpreadsheets, restoreSpreadsheets } from 'common/objects/savers/spreadsheet-saver.js';
@@ -50,16 +49,22 @@ function SpreadsheetListPageSync(props) {
   const { database, route, env, editing } = props;
   const { t, p, f } = env.locale;
   const readOnly = !editing;
-  const activeSpreadsheets = filterSpreadsheets(spreadsheets);
+  const activeSpreadsheets = useMemo(() => {
+    return filterSpreadsheets(spreadsheets);
+  });
   const selection = useSelectionBuffer({
     original: activeSpreadsheets,
     reset: readOnly,
   });
+  const [ sort, handleSort ] = useSortHandler();
+  const visibleSpreadsheets = useMemo(() => {
+    const visible = (selection.shown) ? spreadsheets : activeSpreadsheets;
+    return sortSpreadsheets(visible, env, sort);
+  }, [ selection.shown, spreadsheets, env, sort ]);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
   const warnDataLoss = useDataLossWarning(route, env, confirm);
 
-  const [ sort, handleSort ] = useSortHandler();
   const handleRowClick = useRowToggle(selection, spreadsheets);
   const handleEditClick = useListener((evt) => {
     route.replace({ editing: true });
@@ -165,9 +170,7 @@ function SpreadsheetListPageSync(props) {
   }
 
   function renderRows() {
-    const visible = (selection.shown) ? spreadsheets : activeSpreadsheets;
-    const sorted = sortSpreadsheets(visible, env, sort);
-    return sorted?.map(renderRow);
+    return visibleSpreadsheets.map(renderRow);
   }
 
   function renderRow(spreadsheet) {
@@ -279,7 +282,10 @@ function SpreadsheetListPageSync(props) {
   }
 }
 
-const sortSpreadsheets = memoizeWeak(null, (spreadsheets, env, sort) => {
+function sortSpreadsheets(spreadsheets, env, sort) {
+  if (!spreadsheets) {
+    return [];
+  }
   const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
@@ -293,10 +299,13 @@ const sortSpreadsheets = memoizeWeak(null, (spreadsheets, env, sort) => {
     }
   });
   return orderBy(spreadsheets, columns, sort.directions);
-});
+}
 
-const filterSpreadsheets = memoizeWeak(null, (spreadsheets) => {
+function filterSpreadsheets(spreadsheets) {
+  if (!spreadsheets) {
+    return [];
+  }
   return spreadsheets.filter((spreadsheet) => {
     return !spreadsheet.deleted && !spreadsheet.disabled;
   });
-});
+}

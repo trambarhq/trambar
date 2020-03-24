@@ -1,7 +1,6 @@
 import Moment from 'moment';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findProjectsWithMembers } from 'common/objects/finders/project-finder.js';
 import { getProjectName } from 'common/objects/utils/project-utils.js';
 import { findRolesOfUsers } from 'common/objects/finders/role-finder.js';
@@ -25,13 +24,7 @@ import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
-import {
-  useSelectionBuffer,
-  useSortHandler,
-  useRowToggle,
-  useConfirmation,
-  useDataLossWarning,
-} from '../hooks.js';
+import { useSelectionBuffer, useSortHandler, useRowToggle, useConfirmation, useDataLossWarning, } from '../hooks.js';
 
 import './user-list-page.scss';
 
@@ -59,16 +52,22 @@ function UserListPageSync(props) {
   const { database, route, env, projectID, editing } = props;
   const { t, p, f } = env.locale;
   const readOnly = !editing;
-  const activeUsers = filterUsers(users);
+  const activeUsers = useMemo(() => {
+    return filterUsers(users);
+  });
   const selection = useSelectionBuffer({
     original: activeUsers,
     reset: readOnly,
   });
+  const [ sort, handleSort ] = useSortHandler();
+  const visibleUsers = useMemo(() => {
+    const visible = (selection.shown) ? users : activeUsers;
+    return sortUsers(visible, roles, projects, env, sort);
+  }, [ selection.shown, users, roles, projects, env, sort ]);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
   const warnDataLoss = useDataLossWarning(route, env, confirm);
 
-  const [ sort, handleSort ] = useSortHandler();
   const handleRowClick = useRowToggle(selection, users);
   const handleEditClick = useListener((evt) => {
     route.replace({ editing: true });
@@ -174,9 +173,7 @@ function UserListPageSync(props) {
   }
 
   function renderRows() {
-    const visible = (selection.shown) ? users : activeUsers;
-    const sorted = sortUsers(visible, roles, projects, env, sort);
-    return sorted?.map(renderRow);
+    return visibleUsers.map(renderRow);
   }
 
   function renderRow(user) {
@@ -292,7 +289,7 @@ function UserListPageSync(props) {
       return <TH id="roles">{t('user-list-column-roles')}</TH>;
     } else {
       const props = {
-        roles: findRoles(roles, user),
+        roles: findByIds(roles, user.role_ids),
         disabled: selection.shown,
         route,
         env,
@@ -338,7 +335,10 @@ function UserListPageSync(props) {
   }
 }
 
-const sortUsers = memoizeWeak(null, (users, roles, projects, env, sort) => {
+function sortUsers(users, roles, projects, env, sort) {
+  if (!users) {
+    return [];
+  }
   const columns = sort.columns.map((column) => {
     switch (column) {
       case 'name':
@@ -349,7 +349,7 @@ const sortUsers = memoizeWeak(null, (users, roles, projects, env, sort) => {
         return u => UserTypes.indexOf(u.type);
       case 'roles':
         return (user) => {
-          const role0 = findRoles(roles, user)?.[0];
+          const role0 = findByIds(roles, user.role_ids)[0];
           if (!role0) {
             return '';
           }
@@ -357,7 +357,7 @@ const sortUsers = memoizeWeak(null, (users, roles, projects, env, sort) => {
         };
       case 'projects':
         return (user) => {
-          let project0 = findProjects(projects, user)?.[0];
+          let project0 = findProjects(projects, user)[0];
           if (!project0) {
             return '';
           }
@@ -370,20 +370,22 @@ const sortUsers = memoizeWeak(null, (users, roles, projects, env, sort) => {
     }
   });
   return orderBy(users, columns, sort.directions);
-});
+}
 
-const filterUsers = memoizeWeak(null, (users) => {
+function filterUsers(users) {
+  if (!users) {
+    return [];
+  }
   return users.filter((user) => {
     return (user.disabled !== true) && (user.deleted !== true);
   });
-});
+}
 
-const findProjects = memoizeWeak(null, (projects, user) => {
+function findProjects(projects, user) {
+  if (!projects) {
+    return [];
+  }
   return projects.filter((project) => {
     return (project.user_ids.includes(user.id));
   });
-});
-
-const findRoles = memoizeWeak(null, (roles, user) => {
-  return findByIds(roles, user.role_ids);
-});
+}

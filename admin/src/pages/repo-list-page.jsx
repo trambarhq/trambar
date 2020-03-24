@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findProject } from 'common/objects/finders/project-finder.js';
 import { associateRepos } from 'common/objects/savers/project-saver.js';
 import { findExistingRepos } from 'common/objects/finders/repo-finder.js';
@@ -42,7 +41,7 @@ export default async function RepoListPage(props) {
   render();
   const servers = await findRepoServers(database, repos);
   render();
-  const linkedRepos = findRepos(repos, project);
+  const linkedRepos = findByIds(repos, project.repo_ids);
   const statistics = await findDailyActivitiesOfRepos(database, project, linkedRepos);
   render();
 
@@ -57,18 +56,27 @@ function RepoListPageSync(props) {
   const { database, route, env, editing } = props;
   const { t, p, f } = env.locale;
   const readOnly = !editing;
-  const linkedRepos = findRepos(repos, project);
+  const linkedRepos = useMemo(() => {
+    if (!project) {
+      return [];
+    }
+    return findByIds(repos, project.repo_ids);
+  }, [ project ]);
   const selection = useSelectionBuffer({
     original: linkedRepos,
     save: (base, ours) => {
     },
     reset: readOnly,
   });
+  const [ sort, handleSort ] = useSortHandler();
+  const visibleRepos = useMemo(() => {
+    const visible = (selection.shown) ? repos : linkedRepos;
+    return sortRepos(visible, servers, statistics, env, sort);
+  }, [ selection.shown, repos, servers, statistics, env, sort ]);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ]  = useConfirmation();
   const warnDataLoss = useDataLossWarning(route, env, confirm);
 
-  const [ sort, handleSort ] = useSortHandler();
   const handleRowClick = useRowToggle(selection, repos);
   const handleEditClick = useListener((evt) => {
     route.replace({ editing: true });
@@ -161,9 +169,7 @@ function RepoListPageSync(props) {
   }
 
   function renderRows() {
-    const visible = (selection.shown) ? repos : linkedRepos;
-    const sorted = sortRepos(visible, servers, statistics, env, sort);
-    return sorted?.map(renderRow);
+    return visibleRepos.map(renderRow);
   }
 
   function renderRow(repo, i) {
@@ -226,7 +232,7 @@ function RepoListPageSync(props) {
     if (!repo) {
       return <TH id="server">{t('repo-list-column-server')}</TH>
     } else {
-      const server = findServer(servers, repo);
+      const server = servers?.find(server => findLink(repo, server));
       let contents;
       if (server) {
         const title = getServerName(server, env);
@@ -339,7 +345,10 @@ function RepoListPageSync(props) {
   }
 }
 
-const sortRepos = memoizeWeak(null, (repos, servers, statistics, env, sort) => {
+function sortRepos(repos, servers, statistics, env, sort) {
+  if (!repos) {
+    return [];
+  }
   const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
@@ -374,14 +383,4 @@ const sortRepos = memoizeWeak(null, (repos, servers, statistics, env, sort) => {
     }
   });
   return orderBy(repos, columns, sort.directions);
-});
-
-const findServer = memoizeWeak(null, function(servers, repo) {
-  return servers.find((server) => {
-    return findLink(repo, server);
-  });
-});
-
-const findRepos = memoizeWeak(null, function(repos, project) {
-  return findByIds(repos, project.repo_ids);
-});
+}

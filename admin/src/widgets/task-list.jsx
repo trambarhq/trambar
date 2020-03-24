@@ -1,7 +1,6 @@
 import Moment from 'moment';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useProgress, useListener } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findServerTasks } from 'common/objects/finders/task-finder.js';
 import { orderBy, toggle } from 'common/utils/array-utils.js';
 
@@ -49,8 +48,9 @@ export async function TaskList(props) {
   render();
 
   function render() {
+    const visibleTasks = orderBy(tasks, 'id', 'desc');
     const smartListProps = {
-      items: sortTasks(tasks),
+      items: visibleTasks,
       offset: 5,
       behind: 20,
       ahead: 20,
@@ -242,10 +242,6 @@ export async function TaskList(props) {
     }
   }
 }
-
-const sortTasks = memoizeWeak(null, function(tasks) {
-  return orderBy(tasks, 'id', 'desc');
-});
 
 function formatAddedDeleteChanged(object) {
   const list = [];

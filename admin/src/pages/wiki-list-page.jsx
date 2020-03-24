@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findProject } from 'common/objects/finders/project-finder.js';
 import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
 import { getRepoName } from 'common/objects/utils/repo-utils.js';
@@ -18,13 +17,7 @@ import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
-import {
-  useSelectionBuffer,
-  useSortHandler,
-  useRowToggle,
-  useConfirmation,
-  useDataLossWarning,
-} from '../hooks.js';
+import { useSelectionBuffer, useSortHandler, useRowToggle, useConfirmation, useDataLossWarning } from '../hooks.js';
 
 import './wiki-list-page.scss';
 
@@ -52,17 +45,25 @@ function WikiListPageSync(props) {
   const { database, route, env, editing } = props;
   const { t, p, f } = env.locale;
   const readOnly = !editing;
-  const publicWikis = filterWikis(wikis, false);
-  const chosenWikis = filterWikis(wikis, true);
+  const publicWikis = useMemo(() => {
+    return filterWikis(wikis, false);
+  }, [ wikis ]);
+  const chosenWikis = useMemo(() => {
+    return filterWikis(wikis, true);
+  }, [ wikis ]);
   const selection = useSelectionBuffer({
     original: chosenWikis,
     reset: readOnly,
   });
+  const [ sort, handleSort ] = useSortHandler();
+  const visibleWikis = useMemo(() => {
+    const visible = (selection.shown) ? wikis : publicWikis;
+    return sortWikis(visible, env, sort);
+  }, [ selection.shown, wikis, env, sort ]);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
   const warnDataLoss = useDataLossWarning(route, env, confirm);
 
-  const [ sort, handleSort ] = useSortHandler();
   const handleRowClick = useRowToggle(selection, wikis);
   const handleEditClick = useListener((evt) => {
     route.replace({ editing: true });
@@ -155,9 +156,7 @@ function WikiListPageSync(props) {
   }
 
   function renderRows() {
-    const visible = (selection.shown) ? wikis : publicWikis;
-    const sorted = sortWikis(visible, env, sort);
-    return sorted?.map(renderRow);
+    return visibleWikis.map(renderRow);
   }
 
   function renderRow(wiki) {
@@ -219,7 +218,7 @@ function WikiListPageSync(props) {
     if (!wiki) {
       return <TH id="repo">{t('wiki-list-column-repo')}</TH>;
     } else {
-      const repo = findRepo(repos, wiki);
+      const repo = repos?.find(repo => findLinkByRelative(repo, wiki, 'project'));
       let contents;
       if (repo) {
         const title = getRepoName(repo, env);
@@ -274,7 +273,10 @@ function WikiListPageSync(props) {
   }
 }
 
-const sortWikis = memoizeWeak(null, (wikis, env, sort) => {
+function sortWikis(wikis, env, sort) {
+  if (!wikis) {
+    return [];
+  }
   const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
@@ -296,18 +298,15 @@ const sortWikis = memoizeWeak(null, (wikis, env, sort) => {
     }
   });
   return orderBy(wikis, columns, sort.directions);
-});
+}
 
-const filterWikis = memoizeWeak(null, (wikis, chosen) => {
+function filterWikis(wikis, chosen) {
+  if (!wikis) {
+    return [];
+  }
   return wikis.filter((wiki) => {
     if (wiki.public) {
       return wiki.chosen || !chosen;
     }
   });
-});
-
-const findRepo = memoizeWeak(null, (repos, wiki) => {
-  return repos.find((repo) => {
-    return findLinkByRelative(repo, wiki, 'project');
-  });
-});
+}

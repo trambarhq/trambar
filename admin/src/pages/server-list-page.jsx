@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findAllServers } from 'common/objects/finders/server-finder.js';
 import { disableServers, restoreServers } from 'common/objects/savers/server-saver.js';
 import { getServerName, getServerIconClass } from 'common/objects/utils/server-utils.js';
@@ -50,16 +49,23 @@ function ServerListPageSync(props) {
   const { database, route, env, editing } = props;
   const { t, p, f } = env.locale;
   const readOnly = !editing;
-  const activeServers = filterServers(servers);
+  const activeServers = useMemo(() => {
+    return filterServers(servers);
+  });
   const selection = useSelectionBuffer({
     original: activeServers,
     reset: readOnly,
   });
+  const [ sort, handleSort ] = useSortHandler();
+  const visibleServers = useMemo(() => {
+    const visible = (selection.shown) ? servers : activeServers;
+    return sortServers(visible, users, env, sort);
+    return sorted?.map(renderRow);
+  }, [ selection.shown, users, env, sort ]);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
   const warnDataLoss = useDataLossWarning(route, env, confirm);
 
-  const [ sort, handleSort ] = useSortHandler();
   const handleRowClick = useRowToggle(selection, servers);
   const handleEditClick = useListener((evt) => {
     route.replace({ editing: true });
@@ -166,9 +172,7 @@ function ServerListPageSync(props) {
   }
 
   function renderRows() {
-    const visible = (selection.shown) ? servers : activeServers;
-    const sorted = sortServers(visible, users, env, sort);
-    return sorted?.map(renderRow);
+    return visibleServers.map(renderRow);
   }
 
   function renderRow(server) {
@@ -305,13 +309,10 @@ function ServerListPageSync(props) {
   }
 }
 
-const filterServers = memoizeWeak(null, (servers) => {
-  return servers.filter((server) => {
-    return !server.deleted && !server.disabled;
-  });
-});
-
-const sortServers = memoizeWeak(null, (servers, users, env, sort) => {
+function sortServers(servers, users, env, sort) {
+  if (!servers) {
+    return null;
+  }
   const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
@@ -335,7 +336,24 @@ const sortServers = memoizeWeak(null, (servers, users, env, sort) => {
     }
   });
   return orderBy(servers, columns, sort.directions);
-});
+}
+
+function filterServers(servers) {
+  if (!servers) {
+    return [];
+  }
+  return servers.filter((server) => {
+    return !server.deleted && !server.disabled;
+  });
+}
+
+function findUsers(users, server) {
+  return users.filter((user) => {
+    return user.external.some((link) => {
+      return (link.server_id === server.id);
+    });
+  });
+}
 
 function hasOAuthCredentials(server) {
   const oauth = server?.settings?.oauth;
@@ -352,11 +370,3 @@ function hasAPICredentials(server) {
   }
   return false;
 }
-
-const findUsers = memoizeWeak(null, (users, server) => {
-  return users.filter((user) => {
-    return user.external.some((link) => {
-      return (link.server_id === server.id);
-    });
-  });
-});

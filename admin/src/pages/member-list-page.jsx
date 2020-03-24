@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { findProject } from 'common/objects/finders/project-finder.js';
 import { associateUsers, addUsers } from 'common/objects/savers/project-saver.js';
@@ -68,9 +68,6 @@ function MemberListPageSync(props) {
     const visible = (selection.shown) ? users : membersPlus;
     return sortUsers(visible, roles, statistics, env, sort);
   }, [ selection.shown, roles, statistics, env, sort ]);
-  const rolesOfUsers = useMemo(() => {
-    return hashById(users, user => findByIds(roles, user.role_ids));
-  });
 
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
@@ -286,7 +283,7 @@ function MemberListPageSync(props) {
       return <TH id="roles">{t('member-list-column-roles')}</TH>;
     } else {
       const props = {
-        roles: rolesOfUsers[user.id],
+        roles: findByIds(roles, user.role_ids),
         disabled: selection.shown,
         route,
         env,
@@ -426,21 +423,23 @@ function sortUsers(users, roles, statistics, env, sort) {
 
 function filterUsers(users, project, includePending) {
   const results = [];
-  for (let user of users) {
-    let include = false;
-    if (project.user_ids.includes(user.id)) {
-      include = true;
-    }
-    if (!include && includePending) {
-      if (user.requested_project_ids) {
-        if (user.requested_project_ids?.includes(project.id)) {
-          include = true;
+  if (users) {
+    for (let user of users) {
+      let include = false;
+      if (project.user_ids.includes(user.id)) {
+        include = true;
+      }
+      if (!include && includePending) {
+        if (user.requested_project_ids) {
+          if (user.requested_project_ids?.includes(project.id)) {
+            include = true;
+          }
         }
       }
-    }
-    if (include) {
-      results.push(user);
+      if (include) {
+        results.push(user);
+      }
     }
   }
   return results;
-});
+}

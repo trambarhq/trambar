@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findAllRoles } from 'common/objects/finders/role-finder.js';
 import { disableRoles, restoreRoles } from 'common/objects/savers/role-saver.js';
 import { getRoleName } from 'common/objects/utils/role-utils.js';
@@ -55,11 +54,15 @@ function RoleListPageSync(props) {
     original: activeRoles,
     reset: readOnly,
   });
+  const [ sort, handleSort ] = useSortHandler();
+  const visibleRoles = useMemo(() => {
+    const visible = (selection.shown) ? roles : activeRoles;
+    return sortRoles(visible, users, env, sort);
+  }, [ selection.shown, users, env, sort ]);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
   const warnDataLoss = useDataLossWarning(route, env, confirm);
 
-  const [ sort, handleSort ] = useSortHandler();
   const handleRowClick = useRowToggle(selection, roles);
   const handleEditClick = useListener((evt) => {
     route.replace({ editing: true });
@@ -163,9 +166,7 @@ function RoleListPageSync(props) {
   }
 
   function renderRows() {
-    const visible = (selection.shown) ? roles : activeRoles;
-    const sorted = sortRoles(visible, users, env, sort);
-    return sorted?.map(renderRow);
+    return visibleRoles.map(renderRow);
   }
 
   function renderRow(role) {
@@ -262,13 +263,16 @@ function RoleListPageSync(props) {
   }
 }
 
-const filterRoles = memoizeWeak(null, (roles) => {
+function filterRoles(roles) {
   return roles.filter((role) => {
     return !role.deleted && !role.disabled;
   });
-});
+}
 
-const sortRoles = memoizeWeak(null, (roles, users, env, sort) => {
+function sortRoles(roles, users, env, sort) {
+  if (!roles) {
+    return [];
+  }
   const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
@@ -284,10 +288,10 @@ const sortRoles = memoizeWeak(null, (roles, users, env, sort) => {
     }
   });
   return orderBy(roles, columns, sort.directions);
-});
+}
 
-const findUsers = memoizeWeak(null, (users, role) => {
+function findUsers(users, role) {
   return users.filter((user) => {
     return (user.role_ids.includes(role.id));
   });
-});
+}

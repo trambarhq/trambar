@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findProject } from 'common/objects/finders/project-finder.js';
 import { findAllRests } from 'common/objects/finders/rest-finder.js';
 import { disableRests, restoreRests } from 'common/objects/savers/rest-saver.js';
@@ -49,16 +48,22 @@ function RestListPageSync(props) {
   const { database, route, env, editing } = props;
   const { t, p, f } = env.locale;
   const readOnly = !editing;
-  const activeRests = filterRests(rests);
+  const activeRests = useMemo(() => {
+    return filterRests(rests);
+  }, [ rests ]);
   const selection = useSelectionBuffer({
     original: activeRests,
     reset: readOnly,
   });
+  const [ sort, handleSort ] = useSortHandler();
+  const visibleRests = useMemo(() => {
+    const visible = (selection.shown) ? rests : activeRests;
+    return sortRests(visible, env, sort);
+  }, [ selection.shown, rests, env, sort ]);
   const [ error, run ] = useErrorCatcher();
   const [ confirmationRef, confirm ] = useConfirmation();
   const warnDataLoss = useDataLossWarning(route, env, confirm);
 
-  const [ sort, handleSort ] = useSortHandler();
   const handleRowClick = useRowToggle(selection, rests);
   const handleEditClick = useListener((evt) => {
     route.replace({ editing: true });
@@ -164,9 +169,7 @@ function RestListPageSync(props) {
   }
 
   function renderRows() {
-    const visible = (selection.shown) ? rests : activeRests;
-    const sorted = sortRests(visible, env, sort);
-    return sorted?.map(renderRow);
+    return visibleRests.map(renderRow);
   }
 
   function renderRow(rest) {
@@ -273,7 +276,10 @@ function RestListPageSync(props) {
   }
 }
 
-const sortRests = memoizeWeak(null, (rests, env, sort) => {
+function sortRests(rests, env, sort) {
+  if (!rests) {
+    return [];
+  }
   const columns = sort.columns.map((column) => {
     switch (column) {
       case 'title':
@@ -289,10 +295,13 @@ const sortRests = memoizeWeak(null, (rests, env, sort) => {
     }
   });
   return orderBy(rests, columns, sort.directions);
-});
+}
 
-const filterRests = memoizeWeak(null, (rests) => {
+function filterRests(rests) {
+  if (!rests) {
+    return [];
+  }
   return rests.filter((rest) => {
     return !rest.deleted && !rest.disabled;
   });
-});
+}

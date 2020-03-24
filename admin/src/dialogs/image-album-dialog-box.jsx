@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useProgress, useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findPictures } from 'common/objects/finders/picture-finder.js';
 import { uploadPictures, removePictures } from 'common/objects/savers/picture-saver.js';
 import { toggle, orderBy } from 'common/utils/array-utils.js';
@@ -103,10 +102,10 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
   }
 
   function renderPictures() {
-    const storedPictures = sortPictures(pictures);
+    const sorted = orderBy(pictures, 'mtime', 'desc');
     return (
       <div className="scrollable">
-        {storedPictures?.map(renderPicture)}
+        {sorted.map(renderPicture)}
       </div>
     );
   }
@@ -214,8 +213,4 @@ export const ImageAlbumDialogBox = Overlay.create(async (props) => {
     };
     return <div {...props} />;
   }
-});
-
-const sortPictures = memoizeWeak(null, (pictures) => {
-  return orderBy(pictures, 'mtime', 'desc');
 });
