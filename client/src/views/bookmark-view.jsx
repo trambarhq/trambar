@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { getUserName } from 'common/objects/utils/user-utils.js';
 
@@ -30,7 +29,7 @@ export function BookmarkView(props) {
   );
 
   function renderSenderNames() {
-    const isOwner = _.some(senders, { id: currentUser.id });
+    const isOwner = senders.some(usr => usr.id === currentUser.id);
     const others = senders.filter((sender) => {
       return sender.id !== currentUser.id;
     });
@@ -70,7 +69,7 @@ export function BookmarkView(props) {
         contents = t('bookmark-$name1-and-$name2-recommend-this', name1, name2);
       } else {
         const name1 = getUserName(others[0], env);
-        const additional = _.slice(others, 1);
+        const additional = others.slice(1);
         const props = {
           users: additional,
           label: t('bookmark-$count-other-users', additional.length),

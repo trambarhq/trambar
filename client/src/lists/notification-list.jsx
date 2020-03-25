@@ -1,7 +1,5 @@
-import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { useProgress } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findNotificationTriggerers } from 'common/objects/finders/user-finder.js';
 import { findStoriesOfNotifications } from 'common/objects/finders/story-finder.js';
 
@@ -37,7 +35,7 @@ export async function NotificationList(props) {
     route.replace({ scrollToNotificationID });
   };
   const handleNotificationBeforeAnchor = (evt) => {
-    setHiddenNotificationIDs(_.map(evt.items, 'id'));
+    setHiddenNotificationIDs(evt.items.map(n => n.id));
   };
   const handleNewNotificationAlertClick = (evt) => {
     setHiddenNotificationIDs([]);
@@ -85,7 +83,7 @@ export async function NotificationList(props) {
 
   function renderNotification(notification, needed, previousHeight, estimatedHeight) {
     if (needed) {
-      const user = findUser(users, notification);
+      const user = users?.find(usr => usr.id === notification.user_id);
       const props = {
         notification,
         user,
@@ -126,24 +124,23 @@ export async function NotificationList(props) {
     const unread = notifications.filter((notification) => {
       if (!notification.seen) {
         if (!hiddenNotificationIDs.includes(notification.id)) {
-          return true;
+          // exclude the one that have appeared recently
+          const viewDuration = (viewDurations[notification.id] || 0) + 250;
+          notificationView.durations[notification.id] = viewDuration;
+          if (viewDuration < minimumSeenDelay) {
+            return false;
+          } else {
+            return true;
+          }
         }
-      }
-    });
-
-    // remove the one that have appeared recently
-    _.remove(unread, (notification) => {
-      const viewDuration = viewDurations[notification.id] || 0 + 250;
-      notificationView.durations[notification.id] = viewDuration;
-      if (viewDuration < minimumSeenDelay) {
-        return true;
       }
     });
 
     // what the require view duration ought to be--the more notifications
     // there are, the longer it is
-    const requiredDuration = _.clamp(unread.length * delayPerNotification, minimumSeenDelay, maximumSeenDelay);
-    const allReady = _.every(unread, (notification) => {
+    const delay = unread.length * delayPerNotification;
+    const requiredDuration = Math.min(maximumSeenDelay, Math.max(minimumSeenDelay, delay));
+    const allReady = unread.every((notification) => {
       const viewDuration = viewDurations[notification.id] || 0;
       return (viewDuration > requiredDuration);
     });
@@ -153,7 +150,7 @@ export async function NotificationList(props) {
   }
 
   async function markAsSeen(notifications) {
-    const changes = _.map(notifications, (notification) => {
+    const changes = notifications.map((notification) => {
       return { id: notification.id, seen: true };
     });
     await db.save({ table: 'notification' }, changes);
@@ -164,12 +161,6 @@ export async function NotificationList(props) {
   }
 }
 
-const sortNotifications = memoizeWeak(null, function(notifications) {
-  return _.orderBy(notifications, [ 'ctime' ], [ 'desc' ]);
-});
-
-const findUser = memoizeWeak(null, function(users, notification) {
-  if (notification) {
-    return _.find(users, { id: notification.user_id });
-  }
-});
+function sortNotifications(notifications) {
+  return orderBy(notifications, [ 'ctime' ], [ 'desc' ]);
+}

@@ -1,11 +1,10 @@
-import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { FocusManager }  from 'common/utils/focus-manager.js';
 import { addLike, removeReaction, saveReaction, startComment } from 'common/objects/savers/reaction-saver.js';
 import { findRobot, isSaved } from 'common/objects/utils/story-utils.js';
 import { findLinkByRelative } from 'common/objects/utils/external-data-utils.js';
+import { uniq } from 'common/utils/array-utils.js';
 
 // widgets
 import { ProfileImage } from '../widgets/profile-image.jsx';
@@ -63,10 +62,7 @@ export function StoryView(props) {
           break;
          case 'reaction-add':
           showComments(true);
-          const existing = _.some(reactions, {
-            user_id: currentUser.id,
-            published: false,
-          });
+          const existing = reactions.some(r => r.user_id === currentUser.id && !r.published);
           if (!existing) {
             await startComment(database, story, currentUser);
           }
@@ -263,7 +259,7 @@ export function StoryView(props) {
   }
 
   function renderReactionLink() {
-    const count = _.size(reactions);
+    const count = reactions?.length || 0;
     if (count === 0) {
       return null;
     }
@@ -312,7 +308,7 @@ export function StoryView(props) {
   }
 
   function renderReactions() {
-    if (reactions.length === 0) {
+    if (!(reactions?.length > 0)) {
       return null;
     }
     if (!env.isWiderThan('double-col')) {
@@ -390,10 +386,7 @@ export function StoryView(props) {
   }
 
   async function addComment() {
-    const existing = _.some(reactions, {
-      user_id: currentUser.id,
-      published: false,
-    });
+    const existing = reactions?.some(r => r.user_id === currentUser.id && !r.published);
     if (!existing) {
       const comment = {
         type: 'comment',
@@ -425,14 +418,11 @@ const defaultOptions = {
   keepBookmark: undefined,
 };
 
-const findRepo = memoizeWeak(null, function(repos, story) {
-  return _.find(repos, (repo) => {
-    const link = findLinkByRelative(story, repo, 'project');
-    return !!link;
-  });
-});
+function findRepo(repos, story) {
+  return repos.some(r => findLinkByRelative(story, r, 'project'));
+}
 
-const countRespondents = memoizeWeak(null, function(reactions) {
-  const userIds = _.map(reactions, 'user_id');
-  return _.size(_.uniq(userIds));
-});
+function countRespondents(reactions) {
+  const userIds = uniq(reactions.map(r => r.user_id));
+  return userIds.length;
+}

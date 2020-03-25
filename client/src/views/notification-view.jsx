@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
 import { markNotificationAsSeen } from 'common/objects/savers/notification-saver.js';

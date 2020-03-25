@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { FocusManager } from 'common/utils/focus-manager.js';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
@@ -6,6 +5,7 @@ import { isList, extractListItems, setListItem, countListItems, stringifyList } 
 import { renderPlainText, findEmoji } from 'common/utils/plain-text.js';
 import { renderMarkdown, isMarkdown } from 'common/utils/markdown.js';
 import { findTagsInText } from 'common/utils/tag-scanner.js';
+import { ListStoryTypes } from 'common/objects/types/story-types.js';
 import { saveStory, removeStory } from 'common/objects/savers/story-saver.js';
 import { isCancelable, hasContents, removeSuperfluousDetails } from 'common/objects/utils/story-utils.js';
 import { isCoauthor } from 'common/objects/utils/user-utils.js';
@@ -28,15 +28,11 @@ import { CornerPopUp } from '../widgets/corner-pop-up.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 
 // custom hooks
-import {
-  useDraftBuffer,
-  useMarkdownResources,
-  useConfirmation,
-} from '../hooks.js';
+import { useDraftBuffer, useMarkdownResources, useConfirmation } from '../hooks.js';
 
 import './story-editor.scss';
 
-const autoSaveDuration = 2000;
+const AutoSaveDuration = 2000;
 
 /**
  * Component for creating or editing a story.
@@ -57,7 +53,7 @@ export function StoryEditor(props) {
       recipients,
       hidden: false,
       issue: null,
-      preview: [ 'task-list'.includes('survey' ], story?.type) ? 'text' : '',
+      preview: ListStoryTypes.includes(story?.type) ? 'text' : '', // default to text preview if it's a list
     }
   });
   const draft = useDraftBuffer({
@@ -70,7 +66,7 @@ export function StoryEditor(props) {
   const [ confirmationRef, confirm ] = useConfirmation();
   const [ input ] = useState({ last: null })
 
-  useAutoSave(draft, autoSaveDuration, async () => {
+  useAutoSave(draft, AutoSaveDuration, async () => {
     if (!draft.get('published')) {
       const storyAfter = await saveStory(database, draft.current);
       payloads.dispatch(storyAfter);
@@ -91,9 +87,9 @@ export function StoryEditor(props) {
       if (coauthoring) {
         await confirm(t('story-remove-yourself-are-you-sure'));
         const list = options.get('authors');
-        const newList = _.reject(list, { id: currentUser.id });
+        const newList = list.filter(usr => usr.id !== currentUser.id);
         options.set('authors', newList);
-        draft.set('user_ids', _.map(newList, 'id'));
+        draft.set('user_ids', newList.map(usr => usr.id));
         await saveStory(database, draft.current);
       } else if (isStationary) {
         await confirm(t('story-cancel-are-you-sure'));
@@ -117,7 +113,7 @@ export function StoryEditor(props) {
   const handleBeforeInput = useListener((evt) => {
     const { target, data } = evt;
     if (data === '\n') {
-      if (![ 'task-list'.includes('survey' ], draft.get('type'))) {
+      if (!ListStoryTypes.includes(draft.get('type'))) {
         if (!env.isWiderThan('double-col')) {
           evt.preventDefault();
           handlePublishClick(evt);
@@ -131,7 +127,7 @@ export function StoryEditor(props) {
   const handleKeyUp = useListener((evt) => {
     const { target } = evt;
     if (input.current === '\n') {
-      if ([ 'task-list'.includes('survey' ], draft.get('type'))) {
+      if (ListStoryTypes.includes(draft.get('type'))) {
         appendListItem(target);
       }
     } else if (input.current === ']') {
@@ -163,29 +159,33 @@ export function StoryEditor(props) {
     const type = draft.get('type');
     const text = draft.get(`details.text`, {});
     if (type === 'task-list') {
-      const counts = [];
-      const newText = _.mapValues(text, (langText) => {
+      let newUnfinishedCount = 0;
+      const newText = {};
+      for (let [ lang, langText ] of Object.entries(text)) {
         const tokens = extractListItems(langText);
         setListItem(tokens, list, item, selected);
-        let unfinished = countListItems(tokens, false);
-          counts.push(unfinished);
-          return stringifyList(tokens);
-      });
+        const unfinished = countListItems(tokens, false);
+        const newLangText = stringifyList(tokens);
+        newText[lang] = newLangText;
+        newUnfinishedCount = Math.max(newUnfinishedCount, unfinished);
+      }
       draft.set('details.text', newText);
-      draft.set('unfinished_tasks', _.max(counts));
+      draft.set('unfinished_tasks', newUnfinishedCount);
     } else if (type === 'survey') {
-      const newText = _.mapValues(text, (langText) => {
+      const newText = {};
+      for (let [ lang, langText ] of Object.entries(text)) {
         const tokens = extractListItems(langText);
         setListItem(tokens, list, item, selected, true);
-        return stringifyList(tokens);
-      });
+        const newLangText = stringifyList(tokens);
+        newText[lang] = newLangText;
+      }
       draft.set('details.text', newText);
     }
   });
   const handleCoauthorSelect = useListener((evt) => {
     const { selection } = evt;
     options.set('authors', selection);
-    draft.set('user_ids', _.map(selection, 'id'));
+    draft.set('user_ids', selection.map(usr => usr.id));
   });
   const handleResourcesChange = useListener((evt) => {
     const { resources } = evt;
@@ -218,7 +218,7 @@ export function StoryEditor(props) {
         draft.set('type', type);
 
         // attach a list template to the story if there's no list yet
-        if (type === 'task-list' || type === 'survey') {
+        if (ListStoryTypes.includes(type)) {
           const textArea = textAreaRef.current;
           insertListTemplate(textArea);
         }
@@ -239,7 +239,7 @@ export function StoryEditor(props) {
   });
   useEffect(() => {
     if (options.get('preview') !== 'text') {
-      if (draft.get('type') === 'task-list' || draft.get('type') === 'survey') {
+      if (ListStoryTypes.includes(draft.get('type'))) {
         options.set('preview', 'text');
       }
     }
@@ -581,28 +581,30 @@ function adjustStory(story) {
   }
 
   // automatically set story type to task list
+  const text = story.details.text || {};
   if (!story.type) {
-    if (isList(story.details.text)) {
+    if (isList(text)) {
       story.type = 'task-list';
       if (story.details.markdown === undefined) {
         story.details.markdown = false;
       }
     }
   }
+
+  // update unfinished_tasks
   if (story.type === 'task-list') {
-    // update unfinished_tasks
-    const counts = [];
-    for (let [ lang, langText ] of _.entries(story.details.text)) {
+    let newUnfinishedCount = 0;
+    for (let [ lang, langText ] of Object.entries(text)) {
       const tokens = extractListItems(langText);
       const unfinished = countListItems(tokens, false);
-      counts.push(unfinished);
+      newUnfinishedCount = Math.max(newUnfinishedCount, unfinished);
     }
-    story.unfinished_tasks = _.max(counts);
+    story.unfinished_tasks = newUnfinishedCount;
   }
 
   // automatically enable Markdown formatting
   if (story.details.markdown === undefined) {
-    for (let [ lang, langText ] of _.entries(story.details.text)) {
+    for (let [ lang, langText ] of Object.entries(text)) {
       if (isMarkdown(langText)) {
         story.details.markdown = true;
         break;
@@ -611,7 +613,7 @@ function adjustStory(story) {
   }
 
   // look for tags
-  story.tags = findTagsInText(story.details.text, story.details.markdown);
+  story.tags = findTagsInText(text, story.details.markdown);
   return story;
 }
 
@@ -646,7 +648,7 @@ function appendListItem(textArea) {
   const value = textArea.value;
   const selStart = textArea.selectionStart;
   const textInFront = value.substr(0, selStart);
-  const lineFeedIndex = _.lastIndexOf(textInFront.substr(0, textInFront.length - 1), '\n');
+  const lineFeedIndex = textInFront.substr(0, textInFront.length - 1).lastIndexOf('\n');
   const lineInFront = textInFront.substr(lineFeedIndex + 1);
   const tokens = extractListItems(lineInFront);
   const item = tokens?.[0]?.[0];
@@ -666,7 +668,7 @@ function autocompleteListItem(textArea) {
   const value = textArea.value;
   const selStart = textArea.selectionStart;
   const textInFront = value.substr(0, selStart);
-  const lineFeedIndex = _.lastIndexOf(textInFront, '\n');
+  const lineFeedIndex = textInFront.lastIndexOf('\n');
   const lineInFront = textInFront.substr(lineFeedIndex + 1);
   if (/^\s*\*\[\]/.test(lineInFront)) {
     textArea.selectionStart = selStart - 3;

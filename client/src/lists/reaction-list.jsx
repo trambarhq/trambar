@@ -1,7 +1,6 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import Merger from 'common/data/merger.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { ReactionView } from '../views/reaction-view.jsx';
@@ -35,7 +34,7 @@ export function ReactionList(props) {
     return renderReaction(evt.item);
   };
   const handleReactionBeforeAnchor = (evt) => {
-    setHiddenReactionIDs(_.map(evt.items, 'id'));
+    setHiddenReactionIDs(evt.items.map(r => r.id));
   };
 
   const smartListProps = {
@@ -104,7 +103,7 @@ export function ReactionList(props) {
         access,
         highlighting,
         reaction,
-        respondent: findRespondent(respondents, reaction),
+        respondent: respondents?.find(usr => usr.id === reaction.user_id),
         story,
         repo,
         currentUser,
@@ -125,21 +124,11 @@ export function ReactionList(props) {
   }
 }
 
-const sortReactions = memoizeWeak(null, function(reactions, currentUser) {
-  // reactions are positioned from bottom up
-  // place reactions with later ptime at towards the front of the list
-  const sortedReactions = _.orderBy(reactions, [ 'ptime', 'id' ], [ 'desc', 'desc' ]);
-  const ownUnpublished = _.remove(sortedReactions, { user_id: currentUser, ptime: null });
+function sortReactions(reactions, currentUser) {
   // move unpublished comment of current user to beginning, so it shows up
   // at the bottom
-  for (let reaction of ownUnpublished) {
-    sortedReactions.unshift(reaction);
-  }
-  return sortedReactions;
-});
-
-const findRespondent = memoizeWeak(null, function(users, reaction) {
-  if (reaction) {
-    return _.find(users, { id: reaction.user_id });
-  }
-});
+  const ownPublished = r => !r.ptime && r.user_id === currentUser.id;
+  // reactions are positioned from bottom up
+  // place reactions with later ptime at towards the front of the list
+  return orderBy(reactions, [ ownPublished, 'ptime', 'id' ], [ 'desc', 'desc', 'desc' ]);
+}

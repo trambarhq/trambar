@@ -16,11 +16,17 @@ const StoryTypes = [
   'snapshot',
 ];
 
+const ListStoryTypes = [
+  'task-list',
+  'survey',
+];
+
 const EditableStoryTypes = [
   'post',
   'task-list',
   'survey',
 ];
+
 
 const TrackableStoryTypes = [
   'post',
@@ -65,6 +71,7 @@ if (!isNodeJs) {
 export {
   StoryTypes as default,
   StoryTypes,
+  ListStoryTypes,
   EditableStoryTypes,
   TrackableStoryTypes,
   GitStoryTypes,

@@ -1,15 +1,15 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress, useListener } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { parseActivationURL } from 'common/routing/universal-link.js';
 import { findActiveProjects } from 'common/objects/finders/project-finder.js';
+import { getProjectName } from 'common/objects/utils/project-utils.js';
 import { findActiveLinks } from 'common/objects/finders/project-link-finder.js';
 import { getImageURL } from 'common/objects/utils/resource-utils.js';
-import { getServerIconClass } from 'common/objects/utils/server-utils.js';
+import { getServerName, getServerIconClass } from 'common/objects/utils/server-utils.js';
 import { findSystem } from 'common/objects/finders/system-finder.js';
 import { findUser } from 'common/objects/finders/user-finder.js';
 import { isMember, isPendingMember } from 'common/objects/utils/user-utils.js';
+import { uniq, orderBy, toggle } from 'common/utils/array-utils.js';
 
 // widgets
 import { Scrollable } from '../widgets/scrollable.jsx';
@@ -187,7 +187,7 @@ export default async function StartPage(props) {
   function renderForBrowser() {
     const classNames = [ 'start-page browser' ];
     const style = {};
-    const backgroundImage = _.find(system?.details?.resources, { type: 'image' });
+    const backgroundImage = system?.details?.resources?.find(res => res.type === 'image');
     if (backgroundImage) {
       const imageURL = getImageURL(backgroundImage, { width: 1024, quality: 40 }, env);
       style.backgroundImage = `url(${imageURL})`;
@@ -407,7 +407,7 @@ export default async function StartPage(props) {
         <h2>{t('start-social-login')}</h2>
         <Scrollable>
           {renderEmptyMessage()}
-          <p>{_.map(sorted, renderOAuthButton)}</p>
+          <p>{sorted.map(renderOAuthButton)}</p>
         </Scrollable>
       </div>
     );
@@ -451,7 +451,7 @@ export default async function StartPage(props) {
           <h2>{sorted ? t('start-projects') : ''}</h2>
           <Scrollable>
             {renderEmptyMessage()}
-            {_.map(sorted, renderProjectButton)}
+            {sorted.map(renderProjectButton)}
           </Scrollable>
         </div>
       );
@@ -459,7 +459,7 @@ export default async function StartPage(props) {
       return (
         <div className="projects">
           {renderEmptyMessage()}
-          {_.map(sorted, renderProjectButton)}
+          {sorted.map(renderProjectButton)}
         </div>
       );
     }
@@ -471,7 +471,7 @@ export default async function StartPage(props) {
 
     // project picture
     let icon;
-    let image = _.find(resources, { type: 'image' });
+    let image = resources?.find(res => res.type === 'image');
     if (image) {
       icon = <ResourceView resource={image} width={56} height={56} env={env} />;
     } else {
@@ -489,9 +489,9 @@ export default async function StartPage(props) {
     }
 
     // don't show dialog box if user has previously visited the project
-    const skipDialog = _.some(projectLinks, {
-      address: route.context.address,
-      schema: project.name,
+    const skipDialog = projectLinks?.some((link) => {
+      const { address, schema } = link;
+      return (address === route.context.address && schema === project.name);
     });
     let linkProps;
     if (!skipDialog) {
@@ -529,14 +529,14 @@ export default async function StartPage(props) {
 
   function renderEmptyMessage() {
     if (!database.authorized) {
-      if (servers.length > 0) {
+      if (servers?.length > 0) {
         return null;
       }
       if (servers) {
         return <EmptyMessage phrase="start-no-servers" env={env} />;
       }
     } else {
-      if (projects.length > 0) {
+      if (projects?.length > 0) {
         return null;
       }
       if (!projects) {
@@ -551,7 +551,7 @@ export default async function StartPage(props) {
     if (projectLinks.length === 0) {
       return null;
     }
-    const addresses = _.uniq(_.map(projectLinks, 'address')).sort();
+    const addresses = uniq(projectLinks.map(lnk => lnk.address)).sort();
     const returnProps = {
       label: t('start-activation-return'),
       hidden: !database.authorized,
@@ -560,7 +560,7 @@ export default async function StartPage(props) {
     return (
       <div className="other-servers">
         <h2 className="title">{t('start-activation-others-servers')}</h2>
-        <ul>{_.map(addresses, renderServerLink)}</ul>
+        <ul>{addresses.map(renderServerLink)}</ul>
         <div className="activation-buttons">
           <div className="right">
             <PushButton {...returnProps} />
@@ -583,7 +583,7 @@ export default async function StartPage(props) {
   }
 
   function renderProjectDialog() {
-    const selectedProject = _.find(projects, { name: selectedProjectName });
+    const selectedProject = projects?.find(prj => prj.name === selectedProjectName);
     const dialogProps = {
       show: !!selectedProject && !transitionOut,
       currentUser,
@@ -656,7 +656,7 @@ export default async function StartPage(props) {
         uuid: getDeviceUUID(),
         details: getDeviceDetails(),
         user_id: userID,
-        session_handle: _.toLower(activationCode),
+        session_handle: activationCode.toLowerCase(),
       };
       await db.saveOne({ schema: 'global', table: 'device' }, device);
     } catch (err) {
@@ -673,7 +673,7 @@ export default async function StartPage(props) {
     const projectIDs = currentUser.requested_project_ids;
     const changes = {
       id: currentUser.id,
-      requested_project_ids: _.toggle(projectIDs, project.id),
+      requested_project_ids: toggle(projectIDs, project.id),
     };
     const db = database.use({ schema: 'global' });
     await db.saveOne({ table: 'user' }, changes);
@@ -685,7 +685,9 @@ export default async function StartPage(props) {
       context.address = address;
       context.cors = true;
     }
-    const bookmarked = _.some(projectLinks, { address, schema });
+    const bookmarked = projectLinks?.some((link) => {
+      return (address === link.address && schema === link.schema);
+    });
     if (!bookmarked) {
       setTransitionMethod('slow');
     }
@@ -695,9 +697,9 @@ export default async function StartPage(props) {
 
 async function openPopUpWindow(url) {
   return new Promise((resolve, reject) => {
-    let width = 800;
-    let height = 600;
-    let options = {
+    const width = 800;
+    const height = 600;
+    const options = {
       width,
       height,
       left: window.screenLeft + Math.round((window.outerWidth - width) / 2),
@@ -706,13 +708,14 @@ async function openPopUpWindow(url) {
       menubar: 'no',
       status: 'no',
     };
-    let pairs = _.map(options, (value, name) => {
-      return `${name}=${value}`;
-    });
-    let win = window.open(url, 'login', pairs.join(','));
+    const pairs = [];
+    for (let [ name, value ] of Object.entries(options)) {
+      pairs.push(`${name}=${value}`);
+    }
+    const win = window.open(url, 'login', pairs.join(','));
     if (win) {
       win.location = url;
-      let interval = setInterval(() => {
+      const interval = setInterval(() => {
         if (win.closed) {
           clearInterval(interval);
           resolve();
@@ -724,19 +727,15 @@ async function openPopUpWindow(url) {
   });
 }
 
-const sortProjects = memoizeWeak(null, function(projects, env) {
-  const { p } = env.locale;
-  return _.sortBy(projects, (project) => {
-    return p(project.details.title) || project.name;
-  });
-});
+function sortProjects(projects, env) {
+  const name = prj => getProjectName(prj, env);
+  return orderBy(projects, name, 'asc');
+}
 
-const sortServers = memoizeWeak(null, function(servers, env) {
-  const { p } = env.locale;
-  return _.sortBy(servers, (server) => {
-    return p(server.details.title) || server.name;
-  });
-});
+function sortServers(servers, env) {
+  const name = srv => getServerName(srv, env);
+  return orderBy(servers, name, 'asc')
+}
 
 /**
  * Return the device OS

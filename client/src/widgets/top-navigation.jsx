@@ -21,7 +21,7 @@ export function TopNavigation(props) {
   const [ height, setHeight ] = useState();
   const containerRef = useRef();
   const selectedControl = useMemo(() => {
-    for (let controls of control) {
+    for (let control of controls) {
       for (let key of Object.keys(control.params)) {
         if (route.params[key]) {
           return control;

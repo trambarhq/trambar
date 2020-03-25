@@ -1,7 +1,5 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useProgress } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findStoryAuthors, findReactionAuthors, findBookmarkSenders, findBookmarkRecipients } from 'common/objects/finders/user-finder.js';
 import { findStoriesOfBookmarks, findDraftStories } from 'common/objects/finders/story-finder.js';
 import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
@@ -25,6 +23,9 @@ export async function BookmarkList(props) {
   const { t } = env.locale;
   const [ hiddenStoryIDs, setHiddenStoryIDs ] = useState();
   const [ show ] = useProgress();
+  const currentUserArray = useMemo(() => {
+    return [ currentUser ];
+  }, [ currentUser ]);
 
   const handleBookmarkIdentity = (evt) => {
     return getAnchor(evt.item.story_id);
@@ -37,7 +38,7 @@ export async function BookmarkList(props) {
     route.replace({ scrollToStoryID, highlightStoryID: undefined });
   };
   const handleBookmarkBeforeAnchor = (evt) => {
-    setHiddenStoryIDs(_.map(evt.items, 'story_id'));
+    setHiddenStoryIDs(evt.items.map(bm => bm.story_id));
   };
   const handleNewBookmarkAlertClick = (evt) => {
     setHiddenStoryIDs([]);
@@ -55,7 +56,7 @@ export async function BookmarkList(props) {
   render();
   const draftStories = await findDraftStories(database, currentUser)
   render();
-  const allStories = _.concat(draftStories.filter(stories));
+  const allStories = [ ...draftStories, ...stories ];
   const authors = await findStoryAuthors(database, allStories);
   render();
   const senders = await findBookmarkSenders(database, bookmarks);
@@ -105,7 +106,7 @@ export async function BookmarkList(props) {
   }
 
   function renderBookmark(bookmark, needed, previousHeight, estimatedHeight) {
-    let story = findStory(stories, bookmark);
+    let story = stories.find(s => s.id === bookmark.story_id);
 
     // see if it's being editted
     let editing = false;
@@ -115,7 +116,7 @@ export async function BookmarkList(props) {
         if (!story.published) {
           editing = true;
         } else {
-          let tempCopy = _.find(draftStories, { published_version_id: story.id });
+          let tempCopy = draftStories.find(s => s.published_version_id === story.id);
           if (tempCopy) {
             // edit the temporary copy
             story = tempCopy;
@@ -130,7 +131,7 @@ export async function BookmarkList(props) {
       bookmarkProps = {
         highlighting,
         bookmark,
-        senders: findSenders(senders, bookmark),
+        senders: findByIds(senders, bookmark.user_ids),
         currentUser,
         database,
         route,
@@ -140,7 +141,7 @@ export async function BookmarkList(props) {
     if (editing) {
       const editorProps = {
         story,
-        authors: (story) ? findAuthors(authors, story) : array(currentUser),
+        authors: (story) ? findByIds(authors, story.user_ids) : currentUserArray,
         bookmarks: findBookmarks(bookmarksSent, story),
         recipients: findRecipients(recipients, bookmarksSent),
         currentUser,
@@ -163,7 +164,7 @@ export async function BookmarkList(props) {
           story,
           bookmark,
           reactions: findReactions(reactions, story),
-          authors: findAuthors(authors, story),
+          authors: findByIds(authors, story.user_ids),
           respondents: findRespondents(respondents, reactions, story),
           bookmarks: findBookmarks(bookmarksSent, story),
           recipients: findRecipients(recipients, bookmarksSent),
@@ -194,63 +195,39 @@ export async function BookmarkList(props) {
   }
 }
 
-const array = memoizeWeak([], function(object) {
-  return [ object ];
-});
-
-const sortBookmarks = memoizeWeak(null, function(bookmarks, stories) {
+function sortBookmarks(bookmarks, stories) {
   const withStory = bookmarks.filter((bookmark) => {
-    return _.find(stories, { id: bookmark.story_id });
+    return stories?.some(s => s.id === bookmark.story_id);
   });
-  return _.orderBy(withStory, [ 'id' ], [ 'desc' ]);
-});
+  return orderBy(withStory, [ 'id' ], [ 'desc' ]);
+}
 
-const findStory = memoizeWeak(null, function(stories, bookmark) {
-  if (bookmark) {
-    return _.find(stories, { id: bookmark.story_id });
-  }
-});
-
-const findReactions = memoizeWeak(null, function(reactions, story) {
+function findReactions(reactions, story) {
   if (story) {
     return reactions.filter({ story_id: story.id });
   }
-});
+}
 
-const findAuthors = memoizeWeak(null, function(users, story) {
-  if (story) {
-    return _.map(story.user_ids.filter((userID) => {
-       return _.find(users, { id: userID });
-    }));
-  }
-});
-const findSenders = findAuthors;
-
-const findRespondents = memoizeWeak(null, function(users, reactions, story) {
+function findRespondents(users, reactions, story) {
   const storyReactions = findReactions(reactions, story);
-  const respondentIDs = _.uniq(_.map(storyReactions, 'user_id'));
-  return _.map(respondentIDs.filter((userID) => {
-    return _.find(users, { id: userID });
-  }));
-});
+  if (storyReactions && users) {
+    return users.filter((user) => {
+      return storyReactions.some(r => r.user_id === user.id);
+    });
+  }
+}
 
-const findBookmarks = memoizeWeak(null, function(bookmarks, story) {
+function findBookmarks(bookmarks, story) {
   if (story) {
     const storyID = story.published_version_id || story.id;
-    return bookmarks.filter({ story_id: storyID });
+    return bookmarks.filter(bm => bm.story_id === storyID);
   }
-});
+}
 
-const findRecipients = memoizeWeak(null, function(recipients, bookmarks) {
-  return recipients.filter((recipient) => {
-    return _.some(bookmarks, { target_user_id: recipient.id });
-  });
-});
-
-function getAuthorIDs(stories, currentUser) {
-  const userIDs = _.flatten(_.map(stories, 'user_ids'));
-  if (currentUser) {
-    userIDs.push(currentUser.id);
+function findRecipients(recipients, bookmarks) {
+  if (recipients && bookmarks) {
+    return recipients.filter((recipient) => {
+      return bookmarks.some(bm => bm.target_user_id === recipient.id);
+    });
   }
-  return _.uniq(userIDs);
 }

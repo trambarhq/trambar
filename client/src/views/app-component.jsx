@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
 import { parse } from 'mark-gor/react';

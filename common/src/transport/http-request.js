@@ -31,9 +31,9 @@ function performHTTPRequest(method, url, payload, options) {
         }
       }
       if (url.includes('?')) {
-        url += '?';
-      } else {
         url += '&';
+      } else {
+        url += '?';
       }
       url += pairs.join('&');
       payload = null;

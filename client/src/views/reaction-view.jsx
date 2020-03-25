@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
 import { renderPlainText } from 'common/utils/plain-text.js';
@@ -16,9 +15,7 @@ import { Time } from '../widgets/time.jsx';
 import { ReactionViewOptions } from '../views/reaction-view-options.jsx';
 
 // custom hooks
-import {
-  useMarkdownResources,
-} from '../hooks.js';
+import { useMarkdownResources } from '../hooks.js';
 
 import './reaction-view.scss';
 

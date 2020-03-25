@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.js';
@@ -10,9 +9,7 @@ import { MediaDialogBox } from '../dialogs/media-dialog-box.jsx';
 import { ResourceView } from 'common/widgets/resource-view.jsx';
 import { formatDuration } from '../widgets/duration-indicator.jsx';
 
-import {
-  useDialogHandling,
-} from '../hooks.js';
+import { useDialogHandling } from '../hooks.js';
 
 import './media-view.scss';
 
@@ -25,7 +22,7 @@ export function MediaView(props) {
   const [ selectedIndex, setSelectedIndex ] = useState(0);
   const [ audioURL, setAudioURL ] = useState(null);
   const maxResourceIndex = resources.length - 1;
-  const resourceIndex = _.min([ selectedIndex, maxResourceIndex]);
+  const resourceIndex = Math.min(selectedIndex, maxResourceIndex);
   const resource = resources[resourceIndex];
   const zoomableResources = resources.filter(isZoomable);
 

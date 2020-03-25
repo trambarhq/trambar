@@ -1,7 +1,5 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
-import { memoizeWeak } from 'common/utils/memoize.js';
 
 // widgets
 import { ProfileImage } from '../widgets/profile-image.jsx';
@@ -20,22 +18,24 @@ export function UserActivityList(props) {
     const sorted = sortStories(stories);
     return (
       <div className="user-activity-list">
-        {_.map(sorted, renderActivity)}
+        {sorted.map(renderActivity)}
       </div>
     );
   } else {
-    const indices = _.range(0, storyCountEstimate);
+    const indices = [];
+    for (let i = 0; i < storyCountEstimate; i++) {
+      indices.push(i);
+    }
     return (
       <div className="user-activity-list">
-        {_.map(indices, renderActivityPlaceholder)}
+        {indices.map(renderActivityPlaceholder)}
       </div>
     );
   }
 
   function renderActivity(story) {
-    const params = _.pick(route.params, 'date', 'search');
-    params.selectedUserID = user.id;
-    params.highlightStoryID = story.id;
+    const { date, search } = route.params;
+    const params = { date, search, selectedUserID: user.id, highlightStoryID: story.id };
     const url = route.find('person-page', params);
     const labelClasses = [ 'label' ];
     const time = story.btime || story.ptime;
@@ -79,8 +79,10 @@ export function UserActivityList(props) {
         const action = story.details.action;
         return t(`user-activity-$name-${action}-repo`, name);
       case 'post':
-        const resources = story.details.resources;
-        const counts = _.countBy(resources, 'type');
+        const counts = {};
+        for (let res of story.details.resources) {
+          counts[res.type] = (counts[res.type] || 0) + 1;
+        }
         if (counts.video > 0) {
           return t(`user-activity-$name-posted-$count-video-clips`, name, counts.video);
         } else if (counts.image > 0) {
@@ -108,10 +110,7 @@ export function UserActivityList(props) {
   }
 }
 
-const sortStories = memoizeWeak(null, function(stories) {
-  return _.orderBy(stories, [ getStoryTime ], [ 'desc' ]);
-});
-
-function getStoryTime(story) {
-  return story.btime || story.ptime;
-};
+function sortStories(stories) {
+  const time = s => s.btime || s.ptime;
+  return orderBy(stories, [ time ], [ 'desc' ]);
+}

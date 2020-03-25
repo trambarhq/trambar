@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useMemo } from 'react';
 import { useListener, useErrorCatcher } from 'relaks';
 import { syncBookmarks } from 'common/objects/savers/bookmark-saver.js';
@@ -21,9 +20,7 @@ import { UserSelectionDialogBox } from '../dialogs/user-selection-dialog-box.jsx
 import { IssueDialogBox } from '../dialogs/issue-dialog-box.jsx';
 
 // custom hooks
-import {
-  useDraftBuffer,
-} from '../hooks.js';
+import { useDraftBuffer } from '../hooks.js';
 
 import './story-view-options.scss';
 
@@ -56,8 +53,13 @@ export function StoryViewOptions(props) {
   const handleAddBookmarkClick = useListener((evt) => {
     run(async () => {
       const list = options.get('recipients', []);
-      const self = _.find(list, { id: currentUser.id });
-      const newList = (self) ? _.without(list, self) : _.concat(list, currentUser);
+      const selfIndex = list.findIndex(usr => usr.id === currentUser.id);
+      const newList = list.slice();
+      if (selfIndex !== -1) {
+        newList.splice(selfIndex, 1);
+      } else {
+        newList.push(currentUser);
+      }
       options.set('recipients', newList);
       done();
       await syncBookmarks(database, bookmarks, story, currentUser, newList);
@@ -147,16 +149,16 @@ export function StoryViewOptions(props) {
   function renderButtons(section) {
     if (section === 'main') {
       const recipients = options.get('recipients');
-      const self = _.find(recipients, { id: currentUser.id });
+      const self = recipients.find(usr => usr.id === currentUser.id);
       const bookmarkProps = {
          label: t(bookmarkExpected ? 'option-keep-bookmark' : 'option-add-bookmark'),
          selected: !!self,
          hidden: !bookmarkExpected && !canCreateBookmark(currentUser, story, access),
          onClick: handleAddBookmarkClick,
       };
-      const otherRecipients = _.reject(recipients, { id: currentUser.id });
+      const otherRecipients = recipients.filters(usr => usr.id !== currentUser.id);
       const sendBookmarkProps = {
-        label: _.isEmpty(otherRecipients)
+        label: (otherRecipients.length > 0)
           ? t('option-send-bookmarks')
           : t('option-send-bookmarks-to-$count-users', otherRecipients.length),
         hidden: !canSendBookmarks(currentUser, story, access),
@@ -226,7 +228,7 @@ export function StoryViewOptions(props) {
     // don't allow issue to be deleted once someone has been assigned to it
     const props = {
       show: enteringIssueDetails,
-      allowDeletion: !_.some(reactions, { type: 'assignment '}),
+      allowDeletion: !reactions.some(r => r.type === 'assignment'),
       currentUser,
       story,
       issue: options.get('issue'),

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';

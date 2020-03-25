@@ -1,6 +1,7 @@
 import React from 'react';
 import EmojiRegex from 'emoji-regex';
 import ReactEasyEmoji from 'react-easy-emoji';
+import capitalize from 'lodash/capitalize.js';
 import { extractListItems } from './list-parser.js';
 import { get } from './object-utils.js';
 
@@ -297,6 +298,8 @@ function detectDirection(text) {
 }
 
 export {
+  capitalize,
+
   renderPlainText,
   renderEmoji,
   findEmoji,

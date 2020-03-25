@@ -1,9 +1,8 @@
-import _ from 'lodash';
 import React, { useState, useMemo, useRef } from 'react';
 import { useListener, useSaveBuffer, useErrorCatcher } from 'relaks';
 import round from 'lodash/round.js';
 import { memoizeWeak } from 'common/utils/memoize.js';
-import { renderPlainText, findEmoji } from 'common/utils/plain-text.js';
+import { renderPlainText, findEmoji, capitalize } from 'common/utils/plain-text.js';
 import { renderMarkdown } from 'common/utils/markdown.js';
 import { getWebsiteAddress } from 'common/objects/utils/project-utils.js';
 import { updateTaskStatuses, saveSurveyResults } from 'common/objects/savers/reaction-saver.js';
@@ -12,7 +11,7 @@ import { getRepoName, getRepoURL, getMembershipPageURL, getIssueNumber, getIssue
 import { saveStory } from 'common/objects/savers/story-saver.js';
 import { extractUserAnswers, insertUserAnswers } from 'common/objects/utils/story-utils.js';
 import { getUserName, getGender, canAccessRepo } from 'common/objects/utils/user-utils.js';
-import { Payload } from 'common/transport/payload.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { MediaView } from '../views/media-view.jsx';
@@ -264,7 +263,7 @@ export function StoryContents(props) {
       <div className="text wiki">
         <p>
           <a href={url} target={target}>
-            {t(`story-$name-${action}d-$page`, authorName, _.capitalize(title))}
+            {t(`story-$name-${action}d-$page`, authorName, capitalize(title))}
           </a>
         </p>
       </div>
@@ -358,7 +357,7 @@ export function StoryContents(props) {
     for (let [ code, count ] of Object.entries(byCountry)) {
       countries.push({ code, count });
     }
-    const topCountries = _.orderBy(countries, 'count', 'desc');
+    const topCountries = orderBy(countries, 'count', 'desc');
     if (topCountries.length > 5) {
       const otherCountries = topCountries.splice(4);
       const otherTotal = otherCountries.reduce((sum, c) => sum + c.count, 0);
@@ -560,38 +559,39 @@ export function StoryContents(props) {
   }
 }
 
-const countVotes = memoizeWeak({}, function(reactions) {
+function countVotes(reactions) {
   let tallies = {};
-  for (let reaction of reactions) {
-    if (reaction.type === 'vote') {
-      const { answers } = reaction.details;
-      if (answers) {
-        for (let [ name, value ] of Object.entries(answers)) {
-          let tally = tallies[name];
-          if (!tally) {
-            tally = tallies[name] = {
-              total: 0,
-              answers: {}
-            };
+  if (reactions) {
+    for (let reaction of reactions) {
+      if (reaction.type === 'vote') {
+        const { answers } = reaction.details;
+        if (answers) {
+          for (let [ name, value ] of Object.entries(answers)) {
+            let tally = tallies[name];
+            if (!tally) {
+              tally = tallies[name] = {
+                total: 0,
+                answers: {}
+              };
+            }
+            tally.total = tally.total + 1;
+            tally.answers[value] = (tally.answers[value] || 0) + 1;
           }
-          tally.total = tally.total + 1;
-          tally.answers[value] = (tally.answers[value] || 0) + 1;
         }
       }
     }
   }
   return tallies;
-});
+}
 
-const getUserVote = memoizeWeak(null, function(reactions, user) {
+function getUserVote(reactions, user) {
   if (user) {
-    return _.find(reactions, { type: 'vote', user_id: user.id })
+    return reactions.find(r => r.type === 'vote' && r.user_id === user.id);
   }
-});
+}
 
-const sortComponents = memoizeWeak(null, function(components, env) {
+function sortComponents(components, env) {
   let { p } = env.locale;
-  return _.sortBy(components, (component) => {
-    return _.toLower(p(component.text));
-  });
-});
+  const text = c => p(c.text).toLowerCase();
+  return orderBy(components, text, 'asc');
+}

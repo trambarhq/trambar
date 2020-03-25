@@ -1,8 +1,6 @@
-import _ from 'lodash';
 import React, { useMemo } from 'react';
 import { useListener } from 'relaks';
 import Moment from 'moment';
-import { memoizeWeak, memoizeStrong } from 'common/utils/memoize.js';
 import StoryTypes from 'common/objects/types/story-types.js';
 
 // widgets
@@ -67,9 +65,9 @@ export const UserStatistics = React.memo((props) => {
     }
   }, [ selectedDate, localeCode ]);
   const tooltips = useMemo(() => {
-    const dateLabels = getDateLabels(dates, localeCode);
-    return _.map(series, (series) => {
-      return _.map(series.data, (count, index) => {
+    const dateLabels = dates.map(d => Moment(date).locale(localeCode).format('l'));
+    return series.map((series) => {
+      return series.data.map((count, index) => {
         const objects = t(`user-statistics-tooltip-$count-${series.name}`, count);
         const dateLabel = dateLabels[index];
         return `${objects}\n${dateLabel}`;
@@ -96,7 +94,7 @@ export const UserStatistics = React.memo((props) => {
     if (!chartType) {
       return null;
     }
-    let items = _.map(indices, renderLegendItem);
+    let items = indices.map(renderLegendItem);
     if (items.length === 0) {
       items = '\u00a0';
     }
@@ -170,8 +168,8 @@ export const UserStatistics = React.memo((props) => {
     const chartProps = {
       type: 'pie',
       data: {
-        series: _.map(series, (series) => {
-          return _.sum(series.data);
+        series: series.map((series) => {
+          return series.data.reduce((sum, num) => sum + num, 0);
         })
       },
       options: {
@@ -266,11 +264,11 @@ export const UserStatistics = React.memo((props) => {
   }
 });
 
-const getActivityIndices = memoizeWeak(null, function(activities, dates) {
+function getActivityIndices(activities, dates) {
   const present = {};
   for (let date of dates) {
     const counts = activities[date];
-    for (let [ type, count ] of _.entries(counts)) {
+    for (let [ type, count ] of Object.entries(counts)) {
       if (count) {
         present[type] = true;
       }
@@ -283,13 +281,13 @@ const getActivityIndices = memoizeWeak(null, function(activities, dates) {
     }
   }
   return indices;
-});
+}
 
-const getActivitySeries = memoizeWeak(null, function(activities, dates) {
-  return _.map(StoryTypes, (type) => {
+function getActivitySeries(activities, dates) {
+  return StoryTypes.map((type) => {
     // don't include series that are completely empty
     let empty = true;
-    let series = _.map(dates, (date) => {
+    let series = dates.map((date) => {
       let value = activities?.[date]?.[type] ?? 0;
       if (value) {
         empty = false;
@@ -304,26 +302,19 @@ const getActivitySeries = memoizeWeak(null, function(activities, dates) {
       data: series,
     };
   });
-});
+}
 
-const getUpperRange = memoizeWeak(null, function(series, additive) {
+function getUpperRange(series, additive) {
   let highest = 0;
   if (additive) {
-    const sums = [];
     for (let { data } of series) {
-      for (let [ index, value ] of data.entries()) {
-        sums[index] = (sums[index]) ? sums[index] + value : value;
-      }
-    }
-    if (sums.length > 0) {
-      highest = _.max(sums);
+      const sum = data.reduce((sum, num) => sum + num, 0);
+      highest = Math.max(highest, sum);
     }
   } else {
     for (let { data } of series) {
-      const max = _.max(data);
-      if (max > highest) {
-        highest = max;
-      }
+      const max = data.reduce((max, num) => Math.max(max, num), 0);
+      highest = Math.max(highest, max);
     }
   }
   // leave some room at the top
@@ -343,22 +334,16 @@ const getUpperRange = memoizeWeak(null, function(series, additive) {
     }
     return upper;
   }
-});
+}
 
-const getDateLabels = memoizeWeak(null, function(dates, localeCode) {
-  return _.map(dates, (date) => {
-    return Moment(date).locale(localeCode).format('l');
+function getDateOfWeekLabels(dates, localeCode) {
+  return dates.map((date) => {
+    return Moment(d).locale(localeCode).format('dd');
   });
-});
+}
 
-const getDateOfWeekLabels = memoizeWeak(null, function(dates, localeCode) {
-  return _.map(dates, (date) => {
-    return Moment(date).locale(localeCode).format('dd');
-  });
-});
-
-const getDateOfMonthLabels = memoizeWeak(null, function(dates, localeCode) {
-  return _.map(dates, (date) => {
+function getDateOfMonthLabels(dates, localeCode) {
+  return dates.map((date) => {
     const m = Moment(date);
     const d = m.date();
     if (d % 2 === 0) {
@@ -367,10 +352,10 @@ const getDateOfMonthLabels = memoizeWeak(null, function(dates, localeCode) {
       return '';
     }
   });
-});
+}
 
-const getMonthLabels = memoizeWeak(null, function(dates, localeCode) {
-  return _.map(dates, (date) => {
+function getMonthLabels(dates, localeCode) {
+  return dates.map((date) => {
     const m = Moment(date);
     const d = m.date();
     if (d === 1) {
@@ -379,13 +364,13 @@ const getMonthLabels = memoizeWeak(null, function(dates, localeCode) {
       return '';
     }
   });
-});
+}
 
 function getDateString(m) {
   return m.format('YYYY-MM-DD');
 }
 
-const getDates = memoizeStrong([], function(start, end) {
+function getDates(start, end) {
   const s = Moment(start);
   const e = Moment(end);
   const dates = [];
@@ -396,27 +381,27 @@ const getDates = memoizeStrong([], function(start, end) {
     m.add(1, 'day');
   }
   return dates;
-});
+}
 
-const getTwoWeeks = memoizeStrong([], function(date, offset) {
+function getTwoWeeks(date, offset) {
   const m = Moment(date).add(offset, 'day');
   const end = getDateString(m);
   const start = getDateString(m.subtract(13, 'day'));
   return getDates(start, end);
-});
+}
 
-const getMonth = memoizeStrong([], function(date) {
+function getMonth(date) {
   const m = Moment(date).startOf('month');
   const start = getDateString(m);
   const end = getDateString(Moment(date).endOf('month'));
   return getDates(start, end);
-});
+}
 
-const getMonths = memoizeStrong([], function(start, end) {
+function getMonths(start, end) {
   start = getDateString(Moment(start).startOf('month'));
   end = getDateString(Moment(end).endOf('month'));
   return getDates(start, end);
-});
+}
 
 function LegendItem(props) {
   const { series, label } = props;

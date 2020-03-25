@@ -6,16 +6,8 @@ import { findUser } from 'common/objects/finders/user-finder.js';
 import { findCurrentProject } from 'common/objects/finders/project-finder.js';
 import { getUserAccessLevel } from 'common/objects/utils/project-utils.js';
 import { removeTags, findTags } from 'common/utils/tag-scanner.js';
-import {
-  findStory,
-  findStoriesWithTags,
-  findStoriesMatchingText,
-  findStoriesOnDate,
-  findStoriesWithRolesInListing,
-  findStoriesInListing,
-  findDraftStories,
-  findUnlistedStories,
-} from 'common/objects/finders/story-finder.js';
+import { findStory, findStoriesWithTags, findStoriesMatchingText, findStoriesOnDate, findStoriesWithRolesInListing,
+  findStoriesInListing, findDraftStories, findUnlistedStories } from 'common/objects/finders/story-finder.js';
 
 // widgets
 import { PageContainer } from '../widgets/page-container.jsx';
@@ -37,7 +29,7 @@ export default async function NewsPage(props) {
     }
     filtering = true;
   }
-  if (date || roleIDs.length > 0) {
+  if (date || roleIDs?.length > 0) {
     filtering = true;
   }
 
@@ -53,7 +45,7 @@ export default async function NewsPage(props) {
     stories = await findStoriesMatchingText(database, search, env, currentUser);
   } else if (date) {
     stories = await findStoriesOnDate(database, date, currentUser);
-  } else if (roleIDs.length > 0) {
+  } else if (roleIDs?.length > 0) {
     stories = await findStoriesWithRolesInListing(database, 'news', roleIDs, currentUser);
   } else {
     stories = await findStoriesInListing(database, 'news', currentUser);
@@ -116,7 +108,7 @@ export default async function NewsPage(props) {
   }
 
   function renderEmptyMessage() {
-    if (stories.length > 0) {
+    if (stories?.length > 0) {
       return null;
     }
     if (!stories) {
@@ -126,7 +118,7 @@ export default async function NewsPage(props) {
       let phrase;
       if (date) {
         phrase = 'news-no-stories-on-date';
-      } else if (roleIDs.length > 0) {
+      } else if (roleIDs?.length > 0) {
         phrase = 'news-no-stories-by-role';
       } else if (search) {
         phrase = 'news-no-stories-found';

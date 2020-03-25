@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
+import { getUserName } from 'common/objects/utils/user-utils.js';
 import { orderBy } from 'common/utils/array-utils.js';
 import { isEqual } from 'common/utils/object-utils.js';
-import { getUserName } from 'common/objects/utils/user-utils.js';
 
 // widgets
 import { SmartList } from 'common/widgets/smart-list.jsx';
@@ -106,12 +105,10 @@ export function UserList(props) {
 
 let savedViewOptions = {};
 
-const sortUsers = memoizeWeak(null, function(users, env) {
-  const name = (user) => {
-    return getUserName(user, env);
-  };
+function sortUsers(users, env) {
+  const name = usr => getUserName(usr, env);
   return orderBy(users, [ name ], [ 'asc' ]);
-});
+}
 
 function findRoles(roles, user) {
   if (user) {

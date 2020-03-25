@@ -81,8 +81,8 @@ async function stop() {
 async function handleSessionStart(req, res, next) {
   const taskLog = TaskLog.start('session-start');
   try {
-    const area = _.toLower(req.body.area);
-    const originalHandle = _.toLower(req.body.handle);
+    const area = (req.body.area || '').toLowerCase();
+    const originalHandle = (req.body.handle || '').toLowerCase();
     if (!(area === 'client' || area === 'admin')) {
       throw new HTTPError(400);
     }
@@ -95,10 +95,10 @@ async function handleSessionStart(req, res, next) {
       const system = await findSystem();
       const servers = await findOAuthServers(area);
       result = {
-        session: _.pick(session, 'handle', 'etime'),
-        system: _.pick(system, 'details'),
-        servers: _.map(servers, (server) => {
-          return _.pick(server, 'id', 'type', 'details')
+        session: { handle: session.handle,  etime: session.etime },
+        system: { details: system.details },
+        servers: servers.map((server) => {
+          return { id: server.id, type: server.type, details: server.details }
         })
       };
       taskLog.set('type', 'browser');
@@ -168,7 +168,7 @@ async function handleHTPasswdRequest(req, res, next) {
 async function handleSessionRetrieval(req, res, next) {
   const taskLog = TaskLog.start('session-retrieve');
   try {
-    const handle = _.toLower(req.query.handle);
+    const handle = (req.query.handle || '').toLowerCase();
     const session = await findSession(handle);
     let sessionAfter;
     if (session.activated) {
@@ -180,7 +180,11 @@ async function handleSessionRetrieval(req, res, next) {
       session.etime = getFutureTime(SESSION_LIFETIME_CLIENT);
       sessionAfter = await saveSession(session);
       result = {
-        session: _.pick(sessionAfter, 'token', 'user_id', 'etime')
+        session: {
+          token: sessionAfter.token,
+          user_id: sessionAfter.user_id,
+          etime: sessionAfter.etime,
+        }
       };
     } else {
       const error = session.details.error;

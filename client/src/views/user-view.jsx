@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
 import { getRoleName } from 'common/objects/utils/role-utils.js';
@@ -160,8 +159,8 @@ export function UserView(props) {
   function renderProfileImage() {
     let url;
     if (user) {
-      const params = _.pick(route.params, 'date', 'search');
-      params.selectedUserID = user.id;
+      const { date, search } = route.params;
+      const params = { date, search, selectedUserID: user.id };
       url = route.find('person-page', params);
     }
     return (
@@ -172,9 +171,7 @@ export function UserView(props) {
   }
 
   function renderRoles() {
-    const names = _.map(roles, (role) => {
-      return getRoleName(role, env);
-    });
+    const names = roles.map(r => getRoleName(r, env));
     return (
       <span className="roles">
         {names.join(', ') || '\u00a0'}
@@ -191,8 +188,8 @@ export function UserView(props) {
     const name = getUserName(user, env);
     let url;
     if (user) {
-      const params = _.pick(route.params, 'date', 'search');
-      params.selectedUserID = user.id;
+      const { date, search } = route.params;
+      const params = { date, search, selectedUserID: user.id };
       url = route.find('person-page', params);
     }
     return (
@@ -225,7 +222,7 @@ export function UserView(props) {
         list = (stats) ? [ stats ] : [];
       } else {
         // go through all dates
-        list = _.values(dailyActivities.daily);
+        list = Object.values(dailyActivities.daily);
       }
       if (search) {
         if (removeTags(search)) {
@@ -238,7 +235,7 @@ export function UserView(props) {
       if (list) {
         let total = 0;
         for (let stats of list) {
-          for (let [ count, type] of _.entries(stats)) {
+          for (let [ count, type] of Object.entries(stats)) {
             if (!tags || tags.includes(type))  {
               total += count;
             }
@@ -268,8 +265,8 @@ export function UserView(props) {
     }
     let url;
     if (user) {
-      const params = _.pick(route.params, 'date', 'search');
-      params.scrollToUserID = user.id;
+      const { date, search } = route.params;
+      const params = { date, search, scrollToUserID: user.id };
       url = route.find('people-page', params);
     }
     return (

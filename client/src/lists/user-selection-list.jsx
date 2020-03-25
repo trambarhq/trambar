@@ -17,13 +17,13 @@ export async function UserSelectionList(props) {
 
   const handleUserClick = useListener((evt) => {
     const userID = parseInt(evt.currentTarget.getAttribute('data-id'));
-    const user = _.find(users, { id: userID });
-    const userSelected = _.find(selection, { id: userID });
-    let newSelection;
-    if (userSelected) {
-      newSelection = _.without(selection, userSelected);
+    const user = users.find(usr => usr.id === userID);
+    const userSelectedIndex = selection.findIndex(usr => usr.id === userID);
+    const newSelection = [ ...selection ];
+    if (userSelectedIndex !== -1) {
+      newSelection.splice(userSelectedIndex, 1);
     } else {
-      newSelection = _.concat(selection, user);
+      newSelection.push(user);
     }
     if (onSelect) {
       onSelect({ selection: newSelection });
@@ -39,7 +39,7 @@ export async function UserSelectionList(props) {
     const sorted = sortUsers(users, env);
     show(
       <div className="user-selection-list">
-        {_.map(sorted, renderUser)}
+        {sorted.map(renderUser)}
       </div>
     );
   }
@@ -47,8 +47,8 @@ export async function UserSelectionList(props) {
   function renderUser(user) {
     const props = {
       user,
-      selected: _.some(selection, { id: user.id }),
-      disabled: _.some(disabled, { id: user.id }),
+      selected: selection.some(u => u.id === user.id),
+      disabled: disabled.some(u => u.id === user.id),
       env,
       onClick: handleUserClick,
     };
@@ -81,10 +81,7 @@ function User(props) {
   );
 }
 
-const sortUsers = memoizeWeak(null, function(users, env) {
-  let { p } = env.locale;
-  let name = (user) => {
-    return p(user.details.name);
-  };
-  return _.orderBy(users, [ name ], [ 'asc' ]);
-});
+function sortUsers(users, env) {
+  const name = u => getUserName(u, env);
+  return orderBy(users, [ name ], [ 'asc' ]);
+}

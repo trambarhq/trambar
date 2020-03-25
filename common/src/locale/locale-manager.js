@@ -206,7 +206,7 @@ class LocaleManager extends EventEmitter {
    * @return {Object}
    */
   getPhraseTable(module, countryCode) {
-    const table = module.phrases;
+    let table = module.phrases;
     if (table instanceof Function) {
       table = table(countryCode);
     }
