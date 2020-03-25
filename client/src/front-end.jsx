@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useListener, useEventTime } from 'relaks';
 import { routes } from './routing.js';

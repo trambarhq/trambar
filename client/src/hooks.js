@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import RelaksMediaCapture from 'relaks-media-capture';
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
@@ -72,7 +71,7 @@ function useMarkdownResources(resources, env) {
   const [ name, setName ] = useState('');
   const [ audioURL, setAudioURL ] = useState('');
   const [ zoomed, setZoomed ] = useState(false, true);
-  const unreferenced = _.slice(resources);
+  const unreferenced = resources?.slice() || [];
   const unreferencedZoomable = unreferenced.filter(isZoomable);
   const referenced = [];
   const referencedZoomable = [];
@@ -81,10 +80,10 @@ function useMarkdownResources(resources, env) {
     const res = findReferencedResource(resources, evt.name);
     if (res) {
       referenced.push(res);
-      _.pull(unreferenced, res);
+      unreferenced.splice(unreferenced.indexOf(res), 1);
       if (isZoomable(res)) {
         referencedZoomable.push(res);
-        _.pull(unreferencedZoomable, res);
+        unreferencedZoomable.splice(unreferencedZoomable.indexOf(res), 1);
       }
       const href = getMarkdownIconURL(res, evt.type, env);
       const hrefHTML = href;

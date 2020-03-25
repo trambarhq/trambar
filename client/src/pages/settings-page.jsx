@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useEffect } from 'react';
 import { useProgress, useListener, useSaveBuffer, useAutoSave } from 'relaks';
 import { KonamiCode } from 'common/utils/konami-code.js';
@@ -25,9 +24,7 @@ import { LanguagePanel } from '../panels/language-panel.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 // custom hooks
-import {
-  useDraftBuffer,
-} from '../hooks.js';
+import { useDraftBuffer } from '../hooks.js';
 
 import './settings-page.scss';
 
@@ -132,7 +129,7 @@ function SettingsPageSync(props) {
   }
 
   function renderDevicePanel() {
-    if (env.platform === 'cordova' || _.isEmpty(devices)) {
+    if (env.platform === 'cordova' || !devices?.length) {
       return null;
     }
     const props = {

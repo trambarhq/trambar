@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useMemo, useRef, useImperativeHandle, useEffect } from 'react';
 import { useListener, useAsyncEffect } from 'relaks';
 import { BlobManager } from 'common/transport/blob-manager.js';

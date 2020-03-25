@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
 import { useProgress } from 'relaks';
@@ -45,7 +44,7 @@ export default async function PeoplePage(props) {
   let selectedUser, visibleUsers;
   if (selectedUserID) {
     // find the selected user
-    let user = _.find(members, { id: selectedUserID });
+    let user = members.find(usr => usr.id === selectedUserID);
     if (!user) {
       // not on the member list
       user = await findUser(database, selectedUserID);
@@ -142,20 +141,27 @@ export default async function PeoplePage(props) {
     // deal with situation where we're showing stories by someone
     // who're not on the team (only when we're searching for stories)
     if (search || date) {
-      const authorIDs = _.uniq(_.flatten(_.map(stories, 'user_ids')));
-      const memberIDs = _.map(members, 'id');
-      const nonMemberUserIDs = _.difference(authorIDs, memberIDs);
+      const nonMemberUserIDs = [];
+      for (let story of stories) {
+        for (let userID of story.user_ids) {
+          if (!members.some(usr => usr.id === userID)) {
+            if (!nonMemberUserIDs.includes(userID)) {
+              nonMemberUserIDs.push(userID);
+            }
+          }
+        }
+      }
       const publicOnly = (currentUser.type === 'guest');
       if (nonMemberUserIDs.length > 0) {
-        const users = await findUsers(database, nonMemberUserIDs);
+        const nonmembers = await findUsers(database, nonMemberUserIDs);
         // add non-members
         if (visibleUsers) {
-          visibleUsers = _.concat(visibleUsers, users);
+          visibleUsers = visibleUsers.concat(nonmembers);
         } else {
-          visibleUsers = users;
+          visibleUsers = nonmembers;
         }
         render();
-        const nonMemberStats = await findDailyActivitiesOfUsers(database, project, users, publicOnly);
+        const nonMemberStats = await findDailyActivitiesOfUsers(database, project, nonmembers, publicOnly);
         dailyActivities = { ...dailyActivities, ...nonMemberStats };
       }
     }
@@ -166,7 +172,7 @@ export default async function PeoplePage(props) {
   if (!date) {
     if (highlightStoryID) {
       const allStories = selectedUserStories;
-      if (!_.find(allStories, { id: highlightStoryID })) {
+      if (!allStories.some(s => s.id === highlightStoryID)) {
         try {
           let story = await findStory(database, highlightStoryID);
           await redirectToStory(story);

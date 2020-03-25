@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
 import { useProgress } from 'relaks';
@@ -59,12 +58,11 @@ export default async function NewsPage(props) {
 
   // when we're highlighting a story, make sure the story is actually there
   if (!date) {
-    const storyID = highlightStoryID;
-    if (storyID) {
-      const allStories = _.concat(stories, draftStories, pendingStories);
-      if (!_.find(allStories, { id: storyID })) {
+    if (highlightStoryID) {
+      const allStories = stories.concat(draftStories, pendingStories);
+      if (!allStories.find(s.id === highlightStoryID)) {
         try {
-          const story = await findStory(database, storyID);
+          const story = await findStory(database, highlightStoryID);
           await redirectToStory(route.params.schema, story);
         } catch (err) {
         }

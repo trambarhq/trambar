@@ -1,11 +1,7 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress } from 'relaks';
 import { findUser } from 'common/objects/finders/user-finder.js';
-import {
-  findNotificationsForUserOnDate,
-  findNotificationsForUser
-} from 'common/objects/finders/notification-finder.js';
+import { findNotificationsForUserOnDate, findNotificationsForUser } from 'common/objects/finders/notification-finder.js';
 
 // widgets
 import { PageContainer } from '../widgets/page-container.jsx';
