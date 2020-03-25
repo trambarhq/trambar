@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import Relaks, { useProgress } from 'relaks';
 import Moment from 'moment';
@@ -37,7 +36,7 @@ export async function CalendarBar(props) {
     const months = getMonths();
     show(
       <div className="calendar-bar">
-        {_.map(months, renderCalendar)}
+        {months.map(renderCalendar)}
       </div>
     , 'initial');
   }

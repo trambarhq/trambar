@@ -1,6 +1,6 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
+import { capitalize } from 'common/utils/plain-text.js';
 
 import './calendar.scss';
 
@@ -36,15 +36,15 @@ export function Calendar(props) {
       x++;
     }
   }
-  const dayLabels = _.slice(localeData.weekdaysShort());
+  const dayLabels = localeData.weekdaysShort().slice();
   const isWeekend = [ true, false, false, false, false, false, true ];
   for (let i = 0; i < firstDayOfWeek; i++) {
     dayLabels.push(dayLabels.shift());
     isWeekend.push(isWeekend.shift());
   }
   const titleFormat = (showYear) ? 'MMMM YYYY' : 'MMMM';
-  const title = _.capitalize(firstDay.format(titleFormat));
-  const headings = _.map(dayLabels, (label, index) => {
+  const title = capitalize(firstDay.format(titleFormat));
+  const headings = dayLabels.map((label, index) => {
     let classNames = [
       isWeekend[index] ? 'weekend' : 'workweek'
     ];
@@ -56,8 +56,8 @@ export function Calendar(props) {
   });
   let firstURL;
   let monthClassName;
-  const rows = _.map(grid, (days) => {
-    return _.map(days, (day, index) => {
+  const rows = grid.map((days) => {
+    return days.map((day, index) => {
       let classNames = [
         isWeekend[index] ? 'weekend' : 'workweek'
       ];

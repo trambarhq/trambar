@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
 
@@ -23,7 +22,7 @@ export function MediaEditor(props) {
     if (resourceIndex < 1) {
       return;
     }
-    const resourcesAfter = _.slice(resources);
+    const resourcesAfter = resources.slice();
     resourcesAfter.splice(resourceIndex, 1);
     resourcesAfter.splice(resourceIndex - 1, 0, resource);
     if (onChange) {
@@ -34,7 +33,7 @@ export function MediaEditor(props) {
     }
   });
   const handleRemoveClick = useListener((evt) => {
-    const resourcesAfter = _.slice(resources);
+    const resourcesAfter = resources.slice();
     resourcesAfter.splice(resourceIndex, 1);
     let newIndex = resourceIndex;
     if (resourceIndex >= resources.length) {
@@ -63,14 +62,14 @@ export function MediaEditor(props) {
     }
   });
   const handleForwardClick = useListener((evt) => {
-    if (resourceIndex < _.size(resources) - 1) {
+    if (resourceIndex < resources.length - 1) {
       if (onChange) {
         return onChange({ resources, selection: resourceIndex - 1 });
       }
     }
   });
   const handleResourceChange = useListener((evt) => {
-    const resourcesAfter = _.slice(resources);
+    const resourcesAfter = resources?.slice() || [];
     resourcesAfter[resourceIndex] = evt.resource;
     if (onChange) {
       return onChange({
@@ -116,8 +115,8 @@ export function MediaEditor(props) {
   }
 
   function renderNavigation() {
-    const resourceCount = _.size(resources);
-    if (resourceCount === 0) {
+    const resourceCount = resources?.length;
+    if (!resourceCount) {
       return null;
     }
     const removeProps = {

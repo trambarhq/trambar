@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
 import { canCreateBookmark, canSendBookmarks, canAddIssue, canHideStory } from 'common/objects/utils/user-utils.js';
@@ -22,8 +21,13 @@ export function StoryEditorOptions(props) {
   const [ enteringIssueDetails, enterIssueDetails ] = useState(false);
   const handleAddBookmarkClick = useListener((evt) => {
     const list = options.get('recipients');
-    const self = _.find(list, { id: currentUser.id });
-    const newList = (self) ? _.without(list, self) : _.concat(list, currentUser);
+    const selfIndex = list.findIndex(usr => usr.id === currentUser.id);
+    const newList = list.slice();
+    if (selfIndex !== -1) {
+      newList.splice(selfIndex, 1);
+    } else {
+      newList.push(currentUser);
+    }
     options.set('recipients', newList);
     done();
   });
@@ -91,16 +95,16 @@ export function StoryEditorOptions(props) {
     if (section === 'main') {
       const access = 'read-write';
       const recipients = options.get('recipients');
-      const self = _.find(recipients, { id: currentUser.id });
+      const self = recipients.find(usr => usr.id === currentUser.id);
       const bookmarkProps = {
         label: t('option-add-bookmark'),
         selected: !!self,
         hidden: !canCreateBookmark(currentUser, story, access),
         onClick: handleAddBookmarkClick,
       };
-      const otherRecipients = _.reject(recipients, { id: currentUser.id });
+      const otherRecipients = recipients.filter(usr => usr.id !== currentUser.id);
       const sendBookmarkProps = {
-        label: _.isEmpty(otherRecipients)
+        label: (!otherRecipients.length)
           ? t('option-send-bookmarks')
           : t('option-send-bookmarks-to-$count-users', otherRecipients.length),
         hidden: !canSendBookmarks(currentUser, story, access),
@@ -152,7 +156,7 @@ export function StoryEditorOptions(props) {
   function renderRecipientDialogBox() {
     let selection = options.get('recipients');
     if (options.get('bookmarked')) {
-      selection = _.concat(selection, currentUser);
+      selection = [ ...selection, currentUser ];
     }
     const props = {
       show: selectingRecipients,

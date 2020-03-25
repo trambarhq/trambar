@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useListener } from 'relaks';
 import ReactDOM from 'react-dom';
@@ -155,7 +154,7 @@ export function PopUpMenu(props) {
 
   function renderContents(tagName) {
     const list = React.Children.toArray(children);
-    let child = _.find(list, { type: tagName });
+    let child = list.find(el => el.type === tagName);
     if (child) {
       return child.props.children;
     }

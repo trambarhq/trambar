@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 import './settings-panel.scss';
@@ -24,7 +23,7 @@ export function SettingsPanel(props) {
   );
 
   function renderPart(tag) {
-    let element = _.find(children, { type: tag });
+    const element = children.find(el => el.type === tag);
     if (!element) {
       return null;
     }

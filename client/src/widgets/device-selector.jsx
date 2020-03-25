@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 import './device-selector.scss';
@@ -15,7 +14,7 @@ export function DeviceSelector(props) {
   if (devices.length < 2) {
     return null;
   }
-  const frontBack = (devices.length === 2) && _.every(devices, (device) => {
+  const frontBack = (devices.length === 2) && devices.every((device) => {
     if (/front|back/i.test(device.label)) {
       return true;
     }
@@ -23,7 +22,7 @@ export function DeviceSelector(props) {
   return (
     <div className="device-selector">
       <select onChange={onSelect}>
-        {_.map(devices, renderOption)}
+        {devices.map(renderOption)}
       </select>
     </div>
   );
@@ -50,24 +49,3 @@ export function DeviceSelector(props) {
     return <option key={index} {...optionProps}>{label}</option>;
   }
 }
-
-/**
- * Given a list of devices, select one that matches the indicated direction.
- *
- * @param  {Array<Object>} devices
- * @param  {String} type
- * @param  {String} descriptor
- *
- * @return {Object|undefined}
- */
-DeviceSelector.choose = function(devices, type, descriptor) {
-  return _.find(devices, (device) => {
-    if (type === 'video' && device.kind === 'videoinput') {
-      if (descriptor === 'front') {
-        return /front/i.test(device.label);
-      } else if (descriptor === 'back') {
-        return /back/i.test(device.label);
-      }
-    }
-  })
-};

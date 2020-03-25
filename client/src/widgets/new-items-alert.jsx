@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { useLastAcceptable } from 'relaks';
 import ReactDOM from 'react-dom';

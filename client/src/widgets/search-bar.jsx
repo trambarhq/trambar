@@ -1,9 +1,9 @@
-import _ from 'lodash';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useProgress, useListener } from 'relaks';
 import { findTags } from 'common/utils/tag-scanner.js';
 import { findStatistics } from 'common/objects/finders/statistics-finder.js';
 import { findUser } from 'common/objects/finders/user-finder.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 import './search-bar.scss';
 
@@ -50,14 +50,14 @@ function SearchBarSync(props) {
   const hashTags = useMemo(() => {
     return extractTags(dailyActivities, env);
   }, [ dailyActivities, env ]);
-  const [ selectedHashTags ] = useMemo(() => {
+  const selectedHashTags = useMemo(() => {
     const tags = findTags(route.params.search);
-    return _.map(tags, _.toLower);
+    return tags.map(t => t.toLowerCase());
   }, [ route ]);
   const [ search, setSearch ] = useState(null);
 
   const handleTextChange = useListener((evt) => {
-    const keywords = _.trim(evt.target.value);
+    const keywords = evt.target.value;
     setSearch({ keywords, delay: 800 });
   });
   const handleKeyDown = useListener((evt) => {
@@ -109,7 +109,7 @@ function SearchBarSync(props) {
         const tag = node.getAttribute('data-tag');
         nodes[tag] = node;
       }
-      const tagsByPopularity = _.sortBy(hashTags, 'score');
+      const tagsByPopularity = orderBy(hashTags, 'score');
       // hide tags until container has only a single line
       while (isWrapping(nodes)) {
         const tag = tagsByPopularity.shift();
@@ -155,7 +155,7 @@ function SearchBarSync(props) {
   function renderHashTags() {
     return (
       <div ref={tagsRef} className="tags">
-        {_.map(hashTags, renderHashTag)}
+        {hashTags.map(renderHashTag)}
       </div>
     );
   }
@@ -164,7 +164,7 @@ function SearchBarSync(props) {
     const params = { search: tag.name, ...settings.route };
     const url = route.find(route.name, params);
     const classNames = [ 'tag' ];
-    if (selectedHashTags.includes(_.toLower(tag.name))) {
+    if (selectedHashTags.includes(tag.name.toLowerCase())) {
       classNames.push('selected');
     }
     const props = {
@@ -176,22 +176,16 @@ function SearchBarSync(props) {
   }
 }
 
-function normalize(s) {
-  s = _.replace(s, /\+/g, '');
-  s = _.replace(s, /\s+/g, ' ')
-  let words = _.split(s);
-  return words.join(' ');
-}
-
 function isWrapping(nodes) {
   let top;
-  return _.some(nodes, (node) => {
+  for (let node of nodes) {
     if (top === undefined) {
       top = node.offsetTop;
     } else if (node.offsetTop > top) {
       return true;
     }
-  });
+  }
+  return false;
 }
 
 function extractTags(dailyActivities, env) {
@@ -239,12 +233,11 @@ function extractTags(dailyActivities, env) {
 
   const scoresMC = {};
   for (let [ nameLC, score ] of scoresLC) {
-    const names = nameLists[nameLC];
+    let names = nameLists[nameLC];
     if (names.length > 1) {
       // choose the more frequently used name
-      names = _.orderBy(names, (name) => {
-        return frequency[name];
-      }, 'desc');
+      const nameFreq = n => frequency[name];
+      names = orderBy(names, nameFreq, 'desc');
     }
     const name = names[0];
     scoresMC[name] = score;
@@ -256,5 +249,5 @@ function extractTags(dailyActivities, env) {
   }
 
   // sort in case-sensitive manner, as it's done in Gitlab
-  return _.sortBy(hashTags, 'name');
+  return orderBy(hashTags, 'name', 'asc');
 }

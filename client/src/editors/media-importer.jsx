@@ -1,16 +1,10 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState, useImperativeHandle } from 'react';
 import { useListener } from 'relaks';
 import { optimizeVideo } from 'common/media/quick-start.js';
 import ResourceTypes from 'common/objects/types/resource-types.js';
-import {
-  extractFileCategory,
-  extractFileFormat,
-  getVideoMetadata,
-  getAudioMetadata,
-  getImageMetadata,
-} from 'common/media/media-loader.js';
+import { getVideoMetadata, getAudioMetadata, getImageMetadata,
+  extractFileCategory, extractFileFormat } from 'common/media/media-loader.js';
 import { extractAlbumArt } from 'common/media/media-tag-reader.js';
 
 // widgets
@@ -90,7 +84,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
       return 0;
     }
     // add placeholders first
-    const placeholders = _.map(acceptable, (file) => {
+    const placeholders = acceptable.map((file) => {
       return {
         type: extractFileCategory(file.type),
         pending: `import-${++importCount}`,
@@ -104,15 +98,15 @@ export const MediaImporter = React.forwardRef((props, ref) => {
     // import each file, replacing its placeholder
     const imported = [];
     let failure = false;
-    for (let [ index, file ] of _.entries(acceptable)) {
+    for (let [ index, file ] of Object.entries(acceptable)) {
       try {
         const resource = await importFile(file);
         const placeholder = placeholders[index];
         const placeholderIndex = newList.indexOf(placeholder);
-        newList = _.slice(newList);
-        newList[placeholderIndex] = resource;
+        const newList2 = newList.slice();
+        newList2[placeholderIndex] = resource;
         imported.push(resource);
-        triggerChangeEvent(newList, newIndex);
+        triggerChangeEvent(newList2, newIndex);
       } catch (err) {
         failure = true;
       }
@@ -120,9 +114,9 @@ export const MediaImporter = React.forwardRef((props, ref) => {
     if (failure) {
       if (imported) {
         // add only those that were successfully imported
-        newList = appendResources(resources, imported, limit);
-        newIndex = newList.indexOf(imported[0]);
-        triggerChangeEvent(newList, newIndex);
+        const newList2 = appendResources(resources, imported, limit);
+        const newIndex2 = newList.indexOf(imported[0]);
+        triggerChangeEvent(newList2, newIndex2);
       } else {
         // restore the original list
         triggerChangeEvent(resources);
@@ -244,7 +238,7 @@ export const MediaImporter = React.forwardRef((props, ref) => {
     if (/<img\b/i.test(html) && types.includes('image')) {
       const m = /<img\b.*?\bsrc="(.*?)"/.exec(html);
       if (m) {
-        const url = _.unescape(m[1]);
+        const url = unescape(m[1]);
         const filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
         const payload = payloads.add('image').attachURL(url);
         const resource = {
@@ -336,7 +330,7 @@ async function retrieveDataItemTexts(items) {
   // we need to call getAsString() on all of them synchronously and not in
   // a callback (i.e. no await between calls)
   const strings = {};
-  const promises = _.map(items, (item) => {
+  const promises = items.map((item) => {
     if (item.kind === 'string') {
       if (/^text\/(html|uri-list)/.test(item.type)) {
         return new Promise((resolve, reject) => {
@@ -382,7 +376,7 @@ function getInnerText(html) {
 }
 
 function getFilenameFromTime(ext) {
-  return _.toUpper(Moment().format('YYYY-MMM-DD-hhA')) + ext;
+  return Moment().format('YYYY-MMM-DD-hhA').toUpperCase() + ext;
 }
 
 MediaImporter.defaultProps = {

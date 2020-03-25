@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 import './media-placeholder.scss';
@@ -10,7 +9,7 @@ import './media-placeholder.scss';
 export function MediaPlaceholder(props) {
   const { env, showHints } = props;
   const { t } = env.locale;
-  let phraseIDs;
+  let phraseIDs = [];
   if (env.pointingDevice === 'mouse') {
     if (showHints) {
       phraseIDs = [
@@ -21,7 +20,7 @@ export function MediaPlaceholder(props) {
   }
   return (
     <div className="media-placeholder">
-      {_.map(phraseIDs, renderMessage)}
+      {phraseIDs.map(renderMessage)}
     </div>
   );
 

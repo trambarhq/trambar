@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Bytes from 'bytes';
 
@@ -62,7 +61,7 @@ export function TopNavigation(props) {
     };
     return (
       <div>
-        {_.map(controls, renderButton)}
+        {controls.map(renderButton)}
         <ConnectionIndicator {...connectionProps}/>
       </div>
     );

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
 import { findTagsInText } from 'common/utils/tag-scanner.js';
@@ -258,7 +257,7 @@ function adjustReaction(reaction) {
   reaction = removeSuperfluousDetails(reaction);
 
   if (reaction.details.markdown === undefined) {
-    for (let [ lang, langText ] of _.entries(reaction.details.text)) {
+    for (let [ lang, langText ] of Object.entries(reaction.details.text)) {
       if (isMarkdown(langText)) {
         reaction.details.markdown = true;
         break;

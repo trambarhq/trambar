@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { getUserName } from 'common/objects/utils/user-utils.js';
 
@@ -15,9 +14,7 @@ import './author-names.scss';
 export function AuthorNames(props) {
   const { env, authors, robot } = props;
   const { t } = env.locale;
-  const names = _.map(authors, (author) => {
-    return getUserName(author, env);
-  });
+  const names = authors.map(usr => getUserName(usr, env));
   let contents;
   if (!authors || authors.length === 0) {
     if (robot) {
@@ -34,7 +31,7 @@ export function AuthorNames(props) {
     contents = t('story-author-$name1-and-$name2', name1, name2);
   } else {
     const name1 = <span key={1} className="lead author">{names[0]}</span>;
-    const coauthors = _.slice(authors, 1);
+    const coauthors = authors.slice(1);
     const props = {
       users: coauthors,
       label: t('story-author-$count-others', coauthors.length),

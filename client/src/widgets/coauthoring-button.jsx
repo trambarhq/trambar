@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
 import { isCoauthor } from 'common/objects/utils/user-utils.js';
@@ -46,7 +45,7 @@ export function CoauthoringButton(props) {
     label = t('story-remove-yourself');
   } else {
     iconClass = 'fas fa-plus-square';
-    if (_.size(authors) > 1) {
+    if (authors.length > 1) {
       label = t('story-add-remove-coauthor');
     } else {
       label = t('story-add-coauthor');
@@ -66,7 +65,7 @@ export function CoauthoringButton(props) {
     const props = {
       show: selecting,
       selection: authors,
-      disabled: _.slice(authors, 0, 1),
+      disabled: authors.slice(0, 1),
       database,
       route,
       env,

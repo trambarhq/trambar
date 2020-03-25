@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useProgress } from 'relaks';
 import { findNotificationsUnseenByUser } from 'common/objects/finders/notification-finder.js';
@@ -57,7 +56,7 @@ export function BottomNavigation(props) {
     <footer className="bottom-navigation" style={{ height }}>
       <div ref={containerRef} className="container">
         <ErrorBoundary env={env} showError={false}>
-          {_.map(sections, renderButton)}
+          {sections.map(renderButton)}
         </ErrorBoundary>
       </div>
     </footer>
@@ -162,7 +161,7 @@ async function NewNotificationsBadge(props) {
   const currentUserID = await db.start();
   const currentUser = (active) ? await findUser(db, currentUserID) : null;
   const notifications = (active) ? await findNotificationsUnseenByUser(db, currentUser) : [];
-  const count = _.size(notifications);
+  const count = notifications.length;
   render();
 
   if (env.platform === 'browser') {

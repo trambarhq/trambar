@@ -1,7 +1,7 @@
-import _ from 'lodash';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useListener } from 'relaks';
 import { getUserName } from 'common/objects/utils/user-utils.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -21,6 +21,10 @@ export function MultipleUserNames(props) {
   const { t, p } = env.locale;
   const [ showingPopUp, showPopUp ] = useState(false);
   const [ showingDialogBox, showDialogBox ] = useState(false);
+  const usersSorted = useMemo(() => {
+    const name = usr => getUserName(usr, env);
+    return orderBy(users, name, 'asc');
+  }, [ users, env ]);
 
   const handleMouseEnter = useListener((evt) => {
     showPopUp(true);
@@ -97,17 +101,14 @@ export function MultipleUserNames(props) {
   }
 
   function renderUserList() {
-    const sorted = _.sortBy(users, (user) => {
-      return p(user.details.name);
+    const chunk = usersSorted.slice(popupLimit);
+    const elements = chunk.map((user) => {
+      return renderUser(user);
     });
-    const chunk = _.slice(sorted, popupLimit);
-    const elements = _.map(chunk, (user) => {
-      return this.renderUser(user);
-    });
-    if (sorted.length > limit) {
+    if (usersSorted.length > limit) {
       elements.push(
         <div key={0} className="more">
-          {t('list-$count-more', users.length - chunk.length)}
+          {t('list-$count-more', usersSorted.length - chunk.length)}
         </div>
       );
     }
@@ -118,7 +119,6 @@ export function MultipleUserNames(props) {
     const userProps = { user, env };
     return <User key={user.id} {...userProps} />;
   }
-
 }
 
 /**

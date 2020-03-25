@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { BlobManager } from 'common/transport/blob-manager.js';
 
@@ -16,7 +15,7 @@ import './profile-image.scss';
 export function ProfileImage(props) {
   const { env, href, user, robot, size } = props;
   const className = `profile-image ${size}`;
-  const profileImage = _.find(user?.details?.resources, { type: 'image' });
+  const profileImage = user?.details?.resources?.find(res => res.type === 'image');
   const imageResolutions = {
     small: 24,
     medium: 48,

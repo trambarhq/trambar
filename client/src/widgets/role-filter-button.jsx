@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 // widgets
@@ -34,12 +33,12 @@ export function RoleFilterButton(props) {
   function renderImageRow(index, count) {
     // only show user if he has a profile image
     const visibleUsers = users.filter((user) => {
-      return _.some(user.details.resources, { type: 'image' });
+      return user.details.resources?.some(res => res.type === 'image');
     });
-    const slice = _.slice(users, index, count);
+    const slice = users.slice(index, count);
     return (
       <div className="row">
-        {_.map(slice, renderProfileImage)}
+        {slice.map(renderProfileImage)}
       </div>
     );
   }
