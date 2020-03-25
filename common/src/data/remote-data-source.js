@@ -12,6 +12,7 @@ import { Removal } from './remote-data-source/removal.js';
 import { CacheSignature } from './remote-data-source/cache-signature.js';
 import { ChangeMonitor } from './remote-data-source/change-monitor.js';
 import { delay } from '../utils/delay.js';
+import { sortedIndexBy } from '../utils/array-utils.js';
 
 const defaultOptions = {
   basePath: '/srv/data',
@@ -478,7 +479,7 @@ export class RemoteDataSource extends EventEmitter {
               if (search.isMeetingExpectation()) {
                 // we have all the possible results
                 // see if the changed object is among them
-                const index = _.sortedIndexBy(search.results, { id: their.id }, 'id');
+                const index = sortedIndexBy(search.results, { id: their.id }, 'id');
                 const object = search.results[index];
                 if (object && object.id === their.id) {
                   dirty = true;
@@ -553,7 +554,7 @@ export class RemoteDataSource extends EventEmitter {
     const relevantSearches = this.getRelevantRecentSearches(location);
     for (let search of relevantSearches) {
       const results = search.results;
-      const index = _.sortedIndexBy(results, object, 'id');
+      const index = sortedIndexBy(results, object, 'id');
       const target = results[index];
       if (target && target.id === object.id) {
         search.dirty = true;
@@ -691,7 +692,7 @@ export class RemoteDataSource extends EventEmitter {
         continue;
       }
       // load the (possibly) new objects
-      const affectedIDs = _.map(affectedObjects, 'id');
+      const affectedIDs = affectedObjects.map(obj => obj.id);
       const remoteObjects = await this.retrieveRemoteObjects(change.location, affectedIDs, true);
       for (let own of affectedObjects) {
         const their = _.find(remoteObjects, { id: own.id });
@@ -1428,7 +1429,7 @@ export class RemoteDataSource extends EventEmitter {
       const resultsBefore = search.results;
       let resultsAfter = resultsBefore;
       for (let object of op.results) {
-        const index = _.sortedIndexBy(resultsAfter, object, 'id');
+        const index = sortedIndexBy(resultsAfter, object, 'id');
         const target = resultsAfter[index];
         const present = (target && target.id === object.id);
         // note: Removal is a subclass of Storage
@@ -1685,7 +1686,7 @@ export class RemoteDataSource extends EventEmitter {
       list = [];
       _.set(this.idMappings, path, list);
     }
-    for (let [ index, localObject ] of _.entries(localObjects)) {
+    for (let [ index, localObject ] of Object.entries(localObjects)) {
       if (localObject.id < 1) {
         let remoteObject = remoteObjects[index];
         _.remove(list, { permanent: remoteObject.id });
@@ -1713,7 +1714,7 @@ function removeObjects(objects, ids) {
   }
   objects = _.slice(objects);
   for (let id of ids) {
-    const index = _.sortedIndexBy(objects, { id }, 'id');
+    const index = sortedIndexBy(objects, { id }, 'id');
     const object = (objects) ? objects[index] : null;
     if (object && object.id === id) {
       objects.splice(index, 1);
@@ -1736,7 +1737,7 @@ function insertObjects(objects, newObjects) {
   }
   objects = _.slice(objects);
   for (let newObject of newObjects) {
-    const index = _.sortedIndexBy(objects, newObject, 'id');
+    const index = sortedIndexBy(objects, newObject, 'id');
     const object = objects[index];
     if (object && object.id === newObject.id) {
       objects[index] = newObject;

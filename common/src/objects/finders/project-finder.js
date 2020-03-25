@@ -101,7 +101,7 @@ async function findActiveProjects(db, minimum) {
  * @return {Promise<Array<Project>>}
  */
 async function findProjectsWithMembers(db, users, minimum) {
-  const ids = _.map(users, 'id');
+  const ids = users.map(usr => usr.id);
   if (ids.length === 0) {
     return emptyArray;
   }

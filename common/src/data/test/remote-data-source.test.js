@@ -367,8 +367,8 @@ describe('RemoteDataSource', function() {
           discovery++;
           expect(payload).to.have.property('id', 3);
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn')
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn)
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -403,8 +403,8 @@ describe('RemoteDataSource', function() {
           discovery++;
           expect(payload).to.have.property('id', 1);
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn')
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn)
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -444,8 +444,8 @@ describe('RemoteDataSource', function() {
         if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn')
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn)
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -483,8 +483,8 @@ describe('RemoteDataSource', function() {
         if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn')
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn)
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -527,8 +527,8 @@ describe('RemoteDataSource', function() {
         if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn')
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn)
           };
         } else if (/retrieval/.test(url)) {
           expect(payload).to.have.property('ids').that.deep.equal([ objects[1].id ])
@@ -580,8 +580,8 @@ describe('RemoteDataSource', function() {
           await delay(50);
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn')
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn)
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -630,8 +630,8 @@ describe('RemoteDataSource', function() {
         if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn')
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn)
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -676,8 +676,8 @@ describe('RemoteDataSource', function() {
         if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn')
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn)
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -753,8 +753,8 @@ describe('RemoteDataSource', function() {
         } else if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn')
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn)
           };
         }
       });
@@ -792,8 +792,8 @@ describe('RemoteDataSource', function() {
         } else if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn'),
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn),
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -860,8 +860,8 @@ describe('RemoteDataSource', function() {
         await delay(50);
         if (/discovery/.test(url)) {
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn')
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn)
           };
         } else if (/retrieval/.test(url)) {
           return objects;
@@ -902,8 +902,8 @@ describe('RemoteDataSource', function() {
         } else if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn'),
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn),
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -959,8 +959,8 @@ describe('RemoteDataSource', function() {
         } else if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn'),
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn),
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -1045,8 +1045,8 @@ describe('RemoteDataSource', function() {
           });
         } else if (/discovery/.test(url)) {
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn'),
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn),
           };
         } else if (/retrieval/.test(url)) {
           return objects;
@@ -1107,8 +1107,8 @@ describe('RemoteDataSource', function() {
         if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn'),
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn),
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -1146,8 +1146,8 @@ describe('RemoteDataSource', function() {
         if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn'),
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn),
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -1230,8 +1230,8 @@ describe('RemoteDataSource', function() {
         if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn'),
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn),
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -1274,8 +1274,8 @@ describe('RemoteDataSource', function() {
         if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn'),
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn),
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -1319,8 +1319,8 @@ describe('RemoteDataSource', function() {
         if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn'),
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn),
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
@@ -1373,8 +1373,8 @@ describe('RemoteDataSource', function() {
         if (/discovery/.test(url)) {
           discovery++;
           return {
-            ids: _.map(objects, 'id'),
-            gns: _.map(objects, 'gn'),
+            ids: objects.map(obj => obj.id),
+            gns: objects.map(obj => obj.gn),
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;

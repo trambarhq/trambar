@@ -480,7 +480,7 @@ class PayloadManager extends EventEmitter {
     let blob = part.blob;
     let formData = new FormData;
     formData.append('file', blob);
-    for (let [ name, value ] of _.entries(part.options)) {
+    for (let [ name, value ] of Object.entries(part.options)) {
       formData.append(name, value);
     }
     let options = {

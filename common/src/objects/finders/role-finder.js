@@ -68,7 +68,7 @@ async function findActiveRoles(db, minimum) {
  */
 async function findRolesOfUsers(db, users) {
   // load roles that members have
-  const roleIDs = _.uniq(_.flatten(_.map(users, 'role_ids')));
+  const roleIDs = _.uniq(_.flatten(users.map(usr => usr.role_ids)));
   if (roleIDs.length === 0) {
     return emptyArray;
   }

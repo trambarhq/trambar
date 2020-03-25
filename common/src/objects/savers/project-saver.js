@@ -50,32 +50,32 @@ async function restoreProject(db, project) {
 }
 
 async function associateRepos(db, project, repos) {
-  const repoIDs = _.map(repos, 'id');
+  const repoIDs = repos.map(r => r.id);
   return saveProject(db, { id: project.id, repo_ids: repoIDs });
 }
 
 async function attachRepos(db, project, repos) {
-  const repoIDs = _.union(project.repo_ids, _.map(repos, 'id'));
+  const repoIDs = _.union(project.repo_ids, repos.map(r => r.id));
   return saveProject(db, { id: project.id, repo_ids: repoIDs });
 }
 
 async function detachRepos(db, project, repos) {
-  const repoIDs = _.difference(project.repo_ids, _.map(repos, 'id'));
+  const repoIDs = _.difference(project.repo_ids, repos.map(r => r.id));
   return saveProject(db, { id: project.id, repo_ids: repoIDs });
 }
 
 async function associateUsers(db, project, users) {
-  const userIDs = _.map(users, 'id');
+  const userIDs = users.map(usr => usr.id);
   return saveProject(db, { id: project.id, user_ids: userIDs });
 }
 
 async function addMembers(db, project, users) {
-  const userIDs = _.union(project.user_ids, _.map(users, 'id'));
+  const userIDs = _.union(project.user_ids, users.map(usr => usr.id));
   return saveProject(db, { id: project.id, user_ids: userIDs });
 }
 
 async function removeMembers(db, project, users) {
-  const userIDs = _.difference(project.user_ids, _.map(users, 'id'));
+  const userIDs = _.difference(project.user_ids, users.map(usr => usr.id));
   return saveProject(db, { id: project.id, user_ids: userIDs });
 }
 

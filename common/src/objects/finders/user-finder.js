@@ -134,7 +134,7 @@ async function findActiveUsers(db, minimum) {
  * @return {Promise<User>}
  */
 async function findUsersWithRoles(db, roles, minimum) {
-  let ids = _.map(roles, 'id');
+  let ids = roles.map(r => r.id);
   ids = _.sortBy(_.uniq(ids));
   return db.find({
     schema,
@@ -153,7 +153,7 @@ async function findUsersWithRoles(db, roles, minimum) {
  * @return {Promise<User>}
  */
 async function findStoryAuthors(db, stories) {
-  const userIDs = _.flatten(_.map(stories, 'user_ids'));
+  const userIDs = _.flatten(stories.map(s => s.user_ids));
   return findUsers(db, userIDs);
 }
 
@@ -166,7 +166,7 @@ async function findStoryAuthors(db, stories) {
  * @return {Promise<User>}
  */
 async function findReactionAuthors(db, reactions) {
-  const userIDs = _.map(reactions, 'user_id');
+  const userIDs = reactions.map(r => r.user_id);
   return findUsers(db, userIDs);
 }
 
@@ -179,7 +179,7 @@ async function findReactionAuthors(db, reactions) {
  * @return {Promise<User>}
  */
 async function findBookmarkRecipients(db, bookmarks) {
-  const userIDs = _.map(bookmarks, 'target_user_id');
+  const userIDs = bookmarks.map(bm => bm.target_user_id);
   return findUsers(db, userIDs);
 }
 
@@ -192,7 +192,7 @@ async function findBookmarkRecipients(db, bookmarks) {
  * @return {Promise<User>}
  */
 async function findBookmarkSenders(db, bookmarks) {
-  const userIDs = _.flatten(_.map(bookmarks, 'user_ids'));
+  const userIDs = _.flatten(bookmarks.map(bm => bm.user_ids));
   return findUsers(db, userIDs);
 }
 
@@ -205,12 +205,12 @@ async function findBookmarkSenders(db, bookmarks) {
  * @return {Promise<User>}
  */
 async function findNotificationTriggerers(db, notifications) {
-  const userIDs = _.map(notifications, 'user_id');
+  const userIDs = notifications.map(n => n.user_id);
   return findUsers(db, userIDs);
 }
 
 async function findSnapshotAuthors(db, snapshots) {
-  const userIDs = _.map(snapshots, 'user_id');
+  const userIDs = snapshots.map(s => s.user_id);
   return findUsers(db, userIDs);
 }
 

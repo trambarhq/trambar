@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import { matchSearchCriteria, limitSearchResults } from './local-search.js';
+import { sortedIndexBy } from '../utils/array-utils.js';
 
 const defaultOptions = {
   databaseName: 'database'
@@ -60,7 +61,7 @@ class IndexedDBCache {
       for (let key of keys) {
         const keyObj = {};
         keyObj[keyName] = key;
-        const index = _.sortedIndexBy(objects, keyObj, keyName);
+        const index = sortedIndexBy(objects, keyObj, keyName);
         const object = objects[index];
         if (object && object[keyName] === key) {
           results.push(object);
@@ -464,7 +465,7 @@ class IndexedDBCache {
     if (tbl.objects) {
       let keyName = this.getObjectKeyName(schema);
       for (let object of objects) {
-        let index = _.sortedIndexBy(tbl.objects, object, keyName);
+        let index = sortedIndexBy(tbl.objects, object, keyName);
         let target = tbl.objects[index];
         if (target && target[keyName] === object[keyName]) {
           if (!remove) {
@@ -524,7 +525,7 @@ class IndexedDBCache {
         if(cursor) {
           const record = cursor.value;
           const object = record.data;
-          const index = _.sortedIndexBy(results, object, keyName);
+          const index = sortedIndexBy(results, object, keyName);
           results.splice(index, 0, object);
           cursor.continue();
         } else {

@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useComputed, useSaveBuffer, useAutoSave } from 'relaks';
+import { sortedIndexBy } from '../utils/array-utils.js';
 
 import './smart-list.scss';
 
@@ -93,7 +94,7 @@ export function SmartList(props) {
   const [ slots, updateSlots ] = useComputed(() => {
     const slots = [];
     const scrollWindow = getScrollWindow(scrollContainerRef);
-    for (let slot of _.values(slotHash)) {
+    for (let slot of Object.values(slotHash)) {
       if (slot.transition === 'decide' && slot.node) {
         const slotPos = getSlotPosition(slot);
         if (isWithin(slotPos, scrollWindow)) {
@@ -111,7 +112,7 @@ export function SmartList(props) {
         slot.transition = 'run';
       }
       if (slot.state !== 'gone') {
-        const index = _.sortedIndexBy(slots, slot, 'index');
+        const index = sortedIndexBy(slots, slot, 'index');
         slots.splice(index, 0, slot);
       }
     }
@@ -197,7 +198,7 @@ export function SmartList(props) {
         }
       }
     }
-    const unseenItems = _.map(unseenSlots, 'item');
+    const unseenItems = unseenSlots.map(s => s.item);
     if (_.xor(scrollState.unseenItems, unseenItems).length > 0) {
       if (onBeforeAnchor) {
         onBeforeAnchor({ items: unseenItems });
@@ -260,7 +261,7 @@ export function SmartList(props) {
       }
     }
     if (estimatedHeight === undefined) {
-      const heights = _.filter(_.map(slots, 'height'));
+      const heights = slots.map(s => s.height).filter(Boolean);
       if (heights.length > 0) {
         const estimatedHeight = Math.round(_.mean(heights));
         if (estimatedHeight > 0) {

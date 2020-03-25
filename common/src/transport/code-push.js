@@ -38,7 +38,7 @@ class CodePush extends EventEmitter {
    * @return {Array<String>}
    */
   getDeploymentNames() {
-    let keys = _.flatten(_.map(this.options.keys, _.keys));
+    let keys = _.flatten(_.map(this.options.keys, Object.keys));
     return _.uniq(keys);
   }
 

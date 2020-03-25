@@ -220,7 +220,7 @@ export class Change {
     if (this.canceled) {
       return;
     }
-    for (let [ i, uncommittedObject ] of _.entries(this.objects)) {
+    for (let [ i, uncommittedObject ] of Object.entries(this.objects)) {
       if (this.removed[i]) {
         continue;
       }

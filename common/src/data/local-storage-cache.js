@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import { matchSearchCriteria, limitSearchResults } from './local-search.js';
+import { sortedIndexBy } from '../utils/array-utils.js';
 
 const defaultOptions = {
   databaseName: 'database'
@@ -227,7 +228,7 @@ function decodeJSON(s) {
 function findByKey(rows, key, keyName) {
   const criteria = {};
   criteria[keyName] = key;
-  const index = _.sortedIndexBy(rows, criteria, keyName);
+  const index = sortedIndexBy(rows, criteria, keyName);
   const target = rows[index];
   if (target && target[keyName] === key) {
     return target;
@@ -235,7 +236,7 @@ function findByKey(rows, key, keyName) {
 }
 
 function replaceByKey(rows, object, keyName) {
-  const index = _.sortedIndexBy(rows, object, keyName);
+  const index = sortedIndexBy(rows, object, keyName);
   const target = rows[index];
   if (target && target[keyName] === object[keyName]) {
     rows[index] = object;
@@ -245,7 +246,7 @@ function replaceByKey(rows, object, keyName) {
 }
 
 function removeByKey(rows, object, keyName) {
-  const index = _.sortedIndexBy(rows, object, keyName);
+  const index = sortedIndexBy(rows, object, keyName);
   const target = rows[index];
   if (target && target[keyName] === object[keyName]) {
     rows.splice(index, 1);

@@ -104,14 +104,14 @@ async function findUnlistedStories(db, user, listedStories, limit) {
   if (!listedStories) {
     return emptyArray;
   }
-  let recentStories = _.filter(listedStories, (story) => {
-    if (_.includes(story.user_ids, user.id)) {
+  const recentStories = listedStories.filter((story) => {
+    if (story.user_ids.includes(user.id)) {
       if (story.ptime > limit) {
         return true;
       }
     }
   });
-  let recentStoryIDs = _.map(recentStories, 'id');
+  const recentStoryIDs = recentStories.map(s => s.id);
   return db.find({
     table,
     criteria: {
@@ -472,7 +472,7 @@ async function findStoriesWithRolesInListing(db, type, roleIDs, currentUser, blo
  * @return {Promise<Array<Story>>}
  */
 async function findStoriesOfNotifications(db, notifications, currentUser) {
-  let ids = _.filter(_.map(notifications, 'story_id'));
+  const ids = notifications.map(n => n.story_id).filter(Boolean);
   return findViewableStories(db, ids, currentUser);
 }
 
@@ -486,7 +486,7 @@ async function findStoriesOfNotifications(db, notifications, currentUser) {
  * @return {Promise<Array<Story>>}
  */
 async function findStoriesOfBookmarks(db, bookmarks, currentUser) {
-  let ids = _.map(bookmarks, 'story_id');
+  let ids = bookmarks.map(bm => bm.story_id);
   return findViewableStories(db, ids, currentUser);
 }
 

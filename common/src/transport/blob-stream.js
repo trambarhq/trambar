@@ -290,7 +290,7 @@ class BlobStream {
           formData.append('file', blob);
           formData.append('chunk', index);
           if (index === 0) {
-            for (let [ name, value ] of _.entries(this.options)) {
+            for (let [ name, value ] of Object.entries(this.options)) {
               formData.append(name, value);
             }
           }
