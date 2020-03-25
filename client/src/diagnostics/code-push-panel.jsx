@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 // widgets
@@ -42,7 +41,7 @@ function CodePushPackageDiagnostics(props) {
       <div>Description: {pkg.description}</div>
       <div>First run: {pkg.isFristRun ? 'yes' : 'no'}</div>
       <div>Mandatory: {pkg.isMandatory ? 'yes' : 'no'}</div>
-      <div>Package hash: {_.truncate(pkg.packageHash, { length: 15 })}</div>
+      <div>Package hash: {pkg.packageHash.substr(0, 15)}...</div>
       <div>Package size: {pkg.packageSize}</div>
     </DiagnosticsSection>
   );

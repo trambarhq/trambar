@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 // widgets
@@ -32,7 +31,7 @@ export function PushNotifierPanel(props) {
           <div>Token: {relayToken}</div>
         </DiagnosticsSection>
         <DiagnosticsSection label="Recent messages">
-           {_.map(recentMessages, renderJSON)}
+           {recentMessages.map(renderJSON)}
         </DiagnosticsSection>
         <DiagnosticsSection label="Device">
           <div>Manufacturer: {device.manufacturer}</div>

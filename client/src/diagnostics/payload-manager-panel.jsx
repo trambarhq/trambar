@@ -1,7 +1,7 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
 import Bytes from 'bytes';
+import round from 'lodash/round.js';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -15,11 +15,11 @@ export function PayloadManagerPanel(props) {
   if (payloads.length === 0) {
     return null;
   }
-  const pending = payloads.filter({ started: false });
-  const uploading = payloads.filter({ started: true, sent: false, failed: false });
-  const processing =  payloads.filter({ sent: true, completed: false });
-  const failed = payloads.filter({ failed: true });
-  const completed = payloads.filter({ completed: true });
+  const pending = payloads.filter(p => p.started === false);
+  const uploading = payloads.filter(p => p.started === true && !p.sent && !p.failed);
+  const processing =  payloads.filter(p => p.sent && !p.completed);
+  const failed = payloads.filter(p => p.failed);
+  const completed = payloads.filter(p => p.completed);
   return (
     <SettingsPanel className="payload-manager">
       <header>
@@ -27,19 +27,19 @@ export function PayloadManagerPanel(props) {
       </header>
       <body>
         <DiagnosticsSection label="Pending payloads" hidden={pending.length === 0}>
-          {_.map(pending, renderPayload)}
+          {pending.map(renderPayload)}
         </DiagnosticsSection>
         <DiagnosticsSection label="Payloads in transit" hidden={uploading.length === 0}>
-          {_.map(uploading, renderPayload)}
+          {uploading.map(renderPayload)}
         </DiagnosticsSection>
         <DiagnosticsSection label="Payloads in backend process" hidden={processing.length === 0}>
-          {_.map(processing, renderPayload)}
+          {processing.map(renderPayload)}
         </DiagnosticsSection>
         <DiagnosticsSection label="Failed payloads" hidden={failed.length === 0}>
-          {_.map(failed, renderPayload)}
+          {failed.map(renderPayload)}
         </DiagnosticsSection>
         <DiagnosticsSection label="Completed payloads" hidden={completed.length === 0}>
-          {_.map(completed, renderPayload)}
+          {completed.map(renderPayload)}
         </DiagnosticsSection>
       </body>
     </SettingsPanel>
@@ -53,7 +53,7 @@ export function PayloadManagerPanel(props) {
         {renderTransferStatus(payload)}
         {renderBackendStatus(payload)}
         <ol>
-          {_.map(payload.parts, renderPayloadPart)}
+          {payload.parts.map(renderPayloadPart)}
         </ol>
       </div>
     );
@@ -70,12 +70,12 @@ export function PayloadManagerPanel(props) {
       if (size > 0) {
         speed = `(${Bytes(size / elapsed)} per sec)`;
       }
-      const duration = _.round(elapsed, (elapsed < 1) ? 2 : 0) + 's';
+      const duration = round(elapsed, (elapsed < 1) ? 2 : 0) + 's';
       return <div>Upload duration: {duration} {speed}</div>;
     } else {
       const size = payload.getSize();
       const uploaded = payload.getUploaded();
-      const progress = Math.round(uploaded / size * 100 || 0) + '%';
+      const progress = round(uploaded / size * 100 || 0) + '%';
       return <div>Upload progress: {progress}</div>;
     }
   }
@@ -86,7 +86,7 @@ export function PayloadManagerPanel(props) {
     }
     if (payload.completed) {
       const elapsed = (Moment(payload.processEndTime) - Moment(payload.uploadEndTime)) * 0.001;
-      const duration = _.round(elapsed, (elapsed < 1) ? 2 : 0) + 's';
+      const duration = round(elapsed, (elapsed < 1) ? 2 : 0) + 's';
       return <div>Backend duration: {duration}</div>;
     } else {
       const progress = payload.processed + '%';

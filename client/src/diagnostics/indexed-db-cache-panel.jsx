@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 // widgets
@@ -12,13 +11,7 @@ import './indexed-db-cache-panel.scss';
  */
 export function IndexedDBCachePanel(props) {
   const { cache } = props;
-  const {
-    options,
-    recordCounts,
-    writeCount,
-    readCount,
-    deleteCount,
-  } = cache;
+  const { options, recordCounts, writeCount, readCount, deleteCount } = cache;
   const localRowCount = recordCounts?.['local-data'];
   const remoteRowCount = recordCounts?.['remote-data'];
   return (

@@ -9,12 +9,7 @@ import './websocket-notifier-panel.scss';
 
 export function WebsocketNotifierPanel(props) {
   const { notifier } = props;
-  const {
-    socket,
-    reconnectionCount,
-    notificationPermitted,
-    recentMessages,
-  } = notifier;
+  const { socket, reconnectionCount, notificationPermitted, recentMessages } = notifier;
   return (
     <SettingsPanel className="websocket-notifier">
       <header>
@@ -28,7 +23,7 @@ export function WebsocketNotifierPanel(props) {
           <div>Notification: {notificationPermitted ? 'permitted' : 'denied'}</div>
         </DiagnosticsSection>
         <DiagnosticsSection label="Recent messages">
-          {_.map(recentMessages, renderJSON)}
+          {recentMessages.map(renderJSON)}
         </DiagnosticsSection>
       </body>
     </SettingsPanel>

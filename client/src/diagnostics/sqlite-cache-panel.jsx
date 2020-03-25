@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 // widgets
@@ -12,13 +11,7 @@ import './sqlite-cache-panel.scss';
  */
 export function SQLiteCachePanel(props) {
   const { cache } = props;
-  const {
-    options,
-    recordCounts,
-    writeCount,
-    readCount,
-    deleteCount,
-  } = cache;
+  const { options, recordCounts, writeCount, readCount, deleteCount } = cache;
   const localRowCount = recordCounts?.['local-data'];
   const remoteRowCount = recordCounts?.['remote-data'];
   return (

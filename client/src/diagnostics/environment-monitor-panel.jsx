@@ -11,21 +11,8 @@ import './environment-monitor-panel.scss';
  */
 export function EnvironmentMonitorPanel(props) {
   const { envMonitor } = props;
-  const {
-    online,
-    os,
-    connectionType,
-    battery,
-    screenWidth,
-    screenHeight,
-    viewportWidth,
-    viewportHeight,
-    devicePixelRatio,
-    pointingDevice,
-    webpSupport,
-    browser,
-    date,
-  } = envMonitor;
+  const { online, os, connectionType, battery, screenWidth, screenHeight, viewportWidth,
+    viewportHeight, devicePixelRatio, pointingDevice, webpSupport, browser, date } = envMonitor;
   return (
     <SettingsPanel className="env-monitor">
       <header>

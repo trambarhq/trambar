@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import CodePush from 'common/transport/code-push.js';
 
@@ -56,7 +55,7 @@ function RecentSearchTable(props) {
         </tr>
       </thead>
       <tbody>
-        {_.map(remoteSearches, renderRow)}
+        {remoteSearches.map(renderRow)}
       </tbody>
     </table>
   );
@@ -79,8 +78,8 @@ function RecentSearchTable(props) {
         <td className="criteria" title={truncateLongArray(criteriaJSON1)}>
           {criteriaJSON2}
         </td>
-        <td className="objects">{_.size(search.results)} ({search.lastRetrieved})</td>
-        <td className="by">{_.join(search.by, ', ')}</td>
+        <td className="objects">{search.results?.length || 0} ({search.lastRetrieved})</td>
+        <td className="by">{search.by?.join(', ')}</td>
       </tr>
     );
   };
@@ -103,7 +102,7 @@ function RecentStorageTable(props) {
         </tr>
       </thead>
       <tbody>
-        {_.map(remoteStores, renderRow)}
+        {remoteStores.map(renderRow)}
       </tbody>
     </table>
   );
