@@ -1,7 +1,6 @@
-import _ from 'lodash';
 import React, { useCallback } from 'react';
 import { useListener } from 'relaks';
-import { NotificationTypes, AdminNotificationTypes } from 'common/objects/types/notification-types.js';
+import { NotificationTypes, UserNotificationTypes } from 'common/objects/types/notification-types.js';
 import { canReceiveNotification } from 'common/objects/utils/user-utils.js';
 
 // widgets
@@ -16,12 +15,8 @@ import './mobile-alert-panel.scss';
 export function MobileAlertPanel(props) {
   const { env, userDraft, repos } = props;
   const { t } = env.locale;
-  let types = NotificationTypes;
-  let userType = userDraft.get('type');
-  if (userType !== 'admin') {
-    types = _.without(types, AdminNotificationTypes);
-  }
-  types = _.concat(types, 'web-session');
+  const userType = userDraft.get('type');
+  const types = (userType === 'admin') ? NotificationTypes : UserNotificationTypes;
 
   const handleOptionClick = useCallback((evt) => {
     const optionName = evt.currentTarget.id;
@@ -39,13 +34,13 @@ export function MobileAlertPanel(props) {
         {t('settings-mobile-alert')}
       </header>
       <body>
-        {_.map(types, renderOption)}
+        {[ ...types, 'web-session' ].map(renderOption)}
       </body>
     </SettingsPanel>
   );
 
   function renderOption(type, index) {
-    const optionName = _.snakeCase(type);
+    const optionName = type.replace(/-/g, '_');
     const notificationEnabled = userDraft.get(`settings.notification.${optionName}`, false);
     const alertEnabled = userDraft.get(`settings.mobile_alert.${optionName}`, false);
     const canReceive = canReceiveNotification(userDraft.current, repos, type);

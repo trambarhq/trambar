@@ -1,8 +1,8 @@
-import _ from 'lodash';
 import React, { useState, useEffect, useRef } from 'react';
 import { useListener, useErrorCatcher } from 'relaks';
 import { removeLinks } from 'common/objects/savers/project-link-saver.js';
 import { isMember } from 'common/objects/utils/user-utils.js';
+import { union, difference } from 'common/utils/array-utils.js';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -13,10 +13,7 @@ import { ProjectDescriptionDialogBox } from '../dialogs/project-description-dial
 import { MobileSetupDialogBox } from '../dialogs/mobile-setup-dialog-box.jsx';
 import { ProjectManagementDialogBox } from '../dialogs/project-management-dialog-box.jsx';
 
-import {
-  useConfirmation,
-  useDialogHandling,
-} from '../hooks.js';
+import { useConfirmation, useDialogHandling } from '../hooks.js';
 
 import './project-panel.scss';
 
@@ -32,7 +29,7 @@ export function ProjectPanel(props) {
 
   const handleProjectOptionClick = useListener((evt) => {
     const key = evt.currentTarget.getAttribute('data-key');
-    const link = _.find(projectLinks, { key });
+    const link = projectLinks.find(lnk => lnk.key === key);
     if (link) {
       // redirect to settings page with new schema, possibly new address
       const siteAddress = window.location.origin;
@@ -49,12 +46,12 @@ export function ProjectPanel(props) {
   });
   const handleJoinClick = useListener((evt) => {
     const projectIDsBefore = userDraft.get('requested_project_ids', []);
-    const projectIDs = _.union(projectIDsBefore, [ project.id ]);
+    const projectIDs = union(projectIDsBefore, [ project.id ]);
     userDraft.set('requested_project_ids', projectIDs);
   });
   const handleCancelJoinClick = useListener((evt) => {
     const projectIDsBefore = userDraft.get('requested_project_ids', []);
-    const projectIDs = _.difference(projectIDsBefore, [ project.id ]);
+    const projectIDs = difference(projectIDsBefore, [ project.id ]);
     userDraft.set('requested_project_ids', projectIDs);
   });
   const handleSignOutClick = useListener((evt) => {
@@ -110,7 +107,7 @@ export function ProjectPanel(props) {
         <i className="fas fa-database" /> {t('settings-projects')}
       </header>
       <body>
-        {_.map(projectLinks, renderProject)}
+        {projectLinks.map(renderProject)}
         {renderDialogBox()}
       </body>
       <footer>

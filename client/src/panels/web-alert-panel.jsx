@@ -1,7 +1,6 @@
-import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
-import { NotificationTypes, AdminNotificationTypes } from 'common/objects/types/notification-types.js';
+import { NotificationTypes, UserNotificationTypes } from 'common/objects/types/notification-types.js';
 import { canReceiveNotification } from 'common/objects/utils/user-utils.js';
 
 // widgets
@@ -17,10 +16,7 @@ export function WebAlertPanel(props) {
   const { env, userDraft, repos } = props;
   const { t } = env.locale;
   const userType = userDraft.get('type');
-  let types = NotificationTypes;
-  if (userType !== 'admin') {
-    types = _.without(types, AdminNotificationTypes);
-  }
+  const types = (userType === 'admin') ? NotificationTypes : UserNotificationTypes;
 
   const handleOptionClick = useListener((evt) => {
     const optionName = evt.currentTarget.id;
@@ -39,13 +35,13 @@ export function WebAlertPanel(props) {
         {t('settings-web-alert')}
       </header>
       <body>
-        {_.map(types, renderOption)}
+        {types.map(renderOption)}
       </body>
     </SettingsPanel>
   );
 
   function renderOption(type, index) {
-    const optionName = _.snakeCase(type);
+    const optionName = type.replace(/-/g, '_');
     const notificationEnabled = userDraft.get(`settings.notification.${optionName}`, false);
     const alertEnabled = userDraft.get(`settings.web_alert.${optionName}`, false);
     const canReceive = canReceiveNotification(userDraft.current, repos, type);

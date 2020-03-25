@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useCallback, useEffect } from 'react';
 import { useListener } from 'relaks';
 
@@ -55,8 +54,8 @@ export function DevelopmentPanel(props) {
         {t('settings-development')}
       </header>
       <body>
-        {_.map(deploymentNames, renderDeploymentOption)}
-        {_.map(deploymentOptions, renderDevelopmentOption)}
+        {deploymentNames.map(renderDeploymentOption)}
+        {deploymentOptions.map(renderDevelopmentOption)}
       </body>
       <footer>
         {renderButtons()}
@@ -65,7 +64,7 @@ export function DevelopmentPanel(props) {
   );
 
   function renderDevelopmentOption(name, index) {
-    const optionName = _.snakeCase(name);
+    const optionName = name.replace(/-/g, '_');
     const enabled = userDraft.get(`settings.development.${optionName}`, false);
     const buttonProps = {
       label: t(`development-${name}`),

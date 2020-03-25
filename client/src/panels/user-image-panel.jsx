@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useRef } from 'react';
 import { useListener } from 'relaks';
 import { FocusManager } from 'common/utils/focus-manager.js';
@@ -22,7 +21,7 @@ export function UserImagePanel(props) {
   const [ newImage, setNewImage ] = useState(null);
   const [ action, setAction ] = useState('');
   const existingResources = userDraft.get('details.resources', []);
-  const existingImage = _.find(existingResources, { type: 'image' });
+  const existingImage = existingResources.find(res => res.type === 'image');
 
   const handleCancelClick = useListener((evt) => {
     setAction('');

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
 
@@ -17,11 +16,11 @@ export function SocialNetworkPanel(props) {
   const { t } = env.locale;
 
   const handleSkypeUsernameChange = useListener((evt) => {
-    const username = _.trim(evt.target.value);
+    const username = evt.target.value.trim();
     userDraft.set('details.skype_username', username);
   });
   const handleIchatUsernameChange = useListener((evt) => {
-    const username = _.trim(evt.target.value);
+    const username = evt.target.value.trim();
     userDraft.set('details.ichat_username', username);
   });
   const handleTwitterUsernameChange = useListener((evt) => {
@@ -29,19 +28,19 @@ export function SocialNetworkPanel(props) {
     userDraft.set('details.twitter_username', username);
   });
   const handleLinkedinURLChange = useListener((evt) => {
-    const url = _.trim(evt.target.value);
+    const url = evt.target.value.trim();
     userDraft.set('details.linkedin_url', url);
   })
   const handleGitHubURLChange = useListener((evt) => {
-    const url = _.trim(evt.target.value);
+    const url = evt.target.value.trim();
     userDraft.set('details.github_url', url);
   });
   const handleGitlabURLChange = useListener((evt) => {
-    let url = _.trim(evt.target.value);
+    let url = evt.target.value.trim();
     userDraft.set('details.gitlab_url', url);
   });
   const handleStackoverflowURLChange = useListener((evt) => {
-    let url = _.trim(evt.target.value);
+    let url = evt.target.value.trim();
     userDraft.set('details.stackoverflow_url', url);
   });
 
@@ -136,8 +135,8 @@ export function SocialNetworkPanel(props) {
 function extractUsername(text, type) {
   if (/https?:/.test(text)) {
     // remove query string
-    text = _.trim(text.replace(/\?.*/, ''));
-    const parts = _.filter(text.split('/'));
+    text = text.trim().replace(/\?.*/, '');
+    const parts = text.split('/').filter(Boolean);
     return parts[parts.length - 1];
   }
   return text;

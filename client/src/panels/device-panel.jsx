@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
 import { Cancellation } from 'common/errors.js';
@@ -9,9 +8,7 @@ import { PushButton } from '../widgets/push-button.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 
 // custom hooks
-import {
-  useConfirmation,
-} from '../hooks.js';
+import { useConfirmation } from '../hooks.js';
 
 import './device-panel.scss';
 
@@ -22,11 +19,11 @@ export function DevicePanel(props) {
   const { database, env, devices } = props;
   const { t } = env.locale;
   const [ confirmationRef, confirm ] = useConfirmation();
-  const title = t('settings-device' + (_.size(devices) !== 1 ? 's' : ''));
+  const title = t('settings-device' + (devices?.length !== 1 ? 's' : ''));
 
   const handleRevokeClick = useListener(async (evt) => {
     const deviceID = parseInt(evt.currentTarget.getAttribute('data-device-id'));
-    const device = _.find(devices, { id: deviceID });
+    const device = devices.find(dev => dev.id === deviceID);
 
     try {
       await confirm(t('mobile-device-revoke-are-you-sure'));
@@ -46,7 +43,7 @@ export function DevicePanel(props) {
         <i className="fas fa-tablet" /> {title}
       </header>
       <body>
-        {_.map(devices, renderDevice)}
+        {devices.map(renderDevice)}
         <ActionConfirmation ref={confirmationRef} env={env} />
       </body>
     </SettingsPanel>
@@ -91,7 +88,7 @@ function DeviceIcon(props) {
 function formatDeviceName(device) {
   const manufacturer = device.details.manufacturer;
   let name = device.details.display_name || device.details.name;
-  if (!_.toLower(name).includes(_.toLower(manufacturer))) {
+  if (!name.toLowerCase().includes(manufacturer.toLowerCase())) {
     name = `${manufacturer} ${name}`;
   }
   return name;

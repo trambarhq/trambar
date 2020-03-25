@@ -1,4 +1,4 @@
-const NotificationTypes = [
+const UserNotificationTypes = [
   'like',
   'comment',
   'task-completion',
@@ -13,11 +13,15 @@ const NotificationTypes = [
   'issue',
   'push',
   'merge',
-  'join-request',
 ];
 
 const AdminNotificationTypes = [
   'join-request',
+];
+
+const NotificationTypes = [
+  ...UserNotificationTypes,
+  ...AdminNotificationTypes,
 ];
 
 const GitNotificationTypes = [

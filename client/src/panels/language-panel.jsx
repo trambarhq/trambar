@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
 
@@ -21,7 +20,7 @@ export function LanguagePanel(props) {
   const handleLanguageClick = useListener((evt) => {
     const code = evt.currentTarget.id;
     if (code !== languageCode) {
-      const language = _.find(directory, { code });
+      const language = directory.find(lng => lng.code === code);
       const localeCode = `${language.code}-${language.defaultCountry}`;
       env.locale.change(localeCode);
     }
@@ -40,7 +39,7 @@ export function LanguagePanel(props) {
         <i className="fas fa-language" /> {t('settings-language')}
       </header>
       <body>
-        {_.map(languages, renderButton)}
+        {languages.map(renderButton)}
       </body>
     </SettingsPanel>
   );
@@ -58,7 +57,7 @@ export function LanguagePanel(props) {
 
   function renderCountrySelect(language) {
     let className;
-    if (language.code !== languageCode || _.size(language.countries) <= 1) {
+    if (language.code !== languageCode || language.countries.length <= 1) {
       className = 'sole';
     }
     const props = {
@@ -68,7 +67,7 @@ export function LanguagePanel(props) {
     };
     return (
       <select key={1} {...props}>
-        {_.map(language.countries, renderCountryOption)}
+        {language.countries.map(renderCountryOption)}
       </select>
     );
   }

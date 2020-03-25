@@ -1,8 +1,8 @@
-import _ from 'lodash';
 import React from 'react';
 import { useListener } from 'relaks';
-import { NotificationTypes, AdminNotificationTypes } from 'common/objects/types/notification-types.js';
+import { NotificationTypes, UserNotificationTypes } from 'common/objects/types/notification-types.js';
 import { canReceiveNotification } from 'common/objects/utils/user-utils.js';
+import { get, set, unset, cloneDeep } from 'common/utils/object-utils.js';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -17,10 +17,7 @@ export function NotificationPanel(props) {
   const { env, userDraft, repos } = props;
   const { t } = env.locale;
   const userType = userDraft.get('type');
-  let types = NotificationTypes;
-  if (userType !== 'admin') {
-    types = _.without(types, AdminNotificationTypes);
-  }
+  const types = (userType === 'admin') ? NotificationTypes : UserNotificationTypes;
 
   const handleOptionClick = useListener((evt) => {
     const optionName = evt.currentTarget.id;
@@ -30,16 +27,16 @@ export function NotificationPanel(props) {
       `mobile_alert.${optionName}`,
     ];
     const settingsBefore = userDraft.get('settings', {});
-    const settings = _.cloneDeep(settingsBefore);
-    const enabled = !_.get(settings, optionPaths[0]);
+    const settings = cloneDeep(settingsBefore);
+    const enabled = !get(settings, optionPaths[0]);
     for (let optionPath of optionPaths) {
       if (!enabled) {
-        _.unset(settings, optionPath);
+        unset(settings, optionPath);
       } else {
         if (optionPath === 'notification.merge') {
-          _.set(settings, optionPath, 'master');
+          set(settings, optionPath, 'master');
         } else {
-          _.set(settings, optionPath, true);
+          set(settings, optionPath, true);
         }
       }
     }
@@ -52,13 +49,13 @@ export function NotificationPanel(props) {
         <i className="fas fa-exclamation-circle" /> {t('settings-notification')}
       </header>
       <body>
-        {_.map(types, renderOption)}
+        {types.map(renderOption)}
       </body>
     </SettingsPanel>
   );
 
   function renderOption(type, index) {
-    const optionName = _.snakeCase(type);
+    const optionName = type.replace(/-/g, '_');
     const enabled = userDraft.get(`settings.notification.${optionName}`, false);
     const canReceive = canReceiveNotification(userDraft.current, repos, type);
     const buttonProps = {
