@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useErrorCatcher, useAutoSave } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findTagsInText } from 'common/utils/tag-scanner.js';
 import { isMarkdown } from 'common/utils/markdown.js';
 import { FocusManager } from 'common/utils/focus-manager.js';

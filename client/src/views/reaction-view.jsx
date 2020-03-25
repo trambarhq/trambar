@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
 import { renderPlainText } from 'common/utils/plain-text.js';
 import { renderMarkdown } from 'common/utils/markdown.js';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { getUserName, getGender, canAccessRepo } from 'common/objects/utils/user-utils.js';
 import { getCommitNoteURL, getIssueNoteURL, getMergeRequestNoteURL } from 'common/objects/utils/repo-utils.js';
 
@@ -300,13 +299,3 @@ const defaultOptions = {
   editReaction: false,
   removeReaction: false,
 };
-
-const getZoomableResources = memoizeWeak(null, function(resources) {
-  return resources.filter((res) => {
-    switch (res.type) {
-      case 'image':
-      case 'video':
-        return true;
-    }
-  })
-});

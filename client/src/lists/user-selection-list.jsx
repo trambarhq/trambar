@@ -1,7 +1,5 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findCurrentProject } from 'common/objects/finders/project-finder.js';
 import { findProjectMembers } from 'common/objects/finders/user-finder.js';
 import { getUserName } from 'common/objects/utils/user-utils.js';

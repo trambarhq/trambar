@@ -1,5 +1,5 @@
 import Moment from 'moment';
-import { memoizeStrong } from '../utils/memoize.js';
+import { get, set } from '../utils/object-utils.js';
 
 class Environment {
   constructor(envMonitor, extra) {
@@ -46,7 +46,14 @@ class Environment {
   }
 
   getRelativeDate(diff, unit) {
-    return getRelativeDate(this.date, diff, unit);
+    const path = [ this.date, unit, diff ];
+    let date = get(relativeDateCache, path);
+    if (!date) {
+      const m = Moment(this.date).add(diff, unit);
+      date = m.toISOString();
+      set(relativeDateCache, path, date);
+    }
+    return date;
   }
 
   detectAndroidKeyboard() {
@@ -81,10 +88,7 @@ function hasFocusedInput() {
   return false;
 }
 
-const getRelativeDate = memoizeStrong('', function(date, diff, unit) {
-  let m = Moment(date).add(diff, unit);
-  return m.toISOString();
-});
+const relativeDateCache = {};
 
 export {
   Environment as default,

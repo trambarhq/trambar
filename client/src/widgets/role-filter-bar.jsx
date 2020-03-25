@@ -1,7 +1,5 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findCurrentProject } from 'common/objects/finders/project-finder.js';
 import { findRolesOfUsers } from 'common/objects/finders/role-finder.js';
 import { findProjectMembers } from 'common/objects/finders/user-finder.js';
@@ -17,28 +15,27 @@ import './role-filter-bar.scss';
  */
 export async function RoleFilterBar(props) {
   const { database, route, env, settings } = props;
-  const db = database.use({ by: this });
   const [ show ] = useProgress();
 
   // don't let the component be empty initially
-  render();
-  const currentUserID = await db.start();
-  const project = await findCurrentProject(db);
-  const users = await findProjectMembers(db, project);
-  const roles = await findRolesOfUsers(db, users);
+  render('initial');
+  const currentUserID = await database.start();
+  const project = await findCurrentProject(database);
+  const users = await findProjectMembers(database, project);
+  const roles = await findRolesOfUsers(database, users);
   render();
 
-  function render() {
+  function render(disp) {
     show(
       <div className="role-filter-bar">
         {renderButtons()}
       </div>
-    , 'initial');
+    , disp);
   };
 
   function renderButtons() {
     if (roles.length > 0) {
-      return _.map(roles, renderButton);
+      return roles.map(renderButton);
     } else if (roles) {
       const props = {
         role: (roles !== null) ? null : undefined,
@@ -50,8 +47,8 @@ export async function RoleFilterBar(props) {
 
   function renderButton(role) {
     const roleIDsBefore = route.params.roleIDs;
-    const roleUsers = findUsers(users, role);
-    const roleIDs = _.toggle(roleIDsBefore, role.id);
+    const roleUsers = users?.filter(usr => usr.role_ids.includes(role.id));
+    const roleIDs = toggle(roleIDsBefore, role.id);
     const params = { ...settings.route, roleIDs };
     const url = route.find(route.name, params);
     const props = {
@@ -64,12 +61,3 @@ export async function RoleFilterBar(props) {
     return <RoleFilterButton key={role.id} {...props} />;
   }
 }
-
-const findUsers = memoizeWeak(null, function(users, role) {
-  let list = users.filter((user) => {
-    return user.role_ids.includes(role.id);
-  });
-  if (list.length > 0) {
-    return list;
-  }
-});

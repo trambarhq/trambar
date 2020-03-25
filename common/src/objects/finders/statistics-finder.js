@@ -1,5 +1,4 @@
 import Moment from 'moment';
-import { memoizeWeak } from '../../utils/memoize.js';
 import { getMonthRanges, getTimeZoneOffset } from '../../utils/date-utils.js';
 import { isEqual, isMatch } from '../../utils/object-utils.js';
 
@@ -379,7 +378,7 @@ function isValidRange(dateRange) {
   return dateRange && !!dateRange.details.start_time && !!dateRange.details.end_time;
 }
 
-const summarizeStatistics = memoizeWeak(null, (dailyActivities, dateRange, project) => {
+function summarizeStatistics(dailyActivities, dateRange, project) {
   const lastMonth = Moment().subtract(1, 'month').format('YYYY-MM');
   const thisMonth = Moment().format('YYYY-MM');
   const dailyStats = mergeDailyActivities(dailyActivities);
@@ -402,7 +401,7 @@ const summarizeStatistics = memoizeWeak(null, (dailyActivities, dateRange, proje
     to_date: summaryToDate,
     daily: dailyStats,
   }
-});
+}
 
 function summarizeDailyActivities(dailyActivities, month) {
   const stats = { total: 0 };

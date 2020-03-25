@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { getAudioURL, getImageURL, isZoomable } from 'common/objects/utils/resource-utils.js';
 
 // widgets

@@ -1,7 +1,5 @@
-import _ from 'lodash';
 import React, { useState, useMemo } from 'react';
 import { useProgress } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findStoryAuthors, findReactionAuthors, findBookmarkRecipients } from 'common/objects/finders/user-finder.js';
 import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
 import { findBookmarksByUser } from 'common/objects/finders/bookmark-finder.js';
@@ -275,12 +273,12 @@ function findReactions(reactions, story) {
   }
 }
 
-const findDraftAuthors = memoizeWeak(null, function(currentUser, users, story) {
+function findDraftAuthors(currentUser, users, story) {
   if (story && users) {
     return findAuthors(users, story);
   }
   return [ currentUser ];
-});
+}
 
 function findRespondents(users, reactions) {
   if (users && reactions) {

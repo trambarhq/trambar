@@ -2,21 +2,12 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
 import { useProgress } from 'relaks';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { findCurrentProject } from 'common/objects/finders/project-finder.js';
 import { getUserAccessLevel } from 'common/objects/utils/project-utils.js';
 import { findDailyActivitiesOfUser, findDailyActivitiesOfUsers } from 'common/objects/finders/statistics-finder.js';
-import {
-  findStory,
-  findStoriesWithTags,
-  findStoriesMatchingText,
-  findStoriesOnDate,
-  findStoriesByUsersInListings,
-  findStoriesByUserWithTags,
-  findStoriesByUserMatchingText,
-  findStoriesByUserOnDate,
-  findStoriesByUserInListing,
-} from 'common/objects/finders/story-finder.js';
+import { findStory, findStoriesWithTags, findStoriesMatchingText, findStoriesOnDate,
+  findStoriesByUsersInListings, findStoriesByUserWithTags, findStoriesByUserMatchingText,
+  findStoriesByUserOnDate, findStoriesByUserInListing } from 'common/objects/finders/story-finder.js';
 import { findUser, findUsers, findProjectMembers } from 'common/objects/finders/user-finder.js';
 import { removeTags, findTags } from 'common/utils/tag-scanner.js';
 
@@ -292,40 +283,34 @@ export default async function PeoplePage(props) {
   }
 }
 
-const findUsersWithRoles = memoizeWeak(null, function(users, roleIDs) {
+function findUsersWithRoles(users, roleIDs) {
   return users.filter((user) => {
-    return _.some(user.role_ids, (roleID) => {
-      return roleIDs.includes(roleID);
-    });
+    return user.role_ids.some(id => roleIDs.includes(id));
   });
-});
+}
 
-const findUsersWithActivitiesOnDate = memoizeWeak(null, function(users, statistics, date) {
+function findUsersWithActivitiesOnDate(users, statistics, date) {
   return users.filter((user) => {
     const userStats = statistics[user.id];
     if (userStats) {
       return userStats.daily[date];
     }
   });
-});
+}
 
-const findUsersWithStoriesWithTags = memoizeWeak(null, function(users, statistics, tags) {
+function findUsersWithStoriesWithTags(users, statistics, tags) {
   return users.filter((user) => {
     const userStats = statistics[user.id];
     if (userStats) {
-      return _.some(userStats.daily, (counts, date) => {
-        return _.some(tags, (tag) => {
-          return !!counts[tag];
-        });
+      return userStats.daily?.some((counts, date) => {
+        return tags.some(tag => counts[tag]);
       });
     }
   });
-});
+}
 
-const findUsersWithStories = memoizeWeak(null, function(users, stories) {
+function findUsersWithStories(users, stories) {
   return users.filter((user) => {
-    return _.some(stories, (story) => {
-      return story.user_ids.includes(user.id);
-    });
+    return stories.some(s => s.user_ids.includes(user.id));
   });
-});
+}

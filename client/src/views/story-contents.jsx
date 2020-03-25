@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useListener, useSaveBuffer, useErrorCatcher } from 'relaks';
 import round from 'lodash/round.js';
-import { memoizeWeak } from 'common/utils/memoize.js';
 import { renderPlainText, findEmoji, capitalize } from 'common/utils/plain-text.js';
 import { renderMarkdown } from 'common/utils/markdown.js';
 import { getWebsiteAddress } from 'common/objects/utils/project-utils.js';
