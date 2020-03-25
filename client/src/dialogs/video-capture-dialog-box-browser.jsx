@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useProgress, useListener } from 'relaks';
 
@@ -12,10 +11,7 @@ import { DurationIndicator } from '../widgets/duration-indicator.jsx';
 import { VolumeIndicator } from '../widgets/volume-indicator.jsx';
 
 // custom hooks
-import {
-  useMediaCapture,
-  useStreamHandling,
-} from '../hooks.js';
+import { useMediaCapture, useStreamHandling } from '../hooks.js';
 
 import './video-capture-dialog-box-browser.scss';
 
@@ -64,7 +60,7 @@ export const VideoCaptureDialogBoxBrowser = Overlay.create(async (props) => {
         width: capturedVideo.width,
         height: capturedVideo.height,
         duration: capturedVideo.duration,
-        format: _.last(_.split(capture.options.videoMIMEType, '/')),
+        format: capture.options.videoMIMEType.split('/')[1] || '',
         bitrates: {
           audio: capture.options.audioBitsPerSecond,
           video: capture.options.videoBitsPerSecond,

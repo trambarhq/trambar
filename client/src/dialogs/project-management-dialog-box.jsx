@@ -1,6 +1,6 @@
-import _ from 'lodash';
 import React from 'react';
 import { useListener, useSaveBuffer } from 'relaks';
+import { toggle } from 'common/utils/array-utils.js';
 import { isEqual } from 'common/utils/object-utils.js';
 
 // widgets
@@ -24,7 +24,7 @@ export const ProjectManagementDialogBox = Overlay.create((props) => {
 
   const handleProjectClick = useListener((evt) => {
     const key = evt.currentTarget.id;
-    const newSelection = _.toggle(projectSelection.current, key);
+    const newSelection = toggle(projectSelection.current, key);
     projectSelection.update(newSelection);
   });
   const handleRemoveClick = useListener((evt) => {
@@ -36,7 +36,7 @@ export const ProjectManagementDialogBox = Overlay.create((props) => {
   return (
     <div className="project-management-dialog-box">
       <Scrollable>
-        {_.map(projectLinks, renderProjectButton)}
+        {projectLinks.map(renderProjectButton)}
       </Scrollable>
       {renderButtons()}
     </div>

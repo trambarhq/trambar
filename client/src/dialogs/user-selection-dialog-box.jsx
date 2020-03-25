@@ -8,9 +8,7 @@ import { Scrollable } from '../widgets/scrollable.jsx';
 import { UserSelectionList } from '../lists/user-selection-list.jsx';
 
 // custom hooks
-import {
-  useSelectionBuffer,
-} from '../hooks.js';
+import { useSelectionBuffer } from '../hooks.js';
 
 import './user-selection-dialog-box.scss';
 

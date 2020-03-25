@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
 import { getUserName, getGender, isMember, isPendingMember, canViewProject, canJoinProject } from 'common/objects/utils/user-utils.js';
@@ -53,7 +52,7 @@ export const MembershipRequestDialogBox = Overlay.create((props) => {
     }
     const { name } = project;
     const { title, description, resources } = project.details;
-    const image = _.find(resources, { type: 'image' });
+    const image = resources.find(res => res.type === 'image');
     return (
       <Scrollable>
         <div className="title">{p(title) || name}</div>

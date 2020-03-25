@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useAsyncEffect } from 'relaks';
 import { isActuallyPublished } from 'common/media/media-loader.js';
@@ -26,7 +25,7 @@ export function AudioCaptureDialogBoxCordova(props) {
           try {
             const mediaFileData = await getFormatData(mediaFile);
             const file = new CordovaFile(mediaFile.fullPath);
-            const [ type, format ] = _.split(mediaFile.type, '/');
+            const [ type, format ] = mediaFile.type.split('/');
             const payload = payloads.add('audio');
             payload.attachFile(file);
             const res = {

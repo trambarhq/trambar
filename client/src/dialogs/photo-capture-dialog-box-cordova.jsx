@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useAsyncEffect } from 'relaks';
 import { getImageMetadata } from 'common/media/media-loader.js';

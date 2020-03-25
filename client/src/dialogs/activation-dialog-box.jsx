@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useListener } from 'relaks';
 
@@ -26,22 +25,22 @@ export const ActivationDialogBox = Overlay.create((props) => {
   });
   const handleOKClick = useListener((evt) => {
     if (onConfirm) {
-      const codeCleaned = _.replace(code, /\s+/g, '');
+      const codeCleaned = code.replace(/\s+/g, '');
       onConfirm({ address, code: codeCleaned, schema });
     }
   });
   const handleAddressChange = useListener((evt) => {
-    const address = _.replace(evt.target.value, /\s+/g, '');
+    const address = evt.target.value.replace(/\s+/g, '');
     setAddress(address);
   });
   const handleCodeChange = useListener((evt) => {
-    const code = _.replace(_.toUpper(evt.target.value), /[^0-9A-F ]/g, '');
-    if (_.replace(code, /\s+/g, '').length <= 16) {
+    const code = evt.target.value.toUpperCase().replace(/[^0-9A-F ]/g, '');
+    if (code.replace(/\s+/g, '').length <= 16) {
       setCode(code);
     }
   });
   const handleSchemaChange = useListener((evt) => {
-    const schema = _.toLower(_.replace(evt.target.value, /[^\w\-]/g, ''));
+    const schema = evt.target.value.toLowerCase().replace(/[^\w\-]/g, '');
     setSchema(schema);
   });
 
@@ -99,7 +98,7 @@ export const ActivationDialogBox = Overlay.create((props) => {
 
   function renderButtons() {
     let acceptable = true;
-    if (!/^[0-9A-F]{16}$/i.test(_.replace(code, /\s/g, ''))) {
+    if (!/^[0-9A-F]{16}$/i.test(code.replace(/\s/g, ''))) {
       acceptable = false;
     }
     if (!/https?:\/\/\w+/.test(address)) {

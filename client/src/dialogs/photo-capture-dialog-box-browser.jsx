@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import Relaks, { useProgress, useListener } from 'relaks';
 
@@ -10,9 +9,7 @@ import { DeviceSelector } from '../widgets/device-selector.jsx';
 import { DevicePlaceholder } from '../widgets/device-placeholder.jsx';
 
 // custom hooks
-import {
-  useMediaCapture,
-} from '../hooks.js';
+import { useMediaCapture } from '../hooks.js';
 
 import './photo-capture-dialog-box-browser.scss';
 
@@ -48,7 +45,7 @@ export const PhotoCaptureDialogBoxBrowser = Overlay.create(async (props) => {
         payload_token: payload.id,
         width: capturedImage.width,
         height: capturedImage.height,
-        format: _.last(_.split(capture.options.imageMIMEType, '/')),
+        format: capture.options.imageMIMEType.split('/')[1] || '',
       };
       onCapture({ resource });
     }

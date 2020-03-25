@@ -1,9 +1,9 @@
-import _ from 'lodash';
 import React, { useRef, useMemo } from 'react';
 import { useListener } from 'relaks';
 import { removeTags } from 'common/utils/tag-scanner.js';
 import { getRepoName, getIssueLabelStyle } from 'common/objects/utils/repo-utils.js';
 import { canAddIssue } from 'common/objects/utils/user-utils.js';
+import { orderBy, toggle } from 'common/utils/array-utils.js';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -11,9 +11,7 @@ import { PushButton } from '../widgets/push-button.jsx';
 import { TextField } from '../widgets/text-field.jsx';
 
 // custom hooks
-import {
-  useDraftBuffer,
-} from '../hooks.js';
+import { useDraftBuffer } from '../hooks.js';
 
 import './issue-dialog-box.scss';
 
@@ -27,20 +25,16 @@ export const IssueDialogBox = Overlay.create((props) => {
   const { t, p } = env.locale;
   const textFieldRef = useRef();
   const availableRepos = useMemo(() => {
-    const accessible = repos.filter((repo) => {
-      return canAddIssue(currentUser, story, repo, 'read-write');
-    });
-    const sorted = _.sortBy(repos, (repo) => {
-      return _.toLower(p(repo.details.title) || repo.name);
-    });
-    return sorted;
+    const accessible = repos.filter(r => canAddIssue(currentUser, story, repo, 'read-write'));
+    const name = r => getRepoName(r);
+    return orderBy(repos, name, 'asc');
   }, [ env, currentUser, story, repos ]);
   const draft = useDraftBuffer({
     original: issue || {},
     prefill: generateNewIssue,
   });
   const selectedRepoID = draft.get('repo_id');
-  const selectedRepo = _.find(availableRepos, { id: selectedRepoID });
+  const selectedRepo = availableRepos.find(r => r.id === selectedRepoID);
 
   const handleDeleteClick = useListener((evt) => {
     if (onConfirm) {
@@ -54,7 +48,7 @@ export const IssueDialogBox = Overlay.create((props) => {
   });
   const handleOKClick = useListener((evt) => {
     // make sure the selected labels exist in the selected repo only
-    const labels = _.intersection(draft.current.labels, selectedRepo.details.labels);
+    const labels = draft.current.labels.filter(l => selectedRepo.details.labels?.includes(l));
     const newIssue = { ...draft.current, labels };
     if (onConfirm) {
       onConfirm({ issue: newIssue });
@@ -71,7 +65,7 @@ export const IssueDialogBox = Overlay.create((props) => {
   const handleTagClick = useListener((evt) => {
     const label = evt.target.getAttribute('data-label');
     const labelsBefore = draft.get('labels', []);
-    const labels = _.toggle(labelsBefore, label);
+    const labels = toggle(labelsBefore, label);
     draft.set('labels', labels);
   });
 
@@ -114,7 +108,7 @@ export const IssueDialogBox = Overlay.create((props) => {
       <div className="select-field">
         <label>{t('issue-repo')}</label>
         <select value={selectedRepo.id} onChange={handleRepoChange}>
-          {_.map(repos, renderRepoOption)}
+          {repos.map(renderRepoOption)}
         </select>
       </div>
     );
@@ -129,8 +123,8 @@ export const IssueDialogBox = Overlay.create((props) => {
     if (!selectedRepo) {
       return null;
     }
-    const { labels } = selectedRepo.details;
-    const tags = _.map(labels, renderLabel);
+    const { labels = [] } = selectedRepo.details;
+    const tags = labels?.map(renderLabel);
     for (let i = 1; i < tags.length; i += 2) {
       tags.splice(i, 0, ' ');
     }
@@ -190,7 +184,7 @@ export const IssueDialogBox = Overlay.create((props) => {
     const { text } = story.details;
     const langText = p(text);
     // look for a title in the text
-    const paragraphs = _.split(_.trim(langText), /[\r\n]+/);
+    const paragraphs = langText.trim().split(/[\r\n]+/);
     const first = TagScanner.removeTags(paragraphs[0]);
     // use first paragraph as title only if it isn't very long
     let title = '';
@@ -199,22 +193,27 @@ export const IssueDialogBox = Overlay.create((props) => {
     }
 
     // look for tags that match labels
-    const allLabels = _.uniq(_.flatten(_.map(repos, 'details.labels')));
-    const labels = allLabels.filter((label) => {
-      let tag = `#${_.replace(label, /\s+/g, '-')}`;
-      return story.tags.includes(tag);
-    });
+    const labels = [];
+    for (let repo of repos) {
+      for (let label of repos.details.labels || []) {
+        const tag = '#' + label.replace(/\s+/g, '-');
+        if (story.tags.includes(tag)) {
+          if (!labels.includes(label)) {
+            labels.push(label);
+          }
+        }
+      }
+    }
 
     // choose the last one selected
     const lastSelectedRepoID = parseInt(localStorage.last_selected_repo_id);
-    let repo = _.find(availableRepos, { id: lastSelectedRepoID });
+    let repo = availableRepos.find(r => r.id === lastSelectedRepoID);
     if (!repo) {
-      // find one with labels--if a repo has no labels, then its
+      // find one with most labels--if a repo has no labels, then its
       // issue tracker probably isn't being used
-      const sorted = _.sortBy(availableRepos, (repo) => {
-        return _.size(repo.details.labels);
-      });
-      repo = _.last(sorted);
+      const labelCount = r => repo.details.labels?.length || 0;
+      const sorted = orderBy(availableRepos, labelCount, 'desc');
+      repo = sorted[0];
     }
 
     return {

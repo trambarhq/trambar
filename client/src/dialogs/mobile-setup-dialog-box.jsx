@@ -30,7 +30,7 @@ export const MobileSetupDialogBox = Overlay.create(async (props) => {
   const devices = await findUserDevices(database, currentUser);
   render();
 
-  if (_.some(devices, { session_handle: activationCode })) {
+  if (devices.some(dev => dev.session_handle === activationCode)) {
     // a device has acquire the session--close dialog box automatically
     if (onClose) {
       onClose({});
@@ -75,6 +75,6 @@ function insertSpacers(s) {
   if (!s) {
     return s;
   }
-  let parts = s.match(/.{1,4}/g);
-  return _.toUpper(parts.join(' '));
+  const parts = s.match(/.{1,4}/g);
+  return parts.join(' ').toUpperCase();
 }

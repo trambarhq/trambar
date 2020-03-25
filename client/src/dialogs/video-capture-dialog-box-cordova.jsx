@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import { useAsyncEffect } from 'relaks';
 import { getFormatData, extractFileFormat, getImageMetadata } from 'common/media/media-loader.js';
@@ -92,7 +91,7 @@ function createThumbnail(file) {
     const successCB = (path) => {
       if (cordova.platformId === 'windows') {
         // need to use ms-appdata: URL instead of win32 path
-        const backSlashIndex = _.lastIndexOf(path, '\\');
+        const backSlashIndex = path.lastIndexOf('\\');
         if (backSlashIndex !== -1) {
           const filename = path.substr(backSlashIndex + 1);
           path = cordova.file.dataDirectory + filename;

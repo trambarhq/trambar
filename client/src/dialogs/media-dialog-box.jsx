@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { useListener } from 'relaks';
 import Hammer from 'hammerjs';
@@ -199,7 +198,7 @@ export const MediaDialogBox = Overlay.create((props) => {
   function renderThumbnails() {
     return (
       <div className="links">
-        {_.map(resources, renderThumbnail)}
+        {resources.map(renderThumbnail)}
       </div>
     );
   }
@@ -243,7 +242,7 @@ export const MediaDialogBox = Overlay.create((props) => {
   }
 
   function changeResourceIndex(change) {
-    const newIndex = _.clamp(resourceIndex + change, 0, resources.length);
+    const newIndex = Math.max(0, Math.min(resources.length, resourceIndex + change));
     if (resourceIndex !== newIndex)  {
       setResourceIndex(newIndex);
     }

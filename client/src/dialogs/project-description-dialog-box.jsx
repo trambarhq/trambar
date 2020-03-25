@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 // widgets
@@ -26,7 +25,7 @@ export const ProjectDescriptionDialogBox = Overlay.create((props) => {
   function renderText() {
     const { name } = project;
     const { resources, title } = project.details;
-    const image = _.find(resources, { type: 'image' });
+    const image = resources?.find(res => res.type === 'image');
     return (
       <Scrollable>
         <div className="title">{p(title) || name}</div>

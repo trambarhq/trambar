@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { PureComponent, Children } from 'react';
 import ReactDOM from 'react-dom';
 
@@ -289,7 +288,7 @@ class CameraOverlay extends PureComponent {
   renderPart(tag) {
     let { children } = this.props;
     children = Children.toArray(children);
-    let element = _.find(children, { type: tag });
+    let element = children.find(el => el.type === tag);
     if (!element) {
       return null;
     }
