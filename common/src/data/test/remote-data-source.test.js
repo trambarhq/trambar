@@ -712,7 +712,7 @@ describe('RemoteDataSource', function() {
           storage++;
           expect(method).to.match(/post/i);
           expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
-          return _.map(payload.objects, (object) => {
+          return payload.objects.map((object) => {
             object = _.clone(object);
             if (!object.id) {
               object.id = id++;
@@ -1018,7 +1018,7 @@ describe('RemoteDataSource', function() {
           storage++;
           expect(method).to.match(/post/i);
           expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
-          return _.map(payload.objects, (object) => {
+          return payload.objects.map((object) => {
             expect(object.deleted).to.be.true;
             return _.clone(object);
           });
@@ -1040,7 +1040,7 @@ describe('RemoteDataSource', function() {
         await delay(50);
         if (/storage/.test(url)) {
           storage++;
-          return _.map(payload.objects, (object) => {
+          return payload.objects.map((object) => {
             return _.clone(object);
           });
         } else if (/discovery/.test(url)) {

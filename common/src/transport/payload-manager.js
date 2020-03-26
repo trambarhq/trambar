@@ -92,7 +92,7 @@ class PayloadManager extends EventEmitter {
    * @param  {Array<String>} ids
    */
   dispatch(ids) {
-    let payloads = _.filter(this.payloads, (payload) => {
+    let payloads = this.payloads.filter((payload) => {
       return _.includes(ids, payload.id);
     });
     this.dispatchPayloads(payloads);
@@ -104,7 +104,7 @@ class PayloadManager extends EventEmitter {
    * @param  {Array<String>} ids
    */
   abandon(ids) {
-    const payloads = _.filter(this.payloads, (payload) => {
+    const payloads = this.payloads.filter((payload) => {
       return _.includes(ids, payload.id);
     });
     if (payloads.length > 0) {
@@ -128,7 +128,7 @@ class PayloadManager extends EventEmitter {
     if (_.isEmpty(ids)) {
       return null;
     }
-    let payloads = _.filter(this.payloads, (payload) => {
+    let payloads = this.payloads.filter((payload) => {
       return _.includes(ids, payload.id) && payload.type !== 'unknown';
     });
     if (payloads.length < ids.length) {
@@ -295,7 +295,7 @@ class PayloadManager extends EventEmitter {
     if (!this.active) {
       return false;
     }
-    let inProgressPayloads = _.filter(this.payloads, {
+    let inProgressPayloads = this.payloads.filter({
       sent: true,
       completed: false,
     });

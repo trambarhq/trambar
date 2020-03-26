@@ -110,9 +110,7 @@ class BlobManager {
     const now = new Date;
     const removed = _.remove(this.list, (entry) => {
       // see if we can retrieve the file from the server if need arises
-      const hasRemote = _.some(entry.urls, (url) => {
-        return /https?:/.test(url);
-      });
+      const hasRemote = entry.urls.some(url => /https?:/.test(url));
       if (hasRemote) {
         const elapsed = now - entry.atime;
         if (elapsed > 3 * 60 * 1000) {

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import CordovaFile from './cordova-file.js';
 
 class Payload {
@@ -132,7 +131,7 @@ class Payload {
    * @param  {Object} options
    */
   setPartOptions(name, options) {
-    let part = _.find(this.parts, { name });
+    const part = this.parts.find(p => p.name === name);
     if (!part) {
       throw new Error(`Unable to find part: ${name}`);
     }
@@ -140,7 +139,7 @@ class Payload {
       // options need to be applied to stream
       part.stream.setOptions(options);
     } else {
-      part.options = _.assign({}, part.options, options);
+      part.options = Object.assign({}, part.options, options);
     }
   }
 
@@ -150,10 +149,7 @@ class Payload {
    * @return {Number}
    */
   getSize() {
-    let sizes = _.map(this.parts, (part) => {
-      return part.size || 0;
-    });
-    return _.sum(sizes);
+    return this.parts.reduce((sum, p) => sum + (p.size || 0), 0);
   }
 
   /**
@@ -162,10 +158,7 @@ class Payload {
    * @return {Number}
    */
   getUploaded() {
-    let counts = _.map(this.parts, (part) => {
-      return part.uploaded || 0;
-    });
-    return _.sum(counts);
+    return this.parts.reduce((sum, p) => sum + (p.uploaded || 0), 0);
   }
 
   /**
@@ -174,14 +167,8 @@ class Payload {
    * @return {Number}
    */
   getRemainingFiles() {
-    let remainingFiles = _.filter(this.parts, (part) => {
-      if (part.size > 0) {
-        if (part.uploaded < part.size) {
-          return true;
-        }
-      }
-    });
-    return remainingFiles.length;
+    const remaining = this.parts.filters(p => p.size > 0 && p.uploaded < p.size);
+    return remaining.length;
   }
 
   /**
@@ -190,10 +177,7 @@ class Payload {
    * @return {Number}
    */
   getRemainingBytes() {
-    let remainingBytes = _.map(this.parts, (part) => {
-      return (part.size > 0) ? part.size - part.uploaded : 0;
-    });
-    return _.sum(remainingBytes);
+    return this.parts.reduce((sum, p) => sum + (p.size > 0 ? p.size - p.uploaded : 0), 0);
   }
 
   /**

@@ -227,7 +227,7 @@ export class RemoteDataSource extends EventEmitter {
     if (_.get(this.options.discoveryFlags, 'include_deleted')) {
       return storage.results;
     } else {
-      const deleted = _.filter(storage.results, { deleted: true });
+      const deleted = storage.results.filter(obj => obj.deleted);
       const saved = _.difference(storage.results, deleted);
       return saved;
     }
@@ -531,7 +531,7 @@ export class RemoteDataSource extends EventEmitter {
    * @param  {Object|null} revalidation
    */
   async revalidate(revalidation) {
-    this.cacheSignatures = _.filter(this.cacheSignatures, (cacheSignature) => {
+    this.cacheSignatures = this.cacheSignatures.filter((cacheSignature) => {
       if (!revalidation) {
         return false;
       } else if (revalidation.address === cacheSignature.address) {
@@ -613,7 +613,7 @@ export class RemoteDataSource extends EventEmitter {
   omitOwnChanges(changes) {
     return changes.filter((their) => {
       // examine changes that have been sent earlier
-      const relevantChanges = _.filter(this.changeQueue, (change) => {
+      const relevantChanges = this.changeQueue.filter((change) => {
         if (change.dispatched && !change.failed) {
           if (change.matchLocation(their)) {
             return true;
@@ -625,7 +625,7 @@ export class RemoteDataSource extends EventEmitter {
       // recently saved or is being saved at this very moment
       return !relevantChanges.some((change) => {
         if (change.committed) {
-          return _.some(change.received, (own) => {
+          return change.received.some((own) => {
             if (own.id === their.id) {
               if (own.gn >= their.gn) {
                 // the notification is either due to our own action
@@ -635,7 +635,7 @@ export class RemoteDataSource extends EventEmitter {
             }
           });
         } else {
-          return _.some(change.delivered, (own) => {
+          return change.delivered.some((own) => {
             if (own.id === their.id) {
               // the notification is about an object that's in flight
               return true;
@@ -672,7 +672,7 @@ export class RemoteDataSource extends EventEmitter {
       });
 
       // look for uncommitted objects that were changed remotely
-      const affectedObjects = _.filter(change.objects, (own, index) => {
+      const affectedObjects = change.objects.filter((own, index) => {
         if (!change.removed[index]) {
           if (!changes) {
             // we're dealing with a reconnection scenario
@@ -1282,7 +1282,7 @@ export class RemoteDataSource extends EventEmitter {
     */
   async clearCachedSchemas(session) {
     // remove cached remote signatures
-    this.cacheSignatures = _.filter(this.cacheSignatures, (cacheSignature) => {
+    this.cacheSignatures = this.cacheSignatures.filter((cacheSignature) => {
        return (cacheSignature.address !== session.address);
     });
 
@@ -1337,7 +1337,7 @@ export class RemoteDataSource extends EventEmitter {
         if (_.get(this.options.discoveryFlags, 'include_deleted')) {
           await this.cache.save(location, op.results);
         } else {
-          const deleted = _.filter(op.results, { deleted: true });
+          const deleted = op.results.filter(obj => obj.deleted);
           const saved = _.difference(op.results, deleted);
           await this.cache.save(location, saved);
           await this.cache.remove(location, deleted);
@@ -1570,7 +1570,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Array<Object>}
    */
   getRelevantRecentSearches(location) {
-    return _.filter(this.recentSearchResults, (search) => {
+    return this.recentSearchResults.filter((search) => {
       if (search.results) {
         return search.matchLocation(location);
       }

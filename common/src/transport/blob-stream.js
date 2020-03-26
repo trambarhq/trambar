@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { performHTTPRequest } from './http-request.js';
 import { promiseSelf } from '../utils/promise-self.js';
 import { delay } from '../utils/delay.js';
@@ -32,7 +31,7 @@ class BlobStream {
    * @return {Blob}
    */
   toBlob() {
-    let blobs = _.map(this.parts, 'blob');
+    const blobs = this.parts.map(p => p.blob);
     if (blobs.length > 1) {
       let type = blobs[0].type;
       return new Blob(blobs, { type });
@@ -47,7 +46,7 @@ class BlobStream {
     if (this.started) {
       throw new Error('Cannot set options once a stream has started');
     }
-    this.options = _.assign({}, this.options, options);
+    this.options = { ...this.options, ...options };
   }
 
   /**
@@ -77,7 +76,7 @@ class BlobStream {
    */
   close() {
     this.closed = true;
-    let unsent = _.find(this.parts, { sent: false });
+    let unsent = this.parts.find(p => !p.sent);
     if (!unsent) {
       if (this.pullResult) {
         this.pullResult.resolve(null);
@@ -96,7 +95,7 @@ class BlobStream {
    * @return {Promise<Blob>}
    */
   async pull() {
-    let unsent = _.find(this.parts, { sent: false });
+    const unsent = this.parts.find(p => !p.sent);
     if (unsent) {
       return unsent.blob;
     } else {
@@ -116,12 +115,12 @@ class BlobStream {
    * @param  {Blob} blob
    */
   finalize(blob) {
-    let part = _.find(this.parts, { blob });
+    const part = this.parts.find(p => p.blob === blob);
     if (part) {
       part.sent = true;
     }
     if (this.waitResult) {
-      let unsent = _.find(this.parts, { sent: false });
+      const unsent = this.parts.find(p => !p.sent);
       if (!unsent && this.closed) {
         this.waitResult.resolve();
       }
@@ -150,7 +149,7 @@ class BlobStream {
       if (this.error) {
         throw this.error;
       }
-      let unsent = _.find(this.parts, { sent: false });
+      const unsent = this.parts.find(p => !p.sent);
       if (!unsent) {
         return;
       }

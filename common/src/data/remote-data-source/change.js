@@ -267,7 +267,7 @@ export class Change {
    * @return {Array<Object>}
    */
   deliverables() {
-    this.delivered = _.filter(this.objects, (object, index) => {
+    this.delivered = this.objects.filter((object, index) => {
       return !this.removed[index];
     });
     return this.delivered;
@@ -285,7 +285,7 @@ export class Change {
       // drop this one since a new object will be created
       return false;
     }
-    this.objects = _.filter(this.objects, (object) => {
+    this.objects = this.objects.filter((object) => {
       if (object.deleted && object.id < 1) {
         return false;
       }

@@ -184,7 +184,7 @@ export const ImageCropper = React.forwardRef((props, ref) => {
     setPinchStart({
       clippingRect: rect.current,
       boundingRect: container.getBoundingClientRect(),
-      pointers: _.map(evt.pointers, (pointer) => {
+      pointers: evt.pointers.map((pointer) => {
         return {
           pageX: pointer.pageX,
           pageY: pointer.pageY,
