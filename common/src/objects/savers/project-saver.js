@@ -14,7 +14,7 @@ async function saveProject(db, project) {
 }
 
 async function archiveProjects(db, projects) {
-  const changes = _.map(projects, (project) => {
+  const changes = projects.map((project) => {
     return { id: project.id, archived: true };
   });
   return saveProjects(db, changes);
@@ -26,7 +26,7 @@ async function archiveProject(db, project) {
 }
 
 async function removeProjects(db, projects) {
-  const changes = _.map(projects, (project) => {
+  const changes = projects.map((project) => {
     return { id: project.id, deleted: true };
   });
   return saveProjects(db, changes);
@@ -38,7 +38,7 @@ async function removeProject(db, project) {
 }
 
 async function restoreProjects(db, projects) {
-  const changes = _.map(projects, (project) => {
+  const changes = projects.map((project) => {
     return { id: project.id, archived: false, deleted: false };
   });
   return saveProjects(db, changes);

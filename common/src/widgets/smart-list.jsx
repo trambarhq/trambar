@@ -127,7 +127,7 @@ export function SmartList(props) {
       onAnchorChange({ item });
     }
   });
-  const transitioning = _.some(slots, { transition: 'run' });
+  const transitioning = slots.some(s => s.transition === 'run');
 
   const handleScroll = useListener((evt) => {
     if (updateScrollState(scrollContainerRef, scrollState, inverted)) {
@@ -166,7 +166,7 @@ export function SmartList(props) {
 
   useEffect(() => {
     // trigger transitioning of slots once they've been rendered
-    const startTransition = _.some(slots, (slot) => {
+    const startTransition = slots.some((slot) => {
       if (slot.state === 'appearing' || slot.state === 'disappearing') {
         if (slot.transition !== 'run') {
           return true;
@@ -279,7 +279,7 @@ export function SmartList(props) {
   const list = (inverted) ? _.reverse(_.slice(slots)) : slots;
   return (
     <div ref={containerRef} className="smart-list" onTransitionEnd={handleTransitionEnd}>
-      {_.map(list, renderSlot)}
+      {list.map(renderSlot)}
     </div>
   );
 

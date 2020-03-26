@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 const table = 'bookmark';
 
 async function saveBookmarks(db, bookmarks) {
@@ -40,7 +38,7 @@ async function syncBookmarks(db, bookmarks, story, sender, recipients) {
   // add bookmarks that don't exist yet
   const addition = [];
   for (let recipient of recipients) {
-    if (!_.some(bookmarks, { target_user_id: recipient.id })) {
+    if (!bookmarks.some(bm => bm.target_user_id === recipient.id)) {
       addition.push({
         story_id: story.published_version_id || story.id,
         user_ids: [ sender.id ],
@@ -54,7 +52,7 @@ async function syncBookmarks(db, bookmarks, story, sender, recipients) {
   // the backend will handle the fact a bookmark can belong to multiple users
   const removal = [];
   for (let bookmark of bookmarks) {
-    if (!_.some(recipients, { id: bookmark.target_user_id })) {
+    if (!recipients.some(usr => usr.id === bookmark.target_user_id)) {
       removal.push(bookmark);
     }
   }

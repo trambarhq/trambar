@@ -12,7 +12,7 @@ async function saveUser(db, user) {
 }
 
 async function removeUsers(db, users) {
-  const changes = _.map(users, (user) => {
+  const changes = users.map((user) => {
     return { id: user.id, deleted: true };
   });
   return saveUsers(db, changes);
@@ -24,7 +24,7 @@ async function removeUser(db, user) {
 }
 
 async function disableUsers(db, users) {
-  const changes = _.map(users, (user) => {
+  const changes = users.map((user) => {
     return { id: user.id, disabled: true };
   });
   return saveUsers(db, changes);
@@ -36,7 +36,7 @@ async function disableUser(db, user) {
 }
 
 async function restoreUsers(db, users) {
-  const changes = _.map(users, (user) => {
+  const changes = users.map((user) => {
     return { id: user.id, deleted: false, disabled: false };
   });
   return saveUsers(db, changes);
@@ -48,7 +48,7 @@ async function restoreUser(db, user) {
 }
 
 async function assignRole(db, users, role) {
-  const changes = _.map(users, (user) => {
+  const changes = users.map((user) => {
     return {
       id: user.id,
       role_ids: _.union(user.role_ids, [ role.id ])
@@ -58,7 +58,7 @@ async function assignRole(db, users, role) {
 }
 
 async function stripRole(db, users, role) {
-  const changes = _.map(users, (user) => {
+  const changes = users.map((user) => {
     return {
       id: user.id,
       role_ids: _.difference(user.role_ids, [ role.id ])
@@ -68,7 +68,7 @@ async function stripRole(db, users, role) {
 }
 
 async function removeRequestedProject(db, users, project) {
-  const changes = _.map(users, (user) => {
+  const changes = users.map((user) => {
     return {
       id: user.id,
       requested_project_ids: _.difference(user.requested_project_ids, [ project.id ])

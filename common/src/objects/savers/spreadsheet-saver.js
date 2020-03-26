@@ -11,7 +11,7 @@ async function saveSpreadsheet(db, schema, spreadsheet) {
 }
 
 async function disableSpreadsheets(db, schema, spreadsheets) {
-  const changes = _.map(spreadsheets, (spreadsheet) => {
+  const changes = spreadsheets.map((spreadsheet) => {
     return { id: spreadsheet.id, disabled: true };
   });
   return saveSpreadsheets(db, schema, changes);
@@ -23,7 +23,7 @@ async function disableSpreadsheet(db, schema, spreadsheet) {
 }
 
 async function removeSpreadsheets(db, schema, spreadsheets) {
-  const changes = _.map(spreadsheets, (spreadsheet) => {
+  const changes = spreadsheets.map((spreadsheet) => {
     return { id: spreadsheet.id, deleted: true };
   });
   return saveSpreadsheets(db, schema, changes);
@@ -35,7 +35,7 @@ async function removeSpreadsheet(db, schema, spreadsheet) {
 }
 
 async function restoreSpreadsheets(db, schema, spreadsheets) {
-  const changes = _.map(spreadsheets, (spreadsheet) => {
+  const changes = spreadsheets.map((spreadsheet) => {
     return { id: spreadsheet.id, disabled: false, deleted: false };
   });
   return saveSpreadsheets(db, schema, changes);

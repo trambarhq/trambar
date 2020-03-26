@@ -74,11 +74,11 @@ class LocalStorageCache {
       if (!(ids instanceof Array)) {
         ids = [ ids ];
       }
-      objects = _.filter(_.map(ids, (id) => {
+      objects = _.filter(ids.map((id) => {
         return findByKey(rows, id, keyName);
       }));
     } else {
-      objects = _.filter(rows, (row) => {
+      objects = rows.filter((row) => {
         return matchSearchCriteria(table, row, criteria);
       });
     }

@@ -394,7 +394,7 @@ async function findStoriesByUsersInListings(db, type, users, currentUser, perUse
     criteria: {
       type: type,
       target_user_id: currentUser.id,
-      filters: _.map(users, (user) => {
+      filters: users.map((user) => {
         return {
           user_ids: [ user.id ],
           public: publicOnly(currentUser)

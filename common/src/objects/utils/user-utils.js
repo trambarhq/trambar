@@ -270,7 +270,7 @@ function canBumpStory(user, story, access) {
  */
 function canAddIssue(user, story, repo, access) {
   if (repo instanceof Array) {
-    return _.some(repo, (repo) => {
+    return repo.some((repo) => {
       return canAddIssue(user, story, repo, access);
     });
   } else if (!repo) {
@@ -476,7 +476,7 @@ function canReceiveNotification(user, repos, type) {
       }
       if (_.includes(GitNotificationTypes.membership, type)) {
         if (user) {
-          let hasAccess = _.some(repos, (repo) => {
+          let hasAccess = repos.some((repo) => {
             return canAccessRepo(user, repo)
           });
           if (!hasAccess) {

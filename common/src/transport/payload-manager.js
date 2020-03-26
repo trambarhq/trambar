@@ -161,20 +161,17 @@ class PayloadManager extends EventEmitter {
         progress: uploadingProgress
       };
     } else {
-      if (_.some(payloads, { failed: true })) {
+      if (payloads.some(p => p.failed)) {
         return {
           action: 'failed',
         };
       }
 
       // maybe a web-site preview is being rendered
-      let renderingPayloads = _.filter(payloads, (payload) => {
-        return payload.type === 'web-site';
-      });
-      if (_.some(renderingPayloads, { completed: false })) {
-        let renderingProgress = _.round(_.sum(_.map(renderingPayloads, (payload) => {
-          return payload.processed / renderingPayloads.length;
-        })));
+      const renderingPayloads = payloads.filter(p => p.type === 'web-site');
+      if (renderingPayloads.some(p => !p.completed: false)) {
+        const percentages = renderingPayloads.map(p => p.processed / renderingPayloads.length);
+        const renderingProgress = percentages.reduce((sum, pc) => sum + pc, 0);
         return {
           action: 'rendering',
           progress: Math.round(renderingProgress),
@@ -182,13 +179,10 @@ class PayloadManager extends EventEmitter {
       };
 
       // uploading is done--see if transcoding is occurring at the backend
-      let transcodingPayloads = _.filter(payloads, (payload) => {
-        return payload.type === 'video' || payload.type === 'audio';
-      });
-      if (_.some(transcodingPayloads, { completed: false })) {
-        let transcodingProgress = _.round(_.sum(_.map(transcodingPayloads, (payload) => {
-          return payload.processed / transcodingPayloads.length;
-        })));
+      const transcodingPayloads = payloads.filter(p => p.type === 'video' || p.type === 'audio');
+      if (transcodingPayloads.some(p => !p.completed)) {
+        const percentages = transcodingPayloads.map(p => p.processed / transcodingPayloads.length);
+        const transcodingProgress = percentages.reduce((sum, pc) => sum + pc, 0);
         return {
           action: 'transcoding',
           progress: Math.round(transcodingProgress),
@@ -326,7 +320,7 @@ class PayloadManager extends EventEmitter {
    * @return {Promise}
    */
   async acquirePermission(destination, payloads) {
-    let unapprovedPayloads = _.filter(payloads, { approved: false });
+    const unapprovedPayloads = payloads.filter(p => !p.approved);
     if (_.isEmpty(unapprovedPayloads)) {
       return;
     }

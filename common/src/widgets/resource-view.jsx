@@ -115,8 +115,8 @@ function getMosaicStyle(mosaic, width, height) {
   const style = { paddingTop: (heightToWidthRatio * 100) + '%' };
   if (_.size(mosaic) === 16) {
     const scanlines = _.chunk(mosaic, 4);
-    const gradients  = _.map(scanlines, (pixels) => {
-      let [ c1, c2, c3, c4 ] = _.map(pixels, formatColor);
+    const gradients  = scanlines.map((pixels) => {
+      let [ c1, c2, c3, c4 ] = pixels.map(formatColor);
       return `linear-gradient(90deg, ${c1} 0%, ${c1} 25%, ${c2} 25%, ${c2} 50%, ${c3} 50%, ${c3} 75%, ${c4} 75%, ${c4} 100%)`;
     });
     const positions = [ `0 0%`, `0 ${100 / 3}%`, `0 ${200 / 3}%`, `0 100%` ];

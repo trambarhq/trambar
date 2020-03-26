@@ -3,7 +3,7 @@ import _ from 'lodash';
 const table = 'notification';
 
 async function markNotificationsAsSeen(db, notifications) {
-  const changes = _.map(notifications, (notification) => {
+  const changes = notifications.map((notification) => {
     return { id: notification.id, seen: true };
   });
   const notificationsAfter = await db.save({ table }, changes);

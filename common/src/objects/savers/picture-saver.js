@@ -9,7 +9,7 @@ async function savePictures(db, pictures) {
 }
 
 async function removePictures(db, pictures) {
-  const pictureChanges = _.map(pictures, (picture) => {
+  const pictureChanges = pictures.map((picture) => {
     return {
       id: picture.id,
       deleted: true,

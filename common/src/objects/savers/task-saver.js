@@ -13,7 +13,7 @@ async function createTask(db, action, user, options) {
 }
 
 async function markTasksAsSeen(db, tasks) {
-  const changes = _.map(tasks, (task) => {
+  const changes = tasks.map((task) => {
     return { id: task.id, seen: true };
   });
   const tasksAfter = await db.save({ schema: 'global', table }, changes);

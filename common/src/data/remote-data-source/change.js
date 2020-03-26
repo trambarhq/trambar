@@ -234,7 +234,7 @@ export class Change {
             // merge the new object with the original if the new one
             // doesn't have everything
             const originalObject = search.results[index];
-            const missingProperties = _.some(originalObject, (value, key) => {
+            const missingProperties = originalObject.some((value, key) => {
               if (!uncommittedObject.hasOwnProperty(key)) {
                 return true;
               }

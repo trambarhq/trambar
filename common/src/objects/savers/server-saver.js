@@ -12,7 +12,7 @@ async function saveServer(db, server) {
 }
 
 async function removeServers(db, servers) {
-  const changes = _.map(servers, (server) => {
+  const changes = servers.map((server) => {
     return { id: server.id, deleted: true };
   });
   return saveServers(db, changes);
@@ -24,7 +24,7 @@ async function removeServer(db, server) {
 }
 
 async function disableServers(db, servers) {
-  const changes = _.map(servers, (server) => {
+  const changes = servers.map((server) => {
     return { id: server.id, disabled: true };
   });
   return saveServers(db, changes);
@@ -36,7 +36,7 @@ async function disableServer(db, server) {
 }
 
 async function restoreServers(db, servers) {
-  const changes = _.map(servers, (server) => {
+  const changes = servers.map((server) => {
     return { id: server.id, disabled: false, deleted: false };
   });
   return saveServers(db, changes);

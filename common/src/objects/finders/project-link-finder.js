@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { findAllProjects } from './project-finder.js';
 
 const schema = 'local';
@@ -27,13 +26,13 @@ async function findAllLinks(db) {
  * @return {Boolean}
  */
 async function hasUnexpiredSession(db, link) {
-  let record = await db.findOne({
+  const record = await db.findOne({
     schema,
     table: 'session',
     criteria: { key: link.address },
   });
   if (record) {
-    let now = (new Date).toISOString();
+    const now = (new Date).toISOString();
     if (now < record.etime) {
       return true;
     }
@@ -65,10 +64,10 @@ async function findLinksToServer(db, address) {
  * @return {Promise<Array<ProjectLink>>}
  */
 async function findActiveLinks(db) {
-  let results = [];
-  let links = await findAllLinks(db);
+  const results = [];
+  const links = await findAllLinks(db);
   for (let link of links) {
-    let active = await hasUnexpiredSession(db, link);
+    const active = await hasUnexpiredSession(db, link);
     if (active) {
       results.push(link);
     }
@@ -84,12 +83,12 @@ async function findActiveLinks(db) {
  * @return {Promise<Array<ProjectLink>>}
  */
 async function findDefunctLinks(db) {
-  let results = [];
-  let { address } = db.context;
-  let projects = await findAllProjects(db);
-  let links = await findLinksToServer(db, address);
+  const results = [];
+  const { address } = db.context;
+  const projects = await findAllProjects(db);
+  const links = await findLinksToServer(db, address);
   for (let link of links) {
-    if (!_.some(projects, { name: link.schema })) {
+    if (!projects.some(prj => prj.name === link.schema)) {
       results.push(link);
     }
   }

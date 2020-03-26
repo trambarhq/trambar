@@ -373,7 +373,7 @@ describe('RemoteDataSource', function() {
         } else if (/retrieval/.test(url)) {
           retrieval++;
           expect(payload).to.have.property('ids').that.deep.equal([ 3 ]);
-          return _.filter(objects, (object) => {
+          return objects.filter((object) => {
             return _.includes(payload.ids, object.id);
           });
         }
@@ -409,7 +409,7 @@ describe('RemoteDataSource', function() {
         } else if (/retrieval/.test(url)) {
           retrieval++;
           expect(payload).to.have.property('ids').that.deep.equal([ 1 ]);
-          return _.filter(objects, (object) => {
+          return objects.filter((object) => {
             return _.includes(payload.ids, object.id);
           });
         }
@@ -449,7 +449,7 @@ describe('RemoteDataSource', function() {
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
-          return _.filter(objects, (object) => {
+          return objects.filter((object) => {
             return _.includes(payload.ids, object.id);
           });
         }
@@ -488,7 +488,7 @@ describe('RemoteDataSource', function() {
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
-          return _.filter(objects, (object) => {
+          return objects.filter((object) => {
             return _.includes(payload.ids, object.id);
           });
         }
@@ -533,7 +533,7 @@ describe('RemoteDataSource', function() {
         } else if (/retrieval/.test(url)) {
           expect(payload).to.have.property('ids').that.deep.equal([ objects[1].id ])
           retrieval++;
-          return _.filter(objects, (object) => {
+          return objects.filter((object) => {
             return _.includes(payload.ids, object.id);
           });
         }
@@ -585,7 +585,7 @@ describe('RemoteDataSource', function() {
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
-          return _.filter(objects, (object) => {
+          return objects.filter((object) => {
             return _.includes(payload.ids, object.id);
           });
         }
@@ -635,7 +635,7 @@ describe('RemoteDataSource', function() {
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
-          return _.filter(objects, (object) => {
+          return objects.filter((object) => {
             return _.includes(payload.ids, object.id);
           });
         }
@@ -681,7 +681,7 @@ describe('RemoteDataSource', function() {
           };
         } else if (/retrieval/.test(url)) {
           retrieval++;
-          return _.filter(objects, (object) => {
+          return objects.filter((object) => {
             return _.includes(payload.ids, object.id);
           });
         }
@@ -1379,7 +1379,7 @@ describe('RemoteDataSource', function() {
         } else if (/retrieval/.test(url)) {
           retrieval++;
           if (filtering) {
-            return _.map(objects, (object) => {
+            return objects.map((object) => {
               return _.omit(object, 'secret');
             });
           } else {

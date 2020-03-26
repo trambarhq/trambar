@@ -611,7 +611,7 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Array<Object>|null}
    */
   omitOwnChanges(changes) {
-    return _.filter(changes, (their) => {
+    return changes.filter((their) => {
       // examine changes that have been sent earlier
       const relevantChanges = _.filter(this.changeQueue, (change) => {
         if (change.dispatched && !change.failed) {
@@ -623,7 +623,7 @@ export class RemoteDataSource extends EventEmitter {
 
       // see if the change notification is about an object that was
       // recently saved or is being saved at this very moment
-      return !_.some(relevantChanges, (change) => {
+      return !relevantChanges.some((change) => {
         if (change.committed) {
           return _.some(change.received, (own) => {
             if (own.id === their.id) {
@@ -667,7 +667,7 @@ export class RemoteDataSource extends EventEmitter {
         // it's in-flight already
         continue;
       }
-      const relevantChanges = _.filter(changes, (their) => {
+      const relevantChanges = changes.filter((their) => {
         return change.matchLocation(their);
       });
 
@@ -681,7 +681,7 @@ export class RemoteDataSource extends EventEmitter {
               return true;
             }
           }
-          return _.some(relevantChanges, (their) => {
+          return relevantChanges.some((their) => {
             if (their.id === own.id) {
               return true;
             }
@@ -1293,7 +1293,7 @@ export class RemoteDataSource extends EventEmitter {
     // remove the signatures
     const prefix = `${session.address}/`;
     const rows = await this.cache.find(signatureLocation)
-    const matchingRows = _.filter(rows, (row) => {
+    const matchingRows = rows.filter((row) => {
       return _.startsWith(row.key, prefix);
     });
     await this.cache.remove(location, matchingRows);
@@ -1374,7 +1374,7 @@ export class RemoteDataSource extends EventEmitter {
     change.onDispatch = async (change) => {
       const location = change.location;
       const deliverables = change.deliverables();
-      const objects = _.map(deliverables, (object) => {
+      const objects = deliverables.map((object) => {
         // replace temporary IDs with permanent ones (if created)
         if (object.id < 1) {
           let permanentID = this.findPermanentID(location, object.id);

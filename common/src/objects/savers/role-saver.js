@@ -12,7 +12,7 @@ async function saveRole(db, role) {
 }
 
 async function disableRoles(db, roles) {
-  const changes = _.map(roles, (role) => {
+  const changes = roles.map((role) => {
     return { id: role.id, disabled: true };
   });
   return saveRoles(db, changes);
@@ -24,7 +24,7 @@ async function disableRole(db, role) {
 }
 
 async function removeRoles(db, role) {
-  const changes = _.map(roles, (role) => {
+  const changes = roles.map((role) => {
     return { id: role.id, deleted: true };
   });
   return saveRoles(db, changes);
@@ -36,7 +36,7 @@ async function removeRole(db, role) {
 }
 
 async function restoreRoles(db, roles) {
-  const changes = _.map(roles, (role) => {
+  const changes = roles.map((role) => {
     return { id: role.id, disabled: false, deleted: false };
   });
   return saveRoles(db, changes);
