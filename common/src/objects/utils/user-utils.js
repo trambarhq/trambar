@@ -1,21 +1,10 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import {
-  isEditable as isReactionEditable,
-  wasPublishedWithin as wasReactionPublishedWithin,
-} from './reaction-utils.js';
-import {
-  isEditable as isStoryEditable,
-  isTrackable as isStoryTrackable,
-  wasPublishedWithin as wasStoryPublishedWithin,
-  wasBumpedWithin as wasStoryBumpedWithin,
-} from './story-utils.js';
+import { isEditable as isReactionEditable, wasPublishedWithin as wasReactionPublishedWithin } from './reaction-utils.js';
+import { isEditable as isStoryEditable, isTrackable as isStoryTrackable,
+  wasPublishedWithin as wasStoryPublishedWithin, wasBumpedWithin as wasStoryBumpedWithin } from './story-utils.js';
 import { mergeRemoteChanges } from './story-utils.js';
-import {
-  GitNotificationTypes,
-  AdminNotificationTypes,
-  MembershipNotificationTypes
-} from '../types/notification-types.js';
+import { GitNotificationTypes, AdminNotificationTypes, MembershipNotificationTypes } from '../types/notification-types.js';
 
 /**
  * Return true if user is a member of the project
@@ -29,7 +18,7 @@ function isMember(user, project) {
   if (!user || !project) {
     return false;
   }
-  return _.includes(project.user_ids, user.id);
+  return project.user_ids.includes(user.id);
 }
 
 /**
@@ -44,7 +33,7 @@ function isPendingMember(user, project) {
   if (!user || !project) {
     return false;
   }
-  return _.includes(user.requested_project_ids, project.id);
+  return !!user?.requested_project_ids.includes(project.id);
 }
 
 /**
@@ -102,7 +91,7 @@ function isAuthor(user, story) {
   if (!user || !story) {
     return false;
   }
-  if (_.includes(story.user_ids, user.id)) {
+  if (story.user_ids.includes(user.id)) {
     return true;
   }
   return false;
@@ -120,7 +109,7 @@ function isLeadAuthor(authors, user) {
   if (!authors || !user) {
     return false;
   }
-  return _.findIndex(authors, { id: user.id }) === 0;
+  return authors.findIndex(usr => usr.id === user.id) === 0;
 }
 
 /**
@@ -135,7 +124,7 @@ function isCoauthor(authors, user) {
   if (!authors || !user) {
     return false;
   }
-  return _.findIndex(authors, { id: user.id }) >= 1;
+  return authors.findIndex(usr.id === user.id) >= 1;
 }
 
 /**
@@ -284,7 +273,7 @@ function canAddIssue(user, story, repo, access) {
   }
   if (isStoryTrackable(story)) {
     // see if user is a member of one of the repos
-    if (_.includes(repo.user_ids, user.id)) {
+    if (repo.user_ids.includes(user.id)) {
       if (repo.details.issues_enabled) {
         return true;
       }
@@ -305,7 +294,7 @@ function canAccessRepo(user, repo) {
   if (!user || !repo) {
     return false;
   }
-  if (_.includes(repo.user_ids, user.id)) {
+  if (repo.user_ids.includes(user.id)) {
     if (repo.details.web_url) {
       return true;
     }
@@ -474,7 +463,7 @@ function canReceiveNotification(user, repos, type) {
       if (repos.length === 0) {
         return false;
       }
-      if (_.includes(GitNotificationTypes.membership, type)) {
+      if (MembershipNotificationTypes.includes(type)) {
         if (user) {
           let hasAccess = repos.some((repo) => {
             return canAccessRepo(user, repo)

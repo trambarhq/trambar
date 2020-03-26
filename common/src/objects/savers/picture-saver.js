@@ -20,7 +20,7 @@ async function removePictures(db, pictures) {
 
 async function uploadPictures(db, payloads, files) {
   // lists from event objects would disappear after an await operation
-  files = _.slice(files);
+  files = files.slice();
 
   const currentUserID = await db.start();
   const newPictures = [];

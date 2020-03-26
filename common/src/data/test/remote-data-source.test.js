@@ -374,7 +374,7 @@ describe('RemoteDataSource', function() {
           retrieval++;
           expect(payload).to.have.property('ids').that.deep.equal([ 3 ]);
           return objects.filter((object) => {
-            return _.includes(payload.ids, object.id);
+            return payload.ids.includes(object.id);
           });
         }
       });
@@ -410,7 +410,7 @@ describe('RemoteDataSource', function() {
           retrieval++;
           expect(payload).to.have.property('ids').that.deep.equal([ 1 ]);
           return objects.filter((object) => {
-            return _.includes(payload.ids, object.id);
+            return payload.ids.includes(object.id);
           });
         }
       });
@@ -450,7 +450,7 @@ describe('RemoteDataSource', function() {
         } else if (/retrieval/.test(url)) {
           retrieval++;
           return objects.filter((object) => {
-            return _.includes(payload.ids, object.id);
+            return payload.ids.includes(object.id);
           });
         }
       });
@@ -489,7 +489,7 @@ describe('RemoteDataSource', function() {
         } else if (/retrieval/.test(url)) {
           retrieval++;
           return objects.filter((object) => {
-            return _.includes(payload.ids, object.id);
+            return payload.ids.includes(object.id);
           });
         }
       });
@@ -534,7 +534,7 @@ describe('RemoteDataSource', function() {
           expect(payload).to.have.property('ids').that.deep.equal([ objects[1].id ])
           retrieval++;
           return objects.filter((object) => {
-            return _.includes(payload.ids, object.id);
+            return payload.ids.includes(object.id);
           });
         }
       });
@@ -586,7 +586,7 @@ describe('RemoteDataSource', function() {
         } else if (/retrieval/.test(url)) {
           retrieval++;
           return objects.filter((object) => {
-            return _.includes(payload.ids, object.id);
+            return payload.ids.includes(object.id);
           });
         }
       });
@@ -636,7 +636,7 @@ describe('RemoteDataSource', function() {
         } else if (/retrieval/.test(url)) {
           retrieval++;
           return objects.filter((object) => {
-            return _.includes(payload.ids, object.id);
+            return payload.ids.includes(object.id);
           });
         }
       });
@@ -682,7 +682,7 @@ describe('RemoteDataSource', function() {
         } else if (/retrieval/.test(url)) {
           retrieval++;
           return objects.filter((object) => {
-            return _.includes(payload.ids, object.id);
+            return payload.ids.includes(object.id);
           });
         }
       });

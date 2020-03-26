@@ -496,7 +496,7 @@ async function attachMosaic(resources, env) {
  * @return {Object|null}
  */
 function parseJSONEncodedURL(url) {
-  if (_.startsWith(url, 'json:')) {
+  if (url.startsWith('json:')) {
     let json = url.substr(5);
     try {
       return JSON.parse(json);

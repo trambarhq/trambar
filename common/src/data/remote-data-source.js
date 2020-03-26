@@ -739,8 +739,8 @@ export class RemoteDataSource extends EventEmitter {
       if (change.matchLocation(search)) {
         if (!change.committed && !change.canceled && !change.error) {
           if (!newSearch) {
-            newSearch = _.clone(search);
-            newSearch.results = _.slice(search.results);
+            newSearch = { ...search };
+            newSearch.results = search.results.slice();
           }
           change.apply(newSearch, includeDeleted);
         }
@@ -786,7 +786,7 @@ export class RemoteDataSource extends EventEmitter {
   }
 
   discardSession(session) {
-    if (_.includes(this.sessions, session)) {
+    if (this.sessions.includes(session)) {
       _.pull(this.sessions, session);
       this.triggerEvent(new RemoteDataSourceEvent('change', this));
     }
@@ -1293,9 +1293,7 @@ export class RemoteDataSource extends EventEmitter {
     // remove the signatures
     const prefix = `${session.address}/`;
     const rows = await this.cache.find(signatureLocation)
-    const matchingRows = rows.filter((row) => {
-      return _.startsWith(row.key, prefix);
-    });
+    const matchingRows = rows.filter(r => r.key.startsWith(prefix));
     await this.cache.remove(location, matchingRows);
   }
 
@@ -1436,7 +1434,7 @@ export class RemoteDataSource extends EventEmitter {
         if (op instanceof Removal) {
           if (present) {
             if (resultsAfter === resultsBefore) {
-              resultsAfter = _.slice(resultsAfter);
+              resultsAfter = resultsAfter.slice();
             }
             resultsAfter.splice(index, 1);
           }
@@ -1450,7 +1448,7 @@ export class RemoteDataSource extends EventEmitter {
           if (match || present) {
             if (resultsAfter === resultsBefore) {
               // create new array so memoized functions won't return old results
-              resultsAfter = _.slice(resultsAfter);
+              resultsAfter = resultsAfter.slice();
             }
             if (match && present) {
               // update the object with new one
@@ -1712,7 +1710,7 @@ function removeObjects(objects, ids) {
   if (_.isEmpty(ids)) {
     return objects;
   }
-  objects = _.slice(objects);
+  objects = objects.slice();
   for (let id of ids) {
     const index = sortedIndexBy(objects, { id }, 'id');
     const object = (objects) ? objects[index] : null;
@@ -1735,7 +1733,7 @@ function insertObjects(objects, newObjects) {
   if (_.isEmpty(newObjects)) {
     return objects;
   }
-  objects = _.slice(objects);
+  objects = objects.slice();
   for (let newObject of newObjects) {
     const index = sortedIndexBy(objects, newObject, 'id');
     const object = objects[index];

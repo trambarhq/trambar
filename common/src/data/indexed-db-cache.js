@@ -1,6 +1,6 @@
-import _ from 'lodash';
 import { matchSearchCriteria, limitSearchResults } from './local-search.js';
 import { sortedIndexBy } from '../utils/array-utils.js';
+import { get, set, unset } from '../utils/object-utils.js';
 
 const defaultOptions = {
   databaseName: 'database'
@@ -53,7 +53,7 @@ class IndexedDBCache {
     if (criteria?.hasOwnProperty(keyName) && Object.keys(criteria).length === 1) {
       let keys = criteria[keyName];
       if (keys instanceof Array) {
-        keys = _.sortBy(_.slice(keys));
+        keys = keys.slice().sort();
       } else {
         keys = [ keys ];
       }
@@ -190,7 +190,7 @@ class IndexedDBCache {
             if(cursor) {
               let record = cursor.value;
               let primaryKey = cursor.primaryKey;
-              if (!prefix || _.startsWith(record.location, prefix)) {
+              if (!prefix || record.location.startsWith(prefix)) {
                 records.push(record);
                 primaryKeys.push(primaryKey);
               }
@@ -269,9 +269,9 @@ class IndexedDBCache {
 
       let changes = [];
       for (let record of records) {
-        let address = record.address || '';
-        let [ schema, table ] = record.location.substr(address.length + 1).split('/');
-        let change = _.find(changes, { address, schema, table });
+        const address = record.address || '';
+        const [ schema, table ] = record.location.substr(address.length + 1).split('/');
+        let change = changes.find(c => c.address === address && c.schema === schema && c.table == table);
         if (!change) {
           change = { address, schema, table, objects: [] };
           changes.push(change);
@@ -345,13 +345,19 @@ class IndexedDBCache {
    * @param  {String|undefined} schema
    */
   reset(address, schema) {
-    let path;
+    const path = [];
     if (schema === 'local') {
-      path = [ 'local' ];
+      path.push('local');
     } else {
-      path = _.filter([ 'remote', address, schema ]);
+      path.push('remote');
+      if (address) {
+        path.push(address);
+        if (schema) {
+          path.push(schema);
+        }
+      }
     }
-    _.unset(this.tables, path);
+    unset(this.tables, path);
   }
 
   /**
@@ -440,13 +446,13 @@ class IndexedDBCache {
     } else {
       path = [ 'remote', address, schema, table ];
     }
-    let tbl = _.get(this.tables, path);
+    let tbl = get(this.tables, path);
     if (!tbl) {
       tbl = {
         promise: null,
         objects: null,
       };
-      _.set(this.tables, path, tbl);
+      set(this.tables, path, tbl);
     }
     return tbl;
   }
@@ -546,7 +552,7 @@ class IndexedDBCache {
   updateRecordCount(schema, delay) {
     const storeName = this.getObjectStoreName(schema);
     const timeoutPath = `updateRecordCountTimeouts.${storeName}`;
-    let timeout = _.get(this, timeoutPath);
+    let timeout = get(this, timeoutPath);
     if (timeout) {
       clearTimeout(timeout);
     }
@@ -561,9 +567,9 @@ class IndexedDBCache {
         };
       } catch (err) {
       }
-      _.set(this, timeoutPath, 0);
+      set(this, timeoutPath, 0);
     }, delay || 0);
-    _.set(this, timeoutPath, timeout);
+    set(this, timeoutPath, timeout);
   }
 }
 

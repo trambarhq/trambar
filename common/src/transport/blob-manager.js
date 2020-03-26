@@ -40,9 +40,7 @@ class BlobManager {
     if (!url) {
       return null;
     }
-    const entry = _.find(this.list, (entry) => {
-      return _.includes(entry.urls, url);
-    });
+    const entry = this.list.find(e => e.urls.includes(url));
     if (!entry) {
       return null;
     }

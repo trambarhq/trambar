@@ -1,7 +1,6 @@
-import _ from 'lodash';
 import { matchSearchCriteria, limitSearchResults } from './local-search.js';
 import { sortedIndexBy } from '../utils/array-utils.js';
-import { cloneDeep } from '../utils/object-utils.js';
+import { get, set, unset, cloneDeep } from '../utils/object-utils.js';
 
 const defaultOptions = {
   databaseName: 'database'
@@ -33,10 +32,10 @@ class LocalStorageCache {
   getRows(server, schema, table) {
     const store = (schema === 'local') ? this.localData : this.remoteData;
     const path = [ server, schema, table ];
-    let rows = _.get(store, path);
+    let rows = get(store, path);
     if (!rows) {
       rows = [];
-      _.set(store, path, rows);
+      set(store, path, rows);
     }
     return rows;
   }
@@ -75,9 +74,7 @@ class LocalStorageCache {
       if (!(ids instanceof Array)) {
         ids = [ ids ];
       }
-      objects = _.filter(ids.map((id) => {
-        return findByKey(rows, id, keyName);
-      }));
+      objects = ids.map(id => findByKey(rows, id, keyName)).filter(Boolean);
     } else {
       objects = rows.filter((row) => {
         return matchSearchCriteria(table, row, criteria);
@@ -212,8 +209,14 @@ class LocalStorageCache {
    */
   reset(address, schema) {
     if (schema !== 'local') {
-      const path = _.filter([ address, schema ]);
-      _.unset(this.remoteData, path);
+      const path = [];
+      if (address) {
+        path.push(address);
+        if (schema) {
+          path.push(schema);
+        }
+      }
+      unset(this.remoteData, path);
     }
   }
 }
