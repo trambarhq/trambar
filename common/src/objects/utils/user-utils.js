@@ -468,7 +468,7 @@ function canHideReaction(user, story, reaction, access) {
  * @return {Boolean}
  */
 function canReceiveNotification(user, repos, type) {
-  if (_.includes(GitNotificationTypes, type)) {
+  if (GitNotificationTypes.includes(type)) {
     // assume user can receive notification if loading isn't done
     if (repos) {
       if (repos.length === 0) {
@@ -485,7 +485,7 @@ function canReceiveNotification(user, repos, type) {
         }
       }
     }
-  } else if (_.includes(AdminNotificationTypes, type)) {
+  } else if (AdminNotificationTypes.includes(type)) {
     if (user && user.type !== 'admin') {
       return false;
     }

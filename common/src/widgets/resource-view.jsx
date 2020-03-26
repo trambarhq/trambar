@@ -113,7 +113,7 @@ function formatColor(color) {
 function getMosaicStyle(mosaic, width, height) {
   const heightToWidthRatio = height / width;
   const style = { paddingTop: (heightToWidthRatio * 100) + '%' };
-  if (_.size(mosaic) === 16) {
+  if (mosaic?.length === 16) {
     const scanlines = _.chunk(mosaic, 4);
     const gradients  = scanlines.map((pixels) => {
       let [ c1, c2, c3, c4 ] = pixels.map(formatColor);

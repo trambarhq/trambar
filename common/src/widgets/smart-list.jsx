@@ -275,7 +275,7 @@ export function SmartList(props) {
   const startIndex = Math.max(0, anchorIndex - behind);
   // render some items ahead of (i.e. below) the anchored item
   // (presumably the number is sufficient to fill the viewport)
-  const endIndex = Math.min(_.size(slots), anchorIndex + ahead + 1);
+  const endIndex = Math.min(slots.length, anchorIndex + ahead + 1);
   const list = (inverted) ? _.reverse(_.slice(slots)) : slots;
   return (
     <div ref={containerRef} className="smart-list" onTransitionEnd={handleTransitionEnd}>

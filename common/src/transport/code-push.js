@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import { EventEmitter, GenericEvent } from 'relaks-event-emitter';
 import { FileError } from '../errors.js';
@@ -9,7 +8,7 @@ const defaultOptions = {
 class CodePush extends EventEmitter {
   constructor(options) {
     super();
-    this.options = _.defaults({}, options, defaultOptions);
+    this.options = Object.assign({ ...defaultOptions }, options);
     this.lastSyncStatus = '';
     this.lastSyncTime = '';
     this.currentPackage = null;
@@ -38,8 +37,15 @@ class CodePush extends EventEmitter {
    * @return {Array<String>}
    */
   getDeploymentNames() {
-    let keys = _.flatten(_.map(this.options.keys, Object.keys));
-    return _.uniq(keys);
+    const names = [];
+    for (let [ platform, keys ] of Object.entries(this.options.keys)) {
+      for (let [ name, key ] of keys) {
+        if (!names.includes(name)) {
+          names.push(name);
+        }
+      }
+    }
+    return names;
   }
 
   /**
@@ -48,16 +54,16 @@ class CodePush extends EventEmitter {
    * @return {Promise<String>}
    */
   async loadDeploymentName() {
-    let names = this.getDeploymentNames();
+    const names = this.getDeploymentNames();
     let name;
     try {
       name = await readTextFile('codepush');
     } catch (err) {
     }
-    if (_.includes(names, name)) {
+    if (names.includes(name)) {
       return name;
     } else {
-      return _.first(names);
+      return names[0];
     }
   }
 
@@ -115,9 +121,9 @@ class CodePush extends EventEmitter {
    * @return {Promise}
    */
   async checkForUpdate() {
-    let deployment = await this.loadDeploymentName();
-    let platform = cordova.platformId;
-    let deploymentKey = _.get(this.options.keys, [ platform, deployment ]);
+    const deployment = await this.loadDeploymentName();
+    const platform = cordova.platformId;
+    const deploymentKey = this.options.keys[platform][deployment];
     let result = await this.synchronize(deploymentKey);
     this.lastSyncStatus = result;
     this.lastSyncTime = Moment().toISOString();

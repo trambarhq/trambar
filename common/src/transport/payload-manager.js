@@ -19,7 +19,7 @@ class PayloadManager extends EventEmitter {
   constructor(options) {
     super();
     this.active = false;
-    this.options = _.defaults({}, options, defaultOptions);
+    this.options = Object.assign({ ...defaultOptions }, options);
     this.payloads = [];
     this.streams = [];
     this.initialized = false;
@@ -93,7 +93,7 @@ class PayloadManager extends EventEmitter {
    */
   dispatch(ids) {
     let payloads = this.payloads.filter((payload) => {
-      return _.includes(ids, payload.id);
+      return ids.includes(payload.id);
     });
     this.dispatchPayloads(payloads);
   }
@@ -105,7 +105,7 @@ class PayloadManager extends EventEmitter {
    */
   abandon(ids) {
     const payloads = this.payloads.filter((payload) => {
-      return _.includes(ids, payload.id);
+      return ids.includes(payload.id);
     });
     if (payloads.length > 0) {
       for (let payload of payloads) {
@@ -129,7 +129,7 @@ class PayloadManager extends EventEmitter {
       return null;
     }
     let payloads = this.payloads.filter((payload) => {
-      return _.includes(ids, payload.id) && payload.type !== 'unknown';
+      return ids.includes(payload.id) && payload.type !== 'unknown';
     });
     if (payloads.length < ids.length) {
       // some payloads are not there, either because they were sent by

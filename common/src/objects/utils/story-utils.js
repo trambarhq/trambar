@@ -3,10 +3,8 @@ import Moment from 'moment';
 import { extractListItems, updateListItem, countListItems, stringifyList } from 'common/utils/list-parser.js';
 import { mergeObjects } from '../../data/merger.js';
 import { mergeLists } from './resource-utils.js';
-import {
-  TrackableStoryTypes,
-  EditableStoryTypes
-} from '../types/story-types';
+import { TrackableStoryTypes, EditableStoryTypes } from '../types/story-types';
+import { cloneDeep, get, set, isEmpty } from 'common/utils/object-utils.js';
 
 /**
  * Return true if the story has a valid database id
@@ -53,7 +51,7 @@ function isEditable(story) {
   if (!story) {
     return false;
   }
-  if (_.includes(EditableStoryTypes, story.type)) {
+  if (EditableStoryTypes.includes(story.type)) {
     return true;
   }
   if (story.type === 'issue') {
@@ -92,10 +90,10 @@ function hasContents(story) {
   if (!story) {
     return false;
   }
-  if (!_.isEmpty(_.get(story, 'details.text'))) {
+  if (!isEmpty(story.details.text)) {
     return true;
   }
-  if (!_.isEmpty(_.get(story, 'details.resources'))) {
+  if (!isEmpty(story.details.resources)) {
     return true;
   }
   return false;
@@ -118,7 +116,7 @@ function isTrackable(story) {
       return true;
     }
   }
-  return _.includes(TrackableStoryTypes, story.type || 'post');
+  return TrackableStoryTypes.includes(story.type || 'post');
 }
 
 /**
@@ -199,8 +197,8 @@ function mergeRemoteChanges(local, remote, common) {
       resources: mergeLists
     }
   };
-  let merged = mergeObjects(local, remote, common, resolveFns);
-  _.assign(local, merged);
+  const merged = mergeObjects(local, remote, common, resolveFns);
+  Object.assign(local, merged);
   return true;
 }
 
@@ -213,12 +211,12 @@ function extractUserAnswers(story, locale) {
     if (token instanceof Array) {
       for (let item of token) {
         if (story.type === 'task-list') {
-          _.set(answers, [ item.list, item.key ], item.checked);
+          set(answers, [ item.list, item.key ], item.checked);
         } else if (story.type === 'survey') {
           if (item.checked) {
-            _.set(answers, item.list, item.key);
+            set(answers, item.list, item.key);
           } else {
-            _.set(answers, item.list, undefined);
+            set(answers, item.list, undefined);
           }
         }
       }
@@ -228,7 +226,7 @@ function extractUserAnswers(story, locale) {
 }
 
 function insertUserAnswers(story, answers) {
-  const storyUpdated = _.cloneDeep(story);
+  const storyUpdated = cloneDeep(story);
   const taskCounts = [];
   storyUpdated.details.text = _.mapValues(story.details.text, (langText) => {
     const tokens = extractListItems(langText);
@@ -236,9 +234,9 @@ function insertUserAnswers(story, answers) {
       for (let item of token) {
         let checked;
         if (story.type === 'task-list') {
-          checked = !!_.get(answers, [ item.list, item.key ]);
+          checked = !!get(answers, [ item.list, item.key ]);
         } else if (story.type === 'survey') {
-          checked = (_.get(answers, item.list) === item.key);
+          checked = (get(answers, item.list) === item.key);
         }
         updateListItem(item, checked);
       }

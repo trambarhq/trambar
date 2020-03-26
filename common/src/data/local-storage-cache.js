@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { matchSearchCriteria, limitSearchResults } from './local-search.js';
 import { sortedIndexBy } from '../utils/array-utils.js';
+import { cloneDeep } from '../utils/object-utils.js';
 
 const defaultOptions = {
   databaseName: 'database'
@@ -12,7 +13,7 @@ class LocalStorageCache {
   }
 
   constructor(options) {
-    this.options = _.defaults({}, options, defaultOptions);
+    this.options = Object.assign({ ...defaultOptions }, options);
     this.localData = {};
     this.remoteData = {};
   }
@@ -68,7 +69,7 @@ class LocalStorageCache {
     const rows = this.getRows(server, schema, table);
     const keyName = this.getKeyName(schema);
     let objects;
-    if (criteria && criteria.id !== undefined && _.size(criteria) === 1) {
+    if (criteria && criteria.id !== undefined && Object.values(criteria).length === 1) {
       // look up by id
       let ids = criteria.id;
       if (!(ids instanceof Array)) {
@@ -99,7 +100,7 @@ class LocalStorageCache {
     const rows = this.getRows(server, schema, table);
     const keyName = this.getKeyName(schema);
     for (let object of objects) {
-      replaceByKey(rows, _.cloneDeep(object), keyName);
+      replaceByKey(rows, cloneDeep(object), keyName);
     }
     this.saveRows(server, schema, table);
     return objects;

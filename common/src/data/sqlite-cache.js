@@ -22,7 +22,7 @@ class SQLiteCache {
   }
 
   constructor(options) {
-    this.options = { ...defaultOptions, ...options };
+    this.options = Object.assign({ ...defaultOptions }, options);
     this.tables = {};
     this.recordCounts = {};
     this.writeCount = 0;

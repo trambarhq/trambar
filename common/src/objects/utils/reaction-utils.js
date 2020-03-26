@@ -56,7 +56,7 @@ function isEditable(reaction) {
   if (!reaction) {
     return false;
   }
-  return _.includes(EditableReactionTypes, reaction.type);
+  return EditableReactionTypes.includes(reaction.type);
 }
 
 /**

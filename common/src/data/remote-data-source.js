@@ -34,7 +34,7 @@ export class RemoteDataSource extends EventEmitter {
   constructor(options) {
     super();
     this.active = false;
-    this.options = _.defaults({}, options, defaultOptions);
+    this.options = Object.assign({ ...defaultOptions }, options);
     this.idMappings = {};
     this.cache = this.options.cache;
     this.cacheSignatures = [];

@@ -510,7 +510,7 @@ describe('RemoteDataSource', function() {
       ];
       await cache.save(location, objects);
       // bump gn
-      objects[1] = _.cloneDeep(objects[1]);
+      objects[1] = { ...objects[1]) };
       objects[1].gn++;
       const query = {
         address: location.address,

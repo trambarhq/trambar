@@ -17,7 +17,7 @@ class IndexedDBCache {
   }
 
   constructor(options) {
-    this.options = _.defaults({}, options, defaultOptions);
+    this.options = Object.assign({ ...defaultOptions }, options);
     this.tables = {};
     this.databasePromise = null;
     this.recordCounts = {},

@@ -32,7 +32,7 @@ export class ErrorBoundary extends Component {
     if (error) {
       let expectedErrors = [ 401, 403, 404 ];
       // don't render 401, 403, and 404 errors since we handle those by redirecting
-      if (showError && !_.includes(expectedErrors, error.statusCode)) {
+      if (showError && !expectedErrors.includes(error.statusCode)) {
         return <div className="error-boundary">{error.message}</div>;
       } else {
         return null;

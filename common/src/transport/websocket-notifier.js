@@ -11,7 +11,7 @@ const defaultOptions = {
 class WebsocketNotifier extends Notifier {
   constructor(options) {
     super();
-    this.options = _.defaults({}, options, defaultOptions);
+    this.options = Object.assign({ ...defaultOptions }, options);
     this.socket = null;
     this.notificationPermitted = false;
     this.reconnectionCount = 0;

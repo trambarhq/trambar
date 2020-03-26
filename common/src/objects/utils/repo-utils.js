@@ -113,7 +113,7 @@ function getCommitNoteURL(repo, reaction) {
     if (!commitID) {
       // deal with old buggy data
       const commitIDs = noteLink.commit.ids;
-      if (_.size(commitIDs) === 1) {
+      if (commitIDs?.length === 1) {
         commitID = commitIDs[0];
       }
     }

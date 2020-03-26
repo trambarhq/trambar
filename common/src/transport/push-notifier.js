@@ -21,7 +21,7 @@ const defaultOptions = {
 class PushNotifier extends Notifier {
   constructor(options) {
     super();
-    this.options = _.defaults({}, options, defaultOptions);
+    this.options = Object.assign({ ...defaultOptions }, options);
     this.registrationID = null;
     this.registrationType = null;
     this.relayAddress = '';

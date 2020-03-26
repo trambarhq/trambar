@@ -35,7 +35,7 @@ function mergeLists(local, remote, common) {
     }
   }
   for (let [ indexR, resR ] of Object.entries(common)) {
-    if (!_.includes(commonToRemote, indexR)) {
+    if (!commonToRemote.includes(indexR)) {
       // add resource that wasn't there before
       list.push({ resource: resR, index: indexR });
     }
@@ -43,7 +43,7 @@ function mergeLists(local, remote, common) {
   for (let [ indexL, resL ] of Object.entries(local)) {
     let indexR = localToRemote[indexL];
     let resR = remote[indexR];
-    if (!_.includes(commonToLocal, indexL) && !resR) {
+    if (!commonToLocal.includes(indexL) && !resR) {
       // add resource that wasn't there before or in the remote list
       list.push({ resource: resL, index: indexL });
     }
@@ -227,7 +227,7 @@ function getRemoteImageURL(res, params, env) {
     let clip = getClippingRect(res, params);
     if (clip) {
       // run number through Math.round() just in case error elsewhere left fractional pixel dimensions
-      let rect = _.map([ clip.left, clip.top, clip.width, clip.height ], Math.round);
+      const rect = [ clip.left, clip.top, clip.width, clip.height ].map(Math.round);
       filters.push(`cr${rect.join('-')}`)
     }
     // resize image (if dimensions are specified)
