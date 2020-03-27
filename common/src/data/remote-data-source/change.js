@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { delay } from '../../utils/delay.js';
 import { isEqual, clone } from '../../utils/object-utils.js';
 import { promiseSelf } from '../../utils/promise-self.js';
@@ -132,16 +131,16 @@ export class Change {
     }
     let dependent = false;
     for (let object of this.objects) {
-      const index = _.findIndex(earlierOp.objects, { id: object.id });
+      const index = earlierOp.objects.findIndex(obj => obj.id === object.id);
       if (index !== -1 && !earlierOp.removed[index]) {
         if (!earlierOp.dispatched || object.id >= 1) {
-          let earlierObject = earlierOp.objects[index];
+          const earlierObject = earlierOp.objects[index];
           // merge in missing properties from earlier op
-          _.forIn(earlierObject, (value, key) => {
+          for (let [ key, value ] of earlierObject) {
             if (object[key] === undefined) {
               object[key] = value;
             }
-          });
+          }
           // indicate that the object has been superceded
           earlierOp.removed[index] = true;
         } else {
@@ -160,7 +159,7 @@ export class Change {
       this.dependentPromises.push(dependentPromise);
     } else {
       // cancel the earlier op if everything was removed from it
-      if (_.every(earlierOp.removed)) {
+      if (!earlierOp.removed.includes(false)) {
         earlierOp.cancel();
       }
     }
@@ -199,7 +198,7 @@ export class Change {
    * @return {Number|undefined}
    */
   findPermanentID(temporaryID) {
-    const index = _.findIndex(this.delivered, { id: temporaryID });
+    const index = this.delivered.findIndex(obj => obj.id === temporaryID);
     if (index !== -1) {
       if (this.received) {
         let object = this.received[index];
@@ -224,7 +223,7 @@ export class Change {
       if (this.removed[i]) {
         continue;
       }
-      const index = _.findIndex(search.results, { id: uncommittedObject.id });
+      const index = search.results.findIndex(obj => obj.id === uncommittedObject.id);
       if (index !== -1) {
         if (uncommittedObject.deleted && !includeDeleted) {
           search.results.splice(index, 1);
@@ -234,14 +233,16 @@ export class Change {
             // merge the new object with the original if the new one
             // doesn't have everything
             const originalObject = search.results[index];
-            const missingProperties = originalObject.some((value, key) => {
+            let missingProperties = false;
+            for (let [ key, value ] of Object.entries(originalObject)) {
               if (!uncommittedObject.hasOwnProperty(key)) {
-                return true;
+                missingProperties = true;
+                break;
               }
-            });
+            }
             let tempObject;
             if (missingProperties) {
-              tempObject = _.extend({}, originalObject, uncommittedObject);
+              tempObject = { ...originalObject, ...uncommittedObject };
             } else {
               tempObject = uncommittedObject;
             }

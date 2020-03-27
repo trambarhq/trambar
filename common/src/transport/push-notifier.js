@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { Notifier, NotifierEvent } from './notifier.js';
 import { performHTTPRequest } from './http-request.js';
 import { promiseSelf } from '../utils/promise-self.js';
@@ -18,10 +17,10 @@ const defaultOptions = {
   },
 };
 
-class PushNotifier extends Notifier {
+export class PushNotifier extends Notifier {
   constructor(options) {
     super();
-    this.options = Object.assign({ ...defaultOptions }, options);
+    this.options = { ...defaultOptions, ...options };
     this.registrationID = null;
     this.registrationType = null;
     this.relayAddress = '';
@@ -43,7 +42,7 @@ class PushNotifier extends Notifier {
       }
     } else {
       if (process.env.NODE_ENV !== 'production') {
-        this.registrationID = _.repeat('0', 64);
+        this.registrationID = '0'.repeat(64);
         this.registrationType = 'apns-sb';
         this.networkRegistrationPromise.resolve();
       } else {
@@ -97,31 +96,31 @@ class PushNotifier extends Notifier {
    * @return {Promise<Boolean>}
    */
   async registerAtPushRelay(address, relayAddress) {
-    let reconnectionDelay = this.options.initialReconnectionDelay;
-    let maximumDelay = this.options.maximumReconnectionDelay;
+    const { initialReconnectionDelay, maximumReconnectionDelay } = this.options;
+    let reconnectionDelay = initialReconnectionDelay;
 
+    relayAddress = relayAddress.replace(/[\/\s]+$/, '');
     this.address = address;
     this.relayAddress = relayAddress;
-    relayAddress = _.trimEnd(relayAddress, '/');
 
     // keep trying to connect until the effort is abandoned (i.e. user
     // goes to a different server)
     for (;;) {
       try {
-        let url = `${relayAddress}/register`;
-        let details = getDeviceDetails();
-        let payload = {
+        const url = `${relayAddress}/register`;
+        const details = getDeviceDetails();
+        const payload = {
           network: this.registrationType,
           registration_id: this.registrationID,
           address,
           details,
         };
-        let result = await this.sendRegistration(url, payload);
+        const result = await this.sendRegistration(url, payload);
         if (this.address !== address || this.relayAddress !== relayAddress) {
           return false;
         }
         this.relayToken = result.token;
-        let event = new NotifierEvent('connection', this, {
+        const event = new NotifierEvent('connection', this, {
           connection: {
             method: this.registrationType,
             relay: this.relayAddress,
@@ -135,8 +134,8 @@ class PushNotifier extends Notifier {
       } catch (err) {
         console.error(err);
         reconnectionDelay *= 2;
-        if (reconnectionDelay > maximumDelay) {
-          reconnectionDelay = maximumDelay;
+        if (reconnectionDelay > maximumReconnectionDelay) {
+          reconnectionDelay = maximumReconnectionDelay;
         }
         console.log(`Connection attempt in ${delay}ms: ${relayAddress}`);
         await delay(reconnectionDelay);
@@ -156,10 +155,7 @@ class PushNotifier extends Notifier {
    * @return {Object}
    */
   sendRegistration(url, payload) {
-    let options = {
-      responseType: 'json',
-      contentType: 'json',
-    };
+    const options = { responseType: 'json', contentType: 'json' };
     return performHTTPRequest('POST', url, payload, options);
   }
 
@@ -169,15 +165,15 @@ class PushNotifier extends Notifier {
    * @param  {Object} data
    */
   handleRegistration = async (data) => {
-    let id = data.registrationId;
-    let type = _.toLower(data.registrationType);
+    const id = data.registrationId;
+    const type = data.registrationType.toLowerCase();
     if (!type) {
       // the type is missing for WNS
       if (/windows/.test(id)) {
         type = 'wns';
       }
     }
-    let debug = await isDebugMode();
+    const debug = await isDebugMode();
     if (type === 'apns' && debug) {
       type += '-sb';  // use sandbox
     }
@@ -198,9 +194,9 @@ class PushNotifier extends Notifier {
        this.recentMessages.splice(10);
     }
     if (cordova.platformId === 'android') {
-      let payload = data.additionalData;
+      const payload = data.additionalData;
       try {
-        let notification = this.unpack(payload) || {};
+        const notification = this.unpack(payload) || {};
         if (notification) {
           this.dispatchNotification(notification);
         }
@@ -211,10 +207,10 @@ class PushNotifier extends Notifier {
         console.error(err);
       }
     } else if (cordova.platformId === 'ios') {
-      let payload = data.additionalData;
-      let notID = payload.notId;
+      const payload = data.additionalData;
+      const notID = payload.notId;
       try {
-        let notification = this.unpack(payload) || {};
+        const notification = this.unpack(payload) || {};
         if (notification) {
           this.dispatchNotification(notification);
         }
@@ -232,14 +228,14 @@ class PushNotifier extends Notifier {
         let notification;
         if (data.launchArgs) {
           // notification is clicked while app isn't running
-          let payload = parseJSON(data.launchArgs);
+          const payload = parseJSON(data.launchArgs);
           notification = this.unpack(payload);
         } else {
           // payload is stored as raw data
-          let eventArgs = data.additionalData.pushNotificationReceivedEventArgs;
+          const eventArgs = data.additionalData.pushNotificationReceivedEventArgs;
           if (eventArgs.notificationType === 3) { // raw
-            let raw = eventArgs.rawNotification;
-            let payload = parseJSON(raw.content);
+            const raw = eventArgs.rawNotification;
+            const payload = parseJSON(raw.content);
             notification = this.unpack(payload);
           }
         }
@@ -280,10 +276,10 @@ class PushNotifier extends Notifier {
    * @param  {Object} context
    */
   handleActivation = (context) => {
-    let launchArgs = context.args;
+    const launchArgs = context.args;
     if (launchArgs) {
-      let payload = JSON.parse(launchArgs);
-      let notification = this.unpack(payload);
+      const payload = JSON.parse(launchArgs);
+      const notification = this.unpack(payload);
       if (notification) {
         this.dispatchNotification(notification);
       }
@@ -310,8 +306,8 @@ let pushNotification;
  *
  * @return {Object}
  */
-let getDeviceDetails = function() {
-  let device = window.device;
+function getDeviceDetails() {
+  const device = window.device;
   if (device) {
     return {
       manufacturer: device.manufacturer,
@@ -331,16 +327,16 @@ function parseJSON(text) {
 
 function signalBackgroundTaskCompletion(notID) {
   if (pushNotification) {
-    let success = () => {};
-    let failure = () => {};
+    const success = () => {};
+    const failure = () => {};
     pushNotification.finish(success, failure, notID);
   }
 }
 
 function setApplicationIconBadgeNumber(count) {
   if (pushNotification) {
-    let success = () => {};
-    let failure = () => {};
+    const success = () => {};
+    const failure = () => {};
     pushNotification.setApplicationIconBadgeNumber(success, failure, count);
   }
 }
@@ -360,7 +356,5 @@ function isDebugMode() {
 }
 
 export {
-  PushNotifier as default,
-  PushNotifier,
   setApplicationIconBadgeNumber,
 };

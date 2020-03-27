@@ -5,9 +5,10 @@ import { performHTTPRequest } from './http-request.js';
 import { CordovaFile } from './cordova-file.js';
 import { initializeBackgroundTransfer, } from './background-file-transfer.js';
 import { generateToken } from '../utils/random-token.js';
-import { isEqual } from '../utils/object-utils.js';
 import { HTTPError, FileError } from '../errors.js';
 import { delay } from '../utils/delay.js';
+import { pullAll } from '../utils/array-utils.js';
+import { isEqual } from '../utils/object-utils.js';
 
 const defaultOptions = {
   uploadURL: null,
@@ -103,14 +104,11 @@ class PayloadManager extends EventEmitter {
    * @param  {Array<String>} ids
    */
   abandon(ids) {
-    const payloads = this.payloads.filter((payload) => {
+    const abandoning = this.payloads.filter((payload) => {
       return ids.includes(payload.id);
     });
-    if (payloads.length > 0) {
-      for (let payload of payloads) {
-        payload.cancel();
-        this.payloads.splice(this.payloads.indexOf(payload), 1);
-      }
+    if (abandoning.length > 0) {
+      pullAll(this.payloads, abandoning);
       this.triggerEvent(new PayloadManagerEvent('change', this));
     }
   }

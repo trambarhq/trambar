@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 const FileTransferManager = window.FileTransferManager;
 
 const transfers = [];
@@ -8,21 +6,21 @@ let uploader;
 function initializeBackgroundTransfer() {
   try {
     uploader = FileTransferManager.init();
-    uploader.on('success', function(upload) {
-      let transfer = _.find(transfers, { id: upload.id });
+    uploader.on('success', (upload) => {
+      const transfer = transfers.find(t => t.id === upload.id);
       if (transfer && transfer.onSuccess) {
         transfer.onSuccess(upload);
       }
-      _.pull(transfers, transfer);
+      transfers.splice(transfers.indexOf(transfer), 1);
     });
-    uploader.on('progress', function(upload) {
-      let transfer = _.find(transfers, { id: upload.id });
+    uploader.on('progress', (upload) => {
+      let transfer = transfers.find(t => t.id === upload.id);
       if (transfer && transfer.onProgress) {
         transfer.onProgress(upload);
       }
     });
-    uploader.on('error', function(upload) {
-      let transfer = _.find(transfers, { id: upload.id });
+    uploader.on('error', (upload) => {
+      let transfer = transfers.find(t => t.id === upload.id);
       if (transfer && transfer.onError) {
         transfer.onError(new Error(upload.error));
       }
@@ -41,22 +39,23 @@ function initializeBackgroundTransfer() {
  * @param  {Object|undefined} options
  */
 function performBackgroundTransfer(token, path, url, options) {
-  let payload = {
-     id: token,
-     filePath: path,
-     serverUrl: url,
-     fileKey: 'file',
-     headers: _.get(options, 'headers', {}),
-     parameters: _.get(options, 'parameters', {}),
-   };
-   uploader.startUpload(payload);
-   let transfer = {
-     id: token,
-     onSuccess: _.get(options, 'onSuccess'),
-     onError: _.get(options, 'onError'),
-     onProgress: _.get(options, 'onProgress'),
-   };
-   transfers.push(transfer);
+  const { headers = {}, parameters = {}, onSuccess, onError, onProgress } = options || {};
+  const payload = {
+    id: token,
+    filePath: path,
+    serverUrl: url,
+    fileKey: 'file',
+    headers,
+    parameters,
+  };
+  uploader.startUpload(payload);
+  const transfer = {
+    id: token,
+    onSuccess,
+    onError,
+    onProgress,
+  };
+  transfers.push(transfer);
 }
 
 /**
@@ -68,10 +67,10 @@ function performBackgroundTransfer(token, path, url, options) {
  */
 function cancelBackgroundTransfer(token) {
   return new Promise((resolve, reject) => {
-    let success = (res) => {
+    const success = (res) => {
       resolve(res);
     };
-    let fail = (msg) => {
+    const fail = (msg) => {
       reject(new Error(msg.error));
     };
     uploader.removeUpload(token, success, fail);

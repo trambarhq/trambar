@@ -18,7 +18,6 @@ import { UploadProgress } from 'common/widgets/upload-progress.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import 'setimmediate';
-import 'common/utils/lodash-extra.js';
 import '@fortawesome/fontawesome-free/css/all.css';
 import './front-end.scss';
 import './colors.scss';

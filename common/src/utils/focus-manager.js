@@ -1,4 +1,4 @@
-import { remove } from './array-utils.js';
+import { pullAll } from './array-utils.js';
 import { isMatch } from './object-utils.js';
 
 export class FocusManager {
@@ -18,7 +18,8 @@ export class FocusManager {
   }
 
   static unregister(component) {
-    remove(this.entries, r => r.component === component);
+    const removing = this.entries.filter(r => r.component === component)
+    pullAll(this.entries, removing);
   }
 
   static focus(props) {

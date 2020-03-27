@@ -12,7 +12,8 @@ import { Removal } from './remote-data-source/removal.js';
 import { CacheSignature } from './remote-data-source/cache-signature.js';
 import { ChangeMonitor } from './remote-data-source/change-monitor.js';
 import { delay } from '../utils/delay.js';
-import { sortedIndexBy } from '../utils/array-utils.js';
+import { pullAll, difference, sortedIndexBy } from '../utils/array-utils.js';
+import { get, set } from '../utils/object-utils.js';
 
 const defaultOptions = {
   basePath: '/srv/data',
@@ -113,9 +114,7 @@ export class RemoteDataSource extends EventEmitter {
     const required = query.required || false;
     const committed = query.committed || false;
     const refreshInterval = this.options.refreshInterval;
-    let search = _.find(this.recentSearchResults, (search) => {
-      return search.match(newSearch);
-    });
+    let search = this.recentSearchResults.find(s => s.match(newSearch));
     if (!search) {
       search = newSearch;
       if (!search.remote) {
@@ -178,7 +177,7 @@ export class RemoteDataSource extends EventEmitter {
       }
     }
 
-    const includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
+    const includeUncommitted = this.options.discoveryFlags.include_uncommitted || false;
     if (includeUncommitted && !committed) {
       search = this.applyUncommittedChanges(search);
     }
@@ -224,11 +223,12 @@ export class RemoteDataSource extends EventEmitter {
       this.updateRecentSearchResults(storage);
     }
     this.triggerEvent(new RemoteDataSourceEvent('change', this));
-    if (_.get(this.options.discoveryFlags, 'include_deleted')) {
+    const includeDeleted = this.options.discoveryFlags.include_deleted || false;
+    if (includeDeleted) {
       return storage.results;
     } else {
       const deleted = storage.results.filter(obj => obj.deleted);
-      const saved = _.difference(storage.results, deleted);
+      const saved = difference(storage.results, deleted);
       return saved;
     }
   }
@@ -250,7 +250,8 @@ export class RemoteDataSource extends EventEmitter {
       await this.updateLocalDatabase(removal);
     } else {
       if (process.env.NODE_ENV !== 'production') {
-        if (_.get(this.options.discoveryFlags, 'include_deleted')) {
+        const includeDeleted = this.options.discoveryFlags.include_deleted || false;
+        if (includeDeleted) {
           console.warn('remove() should not be used when deleted objects are not automatically filtered out');
         }
       }
@@ -419,8 +420,8 @@ export class RemoteDataSource extends EventEmitter {
    */
   findTemporaryID(location, permanentID) {
     const path = [ location.address, location.schema, location.table ];
-    const list = _.get(this.idMappings, path);
-    const entry = _.find(list, { permanent: permanentID });
+    const list = get(this.idMappings, path);
+    const entry = list.find(e => e.permanent === permanentID);
     if (entry) {
       return entry.temporary;
     }
@@ -436,8 +437,8 @@ export class RemoteDataSource extends EventEmitter {
    */
   findPermanentID(location, temporaryID) {
     const path = [ location.address, location.schema, location.table ];
-    const list = _.get(this.idMappings, path);
-    const entry = _.find(list, { temporary: temporaryID });
+    const list = get(this.idMappings, path);
+    const entry = list.find(e => e.temporary === temporaryID);
     if (entry) {
       return entry.permanent;
     }
@@ -512,7 +513,7 @@ export class RemoteDataSource extends EventEmitter {
         }
       }
     }
-    if (_.isEmpty(invalidated)) {
+    if (invalidated.length === 0) {
       return false;
     }
     if (this.active) {
@@ -599,7 +600,7 @@ export class RemoteDataSource extends EventEmitter {
     this.changeMonitors.push(monitor);
     monitor.setTimeout(timeout);
     const result = await monitor.promise;
-    _.pull(this.changeMonitors, monitor);
+    pullAll(this.changeMonitors, [ monitor ]);
     return result;
   }
 
@@ -688,14 +689,14 @@ export class RemoteDataSource extends EventEmitter {
           });
         }
       });
-      if (_.isEmpty(affectedObjects)) {
+      if (affectedObjects.length === 0) {
         continue;
       }
       // load the (possibly) new objects
       const affectedIDs = affectedObjects.map(obj => obj.id);
       const remoteObjects = await this.retrieveRemoteObjects(change.location, affectedIDs, true);
       for (let own of affectedObjects) {
-        const their = _.find(remoteObjects, { id: own.id });
+        const their = remoteObjects.find(obj => obj.id === own.id);
         if (their) {
           if (their.gn > own.gn) {
             let preserve = false;
@@ -719,7 +720,7 @@ export class RemoteDataSource extends EventEmitter {
           }
         }
       }
-      if (_.every(change.removed)) {
+      if (!change.removed.includes(false)) {
         change.cancel();
       }
     }
@@ -734,7 +735,7 @@ export class RemoteDataSource extends EventEmitter {
    */
   applyUncommittedChanges(search) {
     let newSearch;
-    const includeDeleted = _.get(this.options.discoveryFlags, 'include_deleted');
+    const includeDeleted = this.options.discoveryFlags.include_deleted || false;
     for (let change of this.changeQueue) {
       if (change.matchLocation(search)) {
         if (!change.committed && !change.canceled && !change.error) {
@@ -766,7 +767,7 @@ export class RemoteDataSource extends EventEmitter {
     if (!type) {
       type = 'primary';
     }
-    let session = _.find(this.sessions, { address, area, type });
+    let session = this.sessions.find(s => s.address === address && s.area === area && s.type === type);
     if (!session) {
       session = {
         address,
@@ -787,7 +788,7 @@ export class RemoteDataSource extends EventEmitter {
 
   discardSession(session) {
     if (this.sessions.includes(session)) {
-      _.pull(this.sessions, session);
+      pullAll(this.sessions, [ session ]);
       this.triggerEvent(new RemoteDataSourceEvent('change', this));
     }
   }
@@ -928,16 +929,11 @@ export class RemoteDataSource extends EventEmitter {
    * authorization yet and will be expiring soon so they'd be recreated
    */
   clearExpiredSessions() {
-    let changed = false;
     const now = Moment().toISOString();
     const soon = Moment().add(5, 'minute').toISOString();
-    _.remove(this.sessions, (session) => {
-      if (session.etime < now || (session.etime < soon && !session.token)) {
-        changed = true;
-        return true;
-      }
-    });
-    if (changed) {
+    const removing = this.sessions.filter(s => s.etime < now || (s.etime < soon && !s.token));
+    if (removing.length > 0) {
+      pullAll(this.sessions, removing);
       this.triggerEvent(new RemoteDataSourceEvent('change', this));
     }
   }
@@ -1097,8 +1093,8 @@ export class RemoteDataSource extends EventEmitter {
     try {
       const location = search.getLocation();
       const ids = search.getFetchList(discovery.ids);
-      if (!_.isEmpty(ids)) {
-        const query = _.assign({ criteria: { id: ids } }, location);
+      if (ids.length > 0) {
+        const query = { criteria: { id: ids }, ...location };
         const objects = await this.cache.find(query);
         search.results = insertObjects(search.results, objects);
       }
@@ -1143,10 +1139,10 @@ export class RemoteDataSource extends EventEmitter {
       const idsRemoved = search.getRemovalList(discovery.ids);
 
       let newResults = search.results;
-      if (!_.isEmpty(idsRemoved)) {
+      if (idsRemoved.length > 0) {
         newResults = removeObjects(newResults, idsRemoved);
       }
-      if (!_.isEmpty(idsUpdated)) {
+      if (idsUpdated.length > 0) {
         // retrieve the updated (or new) objects from server
         const newObjects = await this.retrieveRemoteObjects(location, idsUpdated);
         // then add them to the list
@@ -1156,7 +1152,7 @@ export class RemoteDataSource extends EventEmitter {
         newResults = [];
       }
 
-      const includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
+      const includeUncommitted = this.options.discoveryFlags.include_uncommitted || false;
       if (includeUncommitted) {
         // wait for any storage operation currently in flight to finish so
         // we don't end up with both the committed and the uncommitted copy
@@ -1220,9 +1216,9 @@ export class RemoteDataSource extends EventEmitter {
   async getCacheSignature(location) {
     const { address, schema } = location;
     const key = `${address}/${schema}`;
-    const query = _.assign({}, signatureLocation, { criteria: { key } });
+    const query = { ...signatureLocation, criteria: { key } };
     const results = await this.cache.find(query);
-    return _.get(results[0], 'signature', '');
+    return results[0]?.signature || '';
   }
 
   /**
@@ -1249,14 +1245,14 @@ export class RemoteDataSource extends EventEmitter {
    */
   async getRemoteSignature(location) {
     const { address, schema } = location;
-    let cacheSignature = _.find(this.cacheSignatures, { address, schema });
+    let cacheSignature = this.cacheSignatures.find(s => s.address === address && s.schema === schema);
     if (!cacheSignature) {
       cacheSignature = new CacheSignature(address, schema);
       cacheSignature.promise = this.performRemoteAction(location, 'signature');
       this.cacheSignatures.push(cacheSignature);
     }
     const result = await cacheSignature.promise;
-    cacheSignature.signature = _.get(result, 'signature', '');
+    cacheSignature.signature = result?.signature;
     return cacheSignature.signature;
   }
 
@@ -1332,11 +1328,12 @@ export class RemoteDataSource extends EventEmitter {
       } else if (op instanceof Removal) {
         await this.cache.remove(location, op.results);
       } else if (op instanceof Storage) {
-        if (_.get(this.options.discoveryFlags, 'include_deleted')) {
+        const includeDeleted = this.options.discoveryFlags.include_deleted || false;
+        if (includeDeleted) {
           await this.cache.save(location, op.results);
         } else {
           const deleted = op.results.filter(obj => obj.deleted);
-          const saved = _.difference(op.results, deleted);
+          const saved = difference(op.results, deleted);
           await this.cache.save(location, saved);
           await this.cache.remove(location, deleted);
         }
@@ -1377,14 +1374,15 @@ export class RemoteDataSource extends EventEmitter {
         if (object.id < 1) {
           let permanentID = this.findPermanentID(location, object.id);
           if (permanentID) {
-            object = _.clone(object);
-            object.id = permanentID;
+            object = { ...object, id: permanentID };
           } else {
-            object = _.omit(object, 'id', 'uncommitted');
+            const { id: tempID, uncommitted, ...objProps } = object;
+            object = objProps;
           }
         } else {
           if (object.uncommitted !== undefined) {
-            object = _.omit(object, 'uncommitted');
+            const { uncommitted, ...objProps } = object;
+            object = objProps;
           }
         }
         return object;
@@ -1441,7 +1439,8 @@ export class RemoteDataSource extends EventEmitter {
         } else if (op instanceof Storage) {
           let match = matchSearchCriteria(search.table, object, search.criteria);
           if (object.deleted) {
-            if (!_.get(this.options.discoveryFlags, 'include_deleted')) {
+            const includeDeleted = this.options.discoveryFlags || false;
+            if (!includeDeleted) {
               match = false;
             }
           }
@@ -1523,13 +1522,14 @@ export class RemoteDataSource extends EventEmitter {
     if (action === 'retrieval' || action === 'storage') {
       flags = this.options.retrievalFlags;
     } else if (action === 'discovery') {
-      flags = _.omit(this.options.discoveryFlags, 'include_uncommitted');
+      const { include_uncommitted: ignore, ...serverSideFlags } = this.options.discoveryFlags;
+      flags = serverSideFlags;
     }
     let url = `${address}${basePath}/${action}/${schema}/`;
     if (action !== 'signature') {
       url += `${table}/`;
     }
-    const req = _.assign({}, payload, flags, { auth_token: session.token });
+    const req = { ...payload, ...flags, auth_token: session.token };
     const options = { contentType: 'json', responseType: 'json' };
     this.requestCount++;
     this.triggerEvent(new RemoteDataSourceEvent('requeststart', this));
@@ -1581,15 +1581,16 @@ export class RemoteDataSource extends EventEmitter {
    * @param  {Object} session
    */
   clearRecentOperations(session) {
-    let lists = [
+    const lists = [
       this.recentSearchResults,
       this.recentStorageResults,
       this.recentRemovalResults
     ];
+    for (let list of list) {
+      const removing = list.filter(op => op.address === session.address);
+      pullAll(list, removing);
+    }
     for (let list of lists) {
-      _.remove(list, (op) => {
-        return (op.address === session.address);
-      });
     }
   }
 
@@ -1600,9 +1601,9 @@ export class RemoteDataSource extends EventEmitter {
    */
   queueChange(change) {
     // get rid of entries that's no longer needed
-    let delay = 1;
-    let someTimeAgo = Moment().subtract(delay, 'minute').toISOString();
-    _.remove(this.changeQueue, (oldChange) => {
+    const delay = 1;
+    const someTimeAgo = Moment().subtract(delay, 'minute').toISOString();
+    const removing = this.changeQueue.filter((oldChange) => {
       if (oldChange.committed) {
         // keep entry in queue until we're certain we won't receive
         // notification about it
@@ -1619,6 +1620,7 @@ export class RemoteDataSource extends EventEmitter {
         return true;
       }
     });
+    pullAll(this.changeQueue, removing);
     this.changeQueue.push(change);
   }
 
@@ -1644,11 +1646,11 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Storage}
    */
   addStorage(newStorage) {
+    const removing = this.recentStorageResults.filter((op, index) => {
+      return op.canceled || index >= 32;
+    });
+    pullAll(this.recentStorageResults, removing);
     this.recentStorageResults.unshift(newStorage);
-    _.remove(this.recentStorageResults, { canceled: true });
-    while (this.recentStorageResults.length > 32) {
-      this.recentStorageResults.pop();
-    }
     return newStorage;
   }
 
@@ -1660,10 +1662,11 @@ export class RemoteDataSource extends EventEmitter {
    * @return {Removal}
    */
   addRemoval(newRemoval) {
+    const removing = this.recentRemovalResults.filter((op, index) => {
+      return op.canceled || index >= 32;
+    });
+    pullAll(this.recentRemovalResults, removing);
     this.recentRemovalResults.unshift(newRemoval);
-    while (this.recentRemovalResults.length > 32) {
-      this.recentRemovalResults.pop();
-    }
     return newRemoval;
   }
 
@@ -1679,19 +1682,17 @@ export class RemoteDataSource extends EventEmitter {
       return;
     }
     let path = [ location.address, location.schema, location.table ];
-    let list = _.get(this.idMappings, path);
+    let list = get(this.idMappings, path);
     if (!list) {
       list = [];
-      _.set(this.idMappings, path, list);
+      set(this.idMappings, path, list);
     }
     for (let [ index, localObject ] of Object.entries(localObjects)) {
       if (localObject.id < 1) {
-        let remoteObject = remoteObjects[index];
-        _.remove(list, { permanent: remoteObject.id });
-        list.push({
-          temporary: localObject.id,
-          permanent: remoteObject.id,
-        });
+        const remoteObject = remoteObjects[index];
+        const removing = list.filter(e => e.permanent === remoteObject.id);
+        pullAll(list, removing);
+        list.push({ temporary: localObject.id, permanent: remoteObject.id });
       }
     }
   }
@@ -1707,7 +1708,7 @@ export class RemoteDataSource extends EventEmitter {
  * @return {Array<Object>}
  */
 function removeObjects(objects, ids) {
-  if (_.isEmpty(ids)) {
+  if (ids.length === 0) {
     return objects;
   }
   objects = objects.slice();
@@ -1730,7 +1731,7 @@ function removeObjects(objects, ids) {
  * @return {Array<Object>}
  */
 function insertObjects(objects, newObjects) {
-  if (_.isEmpty(newObjects)) {
+  if (newObjects.length === 0) {
     return objects;
   }
   objects = objects.slice();

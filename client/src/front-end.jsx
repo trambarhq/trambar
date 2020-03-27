@@ -21,7 +21,6 @@ import { UploadProgress } from 'common/widgets/upload-progress.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 import { processMobileAlert } from './views/notification-view.jsx';
 
-import 'common/utils/lodash-extra.js';
 import './front-end.scss';
 import '@fortawesome/fontawesome-free/css/all.css';
 
