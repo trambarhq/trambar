@@ -1,8 +1,6 @@
-import _ from 'lodash';
-
 export class Operation {
   constructor(location) {
-    const byComponent = _.get(location, 'by.constructor.displayName')
+    const byComponent = location.by?.constructor?.name;
     if (location.schema !== 'local') {
       this.address =  location.address;
     }
@@ -24,10 +22,11 @@ export class Operation {
    * @return {Object}
    */
   getLocation() {
-    if (this.local) {
-      return _.pick(this, 'schema', 'table');
+    const { local, address, schema, table } = this;
+    if (local) {
+      return { schema, table };
     } else {
-      return _.pick(this, 'address', 'schema', 'table');
+      return { address, schema, table };
     }
   }
 

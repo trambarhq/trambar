@@ -1,5 +1,5 @@
-import _ from 'lodash';
 import React, { Component } from 'react';
+import { shallowDiff } from '../utils/object-utils.js';
 
 import './error-boundary.scss';
 
@@ -73,6 +73,6 @@ function compareElements(e1, e2) {
   if (e1.type !== e2.type) {
     return false;
   }
-  const diff = _.shallowDiff(e1.props, e2.props);
+  const diff = shallowDiff(e1.props, e2.props);
   return (diff.length === 0);
 }

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useAsyncEffect } from 'relaks';
 import { loadImage } from '../media/media-loader.js';
@@ -114,11 +113,13 @@ function getMosaicStyle(mosaic, width, height) {
   const heightToWidthRatio = height / width;
   const style = { paddingTop: (heightToWidthRatio * 100) + '%' };
   if (mosaic?.length === 16) {
-    const scanlines = _.chunk(mosaic, 4);
-    const gradients  = scanlines.map((pixels) => {
-      let [ c1, c2, c3, c4 ] = pixels.map(formatColor);
-      return `linear-gradient(90deg, ${c1} 0%, ${c1} 25%, ${c2} 25%, ${c2} 50%, ${c3} 50%, ${c3} 75%, ${c4} 75%, ${c4} 100%)`;
-    });
+    const gradients = [];
+    for (let i = 0; i < 16; i += 4) {
+      const pixels = mosaic.slice(i, i + 4);
+      const [ c1, c2, c3, c4 ] = pixels.map(formatColor);
+      const g = `linear-gradient(90deg, ${c1} 0%, ${c1} 25%, ${c2} 25%, ${c2} 50%, ${c3} 50%, ${c3} 75%, ${c4} 75%, ${c4} 100%)`;
+      gradients.push(g);
+    }
     const positions = [ `0 0%`, `0 ${100 / 3}%`, `0 ${200 / 3}%`, `0 100%` ];
     style.backgroundRepeat = 'no-repeat';
     style.backgroundSize = `100% 25.5%`;

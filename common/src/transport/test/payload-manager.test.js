@@ -6,15 +6,15 @@ import { promiseSelf } from '../../utils/promise-self.js';
 import { performHTTPRequest } from '../http-request.js';
 import { PayloadManager } from '../payload-manager.js';
 
-let port = 7777;
-let baseURL = `http://localhost:${port}`;
+const port = 7777;
+const baseURL = `http://localhost:${port}`;
 
-let testObject = _.range(1, 500);
-let testJSON = JSON.stringify(testObject);
-let testBlob1 = new Blob([ testJSON ], { type: 'text/plain' });
+const testObject = Array(500).fill(0, 0, 500);
+const testJSON = JSON.stringify(testObject);
+const testBlob1 = new Blob([ testJSON ], { type: 'text/plain' });
 
-let testString = _.repeat('Hello world\n', 500);
-let testBlob2 = new Blob([ testString ], { type: 'text/plain' });
+const testString = Array(500).fill('Hello world\n', 500).join('');
+const testBlob2 = new Blob([ testString ], { type: 'text/plain' });
 
 describe('PayloadManager', function() {
   before(() => {

@@ -1,7 +1,7 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import { expect } from 'chai';
 import { delay } from '../../utils/delay.js';
+import { clone } from '../../utils/object-utils.js';
 
 import { RemoteDataSource } from '../remote-data-source.js';
 import { IndexedDBCache } from '../indexed-db-cache.js';
@@ -713,7 +713,7 @@ describe('RemoteDataSource', function() {
           expect(method).to.match(/post/i);
           expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
           return payload.objects.map((object) => {
-            object = _.clone(object);
+            object = clone(object);
             if (!object.id) {
               object.id = id++;
             }
@@ -739,7 +739,7 @@ describe('RemoteDataSource', function() {
       await cache.save(location, objects);
       let storage = 0;
       let discovery = 0;
-      const updatedObject = _.clone(objects[0]);
+      const updatedObject = clone(objects[0]);
       updatedObject.name = 'gollum';
       mockHTTPRequest(async (method, url, payload, options) => {
         await delay(50);
@@ -747,7 +747,7 @@ describe('RemoteDataSource', function() {
           storage++;
           expect(method).to.match(/post/i);
           expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
-          const object = _.clone(payload.objects[0]);
+          const object = clone(payload.objects[0]);
           objects[0] = object;
           return [ object ];
         } else if (/discovery/.test(url)) {
@@ -784,7 +784,7 @@ describe('RemoteDataSource', function() {
           await presaveSearchPromise;
 
           // return the results only after we've done a search
-          const object = _.clone(payload.objects[0]);
+          const object = clone(payload.objects[0]);
           object.id = id++;
           object.gn = 1;
           objects.push(object);
@@ -829,7 +829,7 @@ describe('RemoteDataSource', function() {
         // blocking needs to be 'never' here, since the remote search will
         // wait for the save operation to finish (which would wait for the
         // promise returned by this function)
-        const query = _.assign({ criteria: {}, blocking: 'never' }, location);
+        const query = { criteria: {}, blocking: 'never', ...location };
         return dataSource.find(query);
       };
       const presaveSearchPromise = presaveSearch();
@@ -842,7 +842,7 @@ describe('RemoteDataSource', function() {
 
       // this search should not trigger a remote search, since it's
       // the same as the one performed in the change event handler
-      const query = _.assign({ criteria: {}, blocking: true }, location);
+      const query = { criteria: {}, blocking: true, ...location };
       const projectsLater = await dataSource.find(query);
       expect(projectsLater).to.have.length(1);
       expect(projectsLater[0]).to.have.property('id').that.is.at.least(1);
@@ -853,7 +853,7 @@ describe('RemoteDataSource', function() {
       const objects = [
         { id: 3, name: 'smeagol', evil: false }
       ];
-      const updatedObject = _.clone(objects[0]);
+      const updatedObject = clone(objects[0]);
       updatedObject.name = 'gollum';
       updatedObject.evil = true;
       mockHTTPRequest(async (method, url, payload, options) => {
@@ -872,9 +872,7 @@ describe('RemoteDataSource', function() {
         schema: 'global',
         table: 'hobbit',
       };
-      const query = _.assign({
-        criteria: { evil: false }
-      }, location);
+      const query = { criteria: { evil: false }, ...location });
       const options = { delay: 1000 };
       const results1 = await dataSource.find(query);
       expect(results1).to.deep.equal(objects);
@@ -893,7 +891,7 @@ describe('RemoteDataSource', function() {
         if (/storage/.test(url)) {
           storage++;
           // make object available, then wait a bit
-          const object = _.clone(payload.objects[0]);
+          const object = clone(payload.objects[0]);
           object.id = id++;
           object.gn = 1;
           objects.push(object);
@@ -925,14 +923,14 @@ describe('RemoteDataSource', function() {
         const num = additionalSavePromises.length + 1;
         if (num <= 4) {
           // load the only object and modify it
-          const query = _.assign({ criteria: {} }, location);
+          const query = { criteria: {}, ...location });
           const save = async (num) => {
             const objects = await dataSource.find(query);
             const object = objects[0];
             // should still be uncommitted at this point
             expect(object).to.have.property('id').that.is.below(1);
             expect(object).to.have.property('uncommitted').that.is.true;
-            object = _.clone(object);
+            object = clone(object);
             object['prop' + num] = num;
             return dataSource.save(location, [ object ], { delay: 200 });
           };
@@ -951,7 +949,7 @@ describe('RemoteDataSource', function() {
       mockHTTPRequest(async (method, url, payload, options) => {
         if (/storage/.test(url)) {
           storage++;
-          const object = _.clone(payload.objects[0]);
+          const object = clone(payload.objects[0]);
           object.id = id++;
           object.gn = 1;
           objects.push(object);
@@ -1020,7 +1018,7 @@ describe('RemoteDataSource', function() {
           expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
           return payload.objects.map((object) => {
             expect(object.deleted).to.be.true;
-            return _.clone(object);
+            return clone(object);
           });
         }
       });
@@ -1041,7 +1039,7 @@ describe('RemoteDataSource', function() {
         if (/storage/.test(url)) {
           storage++;
           return payload.objects.map((object) => {
-            return _.clone(object);
+            return clone(object);
           });
         } else if (/discovery/.test(url)) {
           return {
@@ -1053,7 +1051,7 @@ describe('RemoteDataSource', function() {
         }
       });
       // create a search first
-      const query = _.extend(location, { criteria: {} });
+      const query = { criteria: {}, ...location };
       const found1 = await dataSource.find(query);
       expect(found1).to.have.lengthOf(1);
 
@@ -1115,7 +1113,7 @@ describe('RemoteDataSource', function() {
           return objects;
         }
       });
-      const query = _.extend(location, { blocking: 'expired', criteria: {} });
+      const query = { blocking: 'expired', criteria: {}, ...location };
       const found1 = await dataSource.find(query);
       expect(found1).to.have.lengthOf(1);
       expect(discovery).to.equal(1);
@@ -1154,7 +1152,7 @@ describe('RemoteDataSource', function() {
           return objects;
         }
       });
-      const query = _.extend(location, { criteria: {} });
+      const query = { criteria: {}, ...location };
       const found1 = await dataSource.find(query);
       expect(found1).to.have.lengthOf(1);
       expect(discovery).to.equal(1);
@@ -1380,7 +1378,8 @@ describe('RemoteDataSource', function() {
           retrieval++;
           if (filtering) {
             return objects.map((object) => {
-              return _.omit(object, 'secret');
+              const { secret, ...notSecret } = object;
+              return notSecret;
             });
           } else {
             return objects;

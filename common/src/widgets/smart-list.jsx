@@ -1,7 +1,6 @@
-import _ from 'lodash';
 import React, { useState, useRef, useEffect } from 'react';
 import { useListener, useComputed, useSaveBuffer, useAutoSave } from 'relaks';
-import { sortedIndexBy } from '../utils/array-utils.js';
+import { sortedIndexBy, difference } from '../utils/array-utils.js';
 
 import './smart-list.scss';
 
@@ -122,7 +121,7 @@ export function SmartList(props) {
   const anchorSlot = (slotHash) ? slotHash[anchorBuffer.current] : null;
   const anchorIndex = (anchorSlot) ? anchorSlot.index : -1;
   useAutoSave(anchorBuffer, 500, () => {
-    const item = _.get(anchorSlot, 'item', null);
+    const item = anchorSlot?.item || null;
     if (onAnchorChange) {
       onAnchorChange({ item });
     }
@@ -145,7 +144,7 @@ export function SmartList(props) {
     setEstimatedHeight(undefined);
   });
   const handleTransitionEnd = useListener((evt) => {
-    const slot = _.find(slots, { node: evt.target });
+    const slot = slots.find(s => s.node === evt.target);
     if (slot) {
       if (slot.state === 'appearing') {
         if (evt.propertyName === 'opacity') {
@@ -199,7 +198,7 @@ export function SmartList(props) {
       }
     }
     const unseenItems = unseenSlots.map(s => s.item);
-    if (_.xor(scrollState.unseenItems, unseenItems).length > 0) {
+    if (!isSameList(scrollState.unseenItems, unseenItems)) {
       if (onBeforeAnchor) {
         onBeforeAnchor({ items: unseenItems });
       }
@@ -261,9 +260,10 @@ export function SmartList(props) {
       }
     }
     if (estimatedHeight === undefined) {
-      const heights = slots.map(s => s.height).filter(Boolean);
-      if (heights.length > 0) {
-        const estimatedHeight = Math.round(_.mean(heights));
+      const withHeight = slots.filter(s => s.height > 0);
+      if (withHeight.length > 0) {
+        const averageHeight = withHeight.reduce((sum, s) => sum + s.height, 0) / withHeight.length;
+        const estimatedHeight = Math.floor(averageHeight);
         if (estimatedHeight > 0) {
           setEstimatedHeight(estimatedHeight);
         }
@@ -370,6 +370,16 @@ function findAnchorSlot(slots, scrollWindow, inverted) {
 function isWithin(pos, scrollWindow) {
   if (pos.bottom > scrollWindow.scrollTop && pos.top < scrollWindow.scrollBottom) {
     return true;
+  }
+  return false;
+}
+
+function isSameList(a, b) {
+  if (a.length === b.length) {
+    const diff = difference(a, b);
+    if (diff.length === 0) {
+      return true;
+    }
   }
   return false;
 }

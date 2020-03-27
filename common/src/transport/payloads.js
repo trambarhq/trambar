@@ -1,6 +1,4 @@
-import _ from 'lodash';
-
-class Payloads {
+export class Payloads {
   constructor(payloadManager, destination) {
     this.payloadManager = payloadManager;
     this.destination = destination;
@@ -85,7 +83,7 @@ class Payloads {
    * @return {Payloads}
    */
   override(newDestination) {
-    let destination = _.assign({}, this.destination, newDestination);
+    const destination = { ...this.destination, ...newDestination };
     return new Payloads(this.payloadManager, destination);
   }
 }
@@ -108,8 +106,3 @@ function getPayloadIDs(object) {
   }
   return ids;
 }
-
-export {
-  Payloads as default,
-  Payloads,
-};

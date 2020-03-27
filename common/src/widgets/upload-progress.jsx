@@ -1,5 +1,5 @@
-import _ from 'lodash';
 import React from 'react';
+import Bytes from 'bytes';
 
 import './upload-progress.scss';
 
@@ -13,7 +13,7 @@ export function UploadProgress(props) {
   if (!payloads.uploading) {
     return null;
   }
-  const size = _.fileSize(payloads.uploading.bytes);
+  const size = Bytes(payloads.uploading.bytes);
   const count = payloads.uploading.files;
   return (
     <div className="upload-progress">

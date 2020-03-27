@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { FileError } from '../errors.js';
 
 class CordovaFile {
@@ -7,7 +6,7 @@ class CordovaFile {
     if (fullPath.charAt(0) === '/') {
       fullPath = 'file://' + encodeURI(fullPath);
     }
-    let slashIndex = _.lastIndexOf(fullPath, '/');
+    let slashIndex = fullPath.lastIndexOf('/');
     if (slashIndex !== -1) {
       name = decodeURI(fullPath.substr(slashIndex + 1));
     }
@@ -103,7 +102,7 @@ class CordovaFile {
 function decodeFileType(type) {
   // on Windows we'll get a file extension instead of a mime type
   if (type && type.charAt(0) === '.') {
-    switch (_.toLower(type)) {
+    switch (type.toLowerCase()) {
       case '.jpg':
       case '.jpeg': return 'image/jpeg';
       case '.png': return 'image/png';

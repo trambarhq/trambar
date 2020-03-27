@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 
 class Notifier extends EventEmitter {
@@ -61,12 +60,12 @@ class Notifier extends EventEmitter {
    * @return {Array<Object>}
    */
   unpackChanges(payload) {
-    let list = [];
-    let address = this.address;
+    const list = [];
+    const address = this.address;
     for (let [ key, info ] of Object.entries(payload.changes)) {
-      let [ schema, table ] = _.split(key, '.');
+      const [ schema, table ] = key.split('.');
       for (let [ index, id ] of Object.entries(info.ids)) {
-        let gn = info.gns[index];
+        const gn = info.gns[index];
         list.push({ address, schema, table, id, gn });
       }
     }
@@ -81,8 +80,7 @@ class Notifier extends EventEmitter {
    * @return {Object}
    */
   unpackAlert(payload) {
-    let alert = _.clone(payload.alert);
-    alert.address = this.address;
+    const alert = { ...payload.alert, address: this.address };
     if (alert.profile_image) {
       alert.profile_image = this.address + alert.profile_image;
     }
@@ -100,9 +98,7 @@ class Notifier extends EventEmitter {
    * @return {Object}
    */
   unpackInvalidation(payload) {
-    let revalidation = _.clone(payload.revalidation);
-    revalidation.address = this.address;
-    return revalidation;
+    return { ...payload.revalidation, address: this.address };
   }
 
   /**

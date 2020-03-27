@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { EventEmitter, GenericEvent } from 'relaks-event-emitter';
 import { BlobStream } from './blob-stream.js';
 import { Payload } from './payload.js';
@@ -110,8 +109,8 @@ class PayloadManager extends EventEmitter {
     if (payloads.length > 0) {
       for (let payload of payloads) {
         payload.cancel();
+        this.payloads.splice(this.payloads.indexOf(payload), 1);
       }
-      _.pullAll(this.payloads, payloads);
       this.triggerEvent(new PayloadManagerEvent('change', this));
     }
   }
@@ -125,7 +124,7 @@ class PayloadManager extends EventEmitter {
    * @return {Object|null}
    */
   inquire(ids, destination) {
-    if (_.isEmpty(ids)) {
+    if (ids.length === 0) {
       return null;
     }
     let payloads = this.payloads.filter((payload) => {
@@ -135,7 +134,7 @@ class PayloadManager extends EventEmitter {
       // some payloads are not there, either because they were sent by
       // another browser or a page refresh occurred
       for (let id of ids) {
-        let payload = _.find(this.payloads, { id });
+        let payload = this.payloads.find(p => p.id === id);
         if (!payload) {
           // recreate it (if we know the destination)
           if (destination) {
@@ -321,7 +320,7 @@ class PayloadManager extends EventEmitter {
    */
   async acquirePermission(destination, payloads) {
     const unapprovedPayloads = payloads.filter(p => !p.approved);
-    if (_.isEmpty(unapprovedPayloads)) {
+    if (unapprovedPayloads.length === 0) {
       return;
     }
     // set approved to true immediately to prevent it being sent again
@@ -573,7 +572,7 @@ class PayloadManager extends EventEmitter {
       responseType: 'json',
       contentType: 'json',
     };
-    let body = _.extend({ url: part.url }, part.options);
+    const body = { url: part.url, ...part.options };
     part.promise = performHTTPRequest('POST', url, body, options);
     return part.promise;
   }

@@ -33,5 +33,5 @@ Diagnostics.addListener = function(listener) {
 };
 
 Diagnostics.removeListener = function(listener) {
-  _.pull(listeners, listener);
+  listeners.splice(listeners.indexOf(listener), 1);
 };

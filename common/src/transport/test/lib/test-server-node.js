@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const Express = require('express');
 const BodyParser = require('body-parser');
 const Multer = require('multer');
@@ -47,7 +46,7 @@ async function start(port, options) {
     if (socket) {
       sockets.push(socket);
       socket.on('close', () => {
-        _.pull(sockets, socket);
+        sockets.splice(sockets.indexOf(socket), 1);
       });
 
       // assign a random id to socket
@@ -98,7 +97,7 @@ async function stop() {
 }
 
 function send(token, payload) {
-  let socket = _.find(sockets, { token });
+  const socket = sockets.find(s => s.token === token);
   if (socket) {
     socket.write(JSON.stringify(payload));
   }

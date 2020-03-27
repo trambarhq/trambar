@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import { performHTTPRequest } from './http-request.js';
 import { CordovaFile } from './cordova-file.js';
@@ -13,7 +12,7 @@ class BlobManager {
    */
   static manage(blob) {
     const atime = new Date;
-    const entry = _.find(this.list, { blob });
+    const entry = this.list.find(e => e.blob === blob);
     if (entry) {
       entry.atime = atime;
       return entry.localURL;
@@ -58,10 +57,10 @@ class BlobManager {
     if (!target || !url) {
       return;
     }
-    let entry = _.find(this.list, { blob: target });
+    let entry = this.list.find(e => e.blob === target);
     if (!entry) {
       this.manage(target);
-      entry = _.find(this.list, { blob: target });
+      entry = this.list.find(e => e.blob === target);
     }
     entry.urls.push(url);
   }
@@ -93,7 +92,7 @@ class BlobManager {
    * @param  {Blob|CordovaFile} blob
    */
   static release(blob) {
-    const index = _.findIndex(this.list, { blob });
+    const index = this.list.findIndex(e => e.blob);
     if (index !== -1) {
       let entry = this.list[index];
       this.list.splice(index, 1);
@@ -106,19 +105,21 @@ class BlobManager {
    */
   static clean() {
     const now = new Date;
-    const removed = _.remove(this.list, (entry) => {
+    const removing = [];
+    for (let entry of this.list) {
       // see if we can retrieve the file from the server if need arises
       const hasRemote = entry.urls.some(url => /https?:/.test(url));
       if (hasRemote) {
         const elapsed = now - entry.atime;
         if (elapsed > 3 * 60 * 1000) {
           // after five minutes, the blob probably won't be used again
-          return true;
+          removing.push(entry);
         }
       }
-    });
-    for (let entry of removed) {
+    }
+    for (let entry of removing) {
       releaseEntry(entry);
+      this.list.splice(this.list.indexOf(entry), 1);
     }
   }
 }
