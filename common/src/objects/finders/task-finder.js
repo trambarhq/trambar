@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 const table = 'task';
 const emptyArray = [];
 

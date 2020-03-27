@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { uniqIds } from '../../utils/array-utils.js';
 
 const table = 'bookmark';
 const emptyArray = [];
@@ -14,11 +14,10 @@ const emptyArray = [];
  * @return {Promise<Array<Bookmark>>}
  */
 async function findBookmarksByUser(db, user, stories, minimum) {
-  const storyIds = _.uniq(stories.map(s => s.id));
+  const storyIds = uniqIds(stories.map(s => s.id));
   if (storyIds.length === 0 || !user) {
     return emptyArray;
   }
-  storyIds.sort();
   return db.find({
     table,
     criteria: {

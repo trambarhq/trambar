@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { findLinkByServerType } from '../utils/external-data-utils.js';
 
 const schema = 'global';

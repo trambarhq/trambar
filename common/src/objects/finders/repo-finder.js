@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { uniqIds } from '../../utils/array-utils.js';
 
 const schema = 'global';
 const table = 'repo';
@@ -70,11 +70,10 @@ async function findExistingRepos(db, minimum) {
  */
 async function findProjectRepos(db, projects) {
   if (projects instanceof Array) {
-    const ids = _.uniq(_.flatten(projects.map(prj => prj.repo_ids)));
+    const ids = uniqIds(projects.map(prj => prj.repo_ids));
     if (ids.length === 0) {
       return emptyArray;
     }
-    ids.sort();
     return db.find({
       schema,
       table,

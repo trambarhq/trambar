@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { uniqIds } from '../../utils/array-utils.js';
 import { getDayRange } from '../../utils/date-utils.js';
 
 const table = 'story';
@@ -29,11 +29,10 @@ async function findStory(db, id) {
  * @return {Promise<Story>}
  */
 async function findStories(db, ids) {
-  ids = _.uniq(ids);
+  ids = uniqIds(ids);
   if (ids.length === 0) {
     return emptyArray;
   }
-  ids.sort();
   return db.find({
     table,
     criteria: { id: ids },
@@ -50,11 +49,10 @@ async function findStories(db, ids) {
  * @return {Promise<Story>}
  */
 async function findViewableStories(db, ids, currentUser) {
-  ids = _.uniq(ids);
+  ids = uniqIds(ids);
   if (ids.length === 0 || !currentUser) {
     return emptyArray;
   }
-  ids.sort();
   return db.find({
     table,
     criteria: {

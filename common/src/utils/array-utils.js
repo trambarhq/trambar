@@ -53,6 +53,24 @@ function hashById(objects, f) {
   return hash;
 }
 
+function uniqIds(ids) {
+  const list = [];
+  collectIds(ids, list);
+  return list.sort();
+}
+
+function collectIds(ids, list) {
+  for (let id of ids) {
+    if (id instanceof Array) {
+      collectIds(id, list);
+    } else if (typeof(id) === 'number') {
+      if (!list.includes(id)) {
+        list.push(id);
+      }
+    }
+  }
+}
+
 export {
   difference,
   pull,
@@ -65,4 +83,5 @@ export {
   toggle,
   findByIds,
   hashById,
+  uniqIds,
 };

@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { uniqIds } from '../../utils/array-utils.js';
 
 const schema = 'global';
 const table = 'role';
@@ -68,11 +68,10 @@ async function findActiveRoles(db, minimum) {
  */
 async function findRolesOfUsers(db, users) {
   // load roles that members have
-  const roleIDs = _.uniq(_.flatten(users.map(usr => usr.role_ids)));
+  const roleIDs = uniqIds(users.map(usr => usr.role_ids));
   if (roleIDs.length === 0) {
     return emptyArray;
   }
-  roleIDs.sort();
   return db.find({
     schema,
     table,

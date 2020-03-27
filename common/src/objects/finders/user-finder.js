@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { uniqIds } from '../../utils/array-utils.js';
 
 const schema = 'global';
 const table = 'user';
@@ -30,11 +30,10 @@ async function findUser(db, id) {
  * @return {Promise<User>}
  */
 async function findUsers(db, ids) {
-  ids = _.uniq(ids);
+  ids = uniqIds(ids);
   if (ids.length === 0) {
     return emptyArray;
   }
-  ids.sort();
   return db.find({
     schema,
     table,
@@ -134,8 +133,7 @@ async function findActiveUsers(db, minimum) {
  * @return {Promise<User>}
  */
 async function findUsersWithRoles(db, roles, minimum) {
-  let ids = roles.map(r => r.id);
-  ids = _.sortBy(_.uniq(ids));
+  const ids = roles.map(r => r.id);
   return db.find({
     schema,
     table,
@@ -153,7 +151,7 @@ async function findUsersWithRoles(db, roles, minimum) {
  * @return {Promise<User>}
  */
 async function findStoryAuthors(db, stories) {
-  const userIDs = _.flatten(stories.map(s => s.user_ids));
+  const userIDs = stories.map(s => s.user_ids);
   return findUsers(db, userIDs);
 }
 
@@ -192,7 +190,7 @@ async function findBookmarkRecipients(db, bookmarks) {
  * @return {Promise<User>}
  */
 async function findBookmarkSenders(db, bookmarks) {
-  const userIDs = _.flatten(bookmarks.map(bm => bm.user_ids));
+  const userIDs = bookmarks.map(bm => bm.user_ids);
   return findUsers(db, userIDs);
 }
 

@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 const schema = 'global';
 const table = 'project';
 const emptyArray = [];
