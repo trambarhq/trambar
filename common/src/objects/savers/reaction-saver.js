@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { isEqual } from '../../utils/object-utils.js';
 
 const table = 'reaction';

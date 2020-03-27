@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 const table = 'notification';
 
 async function markNotificationsAsSeen(db, notifications) {

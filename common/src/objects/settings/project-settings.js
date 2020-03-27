@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 let ProjectSettingsTypedef;
 if (process.env.NODE_ENV !== 'production') {
   ProjectSettingsTypedef = {

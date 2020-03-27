@@ -1,3 +1,5 @@
+import { union, difference } from '../../utils/array-utils.js';
+
 const schema = 'global';
 const table = 'user';
 
@@ -51,7 +53,7 @@ async function assignRole(db, users, role) {
   const changes = users.map((user) => {
     return {
       id: user.id,
-      role_ids: _.union(user.role_ids, [ role.id ])
+      role_ids: union(user.role_ids, [ role.id ])
     };
   });
   return saveUsers(db, changes);
@@ -61,7 +63,7 @@ async function stripRole(db, users, role) {
   const changes = users.map((user) => {
     return {
       id: user.id,
-      role_ids: _.difference(user.role_ids, [ role.id ])
+      role_ids: difference(user.role_ids, [ role.id ])
     };
   });
   return saveUsers(db, changes);
@@ -71,7 +73,7 @@ async function removeRequestedProject(db, users, project) {
   const changes = users.map((user) => {
     return {
       id: user.id,
-      requested_project_ids: _.difference(user.requested_project_ids, [ project.id ])
+      requested_project_ids: difference(user.requested_project_ids, [ project.id ])
     };
   });
   return saveUsers(db, changes);

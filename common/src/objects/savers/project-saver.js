@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { union, difference } from '../../utils/array-utils.js';
 
 const schema = 'global';
 const table = 'project';
@@ -55,12 +55,12 @@ async function associateRepos(db, project, repos) {
 }
 
 async function attachRepos(db, project, repos) {
-  const repoIDs = _.union(project.repo_ids, repos.map(r => r.id));
+  const repoIDs = union(project.repo_ids, repos.map(r => r.id));
   return saveProject(db, { id: project.id, repo_ids: repoIDs });
 }
 
 async function detachRepos(db, project, repos) {
-  const repoIDs = _.difference(project.repo_ids, repos.map(r => r.id));
+  const repoIDs = difference(project.repo_ids, repos.map(r => r.id));
   return saveProject(db, { id: project.id, repo_ids: repoIDs });
 }
 
@@ -70,12 +70,12 @@ async function associateUsers(db, project, users) {
 }
 
 async function addMembers(db, project, users) {
-  const userIDs = _.union(project.user_ids, users.map(usr => usr.id));
+  const userIDs = union(project.user_ids, users.map(usr => usr.id));
   return saveProject(db, { id: project.id, user_ids: userIDs });
 }
 
 async function removeMembers(db, project, users) {
-  const userIDs = _.difference(project.user_ids, users.map(usr => usr.id));
+  const userIDs = difference(project.user_ids, users.map(usr => usr.id));
   return saveProject(db, { id: project.id, user_ids: userIDs });
 }
 
