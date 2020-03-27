@@ -1,10 +1,10 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import { isEditable as isReactionEditable, wasPublishedWithin as wasReactionPublishedWithin } from './reaction-utils.js';
 import { isEditable as isStoryEditable, isTrackable as isStoryTrackable,
   wasPublishedWithin as wasStoryPublishedWithin, wasBumpedWithin as wasStoryBumpedWithin } from './story-utils.js';
 import { mergeRemoteChanges } from './story-utils.js';
 import { GitNotificationTypes, AdminNotificationTypes, MembershipNotificationTypes } from '../types/notification-types.js';
+import { capitalize } from '../../utils/plain-text.js';
 
 /**
  * Return true if user is a member of the project
@@ -54,7 +54,7 @@ function canViewProject(user, project) {
     if (user.type === 'admin') {
       return true;
     } else {
-      return _.get(project, 'settings.access_control.grant_view_access', false);
+      return !!project?.settings?.access_control?.grant_view_access;
     }
   }
   return false;
@@ -73,9 +73,9 @@ function canJoinProject(user, project) {
     return false;
   }
   if (user.type === 'guest') {
-    return _.get(project, 'settings.membership.allow_guest_request', false);
+    return !!project?.settings?.membership?.allow_guest_request;
   } else {
-    return _.get(project, 'settings.membership.allow_user_request', false);
+    return !!project?.settings?.membership?.allow_user_request;
   }
 }
 
@@ -492,7 +492,7 @@ function canReceiveNotification(user, repos, type) {
  */
 function getUserName(user, env) {
   let { p } = env.locale;
-  return p(_.get(user, 'details.name')) || _.capitalize(_.get(user, 'username')) || '';
+  return p(user?.details?.name) || capitalize(user?.username);
 }
 
 /**

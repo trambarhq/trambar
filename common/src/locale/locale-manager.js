@@ -91,6 +91,9 @@ class LocaleManager extends EventEmitter {
     if (typeof(languageVersions) === 'string') {
       return languageVersions;
     }
+    if (typeof(languageVersions) !== 'object') {
+      return '';
+    }
     // no support for country-specific versions
     const currentLanguageCode = this.languageCode;
     if (overrideLanguageCode) {

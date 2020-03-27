@@ -1,8 +1,6 @@
-import _ from 'lodash';
-
 function getProjectName(project, env) {
   const { p } = env.locale;
-  return p(_.get(project, 'details.title')) || _.get(project, 'name') || '';
+  return p(project?.details?.title) || project?.name || '';
 }
 
 export {

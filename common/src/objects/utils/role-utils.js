@@ -1,8 +1,6 @@
-import _ from 'lodash';
-
 function getRoleName(role, env) {
   const { p } = env.locale;
-  return p(_.get(role, 'details.title')) || _.get(role, 'name') || '';
+  return p(role?.details?.title) || role?.name || '';
 }
 
 export {

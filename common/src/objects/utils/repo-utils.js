@@ -1,36 +1,34 @@
-import _ from 'lodash';
 import { findLinkByRelations } from './external-data-utils.js';
 
 function getRepoName(repo, env) {
   const { p } = env.locale;
-  return p(_.get(repo, 'details.title')) || _.get(repo, 'name') || '';
+  return p(repo?.details?.title) || repo?.name || '';
 }
 
 function getRepoURL(repo) {
-  return _.get(repo, 'details.web_url', '');
+  return repo?.details?.web_url || '';
 }
 
 function getRepoIconClass(repo) {
-  const type = _.get(repo, 'type', '');
-  switch (type) {
+  switch (repo?.type) {
     case 'gitlab':
       return 'fab fa-gitlab';
+    default:
+      return '';
   }
-  return '';
 }
 
 function getMembershipPageURL(repo) {
   let projectURL = getRepoURL(repo)
   if (projectURL) {
-    projectURL = _.trimEnd(projectURL, ' /');
+    projectURL = projectURL.replace(/[\/\s]+$/), '');
     return `${projectURL}/settings/members`;
   }
 }
 
 function getIssueNumber(repo, story) {
   const issueLink = findLinkByRelations(story, 'issue');
-  const number = _.get(issueLink, 'issue.number');
-  return number || '';
+  return issueLink?.issue?.number || '';
 }
 
 function getIssueURL(repo, story) {
@@ -44,7 +42,7 @@ function getIssueURL(repo, story) {
 function getMilestoneURL(repo, story) {
   const repoURL = getRepoURL(repo);
   const milestoneLink = findLinkByRelations(story, 'milestone');
-  const milestoneID = _.get(milestoneLink, 'milestone.id');
+  const milestoneID = milestoneLink?.milestone?.id;
   if (repoURL && milestoneID) {
     return `${repo.details.web_url}/milestones/${milestoneID}`;
   }
@@ -53,15 +51,15 @@ function getMilestoneURL(repo, story) {
 function getMergeRequestURL(repo, story) {
   const repoURL = getRepoURL(repo);
   const mergeRequestLink = findLinkByRelations(story, 'merge_request');
-  const mergeRequestID = _.get(mergeRequestLink, 'merge_request.number');
+  const mergeRequestID = mergeRequestLink?.merge_request?.number;
   if (repoURL && mergeRequestID) {
     return `${repo.details.web_url}/merge_requests/${mergeRequestID}`;
   }
 }
 
 function getPushURL(repo, story) {
-  const commitBefore = _.get(story, 'details.commit_before');
-  const commitAfter = _.get(story, 'details.commit_after');
+  const commitBefore = story?.details?.commit_before;
+  const commitAfter = story?.details?.commit_after;
   const repoURL = getRepoURL(repo);
   if (repoURL) {
     if (commitBefore) {
@@ -73,7 +71,7 @@ function getPushURL(repo, story) {
 }
 
 function getBranchURL(repo, story) {
-  const branch = _.get(story, 'details.branch');
+  const branch = story?.details?.branch;
   const repoURL = getRepoURL(repo);
   if (repoURL) {
     if (story.type === 'branch') {
@@ -85,23 +83,20 @@ function getBranchURL(repo, story) {
 }
 
 function getIssueLabelStyle(repo, label) {
-  if (repo) {
-    const labels = _.get(repo, 'details.labels');
-    const colors = _.get(repo, 'details.label_colors');
-    const index = repo.details.labels.indexOf(label);
-    const backgroundColor = _.get(colors, index);
-    if (backgroundColor) {
-      const style = { backgroundColor };
-      if (isBright(backgroundColor)) {
-        style.color = '#000000';
-      }
-      return style;
+  const labels = repo?.details?.labels;
+  const index = repo?.details?.labels?.indexOf(label);
+  const backgroundColor = repo?.details?.label_colors?.[index];
+  if (backgroundColor) {
+    const style = { backgroundColor };
+    if (isBright(backgroundColor)) {
+      style.color = '#000000';
     }
+    return style;
   }
 }
 
 function getNoteHash(noteLink) {
-  const noteID = _.get(noteLink, 'note.id');
+  const noteID = noteLink?.note?.id;
   return (noteID) ? `#note_${noteID}` : '';
 }
 
@@ -127,7 +122,7 @@ function getCommitNoteURL(repo, reaction) {
 function getIssueNoteURL(repo, reaction) {
   const repoURL = getRepoURL(repo);
   const noteLink = findLinkByRelations(reaction, 'note', 'issue');
-  const issueNumber = _.get(noteLink, 'issue.number');
+  const issueNumber = noteLink?.issue?.number;
   if (repoURL && issueNumber) {
     const hash = getNoteHash(noteLink);
     return `${repoURL}/issues/${issueNumber}${hash}`;
@@ -137,7 +132,7 @@ function getIssueNoteURL(repo, reaction) {
 function getMergeRequestNoteURL(repo, reaction) {
   const repoURL = getRepoURL(repo);
   const noteLink = findLinkByRelations(reaction, 'note', 'merge_request');
-  const mergeRequestNumber = _.get(noteLink, 'merge_request.number');
+  const mergeRequestNumber = noteLink?.merge_request?.number');
   if (repoURL && mergeRequestNumber) {
     const hash = getNoteHash(noteLink);
     return `${repoURL}/merge_requests/${mergeRequestNumber}${hash}`;

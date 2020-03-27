@@ -1,9 +1,8 @@
-import _ from 'lodash';
 import { BlobManager } from '../../transport/blob-manager.js';
 import { extractMosaic } from '../../media/media-loader.js';
 import { centerSquare } from '../../media/image-cropping.js';
-
 import { mergeObjects } from '../../data/merger.js';
+import { orderBy } from '../../utils/array-utils.js';
 
 /**
  * Merge remote resource list into local one
@@ -15,10 +14,10 @@ import { mergeObjects } from '../../data/merger.js';
  * @param  {Array<Object>}
  */
 function mergeLists(local, remote, common) {
-  let commonToLocal = findIndexMapping(common, local);
-  let commonToRemote = findIndexMapping(common, remote);
-  let localToRemote = findIndexMapping(local, remote);
-  let list = [];
+  const commonToLocal = findIndexMapping(common, local);
+  const commonToRemote = findIndexMapping(common, remote);
+  const localToRemote = findIndexMapping(local, remote);
+  const list = [];
   for (let [ indexC, resC ] of Object.entries(common)) {
     let indexL = commonToLocal[indexC];
     let indexR = commonToRemote[indexC];
@@ -27,10 +26,10 @@ function mergeLists(local, remote, common) {
     if (resL && resR) {
       // merge resource objects, applying the same logic
       // to the indices as well
-      let a = { resource: resL, index: indexL };
-      let b = { resource: resR, index: indexR };
-      let c = { resource: resC, index: indexC };
-      let d = mergeObjects(a, b, c);
+      const a = { resource: resL, index: indexL };
+      const b = { resource: resR, index: indexR };
+      const c = { resource: resC, index: indexC };
+      const d = mergeObjects(a, b, c);
       list.push(d);
     }
   }
@@ -41,16 +40,15 @@ function mergeLists(local, remote, common) {
     }
   }
   for (let [ indexL, resL ] of Object.entries(local)) {
-    let indexR = localToRemote[indexL];
-    let resR = remote[indexR];
+    const indexR = localToRemote[indexL];
+    const resR = remote[indexR];
     if (!commonToLocal.includes(indexL) && !resR) {
       // add resource that wasn't there before or in the remote list
       list.push({ resource: resL, index: indexL });
     }
   }
   // put the list into order then strip out indices
-  list = _.sortBy(list, 'index');
-  return list.map(item => item.resource);
+  return orderBy(list, 'index', 'asc').map(item => item.resource);
 }
 
 /**
@@ -62,12 +60,12 @@ function mergeLists(local, remote, common) {
  * @return {Array}
  */
 function findIndexMapping(listA, listB) {
-  let map = [];
-  let mapped = [];
+  const map = [];
+  const mapped = [];
   for (let [ indexA, a ] of Object.entries(listA)) {
-    let keyA = a.url || a.payload_token;
-    let indexB = _.findIndex(listB, (b, indexB) => {
-      let keyB = b.url || b.payload_token;
+    const keyA = a.url || a.payload_token;
+    let indexB = listB.findIndex((b, indexB) => {
+      const keyB = b.url || b.payload_token;
       if (keyA === keyB && !mapped[indexB]) {
         return true;
       }
@@ -84,7 +82,7 @@ function getImageDimensions(res, params) {
   if (!params) {
     params = {};
   }
-  let clip = getClippingRect(res, params);
+  const clip = getClippingRect(res, params);
   if (clip && !params.original) {
     // return the dimensions of the clipping rect
     return {
@@ -298,22 +296,19 @@ function getRemoteImageURL(res, params, env) {
  */
 function pickVideoVersion(res, params, env) {
   if (params.hasOwnProperty('bitrate')) {
-    return _.find(res.resources, { bitrates: { video: params.bitrate }}) || null;
+    return res.versions?.find(ver => ver.bitrates?.video === params.bitrate) || null;
   }
-  let bandwidth = getBandwidth(env.connectionType);
-  let bitrate = (version) => {
-    return parseInt(_.get(version, 'bitrates.video'));
-  };
-  let below = (version) => {
-    let b = bitrate(version);
+  const bandwidth = getBandwidth(env.connectionType);
+  const below = (version) => {
+    const b = parseInt(version.bitrates?.video);
     return (b <= bandwidth) ? bandwidth - b : Infinity;
   };
-  let above = (version) => {
-    let b = bitrate(version);
+  const above = (version) => {
+    const b = parseInt(version.bitrates?.video);
     return (b > bandwidth) ? b - bandwidth : 0;
   };
-  let versions = _.sortBy(res.versions, [ below, above ]);
-  return _.first(versions) || null;
+  const sorted = orderBy(res.versions, [ below, above ], [ 'asc', 'asc' ]);
+  return sorted[0] || null;
 }
 
 /**
@@ -328,23 +323,20 @@ function pickVideoVersion(res, params, env) {
  */
 function pickAudioVersion(res, params, env) {
   if (params.hasOwnProperty('bitrate')) {
-    return _.find(res.resources, { bitrates: { audio: params.bitrate }}) || null;
+    return res.versions?.find(ver => ver.bitrates.audio === params.bitrate) || null;
   }
-  let bandwidth = getBandwidth(env.connectionType);
-  let bitrate = (version) => {
-    return parseInt(_.get(version, 'bitrates.audio'));
-  };
+  const bandwidth = getBandwidth(env.connectionType);
   // find bitrate closest to bandwidth, below it if possible
-  let below = (version) => {
-    let b = bitrate(version);
+  const below = (version) => {
+    let b = parseInt(version.bitrates?.audio);
     return (b <= bandwidth) ? bandwidth - b : Infinity;
   };
-  let above = (version) => {
-    let b = bitrate(version);
+  const above = (version) => {
+    let b = parseInt(version.bitrates?.audio);
     return (b > bandwidth) ? b - bandwidth : 0;
   };
-  let versions = _.sortBy(res.versions, [ below, above ]);
-  return _.first(versions) || null;
+  const sorted = orderBy(res.versions, [ below, above ], [ 'asc', 'asc' ]);
+  return sorted[0] || null;
 }
 
 function getURL(res, params, env) {

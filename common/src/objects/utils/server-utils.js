@@ -1,17 +1,14 @@
-import _ from 'lodash';
-
 function getServerName(server, env) {
   const { p, t } = env.locale;
-  let title = p(_.get(server, 'details.title'));
-  if (title && server && server.type) {
+  let title = p(server?.details?.title);
+  if (!title && server?.type) {
     title = t(`server-type-${server.type}`);
   }
-  return title || '';
+  return title;
 }
 
 function getServerIconClass(server) {
-  const type = _.get(server, 'type', '');
-  switch (type) {
+  switch (server?.type) {
     case 'dropbox':
       return 'fab fa-dropbox';
     case 'facebook':
@@ -24,8 +21,9 @@ function getServerIconClass(server) {
       return 'fab fa-google';
     case 'windows':
       return 'fab fa-windows';
+    default:
+      return '';
   }
-  return '';
 }
 
 export {

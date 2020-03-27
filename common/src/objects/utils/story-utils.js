@@ -1,10 +1,9 @@
-import _ from 'lodash';
 import Moment from 'moment';
 import { extractListItems, updateListItem, countListItems, stringifyList } from 'common/utils/list-parser.js';
 import { mergeObjects } from '../../data/merger.js';
 import { mergeLists } from './resource-utils.js';
 import { TrackableStoryTypes, EditableStoryTypes } from '../types/story-types';
-import { cloneDeep, get, set, isEmpty } from 'common/utils/object-utils.js';
+import { cloneDeep, get, set, isEmpty, decoupleSet, decoupleUnset } from 'common/utils/object-utils.js';
 
 /**
  * Return true if the story has a valid database id
@@ -227,8 +226,9 @@ function extractUserAnswers(story, locale) {
 
 function insertUserAnswers(story, answers) {
   const storyUpdated = cloneDeep(story);
-  const taskCounts = [];
-  storyUpdated.details.text = _.mapValues(story.details.text, (langText) => {
+  const newText = {};
+  let maxUnfinished = 0;
+  for (let [ lang, langText ] of Object.entries(story.details.text)) {
     const tokens = extractListItems(langText);
     for (let token of tokens) {
       for (let item of token) {
@@ -243,30 +243,39 @@ function insertUserAnswers(story, answers) {
     }
     if (story.type === 'task-list') {
       const unfinished = countListItems(tokens, false);
-      taskCounts.push(unfinished);
+      maxUnfinished = Math.max(maxUnfinished, unfinished);
     }
-    return stringifyList(tokens);
-  });
+    newText[lang] = stringifyList(tokens);
+  }
+  storyUpdated.details.text = newText;
   if (story.type === 'task-list') {
-    storyUpdated.unfinished_tasks = _.max(taskCounts);
+    storyUpdated.unfinished_tasks = maxUnfinished;
   }
   return storyUpdated;
 }
 
 function removeSuperfluousDetails(story) {
   // remove text object from details if it's empty
-  let text = _.get(story, 'details.text');
-  text = _.pickBy(text);
-  if (_.isEmpty(text)) {
-    story = _.decoupleUnset(story, 'details.text');
+  const text = story.details.text;
+  const newText = {};
+  if (text) {
+    for (let [ lang, langText ] = Object.entries(text)) {
+      if (langText) {
+        newText[lang] = langText;
+      }
+    }
+  }
+  if (isEmpty(newText)) {
+    story = decoupleUnset(story, 'details.text');
   } else {
-    story = _.decoupleSet(story, 'details.text', text);
+    if (Object.keys(newText) !== Object.keys(text)) {
+      story = decoupleSet(story, 'details.text', newText);
+    }
   }
 
   // remove empty resources array
-  let resources = _.get(story, 'details.resources');
-  if (_.isEmpty(resources)) {
-    story = _.decoupleUnset(story, 'details.resources');
+  if (story.details.resources?.length === 0) {
+    story = decoupleUnset(story, 'details.resources');
   }
   return story;
 }
