@@ -1,4 +1,3 @@
-import clone from 'lodash/clone.js'
 import cloneDeep from 'lodash/cloneDeep.js';
 import get from 'lodash/get.js';
 import set from 'lodash/set.js';
@@ -93,7 +92,7 @@ function decouple(srcObj, path, defaultValue) {
   if (!defaultValue) {
     defaultValue = emptyObject;
   }
-  const dstObj = clone(srcObj);
+  const dstObj = { ...srcObj };
   if (!(dstObj instanceof Object)) {
     dstObj = {};
   }
@@ -101,7 +100,7 @@ function decouple(srcObj, path, defaultValue) {
   let srcParent = srcObj;
   for (let [ index, key ] of npath.entries()) {
     const srcChild = srcParent ? srcParent[key] : undefined;
-    let dstChild = clone(srcChild);
+    let dstChild = { ...srcChild };
     if (index === npath.length - 1) {
       // make sure the node at the end of the path matches the type
       // of the default value
@@ -137,7 +136,6 @@ function normalizePath(path) {
 }
 
 export {
-  clone,
   cloneDeep,
   get,
   set,

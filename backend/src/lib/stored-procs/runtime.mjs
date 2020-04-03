@@ -4,8 +4,8 @@ function findChanges(before, after, omit) {
   let changes = false;
   for (let key of keys) {
     if (!omit || !omit.includes(key)) {
-      var b = (before) ? before[key] : null;
-      var a = (after) ? after[key] : null;
+      const b = (before) ? before[key] : null;
+      const a = (after) ? after[key] : null;
       if (!isEqual(b, a)) {
         diff[key] = [ b, a ];
         changes = true;
@@ -106,7 +106,7 @@ function sendCleanNotification(op, schema, table, after) {
 }
 
 function matchObject(filters, object) {
-  for (var name in filters) {
+  for (let name in filters) {
     switch (name) {
       case 'time_range':
         if (!matchTimeRanges(filters[name], object[name])) {
@@ -125,7 +125,7 @@ function matchObject(filters, object) {
         const filterExternal = [ filterObject ];
         const serverType = filterObject.type || '';
         const objectNames = [];
-        for (let [ name, link ] of filterObject) {
+        for (let [ name, link ] of Object.entries(filterObject)) {
           if (link.id || link.ids instanceof Array) {
             objectNames.push(name);
           }
@@ -234,8 +234,8 @@ function matchScalars(a, b) {
   } else if (typeof(a) !== 'object' && b instanceof(Array)) {
     return b.includes(a);
   } else if (a instanceof Array && b instanceof Array) {
-    for (var i = 0; i < a.length; i++) {
-      if (b.includes(a[i])) {
+    for (let v of a) {
+      if (b.includes(v)) {
         return true;
       }
     }

@@ -78,7 +78,7 @@ function notifyLiveDataChange(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, T
   if (NEW && NEW.dirty) {
     // if lock time isn't null, then the row will soon be updated
     if (!NEW.ltime) {
-      var requestCleaning = false;
+      let requestCleaning = false;
       if (!OLD || !OLD.dirty) {
         // the row has just become dirty
         requestCleaning = true;

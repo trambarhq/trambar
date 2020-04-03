@@ -7,4 +7,15 @@
       position: absolute;
     }
   }
+
+  &.error {
+    color: darkred;
+    border: 1px solid darkred;
+    padding: 1em 1em 1em 1em;
+    display: inline-block;
+    max-width: 16em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre-wrap;
+  }
 }

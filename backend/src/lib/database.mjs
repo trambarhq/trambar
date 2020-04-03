@@ -109,10 +109,10 @@ export class Database {
     const listener = {
       queue: [],
       timeout: 0,
-      event: event,
-      tables: tables,
-      callback: callback,
-      channels: tables.map((table) => { return `${table}_${event}` }),
+      event,
+      tables,
+      callback,
+      channels: tables.map(tbl => `${tbl}_${event}`),
       delay: delay || 50,
     };
     this.listeners.push(listener);
@@ -211,7 +211,7 @@ export class Database {
       AND nspname NOT LIKE 'pg_temp%'
     `;
     const rows = await this.query(sql);
-    return rows.map((row) => row.nspname);
+    return rows.map(r => r.nspname);
   }
 
   /**

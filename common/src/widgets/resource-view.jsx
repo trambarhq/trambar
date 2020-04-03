@@ -48,8 +48,16 @@ export function ResourceView(props) {
     return renderLocalImage();
   } else if (remoteURL) {
     return renderRemoteImage();
+  } else if (children) {
+    return children;
+  } else if (resource?.error) {
+    return (
+      <div className="resource-view error" title={resource.error}>
+        {resource.error}
+      </div>
+    );
   } else {
-    return children || null;
+    return null;
   }
 
   function renderRemoteImage() {

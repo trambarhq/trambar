@@ -56,11 +56,11 @@ function useConfirmation() {
 
 class AsyncSelectionBuffer extends AsyncSaveBuffer {
   isExisting(object) {
-    return !!this.original.find(x => x.id === object.id);
+    return this.original.some(x => x.id === object.id);
   }
 
   isKeeping(object) {
-    return !!this.current.find(c => c.id === object.id);
+    return this.current.some(c => c.id === object.id);
   }
 
   isAdding(object) {
@@ -108,7 +108,7 @@ function useSelectionBuffer(params) {
     original: [],
     compare: (a, b) => {
       const idsA = a.map(obj => obj.id).sort();
-      const idsB = a.map(obj => obj.id).sort();
+      const idsB = b.map(obj => obj.id).sort();
       return isEqual(idsA, idsB);
     },
     ...params,

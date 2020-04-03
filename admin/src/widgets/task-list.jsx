@@ -151,9 +151,9 @@ export async function TaskList(props) {
     if (task.completion === 100) {
       const repo = task.options.repo;
       const branch = task.options.branch;
-      const added = task.details.added || 0;
-      const deleted = task.details.deleted || 0;
-      const modified = task.details.modified || 0;
+      const added = task.details.added?.length || 0;
+      const deleted = task.details.deleted?.length || 0;
+      const modified = task.details.modified?.length || 0;
       switch (task.action) {
         case 'gitlab-repo-import':
           if (added) {

@@ -43,14 +43,11 @@ hasFalse.ret = 'boolean';
 hasFalse.flags = 'IMMUTABLE';
 
 function hasCandidates(details, ids) {
-  var candidates = details.candidates;
+  const { candidates } = details;
   if (candidates instanceof Array) {
-    for (var i = 0; i < candidates.length; i++) {
-      var id = candidates[i].id;
-      for (var j = 0; j < ids.length; j++) {
-        if (id === ids[j]) {
-          return true;
-        }
+    for (let candidate of candidates) {
+      if (ids.includes(candidate.id)) {
+        return true;
       }
     }
   }
@@ -130,13 +127,14 @@ updatePayload.flags = 'IMMUTABLE';
  * @return {Number}
  */
 function checkAuthorization(token, area) {
-  const sql = `SELECT user_id, area FROM "global"."session"
-         WHERE token = $1
-         AND (area = $2 OR $2 IS NULL)
-         AND etime >= NOW()
-         AND deleted = false
-         AND activated = true
-         LIMIT 1`;
+  const sql = `
+    SELECT user_id, area FROM "global"."session"
+    WHERE token = $1
+    AND (area = $2 OR $2 IS NULL)
+    AND etime >= NOW()
+    AND deleted = false
+    AND activated = true
+    LIMIT 1`;
   const row = plv8.execute(sql, [ token, area ])[0];
   return (row) ? row.user_id : null;
 }
@@ -153,7 +151,7 @@ checkAuthorization.flags = 'SECURITY DEFINER';
  * @param  {Number} days
  */
 function extendAuthorization(token, days) {
-  var etime = new Date;
+  const etime = new Date;
   etime.setMilliseconds(0);
   etime.setSeconds(0);
   etime.setMinutes(0);
@@ -161,10 +159,11 @@ function extendAuthorization(token, days) {
   if (days > 2) {
     etime.setHours(0);
   }
-  var sql = `UPDATE "global"."session"
-         SET etime = $2
-         WHERE token = $1
-         AND deleted = false`;
+  const sql = `
+    UPDATE "global"."session"
+    SET etime = $2
+    WHERE token = $1
+    AND deleted = false`;
   plv8.execute(sql, [ token, etime.toISOString() ]);
 }
 extendAuthorization.args = 'token text, days int';
@@ -184,7 +183,7 @@ externalIdStrings.flags = 'IMMUTABLE';
  * @return {String}
  */
 function extractText(details, lang) {
-  var list = [];
+  const list = [];
   if (details.text && details.text[lang]) {
     list.push(details.text[lang]);
   }
@@ -205,7 +204,7 @@ extractText.flags = 'IMMUTABLE';
  * @return {String}
  */
 function extractStoryText(type, details, external, lang) {
-  var list = [];
+  const list = [];
   if (details.text && details.text[lang]) {
     list.push(details.text[lang]);
   }
@@ -276,7 +275,7 @@ extractStoryText.flags = 'IMMUTABLE';
  * @return {String}
  */
 function extractWikiText(details, lang) {
-  var list = [];
+  const list = [];
   if (details.content) {
     list.push(details.content);
   }
