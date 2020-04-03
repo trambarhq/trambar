@@ -23,7 +23,7 @@ function findTags(text) {
     const match = string.match(findRE);
     if (match) {
       for (let tag of match) {
-        if (tags.includes(tag)) {
+        if (!tags.includes(tag)) {
           tags.push(tag);
         }
       }

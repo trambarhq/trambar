@@ -83,7 +83,13 @@ export class Change {
         }
         return;
       } catch (err) {
+        let unrecoverable = false;
         if (err.statusCode >= 400 && err.statusCode <= 499) {
+          unrecoverable = true;
+        } else if (err instanceof TypeError) {
+          unrecoverable = true;
+        }
+        if (unrecoverable) {
           this.error = err;
           this.promise.reject(err);
           this.canceled = true;
@@ -129,39 +135,43 @@ export class Change {
     if (!isEqual(earlierOp.location, this.location)) {
       return;
     }
-    let dependent = false;
-    for (let object of this.objects) {
-      const index = earlierOp.objects.findIndex(obj => obj.id === object.id);
-      if (index !== -1 && !earlierOp.removed[index]) {
-        if (!earlierOp.dispatched || object.id >= 1) {
-          const earlierObject = earlierOp.objects[index];
-          // merge in missing properties from earlier op
-          for (let [ key, value ] of earlierObject) {
-            if (object[key] === undefined) {
-              object[key] = value;
+    try {
+      let dependent = false;
+      for (let object of this.objects) {
+        const index = earlierOp.objects.findIndex(obj => obj.id === object.id);
+        if (index !== -1 && !earlierOp.removed[index]) {
+          if (!earlierOp.dispatched || object.id >= 1) {
+            const earlierObject = earlierOp.objects[index];
+            // merge in missing properties from earlier op
+            for (let [ key, value ] of Object.entries(earlierObject)) {
+              if (object[key] === undefined) {
+                object[key] = value;
+              }
             }
+            // indicate that the object has been superceded
+            earlierOp.removed[index] = true;
+          } else {
+            // the prior operation has already been sent; if it's going
+            // to yield a permanent database id, then this operation
+            // needs to wait for it to resolve first
+            dependent = true;
+            break;
           }
-          // indicate that the object has been superceded
-          earlierOp.removed[index] = true;
-        } else {
-          // the prior operation has already been sent; if it's going
-          // to yield a permanent database id, then this operation
-          // needs to wait for it to resolve first
-          dependent = true;
-          break;
         }
       }
-    }
-    if (dependent) {
-      // we need to replace the temporary ID with a permanent one before
-      // this change is dispatch; otherwise multiple objects would be created
-      const dependentPromise = this.acquirePermanentIDs(earlierOp);
-      this.dependentPromises.push(dependentPromise);
-    } else {
-      // cancel the earlier op if everything was removed from it
-      if (!earlierOp.removed.includes(false)) {
-        earlierOp.cancel();
+      if (dependent) {
+        // we need to replace the temporary ID with a permanent one before
+        // this change is dispatch; otherwise multiple objects would be created
+        const dependentPromise = this.acquirePermanentIDs(earlierOp);
+        this.dependentPromises.push(dependentPromise);
+      } else {
+        // cancel the earlier op if everything was removed from it
+        if (!earlierOp.removed.includes(false)) {
+          earlierOp.cancel();
+        }
       }
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -179,7 +189,6 @@ export class Change {
         if (object.id < 1) {
           let id = earlierOp.findPermanentID(object.id);
           if (id) {
-            console.log('Found permanent ID', id);
             object.id = id;
           }
         }

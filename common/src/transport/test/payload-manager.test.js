@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Chai, { expect } from 'chai';
 import { TestServer } from './lib/test-server.js';
 import { promiseSelf } from '../../utils/promise-self.js';
+import { delay } from '../../utils/delay.js';
 
 import { performHTTPRequest } from '../http-request.js';
 import { PayloadManager } from '../payload-manager.js';
@@ -13,7 +14,7 @@ const testObject = Array(500).fill(0, 0, 500);
 const testJSON = JSON.stringify(testObject);
 const testBlob1 = new Blob([ testJSON ], { type: 'text/plain' });
 
-const testString = Array(500).fill('Hello world\n', 500).join('');
+const testString = Array(500).fill('Hello world\n', 0, 500).join('');
 const testBlob2 = new Blob([ testString ], { type: 'text/plain' });
 
 describe('PayloadManager', function() {
@@ -21,7 +22,7 @@ describe('PayloadManager', function() {
     return TestServer.start(port);
   })
 
-  let options = {
+  const options = {
     uploadURL: (destination, id, type, part) => {
       return `${baseURL}/upload/${id}/${part}`;
     },
@@ -32,92 +33,92 @@ describe('PayloadManager', function() {
 
   describe('#add()', function() {
     it('should add a payload', async function() {
-      let payloadManager = new PayloadManager(options);
+      const payloadManager = new PayloadManager(options);
       payloadManager.activate();
-      let destination = { address: baseURL, schema: 'test' }
-      let payload = payloadManager.add(destination, 'image');
+      const destination = { address: baseURL, schema: 'test' }
+      const payload = payloadManager.add(destination, 'image');
       expect(payload.id).to.be.a('string');
     })
     it('should permit null as destination', async function() {
-      let payloadManager = new PayloadManager(options);
+      const payloadManager = new PayloadManager(options);
       payloadManager.activate();
-      let payload = payloadManager.add(null, 'image');
+      const payload = payloadManager.add(null, 'image');
       expect(payload.id).to.be.a('string');
     })
   })
   describe('#dispatch()', function() {
     it('should send payload with a single file', async function() {
-      let payloadManager = new PayloadManager(options);
+      const payloadManager = new PayloadManager(options);
       payloadManager.activate();
-      let payload = payloadManager.add(null, 'image');
+      const payload = payloadManager.add(null, 'image');
       payload.attachFile(testBlob1);
-      let completeEventPromise = promiseSelf();
+      const completeEventPromise = promiseSelf();
       payload.onComplete = completeEventPromise.resolve;
       payloadManager.dispatch([ payload.id ]);
       await completeEventPromise
-      let url = `${baseURL}/download/${payload.id}/main`;
-      let result = await performHTTPRequest('GET', url);
+      const url = `${baseURL}/download/${payload.id}/main`;
+      const result = await performHTTPRequest('GET', url);
       expect(result).to.equal(testJSON);
     })
     it('should send payload with two files', async function() {
-      let payloadManager = new PayloadManager(options);
+      const payloadManager = new PayloadManager(options);
       payloadManager.activate();
-      let payload = payloadManager.add(null, 'image');
+      const payload = payloadManager.add(null, 'image');
       payload.attachFile(testBlob1);
       payload.attachFile(testBlob2, 'second');
-      let completeEventPromise = promiseSelf();
+      const completeEventPromise = promiseSelf();
       payload.onComplete = completeEventPromise.resolve;
       payloadManager.dispatch([ payload.id ]);
       await completeEventPromise;
-      let url1 = `${baseURL}/download/${payload.id}/main`;
-      let result1 = await performHTTPRequest('GET', url1);
+      const url1 = `${baseURL}/download/${payload.id}/main`;
+      const result1 = await performHTTPRequest('GET', url1);
       expect(result1).to.equal(testJSON);
-      let url2 = `${baseURL}/download/${payload.id}/second`;
-      let result2 = await performHTTPRequest('GET', url2);
+      const url2 = `${baseURL}/download/${payload.id}/second`;
+      const result2 = await performHTTPRequest('GET', url2);
       expect(result2).to.equal(testString);
     })
     it('should not send payload when payload manager is inactive', async function() {
-      let payloadManager = new PayloadManager(options);
-      let payload = payloadManager.add(null, 'image');
+      const payloadManager = new PayloadManager(options);
+      const payload = payloadManager.add(null, 'image');
       payload.attachFile(testBlob1);
-      let completeEventPromise = promiseSelf();
+      const completeEventPromise = promiseSelf();
       payload.onComplete = completeEventPromise.resolve;
       payloadManager.dispatch([ payload.id ]);
-      let result = await Promise.race([
+      const result = await Promise.race([
         completeEventPromise,
         delay(100).then(() => 'timeout')
       ]);
       expect(result).to.equal('timeout');
     })
     it('should send payload when payload manager becomes active', async function() {
-      let payloadManager = new PayloadManager(options);
-      let payload = payloadManager.add(null, 'image');
+      const payloadManager = new PayloadManager(options);
+      const payload = payloadManager.add(null, 'image');
       payload.attachFile(testBlob1);
-      let completeEventPromise = promiseSelf();
+      const completeEventPromise = promiseSelf();
       payload.onComplete = completeEventPromise.resolve;
       payloadManager.dispatch([ payload.id ]);
       setTimeout(() => {
         payloadManager.activate();
       }, 100);
       await completeEventPromise;
-      let url = `${baseURL}/download/${payload.id}/main`;
-      let result = await performHTTPRequest('GET', url);
+      const url = `${baseURL}/download/${payload.id}/main`;
+      const result = await performHTTPRequest('GET', url);
       expect(result).to.equal(testJSON);
     })
   })
   describe('#stream()', function() {
     it('should send blobs to server as they are added to stream', async function() {
-      let payloadManager = new PayloadManager(options);
+      const payloadManager = new PayloadManager(options);
       payloadManager.activate();
-      let stream = payloadManager.stream(null);
-      let payload = payloadManager.add(null, 'text');
+      const stream = payloadManager.stream(null);
+      const payload = payloadManager.add(null, 'text');
       payload.attachStream(stream);
 
-      let streamCompleteEventPromise = promiseSelf();
+      const streamCompleteEventPromise = promiseSelf();
       stream.onComplete = streamCompleteEventPromise.resolve;
-      let chunks = chunkBlob(testBlob2, 1000);
-      let interval = setInterval(() => {
-        let chunk = chunks.shift();
+      const chunks = chunkBlob(testBlob2, 1000);
+      const interval = setInterval(() => {
+        const chunk = chunks.shift();
         if (chunk) {
           stream.push(chunk);
         } else {
@@ -126,41 +127,41 @@ describe('PayloadManager', function() {
         }
       }, 50);
 
-      let payloadCompleteEventPromise = promiseSelf();
+      const payloadCompleteEventPromise = promiseSelf();
       payload.onComplete = payloadCompleteEventPromise.resolve;
       payloadManager.dispatch([ payload.id ]);
 
       await payloadCompleteEventPromise;
       await streamCompleteEventPromise;
-      let url = `${baseURL}/download/${payload.id}/main`;
-      let result = await performHTTPRequest('GET', url);
+      const url = `${baseURL}/download/${payload.id}/main`;
+      const result = await performHTTPRequest('GET', url);
       expect(result).to.equal(testString);
     })
     it ('should keep a stream suspend when PayloadManager is inactive', async function() {
-      let payloadManager = new PayloadManager(options);
-      let stream = payloadManager.stream(null).pipe(testBlob2, 100);
-      let payload = payloadManager.add(null, 'text');
+      const payloadManager = new PayloadManager(options);
+      const stream = payloadManager.stream(null).pipe(testBlob2, 100);
+      const payload = payloadManager.add(null, 'text');
       payload.attachStream(stream);
 
-      let completeEventPromise = promiseSelf();
+      const completeEventPromise = promiseSelf();
       stream.onComplete = completeEventPromise.resolve;
 
-      let result = await Promise.race([
+      const result = await Promise.race([
         completeEventPromise,
         delay(350).then(() => 'timeout')
       ]);
       expect(result).to.equal('timeout');
     })
     it('should start a suspended stream once payload manager becomes active', async function() {
-      let payloadManager = new PayloadManager(options);
-      let stream = payloadManager.stream(null).pipe(testBlob2, 1000);
-      let payload = payloadManager.add(null, 'text');
+      const payloadManager = new PayloadManager(options);
+      const stream = payloadManager.stream(null).pipe(testBlob2, 1000);
+      const payload = payloadManager.add(null, 'text');
       payload.attachStream(stream);
 
-      let streamCompleteEventPromise = promiseSelf();
+      const streamCompleteEventPromise = promiseSelf();
       stream.onComplete = streamCompleteEventPromise.resolve;
 
-      let payloadCompleteEventPromise = promiseSelf();
+      const payloadCompleteEventPromise = promiseSelf();
       payload.onComplete = payloadCompleteEventPromise.resolve;
       payloadManager.dispatch([ payload.id ]);
 
@@ -170,8 +171,8 @@ describe('PayloadManager', function() {
 
       await payloadCompleteEventPromise;
       await streamCompleteEventPromise;
-      let url = `${baseURL}/download/${payload.id}/main`;
-      let result = await performHTTPRequest('GET', url);
+      const url = `${baseURL}/download/${payload.id}/main`;
+      const result = await performHTTPRequest('GET', url);
       expect(result).to.equal(testString);
     })
   })
@@ -190,12 +191,12 @@ describe('PayloadManager', function() {
 })
 
 function chunkBlob(blob, chunkSize) {
-  let chunks = [];
-  let total = blob.size;
-  let type = blob.type;
+  const chunks = [];
+  const total = blob.size;
+  const type = blob.type;
   for (let offset = 0; offset < total; offset += chunkSize) {
-    let byteCount = Math.min(chunkSize, total - offset);
-    let chunk = blob.slice(offset, offset + byteCount, type);
+    const byteCount = Math.min(chunkSize, total - offset);
+    const chunk = blob.slice(offset, offset + byteCount, type);
     chunks.push(chunk);
   }
   return chunks;

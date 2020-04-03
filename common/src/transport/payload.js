@@ -167,7 +167,7 @@ class Payload {
    * @return {Number}
    */
   getRemainingFiles() {
-    const remaining = this.parts.filters(p => p.size > 0 && p.uploaded < p.size);
+    const remaining = Object.values(this.parts).filter(p => p.size > 0 && p.uploaded < p.size);
     return remaining.length;
   }
 
@@ -177,7 +177,8 @@ class Payload {
    * @return {Number}
    */
   getRemainingBytes() {
-    return this.parts.reduce((sum, p) => sum + (p.size > 0 ? p.size - p.uploaded : 0), 0);
+    const remaining = Object.values(this.parts).filter(p => p.size > 0 && p.uploaded < p.size);
+    return remaining.reduce((sum, p) => sum + (p.size - p.uploaded), 0);
   }
 
   /**

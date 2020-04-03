@@ -101,8 +101,12 @@ export class Search extends Operation {
     if (this.invalid) {
       return false;
     }
-    const rtimes = this.results.map(r => r.rtime);
-    const minRetrievalTime = Math.min.apply(null, rtimes);
+    let minRetrievalTime = '?';
+    for (let object of this.results) {
+      if (object.rtime < minRetrievalTime) {
+        minRetrievalTime = object.rtime;
+      }
+    }
     const then = new Date(minRetrievalTime);
     const now = new Date;
     // see how much time has elapsed since the object was retrieved/last verified

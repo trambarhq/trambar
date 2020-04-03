@@ -6,7 +6,7 @@ const testObject = Array(500).fill(0, 1, 500);
 const testJSON = JSON.stringify(testObject);
 const testBlob1 = new Blob([ testJSON ], { type: 'text/plain' });
 
-const testString = Array(500).fill('Hello world\n', 500).join('');
+const testString = Array(500).fill('Hello world\n', 0, 500).join('');
 const testBlob2 = new Blob([ testString ], { type: 'text/plain' });
 
 describe('Payload', function() {

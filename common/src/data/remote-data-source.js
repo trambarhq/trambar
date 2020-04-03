@@ -438,7 +438,7 @@ export class RemoteDataSource extends EventEmitter {
   findPermanentID(location, temporaryID) {
     const path = [ location.address, location.schema, location.table ];
     const list = get(this.idMappings, path);
-    const entry = list.find(e => e.temporary === temporaryID);
+    const entry = list?.find(e => e.temporary === temporaryID);
     if (entry) {
       return entry.permanent;
     }
@@ -1538,8 +1538,8 @@ export class RemoteDataSource extends EventEmitter {
       result = await performHTTPRequest('POST', url, req, options);
     } catch (err) {
       if (process.env.NODE_ENV !== 'production') {
-        console.log(err.message)
-        console.log(req);
+        console.log(err.stack);
+        console.log(url, req);
       }
       if (err.statusCode === 401 || err.statusCode == 403) {
         this.clearRecentOperations(session);
@@ -1586,11 +1586,9 @@ export class RemoteDataSource extends EventEmitter {
       this.recentStorageResults,
       this.recentRemovalResults
     ];
-    for (let list of list) {
+    for (let list of lists) {
       const removing = list.filter(op => op.address === session.address);
       pullAll(list, removing);
-    }
-    for (let list of lists) {
     }
   }
 

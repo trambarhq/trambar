@@ -279,23 +279,25 @@ class BlobStream {
           throw new Error('Operation canceled');
         }
 
-        let blob = await this.pull();
+        const blob = await this.pull();
         if (!this.started) {
           this.started = true;
         }
-        let options = { responseType: 'json' };
-        let formData = new FormData;
+        const options = { responseType: 'json' };
+        const formData = new FormData;
         if (blob) {
           formData.append('file', blob);
           formData.append('chunk', index);
           if (index === 0) {
-            for (let [ name, value ] of Object.entries(this.options)) {
-              formData.append(name, value);
+            if (this.options) {
+              for (let [ name, value ] of Object.entries(this.options)) {
+                formData.append(name, value);
+              }
             }
           }
           options.onUploadProgress = (evt) => {
             // evt.loaded and evt.total are encoded sizes, which are slightly larger than the blob size
-            let bytesSentFromChunk = Math.round(blob.size * (evt.loaded / evt.total));
+            const bytesSentFromChunk = Math.round(blob.size * (evt.loaded / evt.total));
             if (bytesSentFromChunk) {
               this.transferred = transferredBefore + bytesSentFromChunk;
               if (this.onProgress) {
@@ -324,6 +326,8 @@ class BlobStream {
 
         // fail immediately if it's a HTTP 4XX error
         if (err.statusCode >= 400 && err.statusCode <= 499 && err.statusCode !== 429) {
+          unrecoverable = true;
+        } else if (err instanceof TypeError) {
           unrecoverable = true;
         } else if (this.canceled) {
           unrecoverable = true;

@@ -1,6 +1,6 @@
 async function preload(importFuncs, progress) {
   let loaded = 0;
-  let entries = Object.entries(importFuncs);
+  const entries = Object.entries(importFuncs);
   for (let [ key, load ] of entries) {
     if (progress) {
       progress(loaded, entries.length, key);

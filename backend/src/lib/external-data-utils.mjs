@@ -36,7 +36,7 @@ function extendLink(server, parent, props) {
   }
   // omit fields whose names begin with underscore
   const inherited = {};
-  for (let [ name, value ] of parentLink) {
+  for (let [ name, value ] of Object.entries(parentLink)) {
     if (name.charAt(0) !== '_') {
       inherited[name] = value;
     }
@@ -174,10 +174,10 @@ function findLinkByRelative(object, relative, ...relations) {
     return null;
   }
   const link = object.external.find((link1) => {
-    const link = relative.external.find((link2) => {
-      if (link1.server_id === link2.server_id, link1.type === link2.type) {
+    return relative.external.some((link2) => {
+      if (link1.server_id === link2.server_id && link1.type === link2.type) {
         for (let relation of relations) {
-          if (link1[relation] !== link2[relation]) {
+          if (!isEqual(link1[relation], link2[relation])) {
             return false;
           }
         }

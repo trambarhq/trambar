@@ -30,7 +30,7 @@ function matchSearchCriteria(table, object, criteria) {
         } else {
           // array value matches a scalar or object when the former
           // contains the latter
-          if (!matchElementOf(actualValue)) {
+          if (!matchElementOf(actualValue, desiredValue)) {
             matching = false;
           }
         }
@@ -100,11 +100,14 @@ function matchSearchCriteria(table, object, criteria) {
 }
 
 function matchElementOf(el, array) {
-  if (el instanceof Object) {
-    return array.some(other => isEqual(other, el));
-  } else {
-    return array.includes(el);
+  if (array instanceof Array) {
+    if (el instanceof Object) {
+      return array.some(other => isEqual(other, el));
+    } else {
+      return array.includes(el);
+    }
   }
+  return false;
 }
 
 function limitSearchResults(table, objects, criteria) {

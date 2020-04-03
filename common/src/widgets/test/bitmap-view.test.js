@@ -3,6 +3,7 @@ import React from 'react';
 import { expect } from 'chai';
 import Enzyme from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
+import { promiseSelf } from '../../utils/promise-self.js';
 
 Enzyme.configure({ adapter: new Adapter() });
 
@@ -12,23 +13,20 @@ import imageWithOrientation from '../../media/test/images/jpeg-orientation-sampl
 
 describe('BitmapView', function() {
   it ('should extract orientation and dimension from blob', async function() {
-    let wrapper = await new Promise((resolve, reject) => {
-      let blob = new Blob([ imageWithOrientation ], { type: 'image/jpeg' });
-      let props = {
-        url: URL.createObjectURL(blob),
-        onLoad: () => {
-          resolve(wrapper);
-        },
-        onError: (evt) => {
-          reject(evt.error);
-        },
-      };
-      let wrapper = Enzyme.mount(<BitmapView {...props} />);
-    });
-
-    let comp = wrapper.instance();
-    expect(comp).to.have.property('width', 4);
-    expect(comp).to.have.property('height', 16);
+    const blob = new Blob([ imageWithOrientation ], { type: 'image/jpeg' });
+    const loading = promiseSelf();
+    const ref = { current: null };
+    const props = {
+      ref: (r) => ref.current = r,
+      url: URL.createObjectURL(blob),
+      onLoad: loading.resolve,
+      onError: loading.reject,
+    };
+    const wrapper = Enzyme.mount(<BitmapView {...props} />);
+    await loading;
+    const comp = ref.current;
+    expect(comp).to.have.property('naturalWidth', 4);
+    expect(comp).to.have.property('naturalHeight', 16);
     expect(comp).to.have.property('orientation', 5);
   })
 })

@@ -6,8 +6,8 @@ import {
   mockHTTPRequest,
 } from '../http-request.js';
 
-let port = 7978;
-let baseURL = `http://localhost:${port}`;
+const port = 7978;
+const baseURL = `http://localhost:${port}`;
 
 describe('HTTPRequest', function() {
   before(function() {

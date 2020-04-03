@@ -187,7 +187,7 @@ function stringifyList(tokens) {
   for (let token of tokens) {
     if (token instanceof Array) {
       for (let item of token) {
-        const { before, answer, between, label, after } = token;
+        const { before, answer, between, label, after } = item;
         lines.push(before + '* [' + answer + ']' + between + label + after);
       }
     } else {

@@ -1,13 +1,12 @@
 import Moment from 'moment';
 import { expect } from 'chai';
 import { delay } from '../../utils/delay.js';
-import { clone } from '../../utils/object-utils.js';
+import { promiseSelf } from '../../utils/promise-self.js';
+import { mockHTTPRequest, performHTTPRequest } from '../../transport/http-request.js';
+import { HTTPError } from '../../errors.js';
 
 import { RemoteDataSource } from '../remote-data-source.js';
 import { IndexedDBCache } from '../indexed-db-cache.js';
-import { HTTPError } from '../../errors.js';
-import { promiseSelf } from '../../utils/promise-self.js';
-import { mockHTTPRequest, performHTTPRequest } from '../../transport/http-request.js';
 
 describe('RemoteDataSource', function() {
   let dataSource, cache;
@@ -16,7 +15,7 @@ describe('RemoteDataSource', function() {
 
     cache = new IndexedDBCache({ databaseName: 'rds-test' });
   })
-  beforeEach(() => {
+  beforeEach(function() {
     dataSource = new RemoteDataSource({
       discoveryFlags: {
         include_uncommitted: true
@@ -30,9 +29,11 @@ describe('RemoteDataSource', function() {
     });
     dataSource.activate();
   })
-  after(function() {
+  afterEach(function() {
+    dataSource.deactivate();
     mockHTTPRequest(false);
   })
+
 
   describe('#beginSession()', function() {
     it('should initiate a session', async function() {
@@ -510,7 +511,7 @@ describe('RemoteDataSource', function() {
       ];
       await cache.save(location, objects);
       // bump gn
-      objects[1] = { ...objects[1]) };
+      objects[1] = { ...objects[1] };
       objects[1].gn++;
       const query = {
         address: location.address,
@@ -713,7 +714,7 @@ describe('RemoteDataSource', function() {
           expect(method).to.match(/post/i);
           expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
           return payload.objects.map((object) => {
-            object = clone(object);
+            object = { ...object };
             if (!object.id) {
               object.id = id++;
             }
@@ -739,7 +740,7 @@ describe('RemoteDataSource', function() {
       await cache.save(location, objects);
       let storage = 0;
       let discovery = 0;
-      const updatedObject = clone(objects[0]);
+      const updatedObject = { ...objects[0] };
       updatedObject.name = 'gollum';
       mockHTTPRequest(async (method, url, payload, options) => {
         await delay(50);
@@ -747,7 +748,7 @@ describe('RemoteDataSource', function() {
           storage++;
           expect(method).to.match(/post/i);
           expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
-          const object = clone(payload.objects[0]);
+          const object = { ...payload.objects[0] };
           objects[0] = object;
           return [ object ];
         } else if (/discovery/.test(url)) {
@@ -784,7 +785,7 @@ describe('RemoteDataSource', function() {
           await presaveSearchPromise;
 
           // return the results only after we've done a search
-          const object = clone(payload.objects[0]);
+          const object = { ...payload.objects[0] };
           object.id = id++;
           object.gn = 1;
           objects.push(object);
@@ -853,7 +854,7 @@ describe('RemoteDataSource', function() {
       const objects = [
         { id: 3, name: 'smeagol', evil: false }
       ];
-      const updatedObject = clone(objects[0]);
+      const updatedObject = { ...objects[0] };
       updatedObject.name = 'gollum';
       updatedObject.evil = true;
       mockHTTPRequest(async (method, url, payload, options) => {
@@ -872,13 +873,19 @@ describe('RemoteDataSource', function() {
         schema: 'global',
         table: 'hobbit',
       };
-      const query = { criteria: { evil: false }, ...location });
+      const query = { criteria: { evil: false }, ...location };
       const options = { delay: 1000 };
       const results1 = await dataSource.find(query);
       expect(results1).to.deep.equal(objects);
-      dataSource.save(location, [ updatedObject ], options);
+      const savePromise = dataSource.save(location, [ updatedObject ], options);
       const results2 = await dataSource.find(query);
       expect(results2).to.have.lengthOf(0);
+      try {
+        // the save operation should fail since the mock function doesn't handle it
+        await savePromise;
+        expect.fail();
+      } catch (err) {
+      }
     })
     it('should block search on a table until saving is complete', async function() {
       const location = { address: 'http://level4.misty-mountain.me', schema: 'global', table: 'project' };
@@ -891,7 +898,7 @@ describe('RemoteDataSource', function() {
         if (/storage/.test(url)) {
           storage++;
           // make object available, then wait a bit
-          const object = clone(payload.objects[0]);
+          const object = { ...payload.objects[0] };
           object.id = id++;
           object.gn = 1;
           objects.push(object);
@@ -919,22 +926,19 @@ describe('RemoteDataSource', function() {
       const event = null;
       const additionalSavePromises = [];
       const additionalSavesTriggeredPromise = promiseSelf();
-      dataSource.addEventListener('change', () => {
+      dataSource.addEventListener('change', async () => {
+        // load the only object and modify it
+        const query = { criteria: {}, ...location };
+        const objects = await dataSource.find(query);
+        const object = objects[0];
         const num = additionalSavePromises.length + 1;
         if (num <= 4) {
-          // load the only object and modify it
-          const query = { criteria: {}, ...location });
-          const save = async (num) => {
-            const objects = await dataSource.find(query);
-            const object = objects[0];
-            // should still be uncommitted at this point
-            expect(object).to.have.property('id').that.is.below(1);
-            expect(object).to.have.property('uncommitted').that.is.true;
-            object = clone(object);
-            object['prop' + num] = num;
-            return dataSource.save(location, [ object ], { delay: 200 });
-          };
-          const promise = save(num);
+          // should still be uncommitted at this point
+          expect(object).to.have.property('id').that.is.below(1);
+          expect(object).to.have.property('uncommitted').that.is.true;
+          const newObject = { ...object };
+          newObject['prop' + num] = num;
+          const promise = dataSource.save(location, [ newObject ], { delay: 200 });
           additionalSavePromises.push(promise);
         } else {
           additionalSavesTriggeredPromise.resolve();
@@ -949,7 +953,7 @@ describe('RemoteDataSource', function() {
       mockHTTPRequest(async (method, url, payload, options) => {
         if (/storage/.test(url)) {
           storage++;
-          const object = clone(payload.objects[0]);
+          const object = { ...payload.objects[0] };
           object.id = id++;
           object.gn = 1;
           objects.push(object);
@@ -1018,7 +1022,7 @@ describe('RemoteDataSource', function() {
           expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
           return payload.objects.map((object) => {
             expect(object.deleted).to.be.true;
-            return clone(object);
+            return { ...object };
           });
         }
       });
@@ -1039,7 +1043,7 @@ describe('RemoteDataSource', function() {
         if (/storage/.test(url)) {
           storage++;
           return payload.objects.map((object) => {
-            return clone(object);
+            return { ...object };
           });
         } else if (/discovery/.test(url)) {
           return {

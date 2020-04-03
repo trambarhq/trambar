@@ -17,14 +17,16 @@ module.exports = {
 let server;
 let serverPort;
 let sockets = [];
+let files = {};
+let streams = {};
 
 async function start(port, options) {
   // set up handlers
-  let app = Express();
+  const app = Express();
   app.use(BodyParser.json());
   app.use(CORS());
-  let storage = Multer.memoryStorage()
-  let upload = Multer({ storage: storage });
+  const storage = Multer.memoryStorage()
+  const upload = Multer({ storage: storage });
   app.set('json spaces', 2);
   app.route('/echo').all(handleEchoRequest);
   app.route('/delay/:delay').all(handleDelayEchoRequest);
@@ -34,7 +36,7 @@ async function start(port, options) {
   app.route('/download/:id/:part').get(handleFileRetrieval);
 
   // set up SockJS server
-  let sockJS = SockJS.createServer({
+  const sockJS = SockJS.createServer({
     sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.1.2/sockjs.min.js',
     log: (severity, message) => {
       if (severity === 'error') {
@@ -59,16 +61,16 @@ async function start(port, options) {
   // start up server
   return new Promise((resolve, reject) => {
     try {
-      server = app.listen(port, resolve);
+      server = app.listen(port, () => resolve());
       serverPort = port;
 
       // install SockJS
       sockJS.installHandlers(server, { prefix: '/socket' });
 
       // break connections on shutdown
-      let connections = {};
+      const connections = {};
       server.on('connection', function(conn) {
-        let key = conn.remoteAddress + ':' + conn.remotePort;
+        const key = conn.remoteAddress + ':' + conn.remotePort;
         connections[key] = conn;
         conn.on('close', function() {
           delete connections[key];
@@ -105,7 +107,7 @@ function send(token, payload) {
 
 function handleEchoRequest(req, res) {
   try {
-    let input = (req.method === 'GET') ? req.query : req.body;
+    const input = (req.method === 'GET') ? req.query : req.body;
     res.json(input);
   } catch (err) {
     res.sendStatus(500);
@@ -114,7 +116,7 @@ function handleEchoRequest(req, res) {
 
 function handleDelayEchoRequest(req, res) {
   try {
-    let delay = parseInt(req.params.delay);
+    const delay = parseInt(req.params.delay);
     setTimeout(() => {
       res.json(req.body);
     }, delay);
@@ -123,15 +125,13 @@ function handleDelayEchoRequest(req, res) {
   }
 }
 
-let files = {};
-
 function handleFileUpload(req, res) {
   try {
-    let payloadID = req.params.id;
-    let part = req.params.part;
-    let key = payloadID + '/' + part;
+    const payloadID = req.params.id;
+    const part = req.params.part;
+    const key = payloadID + '/' + part;
     if (req.file) {
-      let buffer = req.file.buffer;
+      const buffer = req.file.buffer;
       files[key] = buffer;
     } else if (req.body.stream) {
       files[key] = req.body.stream;
@@ -145,14 +145,12 @@ function handleFileUpload(req, res) {
   }
 }
 
-let streams = {};
-
 function handleStreamUpload(req, res) {
   try {
-    let streamID = req.params.id;
+    const streamID = req.params.id;
     if (req.file) {
-      let buffer = req.file.buffer;
-      let stream = streams[streamID];
+      const buffer = req.file.buffer;
+      const stream = streams[streamID];
       if (stream) {
         streams[streamID] = Buffer.concat([ stream, buffer ]);
       } else {
@@ -168,9 +166,9 @@ function handleStreamUpload(req, res) {
 
 function handleFileRetrieval(req, res) {
   try {
-    let payloadID = req.params.id;
-    let part = req.params.part;
-    let key = payloadID + '/' + part;
+    const payloadID = req.params.id;
+    const part = req.params.part;
+    const key = payloadID + '/' + part;
     let buffer = files[key];
     if (typeof(buffer) === 'string') {
       buffer = streams[buffer];

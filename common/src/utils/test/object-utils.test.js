@@ -2,6 +2,9 @@ import { expect } from 'chai';
 
 import {
   decouple,
+  decoupleSet,
+  decouplePush,
+  shallowDiff,
 } from '../object-utils.js';
 
 describe('ObjectUtils', function() {

@@ -17,6 +17,7 @@ export const BitmapView = React.forwardRef((props, ref) => {
     src: null,
     naturalWidth: 4,
     naturalHeight: 4,
+    orientation: 1,
   });
 
   useImperativeHandle(ref, () => {
@@ -73,16 +74,20 @@ export const BitmapView = React.forwardRef((props, ref) => {
       context.drawImage(image, src.left, src.top, src.width, src.height, dst.left, dst.top, dst.width, dst.height);
       instance.naturalWidth = actualWidth;
       instance.naturalHeight = actualHeight;
+      instance.orientation = orientation;
     } else {
       canvas.width = 4;
     	canvas.height = 4;
       instance.naturalWidth = 4;
       instance.naturalHeight = 4;
+      instance.orientation = 1;
     }
   }, [ image, clippingRect ]);
   useEffect(() => {
-    if (onLoad) {
-      onLoad({  type: 'load', target: instance });
+    if (image) {
+      if (onLoad) {
+        onLoad({  type: 'load', target: instance });
+      }
     }
   }, [ image ]);
 

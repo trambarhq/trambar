@@ -152,32 +152,22 @@ async function loadPreambles(file) {
  * @return {Promise<Object>}
  */
 async function loadPreamble(blob, offset) {
-  return new Promise((resolve, reject) => {
-    // load 16 bytes, just in case we need the 64-bit size
-    const preambleSize = 16;
-    const slice = blob.slice(offset, offset + preambleSize);
-    const fr = new FileReader();
-    fr.readAsArrayBuffer(slice);
-    fr.onload = (evt) => {
-      const bytes = new Uint8Array(evt.target.result);
-      let size = BE32(bytes, 0);
-      let min = 8;
-      if (size === 1) {
-        // atom size overflows a 32-bit integer
-        size = BE64(bytes, 8);
-        min = 16;
-      }
-      if (!(size >= min)) {
-        reject(new Error('Invalid atom size'));
-      }
-      const name = NAME(bytes, 4);
-      const preamble = { offset, size, name };
-      resolve(preamble);
-    };
-    fr.onerror = (evt) => {
-      reject(new Error('Unable to load data'));
-    };
-  });
+  // load 16 bytes, just in case we need the 64-bit size
+  const preambleSize = 16;
+  const arrayBuffer = await loadArrayBuffer(blob, offset, offset + preambleSize);
+  const bytes = new Uint8Array(arrayBuffer);
+  let size = BE32(bytes, 0);
+  let min = 8;
+  if (size === 1) {
+    // atom size overflows a 32-bit integer
+    size = BE64(bytes, 8);
+    min = 16;
+  }
+  if (!(size >= min)) {
+    throw new Error('Invalid atom size');
+  }
+  const name = NAME(bytes, 4);
+  return { offset, size, name };
 }
 
 /**
@@ -189,18 +179,22 @@ async function loadPreamble(blob, offset) {
  * @return {Promise<ArrayBuffer>}
  */
 async function loadAtom(blob, preamble) {
-  return new Promise((resolve, reject) => {
-    const { offset, size } = preamble;
-    const slice = blob.slice(offset, offset + size);
-    const fr = new FileReader();
-    fr.readAsArrayBuffer(slice);
-    fr.onload = (evt) => {
-      resolve(evt.target.result);
-    };
-    fr.onerror = (evt) => {
-      reject(new Error('Unable to load data'));
-    };
-  });
+  const { offset, size } = preamble;
+  return loadArrayBuffer(blob, offset, size);
+}
+
+/**
+ * Obtain a chunk of bytes from a blob
+ *
+ * @param  {Blob} blob
+ * @param  {Number} offset
+ * @param  {Number} size
+ *
+ * @return {Promise<ArrayBuffer>}
+ */
+async function loadArrayBuffer(blob, offset, size) {
+  const slice = blob.slice(offset, offset + size);
+  return slice.arrayBuffer();
 }
 
 /**

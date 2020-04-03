@@ -92,7 +92,7 @@ class BlobManager {
    * @param  {Blob|CordovaFile} blob
    */
   static release(blob) {
-    const index = this.list.findIndex(e => e.blob);
+    const index = this.list.findIndex(e => e.blob === blob);
     if (index !== -1) {
       let entry = this.list[index];
       this.list.splice(index, 1);

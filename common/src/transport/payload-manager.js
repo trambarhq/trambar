@@ -63,8 +63,8 @@ class PayloadManager extends EventEmitter {
    * @return {Payload}
    */
   add(destination, type) {
-    let id = generateToken();
-    let payload = new Payload(id, destination, type);
+    const id = generateToken();
+    const payload = new Payload(id, destination, type);
     payload.onAttachment = this.handleAttachment;
     this.payloads.push(payload);
     return payload;
@@ -76,9 +76,9 @@ class PayloadManager extends EventEmitter {
    * @return {BlobStream}
    */
   stream(destination, options) {
-    let id = generateToken();
-    let url = this.getStreamURL(destination, id);
-    let stream = new BlobStream(id, url);
+    const id = generateToken();
+    const url = this.getStreamURL(destination, id);
+    const stream = new BlobStream(id, url);
     if (!this.active) {
       stream.suspend();
     }
@@ -92,7 +92,7 @@ class PayloadManager extends EventEmitter {
    * @param  {Array<String>} ids
    */
   dispatch(ids) {
-    let payloads = this.payloads.filter((payload) => {
+    const payloads = this.payloads.filter((payload) => {
       return ids.includes(payload.id);
     });
     this.dispatchPayloads(payloads);
@@ -125,14 +125,14 @@ class PayloadManager extends EventEmitter {
     if (ids.length === 0) {
       return null;
     }
-    let payloads = this.payloads.filter((payload) => {
+    const payloads = this.payloads.filter((payload) => {
       return ids.includes(payload.id) && payload.type !== 'unknown';
     });
     if (payloads.length < ids.length) {
       // some payloads are not there, either because they were sent by
       // another browser or a page refresh occurred
       for (let id of ids) {
-        let payload = this.payloads.find(p => p.id === id);
+        const payload = this.payloads.find(p => p.id === id);
         if (!payload) {
           // recreate it (if we know the destination)
           if (destination) {
@@ -166,7 +166,7 @@ class PayloadManager extends EventEmitter {
 
       // maybe a web-site preview is being rendered
       const renderingPayloads = payloads.filter(p => p.type === 'web-site');
-      if (renderingPayloads.some(p => !p.completed: false)) {
+      if (renderingPayloads.some(p => !p.completed)) {
         const percentages = renderingPayloads.map(p => p.processed / renderingPayloads.length);
         const renderingProgress = percentages.reduce((sum, pc) => sum + pc, 0);
         return {
@@ -217,7 +217,7 @@ class PayloadManager extends EventEmitter {
    * @return {String}
    */
   getUploadURL(payload, part) {
-    let { uploadURL } = this.options;
+    const { uploadURL } = this.options;
     if (!uploadURL) {
       throw new Error('Upload URL is not specified');
     }
@@ -226,7 +226,7 @@ class PayloadManager extends EventEmitter {
     } else {
       let url = uploadURL;
       url += (url.includes('?')) ? '?' : '&';
-      let queryVars = [
+      const queryVars = [
         `id=${payload.id}`,
         `type=${payload.type}`,
         `part=${part}`,
@@ -245,7 +245,7 @@ class PayloadManager extends EventEmitter {
    * @return {String}
    */
   getStreamURL(destination, id) {
-    let { streamURL } = this.options;
+    const { streamURL } = this.options;
     if (!streamURL) {
       throw new Error('Stream URL is not specified');
     }
@@ -254,7 +254,7 @@ class PayloadManager extends EventEmitter {
     } else {
       let url = uploadURL;
       url += (url.includes('?')) ? '?' : '&';
-      let queryVars = [
+      const queryVars = [
         `id=${id}`,
       ];
       url += queryVars.join('&');
@@ -268,10 +268,10 @@ class PayloadManager extends EventEmitter {
    * @param  {Array<Payload>} payloads
    */
   async dispatchPayloads(payloads) {
-    let payloadGroups = separatePayloads(payloads);
+    const payloadGroups = separatePayloads(payloads);
     for (let payloadGroup of payloadGroups) {
-      let { destination, payloads } = payloadGroup;
-      let acquired = await this.acquirePermission(destination, payloads);
+      const { destination, payloads } = payloadGroup;
+      const acquired = await this.acquirePermission(destination, payloads);
       if (acquired) {
         for (let payload of payloads) {
           this.sendPayload(payload);
@@ -292,14 +292,14 @@ class PayloadManager extends EventEmitter {
     if (!this.active) {
       return false;
     }
-    let inProgressPayloads = this.payloads.filter({
+    const inProgressPayloads = this.payloads.filter({
       sent: true,
       completed: false,
     });
-    let payloadGroups = separatePayloads(inProgressPayloads);
+    const payloadGroups = separatePayloads(inProgressPayloads);
     for (let payloadGroup of payloadGroups) {
       if (!destination || isEqual(payloadGroup.destination, destination)) {
-        let updated = await this.requestBackendUpdate(payloadGroup);
+        const updated = await this.requestBackendUpdate(payloadGroup);
         if (updated) {
           this.triggerEvent(new PayloadManagerEvent('change', this));
         }
@@ -326,7 +326,7 @@ class PayloadManager extends EventEmitter {
       payload.approved = true;
     }
     try {
-      let event = new PayloadManagerEvent('permission', this, {
+      const event = new PayloadManagerEvent('permission', this, {
         destination,
         payloads: unapprovedPayloads
       });
@@ -358,7 +358,7 @@ class PayloadManager extends EventEmitter {
    */
   async requestBackendUpdate(payloadGroup) {
     try {
-      let event = new PayloadManagerEvent('backendprogress', this, payloadGroup);
+      const event = new PayloadManagerEvent('backendprogress', this, payloadGroup);
       this.triggerEvent(event);
       await event.waitForDecision();
       return event.defaultPrevented;
@@ -406,7 +406,7 @@ class PayloadManager extends EventEmitter {
       while (!part.sent && !payload.canceled) {
         try {
           await this.waitForConnectivity();
-          let response = await this.sendPayloadPart(payload, part);
+          const response = await this.sendPayloadPart(payload, part);
           part.sent = true;
           this.triggerEvent(new PayloadManagerEvent('uploadpart', this, {
             destination: payload.destination,
@@ -467,14 +467,15 @@ class PayloadManager extends EventEmitter {
    * @return {Promise}
    */
   async sendPayloadBlob(payload, part) {
-    let url = this.getUploadURL(payload, part);
-    let blob = part.blob;
-    let formData = new FormData;
-    formData.append('file', blob);
-    for (let [ name, value ] of Object.entries(part.options)) {
-      formData.append(name, value);
+    const url = this.getUploadURL(payload, part);
+    const formData = new FormData;
+    formData.append('file', part.blob);
+    if (part.options) {
+      for (let [ name, value ] of Object.entries(part.options)) {
+        formData.append(name, value);
+      }
     }
-    let options = {
+    const options = {
       responseType: 'json',
       onUploadProgress: (evt) => {
         if (evt.lengthComputable) {
@@ -484,7 +485,7 @@ class PayloadManager extends EventEmitter {
     };
     part.uploaded = 0;
     part.promise = performHTTPRequest('POST', url, formData, options);
-    let res = await part.promise;
+    const res = await part.promise;
     return res;
   }
 
@@ -497,13 +498,13 @@ class PayloadManager extends EventEmitter {
    * @return {Promise<Object>}
    */
   async sendPayloadCordovaFile(payload, part) {
-    let url = this.getUploadURL(payload, part);
-    let file = part.cordovaFile;
-    let index = this.parts.indexOf(part);
-    let token = `${this.id}-${index + 1}`;
+    const url = this.getUploadURL(payload, part);
+    const file = part.cordovaFile;
+    const index = this.parts.indexOf(part);
+    const token = `${this.id}-${index + 1}`;
     part.uploaded = 0;
     part.promise = new Promise((resolve, reject) => {
-      let options ={
+      const options ={
         onSuccess: (upload) => {
           this.updatePayloadProgress(payload, part, 1);
           resolve(upload.serverResponse);
@@ -541,19 +542,20 @@ class PayloadManager extends EventEmitter {
    * @return {Promise<Object>}
    */
   async sendPayloadStream(payload, part) {
-    let url = this.getUploadURL(payload, part);
-    let stream = part.stream;
+    const url = this.getUploadURL(payload, part);
+    const stream = part.stream;
     stream.resume();
     stream.onProgress = (evt) => {
       this.updatePayloadProgress(payload, part, evt.loaded / evt.total)
     };
     // start the stream first and wait for the first chunk to be sent
     await stream.start();
-    let options = {
+    const options = {
       responseType: 'json',
       contentType: 'json',
     };
-    return performHTTPRequest('POST', url, { stream: stream.id }, options);
+    const res = await performHTTPRequest('POST', url, { stream: stream.id }, options);
+    return res;
   }
 
   /**
@@ -564,15 +566,16 @@ class PayloadManager extends EventEmitter {
    *
    * @return {Promise<Object>}
    */
-  sendPayloadURL(payload, part) {
-    let url = this.getUploadURL(payload, part);
-    let options = {
+  async sendPayloadURL(payload, part) {
+    const url = this.getUploadURL(payload, part);
+    const options = {
       responseType: 'json',
       contentType: 'json',
     };
     const body = { url: part.url, ...part.options };
     part.promise = performHTTPRequest('POST', url, body, options);
-    return part.promise;
+    const res = await part.promise;
+    return res;
   }
 
   /**
@@ -660,8 +663,8 @@ class PayloadManager extends EventEmitter {
    */
   async cancelPayloadCordovaFile(payload, part) {
     try {
-      let index = this.parts.indexOf(part);
-      let token = `${payload.id}-${index + 1}`;
+      const index = this.parts.indexOf(part);
+      const token = `${payload.id}-${index + 1}`;
       cancelBackgroundTransfer(token)
     } catch (err) {
     }
@@ -750,7 +753,7 @@ class PayloadManager extends EventEmitter {
    * @param  {Object} evt
    */
   handleAttachment = (evt) => {
-    let { part, target } = evt;
+    const { part, target } = evt;
     this.triggerEvent(new PayloadManagerEvent('attachment', this, {
       payload: target,
       part,

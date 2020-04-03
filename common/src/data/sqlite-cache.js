@@ -1,6 +1,6 @@
 import { matchSearchCriteria, limitSearchResults } from './local-search.js';
 import { sortedIndexBy } from '../utils/array-utils.js';
-import { isEqual, unset } from '../utils/object-utils.js';
+import { isEqual, get, set, unset } from '../utils/object-utils.js';
 
 let openDatabase = window.openDatabase;
 if (window.sqlitePlugin) {
@@ -453,7 +453,7 @@ class SQLiteCache {
     } else {
       path.push('remote', address, schema, table);
     }
-    const tbl = get(this.tables, path);
+    let tbl = get(this.tables, path);
     if (!tbl) {
       tbl = {
         promise: null,
