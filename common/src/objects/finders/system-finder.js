@@ -10,13 +10,12 @@ const emptyArray = [];
  * @return {Promise<System>}
  */
 async function findSystem(db) {
-  let system = await db.findOne({
+  return db.findOne({
     schema,
     table,
     criteria: {},
     prefetch: true,
   });
-  return system || {};
 }
 
 export {

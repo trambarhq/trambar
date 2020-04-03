@@ -45,7 +45,7 @@ function SettingsPageSync(props) {
   const { t, p, directory } = env.locale;
   const readOnly = !editing;
   const draft = useDraftBuffer({
-    original: system,
+    original: system || {},
     prefill: getDefaultSystem,
     reset: readOnly,
   });
@@ -302,7 +302,7 @@ function SettingsPageSync(props) {
 }
 
 function getDefaultSystem(base) {
-  if (!base) {
+  if (!base.id) {
     // use timezone to determine default relay
     const tzOffset = (new Date()).getTimezoneOffset() / 60;
     let defaultRelay;

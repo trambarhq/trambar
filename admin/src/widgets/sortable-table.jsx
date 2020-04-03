@@ -126,16 +126,14 @@ export const SortableTable = React.memo((props) => {
       const tds = React.Children.toArray(tr.props.children);
       let { className } = tr.props;
       let open = expanded;
-      let state;
       if (action === 'expanding') {
         // render in the closed state at start of transition
         open = false;
-        state = 'expanded';
       } else if (action === 'collapsing') {
         // render in the open state at start of transition
         open = true;
-        state = 'collapsed';
       }
+      const state = (open) ? 'expanded' : 'collapsed';
       className = (className) ? `${className} ${state}` : state;
       const newTds = tds.map((td, j) => {
         const container = (

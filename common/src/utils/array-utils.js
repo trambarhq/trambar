@@ -1,6 +1,6 @@
 import union from 'lodash/union.js'
 import difference from 'lodash/difference.js';
-import pullAll from 'lodash/pull.js';
+import pullAll from 'lodash/pullAll.js';
 import orderBy from 'lodash/orderBy.js';
 import sortedIndexBy from 'lodash/sortedIndexBy.js';
 import uniq from 'lodash/uniq.js';
@@ -71,6 +71,7 @@ function collectIds(ids, list) {
 }
 
 export {
+  union,
   difference,
   pullAll,
   orderBy,

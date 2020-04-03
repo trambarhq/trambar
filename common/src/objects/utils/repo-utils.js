@@ -21,7 +21,7 @@ function getRepoIconClass(repo) {
 function getMembershipPageURL(repo) {
   let projectURL = getRepoURL(repo)
   if (projectURL) {
-    projectURL = projectURL.replace(/[\/\s]+$/), '');
+    projectURL = projectURL.replace(/[\/\s]+$/, '');
     return `${projectURL}/settings/members`;
   }
 }
@@ -132,7 +132,7 @@ function getIssueNoteURL(repo, reaction) {
 function getMergeRequestNoteURL(repo, reaction) {
   const repoURL = getRepoURL(repo);
   const noteLink = findLinkByRelations(reaction, 'note', 'merge_request');
-  const mergeRequestNumber = noteLink?.merge_request?.number');
+  const mergeRequestNumber = noteLink?.merge_request?.number;
   if (repoURL && mergeRequestNumber) {
     const hash = getNoteHash(noteLink);
     return `${repoURL}/merge_requests/${mergeRequestNumber}${hash}`;

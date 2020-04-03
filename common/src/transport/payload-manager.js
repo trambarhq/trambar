@@ -292,10 +292,7 @@ class PayloadManager extends EventEmitter {
     if (!this.active) {
       return false;
     }
-    const inProgressPayloads = this.payloads.filter({
-      sent: true,
-      completed: false,
-    });
+    const inProgressPayloads = this.payloads.filter(p => p.sent && !p.completed);
     const payloadGroups = separatePayloads(inProgressPayloads);
     for (let payloadGroup of payloadGroups) {
       if (!destination || isEqual(payloadGroup.destination, destination)) {

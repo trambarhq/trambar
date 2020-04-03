@@ -259,7 +259,7 @@ function removeSuperfluousDetails(story) {
   const text = story.details.text;
   const newText = {};
   if (text) {
-    for (let [ lang, langText ] = Object.entries(text)) {
+    for (let [ lang, langText ] of Object.entries(text)) {
       if (langText) {
         newText[lang] = langText;
       }

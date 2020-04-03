@@ -155,9 +155,7 @@ function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_A
       // remove payload token if it's been uploaded
       for (let res of resources) {
         if (res.payload_token) {
-          const row = rows.find((row) => {
-            return row.token === res.payload_token;
-          });
+          const row = rows.find(r => r.token === res.payload_token);
           if (row) {
             // copy media metadata into resource
             transferProps(row.details, res);
@@ -166,9 +164,6 @@ function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_A
             } else {
               allReady = false;
             }
-          } else {
-            transferProps({ error: `Missing task: ${res.payload_token}` }, res);
-            delete res.payload_token;
           }
         }
       }

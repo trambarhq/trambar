@@ -23,7 +23,7 @@ export default async function StartPage(props) {
   render();
 
   function render() {
-    if (!system) {
+    if (system === undefined) {
       show(null);
     } else {
       show(

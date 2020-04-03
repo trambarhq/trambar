@@ -65,11 +65,7 @@ function SignInPageSync(props) {
     run(async () => {
       try {
         setSubmitting(true);
-        const credentials = {
-          type: 'password',
-          username,
-          password,
-        };
+        const credentials = { type: 'password', username, password };
         await database.authenticate(credentials);
       } finally {
         setSubmitting(false);

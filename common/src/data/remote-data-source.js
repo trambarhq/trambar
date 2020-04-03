@@ -802,10 +802,7 @@ export class RemoteDataSource extends EventEmitter {
         const payload = { area: session.area };
         const res = await performHTTPRequest('POST', url, payload, options);
         session.handle = res.session.handle;
-        session.info  = {
-          system: res.system,
-          servers: res.servers,
-        };
+        session.info  = { system: res.system, servers: res.servers };
         return session.info;
       } catch (err) {
         console.error(err.message);

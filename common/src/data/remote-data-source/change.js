@@ -1,5 +1,5 @@
 import { delay } from '../../utils/delay.js';
-import { isEqual, clone } from '../../utils/object-utils.js';
+import { isEqual } from '../../utils/object-utils.js';
 import { promiseSelf } from '../../utils/promise-self.js';
 
 import { matchSearchCriteria } from '../local-search.js';
@@ -10,12 +10,11 @@ export class Change {
     this.location = location;
     this.objects = objects.map((object) => {
       if (!object.uncommitted) {
-        object = clone(object);
+        object = { ...object, uncommitted: true };
         if (!object.id) {
           // assign a temporary id so we can find the object again
           object.id = allocateTempoaryID();
         }
-        object.uncommitted = true;
       }
       return object;
     });

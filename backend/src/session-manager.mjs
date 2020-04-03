@@ -95,11 +95,9 @@ async function handleSessionStart(req, res, next) {
       const system = await findSystem();
       const servers = await findOAuthServers(area);
       result = {
-        session: { handle: session.handle,  etime: session.etime },
-        system: { details: system.details },
-        servers: servers.map((server) => {
-          return { id: server.id, type: server.type, details: server.details }
-        })
+        session: _.pick(session, 'handle', 'etime'),
+        system: _.pick(system, 'details'),
+        servers: servers.map((srv) => _.pick(srv, 'id', 'type', 'details')),
       };
       taskLog.set('type', 'browser');
     } else {
@@ -658,11 +656,7 @@ async function removeSession(handle) {
  */
 async function findSession(handle) {
   const db = await Database.open();
-  const criteria = {
-    handle,
-    expired: false,
-    deleted: false,
-  };
+  const criteria = { handle, expired: false, deleted: false };
   const session = await Session.findOne(db, 'global', criteria, '*');
   if (!session) {
     throw new HTTPError(404);
@@ -720,10 +714,7 @@ async function findServersByType(type) {
  */
 async function findOAuthServers(area) {
   const db = await Database.open();
-  const criteria = {
-    deleted: false,
-    disabled: false,
-  };
+  const criteria = { deleted: false, disabled: false };
   const servers = await Server.find(db, 'global', criteria, '*');
   const availableServers = _.filter(servers, (server) => {
     return canProvideAccess(server, area);
@@ -798,10 +789,7 @@ async function findUserByName(username) {
  */
 async function removeDevices(handles) {
   const db = await Database.open();
-  const criteria = {
-    session_handle: handles,
-    deleted: false,
-  };
+  const criteria = { session_handle: handles, deleted: false };
   return Device.updateMatching(db, 'global', criteria, { deleted: true });
 }
 
@@ -898,9 +886,7 @@ async function findHtpasswdRecord(username, password) {
   } catch (err) {
     if (err.code === 'ENOENT') {
       // password file isn't there
-      throw new HTTPError(403, {
-        reason: 'missing-password-file'
-      });
+      throw new HTTPError(403, { reason: 'missing-password-file' });
     } else {
       throw err;
     }

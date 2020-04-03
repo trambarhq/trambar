@@ -256,30 +256,32 @@ function getRemoteImageURL(res, params, env) {
     if (params.quality !== undefined) {
       filters.push(`q${params.quality}`);
     }
-    // choose format
-    let ext;
-    if (res.format === 'svg') {
-      // stick with SVG
-      ext = 'svg';
-    } else {
-      if (env.webpSupport) {
-        ext = 'webp';
-        if (res.format === 'png' || res.format === 'gif') {
-          if (!resizing) {
-            // use lossless compression (since it'll likely produce a smaller file)
-            filters.push(`l`);
+    if (filters.length > 0) {
+      // choose format
+      let ext;
+      if (res.format === 'svg') {
+        // stick with SVG
+        ext = 'svg';
+      } else {
+        if (env.webpSupport) {
+          ext = 'webp';
+          if (res.format === 'png' || res.format === 'gif') {
+            if (!resizing) {
+              // use lossless compression (since it'll likely produce a smaller file)
+              filters.push(`l`);
+            }
+          }
+        } else {
+          if (res.format === 'png' || res.format === 'gif') {
+            // use PNG to preserve alpha channel
+            ext = `png`;
+          } else {
+            ext = 'jpg';
           }
         }
-      } else {
-        if (res.format === 'png' || res.format === 'gif') {
-          // use PNG to preserve alpha channel
-          ext = `png`;
-        } else {
-          ext = 'jpg';
-        }
       }
+      filename = `${filters.join('+')}.${ext}`;
     }
-    filename = `${filters.join('+')}.${ext}`;
   }
   return `${env.address}${resURL}/${filename}`;
 }
