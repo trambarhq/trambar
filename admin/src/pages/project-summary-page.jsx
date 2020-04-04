@@ -22,13 +22,7 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 // custom hooks
-import {
-  useDraftBuffer,
-  useAutogenID,
-  useValidation,
-  useConfirmation,
-  useDataLossWarning,
-} from '../hooks.js';
+import { useDraftBuffer, useAutogenID, useValidation, useConfirmation, useDataLossWarning } from '../hooks.js';
 
 import './project-summary-page.scss';
 
@@ -319,19 +313,27 @@ function ProjectSummaryPageSync(props) {
   }
 
   function renderMembershipOption(option, i) {
-    const optsCurr = draft.getCurrent('settings.membership', {});
-    const optsPrev = draft.getOriginal('settings.membership', {});
+    const [ optsPrev, optsCurr ] = draft.getBoth('settings.membership', {});
     return renderOption(option, optsCurr, optsPrev, i);
   }
 
   function renderOption(option, optsCurr, optsPrev, i) {
-    const noneCurr = isEmpty(optsCurr);
-    const nonePrev = (creating) ? undefined : !isEmpty(optsPrev);
+    let selected, previous;
+    if (option.none) {
+      selected = isEmpty(optsCurr);
+      if (!creating) {
+        previous = isEmpty(optsPrev);
+      }
+      console.log({ selected, previous });
+    } else {
+      selected = optsCurr[option.name];
+      previous = optsPrev[option.name];
+    }
     const props = {
       name: option.name,
-      selected: (option.none) ? noneCurr : optsCurr[option.name],
-      previous: (option.none) ? nonePrev : optsPrev[option.name],
       hidden: option.shownIf && !optsCurr[option.shownIf],
+      selected,
+      previous,
     };
     return <option key={i} {...props}>{t(option.label)}</option>;
   }
@@ -350,8 +352,7 @@ function ProjectSummaryPageSync(props) {
   }
 
   function renderAccessControlOption(option, i) {
-    const optsCurr = draft.getCurrent('settings.access_control', {});
-    const optsPrev = draft.getOriginal('settings.access_control', {});
+    const [ optsPrev, optsCurr ] = draft.getBoth('settings.access_control', {});
     return renderOption(option, optsCurr, optsPrev, i);
   }
 

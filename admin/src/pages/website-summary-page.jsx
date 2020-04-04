@@ -7,7 +7,7 @@ import { saveProject } from 'common/objects/savers/project-saver.js';
 import { findTemplates } from 'common/objects/finders/repo-finder.js';
 import { getRepoName } from 'common/objects/utils/repo-utils.js';
 import { findSnapshots } from 'common/objects/finders/snapshot-finder.js';
-import { uniqBy } from 'common/utils/array-utils.js';
+import { uniqBy, uniq } from 'common/utils/array-utils.js';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -137,7 +137,7 @@ function WebsiteSummaryPageSync(props) {
   });
   const handleTimeZoneChange = useListener((evt) => {
     const label = evt.target.value.trim();
-    const option = timezoneOptions.find(tz.label === label);
+    const option = timezoneOptions.find(tz => tz.label === label);
     draft.set('settings.timezone', option?.timezone);
     timezoneBuf.set(evt.target.value);
   });
@@ -251,12 +251,11 @@ function WebsiteSummaryPageSync(props) {
   }
 
   function renderTemplateOption(repo) {
-    const repoIDCurr = draft.getCurrent('template_repo_id');
-    const repoIDPrev = draft.getOriginal('template_repo_id');
+    const [ repoIDPrev, repoIDCurr ] = draft.getBoth('template_repo_id');
     const props = {
       name: repo.id,
-      selected: repoIDCurr === repo.id,
-      previous: repoIDPrev === repo.id,
+      selected: (repoIDCurr === repo.id),
+      previous: (repoIDPrev === repo.id),
     };
     const label = getRepoName(repo, env);
     return <option key={repo.id} {...props}>{label}</option>;
@@ -321,6 +320,9 @@ function WebsiteSummaryPageSync(props) {
       hidden: readOnly,
       env,
     };
+    if (typeof(draft.getCurrent('template_repo_id')) !== 'number') {
+      instructionProps.topic += '-disabled';
+    }
     return (
       <div className="instructions">
         <InstructionBlock {...instructionProps} />

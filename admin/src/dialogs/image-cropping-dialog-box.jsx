@@ -111,7 +111,7 @@ export const ImageCroppingDialogBox = Overlay.create((props) => {
   function canZoom(amount) {
     const rect = clippingRect.current;
     const newRect = resize(rect, amount, ratio, image);
-    return isEqual(rect, newRect);
+    return !isEqual(rect, newRect);
   }
 });
 

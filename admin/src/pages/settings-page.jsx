@@ -267,8 +267,7 @@ function SettingsPageSync(props) {
   }
 
   function renderInputLanguage(language, i) {
-    const listCurr = draft.getCurrent('settings.input_languages', []);
-    const listPrev = draft.getOriginal('settings.input_languages', []);
+    const [ listPrev, listCurr ] = draft.getBoth('settings.input_languages', []);
     const pos = listCurr.indexOf(language.code) + 1;
     let badge;
     if (pos) {

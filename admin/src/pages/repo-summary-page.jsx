@@ -20,12 +20,7 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 // custom hooks
-import {
-  useDraftBuffer,
-  useValidation,
-  useConfirmation,
-  useDataLossWarning,
-} from '../hooks.js';
+import { useDraftBuffer, useValidation, useConfirmation, useDataLossWarning } from '../hooks.js';
 
 import './repo-summary-page.scss';
 

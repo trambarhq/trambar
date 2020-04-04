@@ -64,8 +64,6 @@ function RepoListPageSync(props) {
   }, [ project ]);
   const selection = useSelectionBuffer({
     original: linkedRepos,
-    save: (base, ours) => {
-    },
     reset: readOnly,
   });
   const [ sort, handleSort ] = useSortHandler();
@@ -232,16 +230,14 @@ function RepoListPageSync(props) {
     if (!repo) {
       return <TH id="server">{t('repo-list-column-server')}</TH>
     } else {
-      const server = servers?.find(server => findLink(repo, server));
+      const server = servers?.find(srv => findLink(repo, srv));
       let contents;
       if (server) {
         const title = getServerName(server, env);
         const iconClass = getServerIconClass(server);
         let url;
         if (!selection.shown) {
-          url = route.find('server-summary-page', {
-            serverID: server.id
-          });
+          url = route.find('server-summary-page', { serverID: server.id });
         }
         contents = (
           <a href={url}>

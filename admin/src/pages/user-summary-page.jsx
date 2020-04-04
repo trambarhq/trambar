@@ -411,8 +411,7 @@ function UserSummaryPageSync(props) {
   }
 
   function renderTypeOption(type, i) {
-    const typeCurr = draft.getCurrent('type', '');
-    const typePrev = draft.getOriginal('type', '');
+    const [ typePrev, typeCurr ] = draft.getBoth('type', null);
     const props = {
       name: type,
       selected: (typeCurr === type),
@@ -442,8 +441,7 @@ function UserSummaryPageSync(props) {
   }
 
   function renderRoleOption(role, i) {
-    const rolesCurr = draft.getCurrent('role_ids', []);
-    const rolesPrev = draft.getOriginal('role_ids', []);
+    const [ rolesPrev, rolesCurr ] = draft.getBoth('role_ids', []);
     let name, props;
     if (!role) {
       name = t('user-summary-role-none')

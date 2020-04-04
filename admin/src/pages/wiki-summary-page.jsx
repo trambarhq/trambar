@@ -263,8 +263,7 @@ function WikiSummaryPageSync(props) {
   }
 
   function renderHiddenOption(hidden, i) {
-    const hiddenCurr = draft.getCurrent('hidden', false);
-    const hiddenPrev = draft.getOriginal('hidden', false);
+    const [ hiddenPrev, hiddenCurr ] = draft.getBoth('hidden', false);
     const props = {
       name: hidden,
       selected: (hiddenCurr === hidden),

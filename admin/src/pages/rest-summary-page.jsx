@@ -295,8 +295,7 @@ function RestSummaryPageSync(props) {
   }
 
   function renderTypeOption(type, i) {
-    const typeCurr = draft.getCurrent('type', '') || 'generic';
-    const typePrev = draft.getOriginal('type', '') || 'generic';
+    const [ typePrev, typeCurr ] = draft.getBoth('type', 'generic');
     const props = {
       name: type,
       selected: (typeCurr === type),

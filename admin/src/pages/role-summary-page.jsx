@@ -302,12 +302,11 @@ function RoleSummaryPageSync(props) {
   }
 
   function renderRatingOption(rating, key) {
-    const ratingCurr = draft.getCurrent('settings.rating', 0);
-    const ratingPrev = draft.getOriginal('settings.rating', 0);
+    const [ ratingPrev, ratingCurr ] = draft.getBoth('settings.rating', 0);
     const props = {
       name: key,
-      selected: ratingCurr === rating,
-      previous: ratingPrev === rating,
+      selected: (ratingCurr === rating),
+      previous: (ratingPrev === rating),
       children: t(`role-summary-rating-${key}`),
     };
     return <option key={key} {...props} />;

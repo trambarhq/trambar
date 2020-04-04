@@ -370,12 +370,11 @@ function ServerSummaryPageSync(props) {
   }
 
   function renderServerType(type, i) {
-    const typeCurr = draft.getCurrent('type');
-    const typePrev = draft.getOriginal('type');
+    const [ typePrev, typeCurr ] = draft.getBoth('type');
     const props = {
       name: type,
-      selected: typeCurr === type,
-      previous: typePrev === type,
+      selected: (typeCurr === type),
+      previous: (typePrev === type),
     };
     const iconClass = getServerIconClass({ type });
     return (
@@ -442,11 +441,10 @@ function ServerSummaryPageSync(props) {
   }
 
   function renderGitlabUserOption(option, i) {
-    const typeCurr = draft.getCurrent(`settings.user.mapping.${option.type}`, null);
-    const typePrev = draft.getOriginal(`settings.user.mapping.${option.type}`, null);
+    const [ typePrev, typeCurr ] = draft.getBoth(`settings.user.mapping.${option.type}`, null);
     const props = {
       name: `${option.type}-${option.value}`,
-      selected: typeCurr === option.value,
+      selected: (typeCurr === option.value),
       previous: (!creating) ? typePrev === option.value : undefined,
     };
     let label;
@@ -480,12 +478,11 @@ function ServerSummaryPageSync(props) {
   }
 
   function renderOAuthUserOption(option, i) {
-    const typeCurr = draft.getCurrent('settings.user.type', null);
-    const typePrev = draft.getOriginal('settings.user.type', null);
+    const [ typePrev, typeCurr ] = draft.getBoth('settings.user.type', null);
     const props = {
       name: `${option.value}`,
-      selected: typeCurr === option.value,
-      previous: (!creating) ? typePrev === option.value : undefined,
+      selected: (typeCurr === option.value),
+      previous: (!creating) ? (typePrev === option.value) : undefined,
     };
     let label;
     if (option.label instanceof Array) {
@@ -540,14 +537,21 @@ function ServerSummaryPageSync(props) {
   }
 
   function renderRoleOption(option, i) {
-    const rolesCurr = draft.getCurrent('settings.user.role_ids', []);
-    const rolesPrev = draft.getOriginal('settings.user.role_ids', []);
-    const setCurr = (option.none) ? (rolesCurr.length === 0) : (rolesCurr.includes(option.value));
-    const setPrev = (option.none) ? (rolesPrev.length === 0) : (rolesPrev.includes(option.value));
+    const [ rolesPrev, rolesCurr ] = draft.getBoth('settings.user.role_ids', []);
+    let selected, previous;
+    if (option.none) {
+      selected = (rolesCurr.length === 0);
+      if (!creating) {
+        previous = (rolesPrev.length === 0);
+      }
+    } else {
+      selected = rolesCurr.includes(option.value);
+      previous = rolesPrev.includes(option.value);
+    }
     const props = {
       name: option.name,
-      selected: setCurr,
-      previous: (!creating) ? setPrev : undefined,
+      selected,
+      previous,
     };
     let label;
     if (option.label instanceof Array) {

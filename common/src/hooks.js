@@ -130,6 +130,10 @@ class AsyncDraftBuffer extends AsyncSaveBuffer {
     return this.getCurrent(key, def);
   }
 
+  getBoth(key, def) {
+    return [ this.getOriginal(key, def), this.getCurrent(key, def) ];
+  }
+
   set(key, value) {
     if (value === undefined) {
       this.unset(key);
