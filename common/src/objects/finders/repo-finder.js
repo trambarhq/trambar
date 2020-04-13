@@ -8,9 +8,9 @@ const emptyArray = [];
  * Find a repo by ID
  *
  * @param  {Database} db
- * @param  {Number} id
+ * @param  {number} id
  *
- * @return {Promise<Repo>}
+ * @return {Repo}
  */
 async function findRepo(db, id) {
   if (!id) {
@@ -28,9 +28,9 @@ async function findRepo(db, id) {
  * Find all repos
  *
  * @param  {Database} db
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Repo>>}
+ * @return {Repo[]}
  */
 async function findAllRepos(db, minimum) {
   return db.find({
@@ -45,9 +45,9 @@ async function findAllRepos(db, minimum) {
  * Find repo that haven't been deleted
  *
  * @param  {Database} db
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Repo>>}
+ * @return {Repo[]}
  */
 async function findExistingRepos(db, minimum) {
   return db.find({
@@ -64,9 +64,9 @@ async function findExistingRepos(db, minimum) {
  * Find repos connected with given project(s)
  *
  * @param  {Database} db
- * @param  {Project|Array<Project>} id
+ * @param  {Project|Project[]} id
  *
- * @return {Promise<Array<Repo>>}
+ * @return {Repo[]}
  */
 async function findProjectRepos(db, projects) {
   if (projects instanceof Array) {
@@ -103,9 +103,9 @@ async function findProjectRepos(db, projects) {
  * Find repos that can server as website template
  *
  * @param  {Database} db
- * @param  {Project|Array<Project>} id
+ * @param  {Project|Project[]} id
  *
- * @return {Promise<Array<Repo>>}
+ * @return {Repo[]}
  */
 async function findTemplates(db) {
   return db.find({

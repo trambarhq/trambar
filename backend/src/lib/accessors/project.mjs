@@ -46,9 +46,7 @@ export class Project extends Data {
    * Create table in schema
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -79,10 +77,10 @@ export class Project extends Data {
    * Upgrade table in schema to given DB version (from one version prior)
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Number} version
+   * @param  {string} schema
+   * @param  {number} version
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async upgrade(db, schema, version) {
     if (version === 3) {
@@ -103,9 +101,7 @@ export class Project extends Data {
    * Grant privileges to table to appropriate Postgres users
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async grant(db, schema) {
     const table = this.getTableName(schema);
@@ -121,9 +117,9 @@ export class Project extends Data {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
@@ -158,11 +154,11 @@ export class Project extends Data {
    * Filter out rows that user doesn't have access to
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async filter(db, schema, rows, credentials) {
     if (!credentials.unrestricted) {
@@ -178,12 +174,12 @@ export class Project extends Data {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
@@ -214,13 +210,13 @@ export class Project extends Data {
    * Import object sent by client-side code
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} projectReceived
    * @param  {Object} projectBefore
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async importOne(db, schema, projectReceived, projectBefore, credentials, options) {
     const row = await super.importOne(db, schema, projectReceived, projectBefore, credentials, options);
@@ -271,13 +267,11 @@ export class Project extends Data {
    * rows in other tables
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} projectsReceived
-   * @param  {Array<Object>} projectsBefore
-   * @param  {Array<Object>} projectsAfter
+   * @param  {string} schema
+   * @param  {Object[]} projectsReceived
+   * @param  {Object[]} projectsBefore
+   * @param  {Object[]} projectsAfter
    * @param  {Object} credentials
-   *
-   * @return {Promise}
    */
   static async associate(db, schema, projectsReceived, projectsBefore, projectsAfter, credentials) {
     await this.updateNewMembers(db, schema, projectsReceived, projectsBefore, projectsAfter);
@@ -287,12 +281,10 @@ export class Project extends Data {
    * Remove ids from requested_project_ids of users who've just joined
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} projectsReceived
-   * @param  {Array<Object>} projectsBefore
-   * @param  {Array<Object>} projectsAfter
-   *
-   * @return {Promise}
+   * @param  {string} schema
+   * @param  {Object[]} projectsReceived
+   * @param  {Object[]} projectsBefore
+   * @param  {Object[]} projectsAfter
    */
   static async updateNewMembers(db, schema, projectsReceived, projectsBefore, projectsAfter) {
     // first, obtain ids of projects that new members are added to
@@ -335,11 +327,11 @@ export class Project extends Data {
    * Add members to a project atomically
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Number} projectId
-   * @param  {Array<Number>} userIds
+   * @param  {string} schema
+   * @param  {number} projectId
+   * @param  {number[]} userIds
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async addMembers(db, schema, projectId, userIds) {
     const table = this.getTableName(schema);
@@ -356,7 +348,7 @@ export class Project extends Data {
    * Return cache signature of project schema
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} credentials
    *
    * @return {[type]}

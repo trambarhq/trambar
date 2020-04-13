@@ -363,9 +363,9 @@ const isDropbox = /^https:\/\/(www\.dropbox\.com)\//;
  * Adjust a URL based on the cloud storage provider so that we receive the
  * actual contents
  *
- * @param  {String} url
+ * @param  {string} url
  *
- * @return {String}
+ * @return {string}
  */
 function getFileURL(url) {
   if (isOneDrive.test(url)) {
@@ -380,9 +380,9 @@ function getFileURL(url) {
 /**
  * Encode a OneDrive shared file URL
  *
- * @param  {String} url
+ * @param  {string} url
  *
- * @return {String}
+ * @return {string}
  */
 function getOneDriveShareURL(url) {
   let token = Buffer.from(url).toString('base64');

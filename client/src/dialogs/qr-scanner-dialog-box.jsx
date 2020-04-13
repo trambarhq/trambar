@@ -281,7 +281,7 @@ class CameraOverlay extends PureComponent {
   /**
    * Render children at the top and bottom
    *
-   * @param  {String} tag
+   * @param  {string} tag
    *
    * @return {ReactElement|null}
    */

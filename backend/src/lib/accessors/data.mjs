@@ -26,9 +26,9 @@ export class Data {
   /**
    * Return fully-qualify name of table
    *
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {String}
+   * @return {string}
    */
   static getTableName(schema) {
     // allow non-alphanumeric schema name during testing
@@ -54,9 +54,7 @@ export class Data {
    * (for reference purpose only)
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -78,9 +76,7 @@ export class Data {
    * Grant privileges to table to appropriate Postgres users
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async grant(db, schema) {
     const table = this.getTableName(schema);
@@ -95,9 +91,7 @@ export class Data {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async watch(db, schema) {
   }
@@ -107,9 +101,7 @@ export class Data {
    * when a row is updated. Also add triggers that send notification messages.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async createChangeTrigger(db, schema) {
     const table = this.getTableName(schema);
@@ -128,9 +120,7 @@ export class Data {
    * certain columns
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async createNotificationTriggers(db, schema) {
     const table = this.getTableName(schema);
@@ -168,7 +158,7 @@ export class Data {
    * @param  {User} user
    * @param  {Subscription} subscription
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static isRelevantTo(event, user, subscription) {
     if (this.schema === 'global') {
@@ -194,10 +184,10 @@ export class Data {
    * Upgrade table in schema to given DB version (from one version prior)
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Number} version
+   * @param  {string} schema
+   * @param  {number} version
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async upgrade(db, schema, version) {
     return false;
@@ -263,11 +253,11 @@ export class Data {
    * Look for rows matching criteria
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object|null} criteria
-   * @param  {String} columns
+   * @param  {string} columns
    *
-   * @return {Promise<Array>}
+   * @return {Object[]}
    */
   static async find(db, schema, criteria, columns) {
     if (!criteria) {
@@ -303,11 +293,11 @@ export class Data {
    * Look for one row
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object|null} criteria
-   * @param  {String} columns
+   * @param  {string} columns
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async findOne(db, schema, criteria, columns) {
     if (!criteria) {
@@ -322,10 +312,10 @@ export class Data {
    * Update multiple rows
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    *
-   * @return {Promise<Array>}
+   * @return {Object[]}
    */
   static async update(db, schema, rows) {
     const results = [];
@@ -340,10 +330,10 @@ export class Data {
    * Update one row
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object|null} row
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async updateOne(db, schema, row) {
     if (!row) {
@@ -387,11 +377,11 @@ export class Data {
    * Update one row
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object|null} criteria
    * @param  {Object} values
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async updateMatching(db, schema, criteria, values) {
     if (!criteria) {
@@ -439,10 +429,10 @@ export class Data {
    * Insert rows into table
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async insert(db, schema, rows) {
     if (_.isEmpty(rows)) {
@@ -509,10 +499,10 @@ export class Data {
    * Insert one row into table
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} row
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async insertOne(db, schema, row) {
     if (!row) {
@@ -526,10 +516,10 @@ export class Data {
    * Insert or update rows depending on whether id is present
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async save(db, schema, rows) {
     if (_.isEmpty(rows)) {
@@ -557,10 +547,10 @@ export class Data {
    * Insert or update a row
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object|null} row
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async saveOne(db, schema, row) {
     if (!row) {
@@ -577,10 +567,10 @@ export class Data {
    * Delete rows by their ids
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async remove(db, schema, rows) {
     if (!_.isEmpty(rows)) {
@@ -602,10 +592,10 @@ export class Data {
    * Delete one row
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} rows
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async removeOne(db, schema, row) {
     if (!row) {
@@ -619,10 +609,10 @@ export class Data {
    * Remove matching rows
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} criteria
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async removeMatching(db, schema, criteria) {
     if (!criteria) {
@@ -653,11 +643,11 @@ export class Data {
    * Filter out rows that user doesn't have access to
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    *
-   * @return {Promise<Array>}
+   * @return {Object[]}
    */
   static async filter(db, schema, rows, credentials) {
     return rows;
@@ -668,12 +658,12 @@ export class Data {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array>}
+   * @return {Object[]}
    */
   static async export(db, schema, rows, credentials, options) {
     return _.map(rows, (row) => {
@@ -699,13 +689,13 @@ export class Data {
    * Import objects sent by client-side code, applying access control
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} objectsReceived
-   * @param  {Array<Object>} objectsBefore
+   * @param  {string} schema
+   * @param  {Object[]} objectsReceived
+   * @param  {Object[]} objectsBefore
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array>}
+   * @return {Object[]}
    */
   static async import(db, schema, objectsReceived, objectsBefore, credentials, options) {
     const rows = [];
@@ -722,13 +712,13 @@ export class Data {
    * Import object sent by client-side code
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} objectReceived
    * @param  {Object} objectBefore
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array>}
+   * @return {Object[]}
    */
   static async importOne(db, schema, object, original, credentials, options) {
     // these properties cannot be modified from the client side
@@ -739,13 +729,11 @@ export class Data {
    * [description]
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} objects
-   * @param  {Array<Object>} originals
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} objects
+   * @param  {Object[]} originals
+   * @param  {Object[]} rows
    * @param  {Object} credentials
-   *
-   * @return {Promise}
    */
   static async associate(db, schema, objects, originals, rows, credentials) {
   }
@@ -755,10 +743,10 @@ export class Data {
    * by their mtime)
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {String} interval
+   * @param  {string} schema
+   * @param  {string} interval
    *
-   * @return {Promise<Number>}
+   * @return {number}
    */
   static async clean(db, schema, interval) {
     const table = this.getTableName(schema);
@@ -780,11 +768,9 @@ export class Data {
    * Add text search to query
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} search
    * @param  {Object} query
-   *
-   * @return {Promise}
    */
   static async applyTextSearch(db, schema, search, query) {
     const ts = parseSearchQuery(search.text);
@@ -837,9 +823,9 @@ export class Data {
   /**
    * Return SQL expression that yield searchable text
    *
-   * @param  {String} languageCode
+   * @param  {string} languageCode
    *
-   * @return {String}
+   * @return {string}
    */
   static getSearchableText(languageCode) {
     return `"extractText"(details, '${languageCode}')`;
@@ -849,9 +835,9 @@ export class Data {
    * Return languages for which there're text search indices
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {Promise<Array<String>>}
+   * @return {string[]}
    */
   static async getTextSearchLanguages(db, schema) {
     let languages = _.get(searchLanguages, [ schema, this.table ]);
@@ -875,10 +861,8 @@ export class Data {
    * Add indices for text search in specified languages
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<String>} codes
-   *
-   * @return {Promise}
+   * @param  {string} schema
+   * @param  {string[]} codes
    */
   static async addTextSearchLanguages(db, schema, codes) {
     for (let code of codes) {
@@ -907,9 +891,7 @@ export class Data {
    * Create search configure for searching text of given language
    *
    * @param  {Database} db
-   * @param  {String} code
-   *
-   * @return {Promise}
+   * @param  {string} code
    */
   static async createSearchConfigure(db, code) {
     if (!/^[a-z]{2}$/.test(code)) {
@@ -947,10 +929,8 @@ export class Data {
    * with data sent from remote client
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<String>}
-   *
-   * @return {Promise}
+   * @param  {string} schema
+   * @param  {string[]}
    */
   static async createResourceCoalescenceTrigger(db, schema, args) {
     const table = this.getTableName(schema);
@@ -975,12 +955,10 @@ export class Data {
    * Ensure that an object has a unique name when undeleting
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} objectBefore
    * @param  {Object} objectReceived
-   * @param  {String|undefined} propName
-   *
-   * @return {Promise}
+   * @param  {string|undefined} propName
    */
   static async ensureUniqueName(db, schema, objectBefore, objectReceived, propName) {
     if (objectBefore) {
@@ -1005,11 +983,11 @@ export class Data {
    * Find matching rows, retrieving from earlier searches if possible
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} criteria
-   * @param  {String} columns
+   * @param  {string} columns
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async findCached(db, schema, criteria, columns) {
     // remove old ones

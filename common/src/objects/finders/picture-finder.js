@@ -5,10 +5,10 @@ const table = 'picture';
  * Find pictures in collection for given purpose
  *
  * @param  {Database} db
- * @param  {String} purpose
- * @param  {Number|undefined} minimum
+ * @param  {string} purpose
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Picture>>}
+ * @return {Picture[]}
  */
 async function findPictures(db, purpose, minimum) {
   return db.find({

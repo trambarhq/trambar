@@ -88,8 +88,8 @@ function sendJSON(res, result) {
  *
  * @param  {Response} res
  * @param  {Buffer} buffer
- * @param  {String} mimeType
- * @param  {String|undefined} cc
+ * @param  {string} mimeType
+ * @param  {string|undefined} cc
  */
 function sendFile(res, buffer, mimeType, cc) {
   res.type(mimeType)
@@ -103,11 +103,9 @@ function sendFile(res, buffer, mimeType, cc) {
  * Send static file to browser
  *
  * @param  {Response} res
- * @param  {String} path
- * @param  {String|undefined} cc
- * @param  {String|undefined} filename
- *
- * @return {Promise}
+ * @param  {string} path
+ * @param  {string|undefined} cc
+ * @param  {string|undefined} filename
  */
 async function sendStaticFile(res, path, cc, filename) {
   const info = await getFileType(path);
@@ -566,9 +564,9 @@ async function handleStream(req, res) {
 /**
  * Return the file extension and mime type
  *
- * @param  {String} path
+ * @param  {string} path
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function getFileType(path) {
   const fd = await FS.openAsync(path, 'r');
@@ -598,9 +596,9 @@ async function getFileType(path) {
 /**
  * Return the URL of a file in the cache folder
  *
- * @param  {String} path
+ * @param  {string} path
  *
- * @return {String}
+ * @return {string}
  */
 function getFileURL(path) {
   return `/srv/media/${Path.relative(CacheFolders.root, path)}`

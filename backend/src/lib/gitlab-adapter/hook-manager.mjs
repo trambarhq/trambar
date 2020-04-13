@@ -13,12 +13,10 @@ import * as Transport from './transport.mjs';
 /**
  * Install hooks on given server
  *
- * @param  {String} host
+ * @param  {string} host
  * @param  {Server} server
- * @param  {Array<Repo>} repos
- * @param  {Array<Project>} projects
- *
- * @return {Promise}
+ * @param  {Repo[]} repos
+ * @param  {Project[]} projects
  */
 async function installServerHooks(host, server, repos, projects) {
   const taskLog = TaskLog.start('gitlab-hook-install', {
@@ -53,12 +51,10 @@ async function installServerHooks(host, server, repos, projects) {
 /**
  * Remove all project hooks
  *
- * @param  {String} host
+ * @param  {string} host
  * @param  {Server} server
- * @param  {Array<Repo>} repos
- * @param  {Array<Project>} projects
- *
- * @return {Promise}
+ * @param  {Repo[]} repos
+ * @param  {Project[]} projects
  */
 async function removeServerHooks(host, server, repos, projects) {
   const taskLog = TaskLog.start('gitlab-hook-remove', {
@@ -108,12 +104,10 @@ async function installSystemHook(host, server) {
 /**
  * Install project hook on Gitlab server
  *
- * @param  {String} host
+ * @param  {string} host
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
- *
- * @return {Promise}
  */
 async function installProjectHook(host, server, repo, project) {
   if (!host) {
@@ -136,10 +130,8 @@ async function installProjectHook(host, server, repo, project) {
 /**
  * Remove project hook from Gitlab server
  *
- * @param  {String} host
+ * @param  {string} host
  * @param  {Server} server
- *
- * @return {Promise}
  */
 async function removeSystemHook(host, server) {
   if (!host) {
@@ -157,12 +149,10 @@ async function removeSystemHook(host, server) {
 /**
  * Remove project hook from Gitlab server
  *
- * @param  {String} host
+ * @param  {string} host
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
- *
- * @return {Promise}
  */
 async function removeProjectHook(host, server, repo, project) {
   if (!host) {
@@ -183,7 +173,7 @@ async function removeProjectHook(host, server, repo, project) {
  *
  * @param  {Server} server
  *
- * @return {Array<Object>}
+ * @return {Object[]}
  */
 async function fetchSystemHooks(server) {
   const url = `/hooks`;
@@ -194,9 +184,9 @@ async function fetchSystemHooks(server) {
  * Retrieve all project hooks installed on repo
  *
  * @param  {Server} server
- * @param  {Number} glProjectID
+ * @param  {number} glProjectID
  *
- * @return {Array<Object>}
+ * @return {Object[]}
  */
 async function fetchProjectHooks(server, glProjectID) {
   const url = `/projects/${glProjectID}/hooks`;
@@ -209,7 +199,7 @@ async function fetchProjectHooks(server, glProjectID) {
  * @param  {Server} server
  * @param  {Object} glHook
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function createSystemHook(server, glHook) {
   const url = `/hooks`;
@@ -220,10 +210,10 @@ async function createSystemHook(server, glHook) {
  * Install a project hook on Gitlab server
  *
  * @param  {Server} server
- * @param  {Number} glProjectID
+ * @param  {number} glProjectID
  * @param  {Object} glHook
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function createProjectHook(server, glProjectID, glHook) {
   const url = `/projects/${glProjectID}/hooks`;
@@ -235,8 +225,6 @@ async function createProjectHook(server, glProjectID, glHook) {
  *
  * @param  {Server} server
  * @param  {Object} glHook
- *
- * @return {Promise}
  */
 async function destroySystemHook(server, glHook) {
   const url = `/hooks/${glHook.id}`;
@@ -247,10 +235,8 @@ async function destroySystemHook(server, glHook) {
  * Remove a project hook from Gitlab server
  *
  * @param  {Server} server
- * @param  {Number} glProjectID
+ * @param  {number} glProjectID
  * @param  {Object} glHook
- *
- * @return {Promise}
  */
 async function destroyProjectHook(server, glProjectID, glHook) {
   const url = `/projects/${glProjectID}/hooks/${glHook.id}`;
@@ -260,7 +246,7 @@ async function destroyProjectHook(server, glProjectID, glHook) {
 /**
  * Return properties of a system hook
  *
- * @param  {String} url
+ * @param  {string} url
  *
  * @return {Object}
  */
@@ -278,7 +264,7 @@ function getSystemHookProps(url) {
 /**
  * Return properties of a project hook
  *
- * @param  {String} url
+ * @param  {string} url
  *
  * @return {Object}
  */
@@ -303,9 +289,9 @@ function getProjectHookProps(url) {
 /**
  * Return URL for a system hook
  *
- * @param  {String} url
+ * @param  {string} url
  *
- * @return {String}
+ * @return {string}
  */
 function getSystemHookEndpoint(host, server) {
   return `${host}/srv/gitlab/hook/${server.id}`;
@@ -314,9 +300,9 @@ function getSystemHookEndpoint(host, server) {
 /**
  * Return URL for a project hook
  *
- * @param  {String} url
+ * @param  {string} url
  *
- * @return {String}
+ * @return {string}
  */
 function getProjectHookEndpoint(host, server, repo, project) {
   return `${host}/srv/gitlab/hook/${server.id}/${repo.id}/${project.id}`;
@@ -327,7 +313,7 @@ function getProjectHookEndpoint(host, server, repo, project) {
  *
  * @param  {Server}  server
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function hasAccessToken(server) {
   const accessToken = _.get(server, 'settings.api.access_token');
@@ -352,7 +338,7 @@ function verifyHookRequest(req) {
 /**
  * Return secret token used to verify requests from GitLab
  *
- * @return {String}
+ * @return {string}
  */
 function getSecretToken() {
   if (!secretToken) {

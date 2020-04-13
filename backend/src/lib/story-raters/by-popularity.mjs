@@ -15,10 +15,10 @@ export class ByPopularity {
    *
    * @param  {Database} db
    * @param  {Schema} schema
-   * @param  {Array<Story>} stories
+   * @param  {Story[]} stories
    * @param  {Listing} listing
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async prepareContext(db, schema, stories, listing) {
     const popularity = {};
@@ -38,7 +38,7 @@ export class ByPopularity {
    * @param  {Object} context
    * @param  {Story} story
    *
-   * @return {Number}
+   * @return {number}
    */
   static calculateRating(context, story) {
     const details = context.popularity[story.id];
@@ -66,8 +66,8 @@ export class ByPopularity {
    * Load statistics from database, saving it to cache
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Number} storyID
+   * @param  {string} schema
+   * @param  {number} storyID
    *
    * @return {Object|null}
    */
@@ -89,8 +89,8 @@ export class ByPopularity {
   /**
    * Save statistics to cache
    *
-   * @param  {String} schema
-   * @param  {Number} storyID
+   * @param  {string} schema
+   * @param  {number} storyID
    * @param  {Object} statistics
    */
   static cacheStatistics(schema, storyID, statistics) {
@@ -104,8 +104,8 @@ export class ByPopularity {
   /**
    * Find cached statistics
    *
-   * @param  {String} schema
-   * @param  {Number} storyID
+   * @param  {string} schema
+   * @param  {number} storyID
    *
    * @return {Object|null}
    */
@@ -123,8 +123,8 @@ export class ByPopularity {
   /**
    * Remove an entry from cache
    *
-   * @param  {String} schema
-   * @param  {Number} id
+   * @param  {string} schema
+   * @param  {number} id
    */
   static clearCachedStatistics(schema, id) {
     const index = _.findIndex(this.statisticsCache, (entry) => {

@@ -22,8 +22,6 @@ import { Reaction } from '../accessors/reaction.mjs';
  * @param  {User} author
  * @param  {Object} glEvent
  * @param  {Object} glHookEvent
- *
- * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent, glHookEvent) {
   const noteType = _.toLower(glEvent.note.noteable_type);
@@ -46,8 +44,6 @@ async function processEvent(db, system, server, repo, project, author, glEvent, 
  * @param  {Project} project
  * @param  {User} author
  * @param  {Object} glEvent
- *
- * @return {Promise}
  */
 async function processIssueNoteEvent(db, system, server, repo, project, author, glEvent) {
   const schema = project.name;
@@ -74,8 +70,6 @@ async function processIssueNoteEvent(db, system, server, repo, project, author, 
  * @param  {Project} project
  * @param  {User} author
  * @param  {Object} glEvent
- *
- * @return {Promise}
  */
 async function processMergeRequestNoteEvent(db, system, server, repo, project, author, glEvent) {
   const schema = project.name;
@@ -102,8 +96,6 @@ async function processMergeRequestNoteEvent(db, system, server, repo, project, a
  * @param  {Project} project
  * @param  {Object} glEvent
  * @param  {Object} glHookEvent
- *
- * @return {Promise}
  */
 async function processCommitNoteEvent(db, system, server, repo, project, author, glEvent, glHookEvent) {
   // need to find the commit id first, since Gitlab doesn't include it
@@ -140,7 +132,7 @@ async function processCommitNoteEvent(db, system, server, repo, project, author,
  * @param  {Object} glEvent
  * @param  {Object} glHookEvent
  *
- * @return {Promise<String|undefined>}
+ * @return {string|undefined}
  */
 async function findCommitID(db, server, repo, glEvent, glHookEvent) {
   if (glHookEvent) {
@@ -227,11 +219,11 @@ function copyEventProperties(reaction, system, server, story, author, glNote) {
  * Retrieve merge request notes from Gitlab server
  *
  * @param  {Server} server
- * @param  {Number} glProjectID
- * @param  {String} glCommitID
- * @param  {String} glObjectType
+ * @param  {number} glProjectID
+ * @param  {string} glCommitID
+ * @param  {string} glObjectType
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function fetchCommitNotes(server, glProjectID, glCommitID) {
   const url = `/projects/${glProjectID}/repository/commits/${glCommitID}/comments`;
@@ -241,9 +233,9 @@ async function fetchCommitNotes(server, glProjectID, glCommitID) {
 /**
  * Generate MD5 hash of text
  *
- * @param  {String} text
+ * @param  {string} text
  *
- * @return {String}
+ * @return {string}
  */
 function hash(text) {
   const hash = Crypto.createHash('md5').update(text);

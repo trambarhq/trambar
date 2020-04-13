@@ -8,10 +8,10 @@ const emptyArray = [];
  *
  * @param  {Database} db
  * @param  {User} user
- * @param  {Array<Story>} stories
- * @param  {Number|undefined} minimum
+ * @param  {Story[]} stories
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Bookmark>>}
+ * @return {Bookmark[]}
  */
 async function findBookmarksByUser(db, user, stories, minimum) {
   const storyIds = uniqIds(stories.map(s => s.id));
@@ -33,9 +33,9 @@ async function findBookmarksByUser(db, user, stories, minimum) {
  *
  * @param  {Database} db
  * @param  {User} user
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Bookmark>>}
+ * @return {Bookmark[]}
  */
 async function findBookmarksForUser(db, user, minimum) {
   return db.find({

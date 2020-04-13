@@ -23,7 +23,7 @@ import { User } from '../accessors/user.mjs';
  * @param  {Database} db
  * @param  {Server} server
  *
- * @return {Promise<User[]>}
+ * @return {User[]}
  */
 async function importUsers(db, server) {
   const taskLog = TaskLog.start('gitlab-user-import', {
@@ -88,7 +88,7 @@ async function importUsers(db, server) {
  * @param  {Server} server
  * @param  {Object} glUser
  *
- * @return {Promise<User|null>}
+ * @return {User|null}
  */
 async function importUser(db, server, glUser) {
   if (!glUser.id) {
@@ -124,7 +124,7 @@ async function importUser(db, server, glUser) {
  * @param  {Server} server
  * @param  {Object} glUser
  *
- * @return {Promise<User|null>}
+ * @return {User|null}
  */
 async function findExistingUser(db, server, users, glUser) {
   // look for matching id among users imported from server previously
@@ -159,9 +159,9 @@ async function findExistingUser(db, server, users, glUser) {
  *
  * @param  {Database} db
  * @param  {Server} server
- * @param  {String} glUserName
+ * @param  {string} glUserName
  *
- * @return {Promise<Array<User|null>>}
+ * @return {User[]}
  */
 async function findUsersByName(db, server, glUsernames) {
   const userList = [];
@@ -189,9 +189,9 @@ async function findUsersByName(db, server, glUsernames) {
  *
  * @param  {Database} db
  * @param  {Server} server
- * @param  {String} glUsername
+ * @param  {string} glUsername
  *
- * @return {Promise<User|null>}
+ * @return {User|null}
  */
 async function findUserByName(db, server, glUsername) {
   const [ user ] = await findUsersByName(db, server, [ glUsername ]);
@@ -292,8 +292,6 @@ function copyUserProperties(user, server, image, glUser) {
  * @param  {Project} project
  * @param  {User} author
  * @param  {Object} glEvent
- *
- * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent) {
   const schema = project.name;
@@ -314,8 +312,6 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
  * @param  {Database} db
  * @param  {Server} server
  * @param  {Object} glHookEvent
- *
- * @return {Promise}
  */
 async function processSystemEvent(db, server, glHookEvent) {
   const eventName = _.snakeCase(glHookEvent.event_name);
@@ -388,7 +384,7 @@ function copyEventProperties(story, system, server, repo, author, glEvent) {
  *
  * @param  {Server} server
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 function fetchUsers(server) {
   const url = `/users`;
@@ -399,9 +395,9 @@ function fetchUsers(server) {
  * Retrieve user record from Gitlab by name
  *
  * @param  {Server} server
- * @param  {String} username
+ * @param  {string} username
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function fetchUserByName(server, username) {
   const url = `/users`;
@@ -415,7 +411,7 @@ async function fetchUserByName(server, username) {
  *
  * @param  {Object} glUser
  *
- * @return {Promise<Object|null>}
+ * @return {Object|null}
  */
 async function findProfileImage(glUser) {
   try {

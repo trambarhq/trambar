@@ -77,7 +77,7 @@ function getNotificationText(user, notification, locale) {
  *
  * @param  {User} user
  *
- * @return {String|undefined}
+ * @return {string|undefined}
  */
 function getProfileImageURL(user) {
   const image = _.find(user.details.resources, { type: 'image' });
@@ -92,7 +92,7 @@ function getProfileImageURL(user) {
  *
  * @param  {Reaction} reaction
  *
- * @return {String|undefined}
+ * @return {string|undefined}
  */
 function getReactionImageURL(reaction) {
   const res = _.first(reaction.details.resources);
@@ -117,13 +117,13 @@ function getReactionImageURL(reaction) {
 /**
  * Return URL to image, with clipping rectangle and dimension filters applied
  *
- * @param  {String} url
+ * @param  {string} url
  * @param  {Object|undefined} clip
- * @param  {Number} width
- * @param  {Number} height
- * @param  {Number} quality
+ * @param  {number} width
+ * @param  {number} height
+ * @param  {number} quality
  *
- * @return {String}
+ * @return {string}
  */
 function applyClippingRectangle(url, clip, width, height, quality) {
   const filters = [];

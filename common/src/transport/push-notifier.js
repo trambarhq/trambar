@@ -67,10 +67,10 @@ export class PushNotifier extends Notifier {
   /**
    * Connect to push network and relay
    *
-   * @param  {String} address
-   * @param  {String} relayAddress
+   * @param  {string} address
+   * @param  {string} relayAddress
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async connect(address, relayAddress) {
     await this.registerAtPushNetwork();
@@ -80,7 +80,7 @@ export class PushNotifier extends Notifier {
   /**
    * Register device at push network
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   registerAtPushNetwork() {
     // events triggered by activate() will resolve this promise
@@ -90,10 +90,10 @@ export class PushNotifier extends Notifier {
   /**
    * Register device at push relay
    *
-   * @param  {String} address
-   * @param  {String} relayAddress
+   * @param  {string} address
+   * @param  {string} relayAddress
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async registerAtPushRelay(address, relayAddress) {
     const { initialReconnectionDelay, maximumReconnectionDelay } = this.options;
@@ -149,7 +149,7 @@ export class PushNotifier extends Notifier {
   /**
    * Send registration to push relay
    *
-   * @param  {String} url
+   * @param  {string} url
    * @param  {Object} payload
    *
    * @return {Object}

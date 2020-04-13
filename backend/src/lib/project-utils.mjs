@@ -6,7 +6,7 @@ import _ from 'lodash';
  * @param  {Project} project
  * @param  {User} user
  *
- * @return {String|null}
+ * @return {string|null}
  */
 function getUserAccessLevel(project, user) {
   if (project && user) {
@@ -41,7 +41,7 @@ function getUserAccessLevel(project, user) {
  * @param  {Project}  project
  * @param  {User}  user
  *
- * @return {String}
+ * @return {string}
  */
 function isVisibleToUser(project, user) {
   let access = getUserAccessLevel(project, user);

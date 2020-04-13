@@ -25,9 +25,7 @@ function removeShutdownListener(callback) {
  * Close an HTTP server
  *
  * @param  {HTTPServer|null} server
- * @param  {Number} maxWait
- *
- * @return {Promise}
+ * @param  {number} maxWait
  */
 async function shutdownHTTPServer(server, maxWait) {
   if (maxWait === undefined) {
@@ -67,8 +65,6 @@ async function initiateShutdown() {
 /**
  * Call shutdown callbacks, handling scenario where shutdown functions add
  * additional handlers
- *
- * @return {Promise}
  */
 async function broadcastShutdownEvent() {
   while (listeners.length > 0) {

@@ -8,9 +8,9 @@ const emptyArray = [];
  *
  * @param  {Database} db
  * @param  {User} user
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Notification>>}
+ * @return {Notification[]}
  */
 async function findNotificationsForUser(db, user, minimum) {
   if (!user) {
@@ -32,10 +32,10 @@ async function findNotificationsForUser(db, user, minimum) {
  *
  * @param  {Database} db
  * @param  {User} user
- * @param  {String} date
- * @param  {Number|undefined} minimum
+ * @param  {string} date
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Notification>>}
+ * @return {Notification[]}
  */
 async function findNotificationsForUserOnDate(db, user, date, minimum) {
   if (!user) {
@@ -56,9 +56,9 @@ async function findNotificationsForUserOnDate(db, user, date, minimum) {
  *
  * @param  {Database} db
  * @param  {User} user
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Notification>>}
+ * @return {Notification[]}
  */
 async function findNotificationsUnseenByUser(db, user, minimum) {
   if (!user) {

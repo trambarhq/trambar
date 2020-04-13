@@ -343,9 +343,9 @@ async function handleStorage(req, res) {
  * Check authorization token, throwing if it's invalid or expired
  *
  * @param  {Database} db
- * @param  {String} token
+ * @param  {string} token
  *
- * @return {Promise<Number>}
+ * @return {number}
  */
 async function checkAuthorization(db, token) {
   const userID = await Session.check(db, token, APP_AREA);
@@ -366,8 +366,8 @@ async function checkAuthorization(db, token) {
  * Load information related to user that can be used to determine access level
  *
  * @param  {Database} db
- * @param  {Number} userID
- * @param  {String} schema
+ * @param  {number} userID
+ * @param  {string} schema
  *
  * @return {Object}
  */
@@ -413,8 +413,8 @@ async function fetchCredentials(db, userID, schema) {
 /**
  * Return appropriate accessor for schema and table
  *
- * @param  {String} schema
- * @param  {String} table
+ * @param  {string} schema
+ * @param  {string} table
  *
  * @return {Accessor}
  */

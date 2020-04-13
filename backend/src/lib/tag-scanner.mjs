@@ -1,9 +1,9 @@
 /**
  * Find @name and #keyword tags
  *
- * @param  {String|Array<String>} text
+ * @param  {string|string[]} text
  *
- * @return {Array<String>}
+ * @return {string[]}
  */
 function findTags(text) {
   const strings = [];

@@ -7,7 +7,7 @@ const emptyArray = [];
  *
  * @param  {Database} db
  *
- * @return {Promise<System>}
+ * @return {System}
  */
 async function findSystem(db) {
   return db.findOne({

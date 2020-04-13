@@ -32,9 +32,7 @@ export class Session extends Data {
    * Create table in schema
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -64,10 +62,10 @@ export class Session extends Data {
    * Upgrade table in schema to given DB version (from one version prior)
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Number} version
+   * @param  {string} schema
+   * @param  {number} version
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async upgrade(db, schema, version) {
     if (version === 3) {
@@ -81,9 +79,7 @@ export class Session extends Data {
    * Grant privileges to table to appropriate Postgres users
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async grant(db, schema) {
     // authorization check is performed through a stored procedure
@@ -99,9 +95,7 @@ export class Session extends Data {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
@@ -112,10 +106,10 @@ export class Session extends Data {
    * Check if authorization token is valid
    *
    * @param  {Database} db
-   * @param  {String} token
-   * @param  {String} area
+   * @param  {string} token
+   * @param  {string} area
    *
-   * @return {Promise<Number|null>}
+   * @return {number|null}
    */
   static async check(db, token, area) {
     const sql = `SELECT "checkAuthorization"($1, $2) AS user_id`;
@@ -127,10 +121,8 @@ export class Session extends Data {
    * Extend authorization til the given number of day from now
    *
    * @param  {Database} db
-   * @param  {String} token
-   * @param  {Number} days
-   *
-   * @return {Promise}
+   * @param  {string} token
+   * @param  {number} days
    */
   static async extend(db, token, days) {
     const sql = `SELECT "extendAuthorization"($1, $2) AS result`;
@@ -142,8 +134,6 @@ export class Session extends Data {
    *
    * @param  {Object} criteria
    * @param  {Object} query
-   *
-   * @return {Promise}
    */
   static apply(criteria, query) {
     const { expired, ...basic } = criteria;

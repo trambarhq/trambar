@@ -55,7 +55,7 @@ const encodingProfiles = [
 /**
  * Find a transcoding job by id
  *
- * @param  {String} jobID
+ * @param  {string} jobID
  *
  * @return {Object|null}
  */
@@ -66,11 +66,11 @@ function findTranscodingJob(jobID) {
 /**
  * Start up instances of ffmpeg
  *
- * @param  {String|null} srcPath
- * @param  {String} type
- * @param  {String} jobID
+ * @param  {string|null} srcPath
+ * @param  {string} type
+ * @param  {string} jobID
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function startTranscodingJob(srcPath, type, jobID) {
   const profiles = _.filter(encodingProfiles, { type });
@@ -173,9 +173,7 @@ async function startTranscodingJob(srcPath, type, jobID) {
 /**
  * Scan files and set their the duration and dimensions
  *
- * @param  {Array<Object>} files
- *
- * @return {Promise}
+ * @param  {Object[]} files
  */
 async function probeFile(file) {
   const info = await probeMediaFile(file.path)
@@ -186,10 +184,8 @@ async function probeFile(file) {
  * Change temporary filename to permanent ones
  *
  * @param  {Object} files
- * @param  {String} match
- * @param  {String} replacement
- *
- * @return {Promise}
+ * @param  {string} match
+ * @param  {string} replacement
  */
 async function renameFile(file, match, replacement) {
   const tempPath = file.path;
@@ -203,8 +199,6 @@ async function renameFile(file, match, replacement) {
  * Wait for transcoding job to finish
  *
  * @param  {Object} job
- *
- * @return {Promise}
  */
 async function awaitTranscodingJob(job) {
   // wait for ffmpeg processes to finish
@@ -241,8 +235,6 @@ async function awaitTranscodingJob(job) {
  * Wait for poster generation to finish
  *
  * @param  {Object} job
- *
- * @return {Promise}
  */
 async function awaitPosterGeneration(job) {
   const { posterFile } = job;
@@ -316,7 +308,7 @@ function transcodeSegment(job, file) {
  * Indicate that there will be no more additional files
  *
  * @param  {Object} job
- * @param  {Boolean} abort
+ * @param  {boolean} abort
  */
 function endTranscodingJob(job, abort) {
   job.closed = true;
@@ -456,8 +448,6 @@ function calculateProgress(job) {
  * Add poster generation to job
  *
  * @param  {Job} job
- *
- * @return {Promise}
  */
 async function requestPosterGeneration(job) {
   const srcPath = (job.streaming) ? null : job.inputFile.path;
@@ -507,8 +497,8 @@ async function requestPosterGeneration(job) {
 /**
  * Spawn an instance of FFmpeg
  *
- * @param  {String} srcPath
- * @param  {String} dstPath
+ * @param  {string} srcPath
+ * @param  {string} dstPath
  * @param  {Object} profile
  *
  * @return {ChildProcess}
@@ -575,7 +565,7 @@ function spawnFFmpeg(srcPath, dstPath, profile) {
 /**
  * Use ffprobe to obtain the duration and dimension of a file
  *
- * @param  {String} srcPath
+ * @param  {string} srcPath
  *
  * @return {Object}
  */

@@ -785,7 +785,7 @@ async function getExportTask(db, schema, story) {
  *
  * @param  {Server}  server
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function hasAccessToken(server) {
   const accessToken = _.get(server, 'settings.api.access_token');

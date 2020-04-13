@@ -22,8 +22,6 @@ let sockets = [];
 
 /**
  * Start listening for incoming Web Socket connection
- *
- * @return {Promise}
  */
 async function listen() {
   // set up endpoint for push subscription
@@ -65,8 +63,6 @@ async function listen() {
 
 /**
  * Shutdown HTTP server
- *
- * @return {Promise}
  */
 async function shutdown() {
   for (let socket of sockets) {
@@ -84,7 +80,7 @@ async function shutdown() {
  *
  * @param  {Database} db
  *
- * @return {Promise<Array<Listener>>}
+ * @return {Listener[]}
  */
 async function find(db, schema) {
   const subscriptionCriteria = { deleted: false };
@@ -107,9 +103,7 @@ async function find(db, schema) {
 /**
  * Send notifications to listeners
  *
- * @param  {Array<Message>} messages
- *
- * @return {Promise}
+ * @param  {Message[]} messages
  */
 async function send(db, messages) {
   await sendToWebsockets(db, messages);
@@ -120,9 +114,7 @@ async function send(db, messages) {
  * Send messages intended for websockets
  *
  * @param  {Database} db
- * @param  {Array<Message>} messages
- *
- * @return {Promise}
+ * @param  {Message[]} messages
  */
 async function sendToWebsockets(db, messages) {
   const desiredMessages = await filterWebsocketMessages(messages);
@@ -159,9 +151,9 @@ async function sendToWebsockets(db, messages) {
  * Remove messages that aren't intended for web-socket and those the users do
  * not wish to receive
  *
- * @param  {Array<Message>} messages
+ * @param  {Message[]} messages
  *
- * @return {Promise<Array<Message>>}
+ * @return {Message[]}
  */
 async function filterWebsocketMessages(messages) {
   return _.filter(messages, (message) => {
@@ -248,9 +240,9 @@ async function sendToPushRelays(db, messages) {
  * Remove messages that aren't push or if the user is already receiving
  * over websocket
  *
- * @param  {Array<Message>} messages
+ * @param  {Message[]} messages
  *
- * @return {Promise<Array<Message>>}
+ * @return {Message[]}
  */
 async function filterPushMessages(messages) {
   return _.filter(messages, (message) => {
@@ -455,7 +447,7 @@ let serverSignature;
 /**
  * Return a randomly generated server ID
  *
- * @return {Promise<String>}
+ * @return {string}
  */
 async function getServerSignature() {
   if (!serverSignature) {
@@ -483,10 +475,10 @@ function handleSignatureValidation(req, res) {
 /**
  * Post a request, retrying if a failure occurs
  *
- * @param  {String} url
+ * @param  {string} url
  * @param  {Object} payload
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function post(url, payload) {
   const method = 'post';

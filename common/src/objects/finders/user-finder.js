@@ -8,9 +8,9 @@ const emptyArray = [];
  * Find a user by ID
  *
  * @param  {Database} db
- * @param  {Number} id
+ * @param  {number} id
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findUser(db, id) {
   return db.findOne({
@@ -25,9 +25,9 @@ async function findUser(db, id) {
  * Find users by IDs
  *
  * @param  {Database} db
- * @param  {Array<Number>} ids
+ * @param  {number[]} ids
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findUsers(db, ids) {
   ids = uniqIds(ids);
@@ -45,9 +45,9 @@ async function findUsers(db, ids) {
  * Find all users
  *
  * @param  {Database} db
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findAllUsers(db, minimum) {
   return db.find({
@@ -62,9 +62,9 @@ async function findAllUsers(db, minimum) {
  * Find users who're members of given project(s)
  *
  * @param  {Database} db
- * @param  {Project|Array<Project>} projects
+ * @param  {Project|Project[]} projects
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findProjectMembers(db, projects) {
   const userIDs = [];
@@ -90,9 +90,9 @@ async function findProjectMembers(db, projects) {
  * Find users who aren't deleted
  *
  * @param  {Database} db
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findExistingUsers(db, minimum) {
   return db.find({
@@ -107,9 +107,9 @@ async function findExistingUsers(db, minimum) {
  * Find users who aren't deleted or disabled
  *
  * @param  {Database} db
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findActiveUsers(db, minimum) {
   return db.find({
@@ -127,10 +127,10 @@ async function findActiveUsers(db, minimum) {
  * Find users with given roles
  *
  * @param  {Database} db
- * @param  {Array<Role>} roles
- * @param  {Number|undefined} minimum
+ * @param  {Role[]} roles
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findUsersWithRoles(db, roles, minimum) {
   const ids = roles.map(r => r.id);
@@ -146,9 +146,9 @@ async function findUsersWithRoles(db, roles, minimum) {
  * Find users who're authors or co-authors of given stories
  *
  * @param  {Database} db
- * @param  {Array<Story>} stories
+ * @param  {Story[]} stories
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findStoryAuthors(db, stories) {
   const userIDs = stories.map(s => s.user_ids);
@@ -159,9 +159,9 @@ async function findStoryAuthors(db, stories) {
  * Find users who wrote a comment or liked a story
  *
  * @param  {Database} db
- * @param  {Array<Reaction>} reactions
+ * @param  {Reaction[]} reactions
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findReactionAuthors(db, reactions) {
   const userIDs = reactions.map(r => r.user_id);
@@ -172,9 +172,9 @@ async function findReactionAuthors(db, reactions) {
  * Find users to whom bookmarks were sent
  *
  * @param  {Database} db
- * @param  {Array<Bookmark>} bookmarks
+ * @param  {Bookmark[]} bookmarks
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findBookmarkRecipients(db, bookmarks) {
   const userIDs = bookmarks.map(bm => bm.target_user_id);
@@ -185,9 +185,9 @@ async function findBookmarkRecipients(db, bookmarks) {
  * Find users who sent the bookmarks
  *
  * @param  {Database} db
- * @param  {Array<Bookmark>} bookmarks
+ * @param  {Bookmark[]} bookmarks
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findBookmarkSenders(db, bookmarks) {
   const userIDs = bookmarks.map(bm => bm.user_ids);
@@ -198,9 +198,9 @@ async function findBookmarkSenders(db, bookmarks) {
  * Find users whose action is being notified
  *
  * @param  {Database} db
- * @param  {Array<Reaction>} reactions
+ * @param  {Reaction[]} reactions
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findNotificationTriggerers(db, notifications) {
   const userIDs = notifications.map(n => n.user_id);

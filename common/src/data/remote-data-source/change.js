@@ -178,8 +178,6 @@ export class Change {
    * Wait for earlier op to finish and obtain permanent IDs from its results
    *
    * @param  {Change}  earlierOp
-   *
-   * @return {Promise}
    */
   async acquirePermanentIDs(earlierOp) {
     try {
@@ -201,9 +199,9 @@ export class Change {
   /**
    * Look for a permanent id that was assigned by remote server
    *
-   * @param  {Number} temporaryID
+   * @param  {number} temporaryID
    *
-   * @return {Number|undefined}
+   * @return {number|undefined}
    */
   findPermanentID(temporaryID) {
     const index = this.delivered.findIndex(obj => obj.id === temporaryID);
@@ -221,7 +219,7 @@ export class Change {
    * Apply changes to search results
    *
    * @param  {Object} search
-   * @param  {Boolean} includeDeleted
+   * @param  {boolean} includeDeleted
    */
   apply(search, includeDeleted) {
     if (this.canceled) {
@@ -273,7 +271,7 @@ export class Change {
   /**
    * Return data that should be sent to the server
    *
-   * @return {Array<Object>}
+   * @return {Object[]}
    */
   deliverables() {
     this.delivered = this.objects.filter((object, index) => {
@@ -286,7 +284,7 @@ export class Change {
    * Remove deleted objects with temporary ids, returning true if there's
    * nothing left to be saved
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   noop() {
     if (this.dependentPromises.length > 0) {
@@ -308,7 +306,7 @@ export class Change {
    *
    * @param  {Object} other
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   matchLocation(other) {
     if (this.location.address !== other.address) {

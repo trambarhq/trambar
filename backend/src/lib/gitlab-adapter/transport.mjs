@@ -16,10 +16,10 @@ const PAGE_LIMIT = 5000;
  * Fetch data from Gitlab server
  *
  * @param  {Server} server
- * @param  {String} uri
+ * @param  {string} uri
  * @param  {Object|undefined} query
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function fetch(server, uri, query) {
   return request(server, uri, 'get', query);
@@ -29,10 +29,10 @@ async function fetch(server, uri, query) {
  * Fetch list of objects, returned potentially in multiple chunks
  *
  * @param  {Server} server
- * @param  {String} uri
+ * @param  {string} uri
  * @param  {Object|undefined} query
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function fetchAll(server, uri, query) {
   const objectList = [];
@@ -62,11 +62,9 @@ async function fetchAll(server, uri, query) {
  * Promise is fulfilled when all objects have been processed
  *
  * @param  {Server} server
- * @param  {String} uri
+ * @param  {string} uri
  * @param  {Object|undefined} query
  * @param  {Function} callback
- *
- * @return {Promise}
  */
 async function fetchEach(server, uri, query, callback) {
   const pageQuery = { page: 1, per_page: PAGE_SIZE, ...query };
@@ -104,11 +102,11 @@ async function fetchEach(server, uri, query, callback) {
  * specific user
  *
  * @param  {Server} server
- * @param  {String} uri
+ * @param  {string} uri
  * @param  {Object} payload
- * @param  {Number|undefined} userID
+ * @param  {number|undefined} userID
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function post(server, uri, payload, userID) {
   const token = await impersonate(server, userID);
@@ -120,11 +118,11 @@ async function post(server, uri, payload, userID) {
  * specific user
  *
  * @param  {Server} server
- * @param  {String} uri
+ * @param  {string} uri
  * @param  {Object} payload
- * @param  {Number|undefined} userID
+ * @param  {number|undefined} userID
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function put(server, uri, payload, userID) {
   const token = await impersonate(server, userID);
@@ -135,10 +133,8 @@ async function put(server, uri, payload, userID) {
  * Remove something at Gitlab server using a DELETE request
  *
  * @param  {Server} server
- * @param  {String} uri
- * @param  {Number|undefined} userID
- *
- * @return {Promise}
+ * @param  {string} uri
+ * @param  {number|undefined} userID
  */
 async function remove(server, uri, userID) {
   const token = await impersonate(server, userID);
@@ -151,9 +147,9 @@ let userImpersonations = {};
  * Obtain impersonation token for give user
  *
  * @param  {Server} server
- * @param  {String} userID
+ * @param  {string} userID
  *
- * @return {Promise<String|undefined>}
+ * @return {string|undefined}
  */
 async function impersonate(server, userID) {
   if (!userID) {
@@ -184,9 +180,9 @@ async function impersonate(server, userID) {
  * Get a list of impersonation tokens
  *
  * @param  {Server} server
- * @param  {Number} userID
+ * @param  {number} userID
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function getImpersonations(server, userID) {
   const url = `/users/${userID}/impersonation_tokens`;
@@ -198,10 +194,8 @@ async function getImpersonations(server, userID) {
  * Revoke an impersonation token
  *
  * @param  {Server} server
- * @param  {Number} userID
+ * @param  {number} userID
  * @param  {Object} ui
- *
- * @return {Promise}
  */
 async function deleteImpersonations(server, userID, ui) {
   const url = `/users/${userID}/impersonation_tokens/${ui.id}`;
@@ -212,10 +206,10 @@ async function deleteImpersonations(server, userID, ui) {
  * Create an impersonation token for given user
  *
  * @param  {Server} server
- * @param  {Number} userID
+ * @param  {number} userID
  * @param  {Object} props
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function createImpersonation(server, userID, props) {
   const url = `/users/${userID}/impersonation_tokens`;
@@ -227,7 +221,7 @@ async function createImpersonation(server, userID, props) {
  *
  * @param  {Server} server
  *
- * @return {Promise<Server>}
+ * @return {Server}
  */
 async function refresh(server) {
   const payload = {
@@ -265,13 +259,13 @@ const unreachableLocations = [];
  * When an error is encountered, try again unless the error is access violation
  *
  * @param  {Server} server
- * @param  {String} uri
- * @param  {String} method
+ * @param  {string} uri
+ * @param  {string} method
  * @param  {Object|undefined} query
  * @param  {Object|undefined} payload
- * @param  {String} userToken
+ * @param  {string} userToken
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function request(server, uri, method, query, payload, userToken) {
   const qs = QueryString.stringify(query);

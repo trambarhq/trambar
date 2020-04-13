@@ -154,11 +154,11 @@ async function handleDatabaseChanges(events) {
  * Added language-specific search indices to table
  *
  * @param  {Database} db
- * @param  {String} schema
- * @param  {String} table
- * @param  {languages} Array<String>
+ * @param  {string} schema
+ * @param  {string} table
+ * @param  {languages} string[]
  *
- * @return {Promise<Boolean>}
+ * @return {boolean}
  */
 async function addSearchIndices(db, schema, table, languages) {
   const taskLog = TaskLog.start('search-indices-add', { schema });
@@ -193,7 +193,7 @@ async function addSearchIndices(db, schema, table, languages) {
  *
  * @param  {Database} db
  *
- * @return {Promise<Boolean>}
+ * @return {boolean}
  */
 async function initializeDatabase(db) {
   await addDatabaseRoles(db);
@@ -230,7 +230,7 @@ async function addDatabaseRoles(db) {
  *
  * @param  {Database} db
  *
- * @return {Promise<Boolean>}
+ * @return {boolean}
  */
 async function upgradeDatabase(db) {
   const globalChanged = await upgradeSchema(db, 'global');
@@ -247,9 +247,9 @@ async function upgradeDatabase(db) {
  * Upgrade schema if necessary
  *
  * @param  {Database} db
- * @param  {String} schema
+ * @param  {string} schema
  *
- * @return {Promise<Boolean>}
+ * @return {boolean}
  */
 async function upgradeSchema(db, schema) {
   const accessors = getAccessors(schema);
@@ -288,9 +288,9 @@ async function upgradeSchema(db, schema) {
  * Create either a project-specific schema or the global schema
  *
  * @param  {Database} db
- * @param  {String} schema
+ * @param  {string} schema
  *
- * @return {Promise<Boolean>}
+ * @return {boolean}
  */
 async function createSchema(db, schema) {
   const taskLog = TaskLog.start('schema-create', { schema });
@@ -348,10 +348,10 @@ async function createSchema(db, schema) {
  * Drop a schema
  *
  * @param  {Database} db
- * @param  {String} schemaBefore
- * @param  {String} schemaAfter
+ * @param  {string} schemaBefore
+ * @param  {string} schemaAfter
  *
- * @return {Promise<Boolean>}
+ * @return {boolean}
  */
 async function deleteSchema(db, schema) {
   const taskLog = TaskLog.start('schema-delete', { schema });
@@ -373,10 +373,10 @@ async function deleteSchema(db, schema) {
  * Rename a schema
  *
  * @param  {Database} db
- * @param  {String} schemaBefore
- * @param  {String} schemaAfter
+ * @param  {string} schemaBefore
+ * @param  {string} schemaAfter
  *
- * @return {Promise<Boolean>}
+ * @return {boolean}
  */
 async function renameSchema(db, schemaBefore, schemaAfter) {
   const taskLog = TaskLog.start('schema-rename', { schema: schemaBefore });
@@ -397,9 +397,9 @@ async function renameSchema(db, schemaBefore, schemaAfter) {
  * Return version number of database schema from meta table
  *
  * @param  {Database} db
- * @param  {String} schema
+ * @param  {string} schema
  *
- * @return {Number}
+ * @return {number}
  */
 async function getSchemaVersion(db, schema) {
   const table = `"${schema}"."meta"`;
@@ -412,10 +412,8 @@ async function getSchemaVersion(db, schema) {
  * Create meta table and insert row with version number
  *
  * @param {Database} db
- * @param {String} schema
- * @param {Number} version
- *
- * @return {Promise}
+ * @param {string} schema
+ * @param {number} version
  */
 async function addSchemaVersion(db, schema, version) {
   let roleNames = _.map(roles, 'name');
@@ -438,10 +436,8 @@ async function addSchemaVersion(db, schema, version) {
  * Update meta table with version number
  *
  * @param {Database} db
- * @param {String} schema
- * @param {Number} version
- *
- * @return {Promise}
+ * @param {string} schema
+ * @param {number} version
  */
 async function setSchemaVersion(db, schema, version) {
   let table = `"${schema}"."meta"`;
@@ -454,7 +450,7 @@ async function setSchemaVersion(db, schema, version) {
  *
  * @param  {Database} db
  *
- * @return {Promise<Boolean>}
+ * @return {boolean}
  */
 async function createMessageQueue(db) {
   let roleNames = _.map(roles, 'name');

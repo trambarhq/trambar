@@ -7,9 +7,9 @@ const emptyArray = [];
  *
  * @param  {Database} db
  * @param  {User} user
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function findUserDevices(db, user, minimum) {
   if (!user) {

@@ -4,10 +4,10 @@ const table = 'spreadsheet';
  * Find a spreadsheet by id
  *
  * @param  {Database} db
- * @param  {String} schema
- * @param  {Number} id
+ * @param  {string} schema
+ * @param  {number} id
  *
- * @return {Promise<Spreadsheet>}
+ * @return {Spreadsheet}
  */
 function findSpreadsheet(db, schema, id) {
   return db.findOne({
@@ -22,9 +22,9 @@ function findSpreadsheet(db, schema, id) {
  * Find all spreadsheets
  *
  * @param  {Database} db
- * @param  {String} schema
+ * @param  {string} schema
  *
- * @return {Promise<Array<Spreadsheet>>}
+ * @return {Spreadsheet[]}
  */
 function findAllSpreadsheets(db, schema) {
   return db.find({

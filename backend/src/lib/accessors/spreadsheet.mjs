@@ -39,9 +39,7 @@ export class Spreadsheet extends Data {
    * Create table in schema
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -71,10 +69,10 @@ export class Spreadsheet extends Data {
    * Upgrade table in schema to given DB version (from one version prior)
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Number} version
+   * @param  {string} schema
+   * @param  {number} version
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async upgrade(db, schema, version) {
     if (version === 3) {
@@ -89,9 +87,7 @@ export class Spreadsheet extends Data {
    * Grant privileges to table to appropriate Postgres users
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async grant(db, schema) {
     const table = this.getTableName(schema);
@@ -106,9 +102,7 @@ export class Spreadsheet extends Data {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
@@ -119,11 +113,9 @@ export class Spreadsheet extends Data {
    * Add conditions to SQL query based on criteria object
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} criteria
    * @param  {Object} query
-   *
-   * @return {Promise}
    */
   static async apply(db, schema, criteria, query) {
     const { search, ...basic } = criteria;
@@ -136,9 +128,9 @@ export class Spreadsheet extends Data {
   /**
    * Return SQL expression that yield searchable text
    *
-   * @param  {String} languageCode
+   * @param  {string} languageCode
    *
-   * @return {String}
+   * @return {string}
    */
   static getSearchableText(languageCode) {
     return `"extractSpreadsheetText"(details, '${languageCode}')`;
@@ -149,12 +141,12 @@ export class Spreadsheet extends Data {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
@@ -189,10 +181,10 @@ export class Spreadsheet extends Data {
    * Save a row, appending a number if a name conflict occurs
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {user} object
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async saveUnique(db, schema, object) {
     // this doesn't work within a transaction

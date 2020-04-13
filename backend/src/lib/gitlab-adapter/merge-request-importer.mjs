@@ -22,8 +22,6 @@ import { Story } from '../accessors/story.mjs';
  * @param  {Project} project
  * @param  {User} author
  * @param  {Object} glEvent
- *
- * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent) {
   if (!glEvent.target_id) {
@@ -68,8 +66,6 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
  * @param  {Project} project
  * @param  {User} author
  * @param  {Object} glEvent
- *
- * @return {Promise}
  */
 async function processHookEvent(db, system, server, repo, project, author, glHookEvent) {
   if (glHookEvent.object_attributes.action !== 'update') {
@@ -120,7 +116,7 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {User} opener
- * @param  {Array<Object>} assignments
+ * @param  {Object[]} assignments
  * @param  {Object} glMergeRequest
  *
  * @return {Story}
@@ -209,8 +205,8 @@ function copyMergeRequestProperties(story, system, server, repo, opener, assignm
  * Retrieve merge request from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
- * @param  {Number} glMergeRequestNumber
+ * @param  {number} glProjectId
+ * @param  {number} glMergeRequestNumber
  *
  * @return {Object}
  */

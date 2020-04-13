@@ -16,9 +16,9 @@ import { Reaction } from '../accessors/reaction.mjs';
  * @param  {Project} project
  * @param  {Repo} repo
  * @param  {Story} story
- * @param  {Array<Object>} assignments
+ * @param  {Object[]} assignments
  *
- * @return {Promise<Array<Reaction>>}
+ * @return {Reaction[]}
  */
 async function importAssignments(db, server, project, repo, story, assignments) {
   const schema = project.name;
@@ -47,7 +47,7 @@ async function importAssignments(db, server, project, repo, story, assignments) 
  * @param  {Server} server
  * @param  {Object} glIssue
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function findIssueAssignments(db, server, glIssue) {
   const glIssueNumber = glIssue.iid;
@@ -63,7 +63,7 @@ async function findIssueAssignments(db, server, glIssue) {
  * @param  {Server} server
  * @param  {Object} glIssue
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function findMergeRequestAssignments(db, server, glMergeRequest) {
   const glMergeRequestNumber = glMergeRequest.iid;
@@ -78,9 +78,9 @@ async function findMergeRequestAssignments(db, server, glMergeRequest) {
  * @param  {Database} db
  * @param  {Server} server
  * @param  {Object} glObject
- * @param  {Array<Object>} glNotes
+ * @param  {Object[]} glNotes
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function findAssignmentsFromNotes(db, server, glObject, glNotes) {
   const assignments = [];
@@ -202,8 +202,8 @@ function copyAssignmentProperties(reaction, server, story, assignment) {
  * Retrieve system notes from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectID
- * @param  {Number} glIssueID
+ * @param  {number} glProjectID
+ * @param  {number} glIssueID
  *
  * @return {Object}
  */
@@ -216,8 +216,8 @@ async function fetchIssueNotes(server, glProjectID, glIssueNumber) {
  * Retrieve system notes from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectID
- * @param  {Number} glMergeRequestNumber
+ * @param  {number} glProjectID
+ * @param  {number} glMergeRequestNumber
  *
  * @return {Object}
  */

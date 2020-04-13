@@ -55,10 +55,10 @@ class LocaleManager extends EventEmitter {
   /**
    * Look up a phrase in phrase dictionary
    *
-   * @param  {String} phrase
+   * @param  {string} phrase
    * @param  {*} ...args
    *
-   * @return {String}
+   * @return {string}
    */
   translate(phrase, ...args) {
     const entry = this.phraseTable[phrase];
@@ -82,10 +82,10 @@ class LocaleManager extends EventEmitter {
   /**
    * Pick language text from a text object
    *
-   * @param  {Object|String} languageVersions
-   * @param  {String} overrideLanguageCode
+   * @param  {Object|string} languageVersions
+   * @param  {string} overrideLanguageCode
    *
-   * @return {String}
+   * @return {string}
    */
   pick(languageVersions, overrideLanguageCode) {
     if (typeof(languageVersions) === 'string') {
@@ -128,9 +128,9 @@ class LocaleManager extends EventEmitter {
   /**
    * Switch to a different locale
    *
-   * @param  {String} localeCode
+   * @param  {string} localeCode
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async change(localeCode) {
     localeCode = localeCode.toLowerCase();
@@ -187,9 +187,9 @@ class LocaleManager extends EventEmitter {
   /**
    * Load phrase table
    *
-   * @param  {String} languageCode
+   * @param  {string} languageCode
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async loadModule(languageCode) {
     const entry = this.directory.find(e => e.code === languageCode);
@@ -204,7 +204,7 @@ class LocaleManager extends EventEmitter {
    * Return phrase table from module country
    *
    * @param  {Object} module
-   * @param  {String} countryCode
+   * @param  {string} countryCode
    *
    * @return {Object}
    */
@@ -219,9 +219,9 @@ class LocaleManager extends EventEmitter {
   /**
    * Return code of country most strongly associated with given language
    *
-   * @param  {String} languageCode
+   * @param  {string} languageCode
    *
-   * @return {String}
+   * @return {string}
    */
   getDefaultCountry(languageCode) {
     const entry = this.directory.find(e => e.code === languageCode);
@@ -232,8 +232,8 @@ class LocaleManager extends EventEmitter {
    * Assign a gender to a name for so grammatically correctly phrases can
    * be formulated
    *
-   * @param  {String} name
-   * @param  {String} gender
+   * @param  {string} name
+   * @param  {string} gender
    */
   genderize(name, gender) {
     if (this.module.genderize) {

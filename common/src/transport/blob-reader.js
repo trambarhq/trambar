@@ -4,9 +4,9 @@ import { CordovaFile } from './cordova-file.js';
 /**
  * Load a file as Uint8Array
  *
- * @param  {Blob|CordovaFile|String} blob
+ * @param  {Blob|CordovaFile|string} blob
  *
- * @return {Promise<Uint8Array>}
+ * @return {Uint8Array}
  */
 async function loadUint8Array(blob) {
   let buffer = await loadArrayBuffer(blob);
@@ -19,7 +19,7 @@ async function loadUint8Array(blob) {
  *
  * @param  {Blob|CordovaFile} blob
  *
- * @return {Promise<ArrayBuffer>}
+ * @return {ArrayBuffer}
  */
 async function loadArrayBuffer(blob) {
   if (blob instanceof CordovaFile) {
@@ -42,9 +42,9 @@ async function loadArrayBuffer(blob) {
 /**
  * Load a file as string
  *
- * @param  {Blob|CordovaFile|String} blob
+ * @param  {Blob|CordovaFile|string} blob
  *
- * @return {Promise<String>}
+ * @return {string}
  */
 async function loadText(blob) {
   if (blob instanceof CordovaFile) {

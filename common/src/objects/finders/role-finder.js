@@ -8,9 +8,9 @@ const emptyArray = [];
  * Find a role by ID
  *
  * @param  {Database} db
- * @param  {Number} id
+ * @param  {number} id
  *
- * @return {Promise<Role>}
+ * @return {Role}
  */
 async function findRole(db, id) {
   return db.findOne({
@@ -25,9 +25,9 @@ async function findRole(db, id) {
  * Find all roles
  *
  * @param  {Database} db
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Role>>}
+ * @return {Role[]}
  */
 async function findAllRoles(db, minimum) {
   return db.find({
@@ -42,9 +42,9 @@ async function findAllRoles(db, minimum) {
  * Find roles that aren't deleted or disabled
  *
  * @param  {Database} db
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Role>>}
+ * @return {Role[]}
  */
 async function findActiveRoles(db, minimum) {
   return db.find({
@@ -62,9 +62,9 @@ async function findActiveRoles(db, minimum) {
  * Find roles that given users have
  *
  * @param  {Database} db
- * @param  {Array<User>} users
+ * @param  {User[]} users
  *
- * @return {Promise<Array<Role>>}
+ * @return {Role[]}
  */
 async function findRolesOfUsers(db, users) {
   // load roles that members have

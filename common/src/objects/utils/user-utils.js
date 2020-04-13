@@ -12,7 +12,7 @@ import { capitalize } from '../../utils/plain-text.js';
  * @param  {User} user
  * @param  {Project} project
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isMember(user, project) {
   if (!user || !project) {
@@ -27,7 +27,7 @@ function isMember(user, project) {
  * @param  {User} user
  * @param  {Project} project
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isPendingMember(user, project) {
   if (!user || !project) {
@@ -42,7 +42,7 @@ function isPendingMember(user, project) {
  * @param  {User} user
  * @param  {Project} project
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canViewProject(user, project) {
   if (isMember(user, project)) {
@@ -66,7 +66,7 @@ function canViewProject(user, project) {
  * @param  {User} user
  * @param  {Project} project
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canJoinProject(user, project) {
   if (!user || !project) {
@@ -85,7 +85,7 @@ function canJoinProject(user, project) {
  * @param  {User} user
  * @param  {Story} story
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isAuthor(user, story) {
   if (!user || !story) {
@@ -100,10 +100,10 @@ function isAuthor(user, story) {
 /**
  * Return true if user is the lead author
  *
- * @param  {Array<User>} authors
+ * @param  {User[]} authors
  * @param  {User} user
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isLeadAuthor(authors, user) {
   if (!authors || !user) {
@@ -115,10 +115,10 @@ function isLeadAuthor(authors, user) {
 /**
  * Return true if user is an coauthor
  *
- * @param  {Array<User>} authors
+ * @param  {User[]} authors
  * @param  {User} user
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isCoauthor(authors, user) {
   if (!authors || !user) {
@@ -132,7 +132,7 @@ function isCoauthor(authors, user) {
  *
  * @param  {User} user
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canModerate(user) {
   if (!user) {
@@ -149,9 +149,9 @@ function canModerate(user) {
  *
  * @param  {User} user
  * @param  {Story} story
- * @param  {String} access
+ * @param  {string} access
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canEditStory(user, story, access) {
   if (access !== 'read-write') {
@@ -179,9 +179,9 @@ function canEditStory(user, story, access) {
  *
  * @param  {User} user
  * @param  {Story} story
- * @param  {String} access
+ * @param  {string} access
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canHideStory(user, story, access) {
   if (access !== 'read-write') {
@@ -203,9 +203,9 @@ function canHideStory(user, story, access) {
  *
  * @param  {User} user
  * @param  {Story} story
- * @param  {String} access
+ * @param  {string} access
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canRemoveStory(user, story, access) {
   if (access !== 'read-write') {
@@ -230,9 +230,9 @@ function canRemoveStory(user, story, access) {
  *
  * @param  {User} user
  * @param  {Story} story
- * @param  {String} access
+ * @param  {string} access
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canBumpStory(user, story, access) {
   if (access !== 'read-write') {
@@ -252,10 +252,10 @@ function canBumpStory(user, story, access) {
  *
  * @param  {User} user
  * @param  {Story} story
- * @param  {Repo|Array<Repo>} repo
- * @param  {String} access
+ * @param  {Repo|Repo[]} repo
+ * @param  {string} access
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canAddIssue(user, story, repo, access) {
   if (repo instanceof Array) {
@@ -288,7 +288,7 @@ function canAddIssue(user, story, repo, access) {
  * @param  {User} user
  * @param  {Repo} repo
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canAccessRepo(user, repo) {
   if (!user || !repo) {
@@ -307,9 +307,9 @@ function canAccessRepo(user, repo) {
  *
  * @param  {User} user
  * @param  {Story} story
- * @param  {String} access
+ * @param  {string} access
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canCreateBookmark(user, story, access) {
   if (!user) {
@@ -323,9 +323,9 @@ function canCreateBookmark(user, story, access) {
  *
  * @param  {User} user
  * @param  {Story} story
- * @param  {String} access
+ * @param  {string} access
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canSendBookmarks(user, story, access) {
   if (user.type === 'guest') {
@@ -343,7 +343,7 @@ function canSendBookmarks(user, story, access) {
  * @param  {User} user
  * @param  {Reaction} reaction
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isRespondent(user, reaction) {
   if (!user || !reaction) {
@@ -361,9 +361,9 @@ function isRespondent(user, reaction) {
  * @param  {User} user
  * @param  {Story} story
  * @param  {Reaction} reaction
- * @param  {String} access
+ * @param  {string} access
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canEditReaction(user, story, reaction, access) {
   if (!user) {
@@ -388,9 +388,9 @@ function canEditReaction(user, story, reaction, access) {
  * @param  {User} user
  * @param  {Story} story
  * @param  {Reaction} reaction
- * @param  {String} access
+ * @param  {string} access
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canRemoveReaction(user, story, reaction, access) {
   if (canModerate(user)) {
@@ -423,9 +423,9 @@ function canRemoveReaction(user, story, reaction, access) {
  * @param  {User} user
  * @param  {Story} story
  * @param  {Reaction} reaction
- * @param  {String} access
+ * @param  {string} access
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canHideReaction(user, story, reaction, access) {
   if (reaction.type === 'vote') {
@@ -451,10 +451,10 @@ function canHideReaction(user, story, reaction, access) {
  * Return true if user can receive notification of given type
  *
  * @param  {User} user
- * @param  {Array<Repo>} repos
+ * @param  {Repo[]} repos
  * @param  {type} type
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canReceiveNotification(user, repos, type) {
   if (GitNotificationTypes.includes(type)) {
@@ -488,7 +488,7 @@ function canReceiveNotification(user, repos, type) {
  * @param  {User} user
  * @param  {Environment} env
  *
- * @return {String}
+ * @return {string}
  */
 function getUserName(user, env) {
   let { p } = env.locale;

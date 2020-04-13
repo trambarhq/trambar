@@ -58,7 +58,7 @@ export async function SnapshotList(props) {
       id = commit.substr(0, 8);
     }
 
-    const author = authors.find(u => u.id === snapshot.user_id);
+    const author = authors?.find(u => u.id === snapshot.user_id);
     const authorName = getUserName(author, env);
 
     const classNames = [ 'snapshot' ];

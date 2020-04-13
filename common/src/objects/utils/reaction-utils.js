@@ -13,7 +13,7 @@ import {
  *
  * @param  {Reaction} reaction
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isSaved(reaction) {
   if (!reaction) {
@@ -30,7 +30,7 @@ function isSaved(reaction) {
  *
  * @param  {Reaction} reaction
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isActuallyPublished(reaction) {
   if (!reaction) {
@@ -50,7 +50,7 @@ function isActuallyPublished(reaction) {
  *
  * @param  {Reaction} reaction
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isEditable(reaction) {
   if (!reaction) {
@@ -65,7 +65,7 @@ function isEditable(reaction) {
  *
  * @param  {Reaction} reaction
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function hasUncomittedChanges(reaction) {
   // a special property set by RemoteDataSource

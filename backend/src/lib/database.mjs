@@ -129,8 +129,8 @@ export class Database {
   /**
    * Wait for a schema to come into existence
    *
-   * @param  {String} schema
-   * @param  {Number} wait
+   * @param  {string} schema
+   * @param  {number} wait
    */
   async need(schema, wait) {
     const startTime = new Date;
@@ -160,9 +160,9 @@ export class Database {
   /**
    * Check if a schema exists
    *
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async schemaExists(schema) {
     const sql = `SELECT 1 FROM pg_namespace WHERE nspname = $1`;
@@ -173,9 +173,9 @@ export class Database {
   /**
    * Check if a user role exists
    *
-   * @param  {String} username
+   * @param  {string} username
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async roleExists(username) {
     const sql = `SELECT 1 FROM pg_roles WHERE rolname = $1`;
@@ -186,9 +186,9 @@ export class Database {
   /**
    * Check if a function exists
    *
-   * @param  {String} fname
+   * @param  {string} fname
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async functionExists(fname) {
     const sql = `SELECT 1 FROM pg_proc WHERE proname = $1;`;
@@ -199,9 +199,9 @@ export class Database {
   /**
    * Return list of all schemas
    *
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {Promise<Array<String>>}
+   * @return {string[]}
    */
   async getSchemaNames() {
     const sql = `
@@ -217,9 +217,9 @@ export class Database {
   /**
    * Return the size of a database schema (in bytes)
    *
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {Promise<Number>}
+   * @return {number}
    */
   async getSchemaSize(schema) {
     const sql = `
@@ -427,9 +427,9 @@ const TIMESTAMP_OID = 1114
 /**
  * Retrieve timestamps from Postgres as ISO strings
  *
- * @param  {String} val
+ * @param  {string} val
  *
- * @return {String}
+ * @return {string}
  */
 function parseDate(val) {
   if (val) {
@@ -444,9 +444,9 @@ Pg.types.setTypeParser(TIMESTAMP_OID, parseDate);
 /**
  * Retrieve bigint as Number unless doing so triggers an overflow
  *
- * @param  {String} val
+ * @param  {string} val
  *
- * @return {Number|String}
+ * @return {number|string}
  */
 function parseBigInt(val) {
   const num = parseInt(val);

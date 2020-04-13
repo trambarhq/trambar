@@ -34,9 +34,7 @@ export class Subscription extends Data {
    * Create table in schema
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -66,9 +64,7 @@ export class Subscription extends Data {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
@@ -80,12 +76,12 @@ export class Subscription extends Data {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
@@ -110,13 +106,13 @@ export class Subscription extends Data {
    * Import object sent by client-side code, applying access control
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} subscriptionReceived
    * @param  {Object} subscriptionBefore
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array>}
+   * @return {Object[]}
    */
   static async importOne(db, schema, subscriptionReceived, subscriptionBefore, credentials, options) {
     const row = await super.importOne(db, schema, subscriptionReceived, subscriptionBefore, credentials, options);
@@ -146,7 +142,7 @@ export class Subscription extends Data {
    * @param  {User} user
    * @param  {Subscription} subscription
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static isRelevantTo(event, user, subscription) {
     if (super.isRelevantTo(event, user, subscription)) {

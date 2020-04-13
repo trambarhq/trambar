@@ -24,9 +24,9 @@ export class LiveData extends Data {
    * (for reference purpose only)
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -52,9 +52,9 @@ export class LiveData extends Data {
    * Attach a modified trigger that accounts for atime, utime, and dirty.
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async createChangeTrigger(db, schema) {
     const table = this.getTableName(schema);
@@ -73,9 +73,7 @@ export class LiveData extends Data {
    * Attach modified triggers that accounts for atime, utime, and dirty.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async createNotificationTriggers(db, schema) {
     const table = this.getTableName(schema);
@@ -111,12 +109,12 @@ export class LiveData extends Data {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
@@ -139,12 +137,12 @@ export class LiveData extends Data {
    * Lock a row for updates
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Number} id
-   * @param  {String} interval
-   * @param  {String} columns
+   * @param  {string} schema
+   * @param  {number} id
+   * @param  {string} interval
+   * @param  {string} columns
    *
-   * @return {Promise<Object|null>}
+   * @return {Object|null}
    */
   static async lock(db, schema, id, interval, columns) {
     const table = this.getTableName(schema);
@@ -170,12 +168,12 @@ export class LiveData extends Data {
    * release the lock.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Number} id
+   * @param  {string} schema
+   * @param  {number} id
    * @param  {Object} props
-   * @param  {String} columns
+   * @param  {string} columns
    *
-   * @return {Promise<Object|null>}
+   * @return {Object|null}
    */
   static async unlock(db, schema, id, props, columns) {
     const table = this.getTableName(schema);
@@ -216,8 +214,6 @@ export class LiveData extends Data {
    * Unlock any previous locked row
    *
    * @param  {Database} db
-   *
-   * @return {Promise}
    */
   static async relinquish(db) {
     if (_.isEmpty(this.locked)) {
@@ -232,10 +228,8 @@ export class LiveData extends Data {
    * Mark rows as dirty
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Number>} ids
-   *
-   * @return {Promise}
+   * @param  {string} schema
+   * @param  {number[]} ids
    */
   static async invalidate(db, schema, ids) {
     const table = this.getTableName(schema);
@@ -251,7 +245,7 @@ export class LiveData extends Data {
    * Update a row's access time
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} row
    */
   static touch(db, schema, row) {
@@ -267,12 +261,12 @@ export class LiveData extends Data {
    * Ensure that rows exist in the database
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} keys
-   * @param  {Array<Object>} expectedRows
-   * @param  {String} columns
+   * @param  {Object[]} expectedRows
+   * @param  {string} columns
    *
-   * @return {Array<Object>}
+   * @return {Object[]}
    */
   static async vivify(db, schema, keys, expectedRows, columns) {
     // we need these columns in order to tell which rows are missing

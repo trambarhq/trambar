@@ -6,7 +6,7 @@ const emptyArray = [];
  *
  * @param  {Database} db
  *
- * @return {Promise<Array<Task>>}
+ * @return {Task[]}
  */
 async function findActiveTasks(db) {
   return db.find({
@@ -40,9 +40,9 @@ async function findFailedTasks(db) {
  *
  * @param  {Database} db
  * @param  {Server} server
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Task>>}
+ * @return {Task[]}
  */
 async function findServerTasks(db, server, minimum) {
   if (!server) {

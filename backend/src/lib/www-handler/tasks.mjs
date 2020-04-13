@@ -122,7 +122,7 @@ class TaskPurgeWiki extends BasicTask {
 
   async run() {
     const { schema, repoID, slug } = this;
-    const db = Database.open();
+    const db = await Database.open();
     const name = await getRepoName(db, repoID);
     const project = ProjectSettings.find({ name: schema });
     if (project) {

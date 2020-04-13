@@ -9,13 +9,13 @@ import * as CommitImporter from './commit-importer.mjs';
  * @param  {Database} db
  * @param  {Server} server
  * @param  {Repo} repo
- * @param  {String} type
- * @param  {String} branch
- * @param  {String} headID
- * @param  {String} tailID
- * @param  {Number} count
+ * @param  {string} type
+ * @param  {string} branch
+ * @param  {string} headID
+ * @param  {string} tailID
+ * @param  {number} count
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function reconstructPush(db, server, repo, type, branch, headID, tailID, count) {
   const commits = await importCommits(db, server, repo, branch, headID, tailID, count);
@@ -35,12 +35,12 @@ async function reconstructPush(db, server, repo, type, branch, headID, tailID, c
  * @param  {Database} db
  * @param  {Server} server
  * @param  {Repo} repo
- * @param  {String} branch
- * @param  {String} headID
- * @param  {String} tailID
- * @param  {Number} count
+ * @param  {string} branch
+ * @param  {string} headID
+ * @param  {string} tailID
+ * @param  {number} count
  *
- * @return {Promise<Object<Commits>>}
+ * @return {Object}
  */
 async function importCommits(db, server, repo, branch, headID, tailID, count) {
   const taskLog = TaskLog.start('gitlab-push-import', {
@@ -169,7 +169,7 @@ function findSourceBranches(commits, branch) {
  *
  * @param  {Commit} commit
  *
- * @return {Array<String>}
+ * @return {string[]}
  */
 function getParentIDs(commit) {
   const commitLink = _.find(commit.external, { type: 'gitlab' });
@@ -185,11 +185,11 @@ function getParentIDs(commit) {
 /**
  * Get a linear list of commits, choosing the first parent when a fork is encountered
  *
- * @param  {Object<Commit>} commits
- * @param  {String} headID
- * @param  {String} branch
+ * @param  {Object} commits
+ * @param  {string} headID
+ * @param  {string} branch
  *
- * @return {Array<Commit>}
+ * @return {Commit[]}
  */
 function getCommitChain(commits, headID, branch) {
   const chain = [];

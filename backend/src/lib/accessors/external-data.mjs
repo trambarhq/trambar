@@ -28,9 +28,7 @@ export class ExternalData extends Data {
    * (for reference purpose only)
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -90,12 +88,12 @@ export class ExternalData extends Data {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
@@ -113,9 +111,7 @@ export class ExternalData extends Data {
    * when a row is updated. Also add triggers that send notification messages.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async createChangeTrigger(db, schema) {
     const table = this.getTableName(schema);
@@ -134,9 +130,7 @@ export class ExternalData extends Data {
    * certain columns
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async createNotificationTriggers(db, schema) {
     const table = this.getTableName(schema);

@@ -24,7 +24,7 @@ function getDimensions(bytes) {
  *
  * @param  {Uint8Array} bytes
  *
- * @return {Number|undefined}
+ * @return {number|undefined}
  */
 function getOrientation(bytes) {
 	let short = beShort;
@@ -116,7 +116,7 @@ function extractPaths(bytes) {
  * @param  {Uint8Array}   bytes
  * @param  {Function} callback
  *
- * @return {Number}
+ * @return {number}
  */
 function findSegment(bytes, callback) {
 	let size = bytes.length;
@@ -146,7 +146,7 @@ function findSegment(bytes, callback) {
  *
  * @param  {Uint8Array} bytes
  *
- * @return {Number}
+ * @return {number}
  */
 function findPhotoshopSegment(bytes) {
 	return findSegment(bytes, (marker, p) => {
@@ -169,7 +169,7 @@ function findPhotoshopSegment(bytes) {
  * Parse 8BIM data in search of paths
  *
  * @param  {Uint8Array} bytes
- * @param  {Number} offset
+ * @param  {number} offset
  *
  * @return {Object|null}
  */
@@ -208,8 +208,8 @@ function parse8BIMData(bytes, offset) {
  * Parse a path at given offset
  *
  * @param  {Uint8Array} bytes
- * @param  {Number} offset
- * @param  {Number} size
+ * @param  {number} offset
+ * @param  {number} size
  *
  * @return {Array}
  */

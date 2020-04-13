@@ -116,9 +116,9 @@ function overrideRequire(preloaded) {
 
 /**
  * Spawn a child process to retrieve code synchronously from GitLab
- * @param  {String} path
+ * @param  {string} path
  *
- * @return {String}
+ * @return {string}
  */
 function downloadRemote(path) {
   const gitPath = path.substr(2);
@@ -181,7 +181,7 @@ function parseResponse(buffer) {
  *
  * @param  {ReadableStream} stream
  *
- * @return {Promise<Buffer>}
+ * @return {Buffer}
  */
 async function readStream(stream) {
   const chunks = [];
@@ -196,9 +196,7 @@ async function readStream(stream) {
  * Write data into a stream
  *
  * @param  {WritableStream} stream
- * @param  {Array<String|Buffer>} chunks
- *
- * @return {Promise}
+ * @param  {string[]|Buffer[]} chunks
  */
 async function writeStream(stream, chunks) {
   for (let chunk of chunks) {

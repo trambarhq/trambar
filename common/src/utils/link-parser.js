@@ -3,7 +3,7 @@ import _ from 'lodash';
 /**
  * Parse contents of a .ini file for properties of web bookmark
  *
- * @param  {String} text
+ * @param  {string} text
  *
  * @return {Object|null}
  */

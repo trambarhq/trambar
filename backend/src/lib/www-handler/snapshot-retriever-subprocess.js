@@ -30,9 +30,7 @@ async function run() {
  * Write data into a stream
  *
  * @param  {WritableStream} stream
- * @param  {Array<String|Buffer>} chunks
- *
- * @return {Promise}
+ * @param  {string[]|Buffer[]} chunks
  */
 async function writeStream(stream, chunks) {
   for (let chunk of chunks) {

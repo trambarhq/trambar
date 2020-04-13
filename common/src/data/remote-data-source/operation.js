@@ -35,7 +35,7 @@ export class Operation {
    *
    * @param  {Object} other
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   matchLocation(other) {
     if (this.address !== other.address) {
@@ -61,7 +61,7 @@ export class Operation {
   /**
    * Set the results, finish time, and the duration of the operation
    *
-   * @param  {Array<Object>} results
+   * @param  {Object[]} results
    */
   finish(results) {
     const then = new Date(this.startTime);
@@ -94,7 +94,7 @@ export class Operation {
   /**
    * Return the number of seconds since the operation finished
    *
-   * @return {Number}
+   * @return {number}
    */
   getTimeElapsed() {
     const then = new Date(this.finishTime);

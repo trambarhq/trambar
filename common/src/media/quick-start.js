@@ -3,7 +3,7 @@
  *
  * @param  {Blob} file
  *
- * @return {Promise<Blob|null>}
+ * @return {Blob|null}
  */
 async function optimizeVideo(file) {
   try {
@@ -45,11 +45,11 @@ async function optimizeVideo(file) {
  * fall within the indicated range
  *
  * @param  {UInt8Array} bytes
- * @param  {Number} offset
- * @param  {Number} end
- * @param  {Number} rangeStart
- * @param  {Number} rangeEnd
- * @param  {Number} shift
+ * @param  {number} offset
+ * @param  {number} end
+ * @param  {number} rangeStart
+ * @param  {number} rangeEnd
+ * @param  {number} shift
  */
 function shiftOffsets(bytes, offset, end, rangeStart, rangeEnd, shift) {
   while (offset < end) {
@@ -107,7 +107,7 @@ function shiftOffsets(bytes, offset, end, rangeStart, rangeEnd, shift) {
  *
  * @param  {Blob} file
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function loadPreambles(file) {
   const { size } = file;
@@ -147,9 +147,9 @@ async function loadPreambles(file) {
  * Load atom preamble at give offset
  *
  * @param  {Blob} blob
- * @param  {Number} offset
+ * @param  {number} offset
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function loadPreamble(blob, offset) {
   // load 16 bytes, just in case we need the 64-bit size
@@ -176,7 +176,7 @@ async function loadPreamble(blob, offset) {
  * @param  {Blob} blob
  * @param  {Object} preamble
  *
- * @return {Promise<ArrayBuffer>}
+ * @return {ArrayBuffer}
  */
 async function loadAtom(blob, preamble) {
   const { offset, size } = preamble;
@@ -187,10 +187,10 @@ async function loadAtom(blob, preamble) {
  * Obtain a chunk of bytes from a blob
  *
  * @param  {Blob} blob
- * @param  {Number} offset
- * @param  {Number} size
+ * @param  {number} offset
+ * @param  {number} size
  *
- * @return {Promise<ArrayBuffer>}
+ * @return {ArrayBuffer}
  */
 async function loadArrayBuffer(blob, offset, size) {
   const slice = blob.slice(offset, offset + size);
@@ -201,9 +201,9 @@ async function loadArrayBuffer(blob, offset, size) {
  * Return 32-bit big-endian integer at byte offset
  *
  * @param  {Uint8Array} b
- * @param  {Number} i
+ * @param  {number} i
  *
- * @return {Number}
+ * @return {number}
  */
 function BE32(b, i) {
   return b[i+0] << 24 | b[i+1] << 16 | b[i+2] << 8 | b[i+3];
@@ -213,9 +213,9 @@ function BE32(b, i) {
  * Return 64-bit big-endian integer at byte offset
  *
  * @param  {Uint8Array} b
- * @param  {Number} i
+ * @param  {number} i
  *
- * @return {Number}
+ * @return {number}
  */
 function BE64(b, i) {
   return b[i+0] << 56 | b[i+1] << 48 | b[i+2] << 40 | b[i+3] << 32
@@ -226,9 +226,9 @@ function BE64(b, i) {
  * Return 4-letter atom identifier
  *
  * @param  {Uint8Array} b
- * @param  {Number} i
+ * @param  {number} i
  *
- * @return {String}
+ * @return {string}
  */
 function NAME(b, i) {
   const chars = [];

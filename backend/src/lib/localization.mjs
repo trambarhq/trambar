@@ -21,11 +21,11 @@ async function load(locale) {
 /**
  * Return a phrase for the given locale
  *
- * @param  {String} phrase
+ * @param  {string} phrase
  * @param  {...} args
- * @param  {String} locale
+ * @param  {string} locale
  *
- * @return {String}
+ * @return {string}
  */
 function translate(phrase, args, locale) {
   const table = phraseTables[locale];
@@ -53,7 +53,7 @@ const phraseTables = {};
  * Return a string object of the name with the gender attached
  *
  * @param  {User} user
- * @param  {String} locale
+ * @param  {string} locale
  *
  * @return {Object}
  */
@@ -72,9 +72,9 @@ function getUserName(user, locale) {
  * Return a text from a multilingual text object
  *
  * @param  {Object} versions
- * @param  {String} locale
+ * @param  {string} locale
  *
- * @return {String}
+ * @return {string}
  */
 function pick(versions, locale) {
   let s;
@@ -95,7 +95,7 @@ function pick(versions, locale) {
  *
  * @param  {System|undefined} system
  *
- * @return {String}
+ * @return {string}
  */
 function getDefaultLanguageCode(system) {
   let lang = _.get(system, 'settings.input_languages.0');
@@ -110,9 +110,9 @@ const serverLanguageCode = (process.env.LANG || 'en').substr(0, 2).toLowerCase()
 /**
  * Extract language code from locale code
  *
- * @param  {String} locale
+ * @param  {string} locale
  *
- * @return {String}
+ * @return {string}
  */
 function getLanguageCode(locale) {
   let lang;

@@ -75,9 +75,7 @@ export class Story extends ExternalData {
    * Create table in schema
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -123,10 +121,10 @@ export class Story extends ExternalData {
    * Upgrade table in schema to given DB version (from one version prior)
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Number} version
+   * @param  {string} schema
+   * @param  {number} version
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async upgrade(db, schema, version) {
     if (version === 3) {
@@ -144,9 +142,7 @@ export class Story extends ExternalData {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
@@ -159,11 +155,11 @@ export class Story extends ExternalData {
    * Filter out rows that user doesn't have access to
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async filter(db, schema, rows, credentials) {
     if (credentials.user.type === 'guest') {
@@ -176,11 +172,9 @@ export class Story extends ExternalData {
    * Add conditions to SQL query based on criteria object
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} criteria
    * @param  {Object} query
-   *
-   * @return {Promise}
    */
   static async apply(db, schema, criteria, query) {
     const { lead_author_id, time_range, newer_than, older_than, bumped_after,
@@ -257,9 +251,9 @@ export class Story extends ExternalData {
   /**
    * Return SQL expression that yield searchable text
    *
-   * @param  {String} languageCode
+   * @param  {string} languageCode
    *
-   * @return {String}
+   * @return {string}
    */
   static getSearchableText(languageCode) {
     return `"extractStoryText"(type, details, external, '${languageCode}')`;
@@ -270,12 +264,12 @@ export class Story extends ExternalData {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array>}
+   * @return {Object[]}
    */
   static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
@@ -315,13 +309,13 @@ export class Story extends ExternalData {
    * Import objects sent by client-side code, applying access control
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} storiesReceived
-   * @param  {Array<Object>} storiesBefore
+   * @param  {string} schema
+   * @param  {Object[]} storiesReceived
+   * @param  {Object[]} storiesBefore
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array>}
+   * @return {Object[]}
    */
   static async import(db, schema, storiesReceived, storiesBefore, credentials, options) {
     const storiesPublished = [];
@@ -407,13 +401,11 @@ export class Story extends ExternalData {
    * rows in other tables
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} storiesReceived
-   * @param  {Array<Object>} storiesBefore
-   * @param  {Array<Object>} storiesAfter
+   * @param  {string} schema
+   * @param  {Object[]} storiesReceived
+   * @param  {Object[]} storiesBefore
+   * @param  {Object[]} storiesAfter
    * @param  {Object} credentials
-   *
-   * @return {Promise}
    */
    static async associate(db, schema, storiesReceived, storiesBefore, storiesAfter, credentials) {
      const deletedStories = _.filter(storiesAfter, { deleted: true });
@@ -428,7 +420,7 @@ export class Story extends ExternalData {
    * @param  {User} user
    * @param  {Subscription} subscription
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static isRelevantTo(event, user, subscription) {
     if (subscription.area === 'admin') {
@@ -500,10 +492,8 @@ export class Story extends ExternalData {
    * at the time when the stories were created.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Number>} userIDs
-   *
-   * @return {Promise}
+   * @param  {string} schema
+   * @param  {number[]} userIDs
    */
   static async updateUserRoles(db, schema, userIDs) {
     const userTable = User.getTableName('global');
@@ -546,10 +536,8 @@ export class Story extends ExternalData {
    * Mark stories as deleted if their lead authors are those specified
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} associations
-   *
-   * @return {Promise}
    */
   static async deleteAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
@@ -573,10 +561,8 @@ export class Story extends ExternalData {
    * Clear deleted flag of stories beloging to specified users
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} associations
-   *
-   * @return {Promise}
    */
   static async restoreAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {

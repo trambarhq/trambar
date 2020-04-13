@@ -5,7 +5,7 @@ import { findLinkByRelative } from './external-data-utils.js';
  * arrange it in a more intuitive fashion
  *
  * @param  {Story} story
- * @param  {Array<Repo>} repos
+ * @param  {Repo[]} repos
  *
  * @return {Object|null}
  */

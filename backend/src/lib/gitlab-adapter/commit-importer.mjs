@@ -15,10 +15,10 @@ import { Commit } from '../accessors/commit.mjs';
  * @param  {Database} db
  * @param  {Server} server
  * @param  {Repo} repo
- * @param  {String} glBranch
- * @param  {String} glCommitID
+ * @param  {string} glBranch
+ * @param  {string} glCommitID
  *
- * @return {Promise<Commit>}
+ * @return {Commit}
  */
 async function importCommit(db, server, repo, glBranch, glCommitID) {
   // first, check if the commit was previously imported
@@ -46,7 +46,7 @@ async function importCommit(db, server, repo, glBranch, glCommitID) {
  * @param  {Commit|null} commit
  * @param  {Server} server
  * @param  {Repo} repo
- * @param  {String} glBranch
+ * @param  {string} glBranch
  * @param  {Object} glCommit
  * @param  {Object} glDiff
  *
@@ -105,10 +105,10 @@ function copyCommitProperties(commit, server, repo, glBranch, glCommit, glDiff) 
  * Retrieve commit info from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectID
- * @param  {String} glCommitID
+ * @param  {number} glProjectID
+ * @param  {string} glCommitID
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function fetchCommit(server, glProjectID, glCommitID) {
   const url = `/projects/${glProjectID}/repository/commits/${glCommitID}`;
@@ -119,10 +119,10 @@ async function fetchCommit(server, glProjectID, glCommitID) {
  * Retrieve the diff of a commit with its parent
  *
  * @param  {Server} server
- * @param  {Number} glProjectID
- * @param  {String} glCommitID
+ * @param  {number} glProjectID
+ * @param  {string} glCommitID
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function fetchDiff(server, glProjectID, glCommitID) {
   const url = `/projects/${glProjectID}/repository/commits/${glCommitID}/diff`;
@@ -250,9 +250,9 @@ function countChanges(glDiff) {
 /**
  * Generate MD5 hash of text
  *
- * @param  {String} text
+ * @param  {string} text
  *
- * @return {String}
+ * @return {string}
  */
 function hash(text) {
   const hash = Crypto.createHash('md5').update(text);

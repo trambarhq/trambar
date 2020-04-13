@@ -8,9 +8,9 @@ const emptyArray = [];
  * Find server by ID
  *
  * @param  {Database} db
- * @param  {Number} id
+ * @param  {number} id
  *
- * @return {Promise<Server>}
+ * @return {Server}
  */
 async function findServer(db, id) {
   return db.findOne({
@@ -25,9 +25,9 @@ async function findServer(db, id) {
  * Find server by ID
  *
  * @param  {Database} db
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Server>>}
+ * @return {Server[]}
  */
 async function findAllServers(db, minimum) {
   return db.find({
@@ -43,7 +43,7 @@ async function findAllServers(db, minimum) {
  *
  * @param  {Database} db
  *
- * @return {Promise<Array<Server>>}
+ * @return {Server[]}
  */
 async function findRepoServers(db, repos) {
   const ids = [];

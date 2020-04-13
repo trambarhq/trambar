@@ -61,7 +61,7 @@ class LocalStorageCache {
    *
    * @param  {Object} query
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async find(query) {
     const { server = 'localhost', schema, table, criteria } = query;
@@ -88,9 +88,9 @@ class LocalStorageCache {
    * Save objects originating from specified location into cache
    *
    * @param  {Object} location
-   * @param  {Array<Object>} objects
+   * @param  {Object[]} objects
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async save(location, objects) {
     const { server = 'localhost', schema, table } = location;
@@ -107,9 +107,9 @@ class LocalStorageCache {
    * Remove objects from cache that originated from specified location
    *
    * @param  {Object} location
-   * @param  {Array<Object>} objects
+   * @param  {Object[]} objects
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async remove(location, objects) {
     const { server = 'localhost', schema, table } = location;
@@ -133,7 +133,7 @@ class LocalStorageCache {
    *
    * @param  {Object} criteria
    *
-   * @return {Promise<Number>}
+   * @return {number}
    */
   async clean(criteria) {
     const store = this.remoteData;
@@ -204,8 +204,8 @@ class LocalStorageCache {
   /**
    * Clear objects cached in memory
    *
-   * @param  {String|undefined} address
-   * @param  {String|undefined} schema
+   * @param  {string|undefined} address
+   * @param  {string|undefined} schema
    */
   reset(address, schema) {
     if (schema !== 'local') {

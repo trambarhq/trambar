@@ -15,7 +15,7 @@ export class ChangeMonitor {
    *
    * @param  {Object} other
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   match(other) {
     if (this.address !== other.address) {

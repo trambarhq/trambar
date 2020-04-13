@@ -10,7 +10,7 @@ class IndexedDBCache {
   /**
    * Return true if IndexedDB is available
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static isAvailable() {
     return !!window.indexedDB;
@@ -43,7 +43,7 @@ class IndexedDBCache {
    *
    * @param  {Object} query
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async find(query) {
     const { address = '', schema, table, criteria } = query;
@@ -83,9 +83,9 @@ class IndexedDBCache {
    * Save objects originating from specified location into cache
    *
    * @param  {Object} location
-   * @param  {Array<Object>} objects
+   * @param  {Object[]} objects
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async save(location, objects) {
     const { address = '', schema, table } = location;
@@ -122,9 +122,9 @@ class IndexedDBCache {
    * Remove objects from cache that originated from specified location
    *
    * @param  {Object} location
-   * @param  {Array<Object>} objects
+   * @param  {Object[]} objects
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async remove(location, objects) {
     const { address = '', schema, table } = location;
@@ -164,7 +164,7 @@ class IndexedDBCache {
    *
    * @param  {Object} criteria
    *
-   * @return {Promise<Number>}
+   * @return {number}
    */
   async clean(criteria) {
     try {
@@ -290,7 +290,7 @@ class IndexedDBCache {
   /**
    * Open database, creating schema if it doesn't exist already
    *
-   * @return {Promise<IDBDatabase>}
+   * @return {IDBDatabase}
    */
   async open() {
     if (!this.databasePromise) {
@@ -323,7 +323,7 @@ class IndexedDBCache {
   /**
    * Destroy the IndexedDB database completely
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async destroy() {
     return new Promise((resolve, reject) => {
@@ -341,8 +341,8 @@ class IndexedDBCache {
   /**
    * Clear objects cached in memory
    *
-   * @param  {String|undefined} address
-   * @param  {String|undefined} schema
+   * @param  {string|undefined} address
+   * @param  {string|undefined} schema
    */
   reset(address, schema) {
     const path = [];
@@ -363,9 +363,9 @@ class IndexedDBCache {
   /**
    * Return name of object store
    *
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {String}
+   * @return {string}
    */
   getObjectStoreName(schema) {
     if (schema === 'local') {
@@ -378,9 +378,9 @@ class IndexedDBCache {
   /**
    * Return name of object key
    *
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {String}
+   * @return {string}
    */
   getObjectKeyName(schema) {
     if (schema === 'local') {
@@ -393,11 +393,11 @@ class IndexedDBCache {
   /**
    * Return path to table
    *
-   * @param  {String} address
-   * @param  {String} schema
-   * @param  {String} table
+   * @param  {string} address
+   * @param  {string} schema
+   * @param  {string} table
    *
-   * @return {String}
+   * @return {string}
    */
   getTablePath(address, schema, table) {
     if (schema === 'local') {
@@ -410,9 +410,9 @@ class IndexedDBCache {
   /**
    * Return a function for generating primary key
    *
-   * @param  {String} address
-   * @param  {String} schema
-   * @param  {String} table
+   * @param  {string} address
+   * @param  {string} schema
+   * @param  {string} table
    *
    * @return {Function}
    */
@@ -433,9 +433,9 @@ class IndexedDBCache {
   /**
    * Return in-memory object for storing table rows
    *
-   * @param  {String} address
-   * @param  {String} schema
-   * @param  {String} table
+   * @param  {string} address
+   * @param  {string} schema
+   * @param  {string} table
    *
    * @return {Object}
    */
@@ -460,11 +460,11 @@ class IndexedDBCache {
   /**
    * Update list of objects that have been loaded
    *
-   * @param  {String} address
-   * @param  {String} schema
-   * @param  {String} table
-   * @param  {Array<Objects>} objects
-   * @param  {Boolean} remove
+   * @param  {string} address
+   * @param  {string} schema
+   * @param  {string} table
+   * @param  {Object[]} objects
+   * @param  {boolean} remove
    */
   updateTableEntry(address, schema, table, objects, remove) {
     let tbl = this.getTableEntry(address, schema, table);
@@ -491,11 +491,11 @@ class IndexedDBCache {
   /**
    * Fetch cached rows of a table
    *
-   * @param  {String} address
-   * @param  {String} schema
-   * @param  {String} table
+   * @param  {string} address
+   * @param  {string} schema
+   * @param  {string} table
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async fetchTable(address, schema, table) {
     const tbl = this.getTableEntry(address, schema, table);
@@ -508,12 +508,12 @@ class IndexedDBCache {
   /**
    * Load all rows for a table into memory
    *
-   * @param  {String} address
-   * @param  {String} schema
-   * @param  {String} table
+   * @param  {string} address
+   * @param  {string} schema
+   * @param  {string} table
    * @param  {Object} tbl
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   async loadTable(address, schema, table, tbl) {
     const db = await this.open();
@@ -546,8 +546,8 @@ class IndexedDBCache {
   /**
    * Count the number of rows in the object store (on a time delay)
    *
-   * @param  {String} schema
-   * @param  {Number} delay
+   * @param  {string} schema
+   * @param  {number} delay
    */
   updateRecordCount(schema, delay) {
     const storeName = this.getObjectStoreName(schema);

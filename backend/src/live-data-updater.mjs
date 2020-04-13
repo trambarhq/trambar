@@ -80,7 +80,7 @@ async function stop() {
 /**
  * Called by Postgres change notification triggers
  *
- * @param  {Array<Object>} events
+ * @param  {Object[]} events
  */
 function handleCleanRequests(events) {
   // filter out events from other tests
@@ -104,7 +104,7 @@ function handleCleanRequests(events) {
 /**
  * Called when monitored tables have changed
  *
- * @param  {Array<Object>} events
+ * @param  {Object[]} events
  */
 function handleRatingDependencyChanges(events) {
   for (let event of events) {
@@ -119,7 +119,7 @@ function handleRatingDependencyChanges(events) {
 /**
  * Called when story table has changed
  *
- * @param  {Array<Object>} events
+ * @param  {Object[]} events
  */
 function handleStoryChanges(events) {
   // invalidate story cache
@@ -140,8 +140,6 @@ function handleStoryChanges(events) {
  * Fetch dirty statistics records from database and place them in update queues
  *
  * @param  {Database} db
- *
- * @return {Promise}
  */
 async function queueDirtyStatistics(db) {
   const schemas = await getProjectSchemas(db);
@@ -165,8 +163,6 @@ async function queueDirtyStatistics(db) {
  * Fetch dirty listings from database and place them in update queues
  *
  * @param  {Database} db
- *
- * @return {Promise}
  */
 async function queueDirtyListings(db) {
   const schemas = await getProjectSchemas(db);
@@ -196,9 +192,9 @@ const statisticsUpdateQueue = new AsyncQueue('priority', 'desc');
  * Add statistics row to update queue, with priority based on how recently
  * it was accessed
  *
- * @param {String} schema
- * @param {Number} id
- * @param {String} atime
+ * @param {string} schema
+ * @param {number} id
+ * @param {string} atime
  */
 function addToStatisticsQueue(schema, id, atime) {
   // use access time to determine priority of update
@@ -244,10 +240,10 @@ function haltStatisticsQueue() {
 /**
  * Update a statistics row, identified by id
  *
- * @param  {String} schema
- * @param  {Number} id
+ * @param  {string} schema
+ * @param  {number} id
  *
- * @return {Promise<Statistics|null>}
+ * @return {Statistics|null}
  */
 async function updateStatistics(schema, id) {
   const taskLog = TaskLog.start('statistics-update', {
@@ -286,9 +282,9 @@ const listingUpdateQueue = new AsyncQueue('priority', 'desc');
  * Add listing row to update queue, with priority based on how recently
  * it was accessed
  *
- * @param {String} schema
- * @param {Number} id
- * @param {String} atime
+ * @param {string} schema
+ * @param {number} id
+ * @param {string} atime
  */
 function addToListingQueue(schema, id, atime) {
   const elapsed = getTimeElapsed(atime, new Date);
@@ -329,10 +325,8 @@ function haltListingQueue() {
 /**
  * Update a listing, identified by id
  *
- * @param  {String} schema
- * @param  {Number} id
- *
- * @return {Promise}
+ * @param  {string} schema
+ * @param  {number} id
  */
 async function updateListing(schema, id) {
   const taskLog = TaskLog.start('list-update', {
@@ -474,11 +468,11 @@ async function updateListing(schema, id) {
  * Call prepareContext() on each story raters
  *
  * @param  {Database} db
- * @param  {String} schema
- * @param  {Array<Story>} stories
+ * @param  {string} schema
+ * @param  {Story[]} stories
  * @param  {Listing} listing
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function prepareStoryRaterContexts(db, schema, stories, listing) {
   const contexts = {};
@@ -495,7 +489,7 @@ async function prepareStoryRaterContexts(db, schema, stories, listing) {
  * @param  {Object} contexts
  * @param  {Story} story
  *
- * @return {Number}
+ * @return {number}
  */
 function calculateStoryRating(contexts, story) {
   let total = 0;
@@ -511,7 +505,7 @@ function calculateStoryRating(contexts, story) {
  *
  * @param  {Database} db
  *
- * @return {Promise<Array<String>>}
+ * @return {string[]}
  */
 async function getProjectSchemas(db) {
   const rows = await Project.find(db, 'global', { deleted: false }, 'name');
@@ -523,9 +517,9 @@ async function getProjectSchemas(db) {
  * Return username for logging purpose
  *
  * @param  {Database} db
- * @param  {Number} id
+ * @param  {number} id
  *
- * @return {Promise<String>}
+ * @return {string}
  */
 async function getUserName(db, id) {
   const users = await User.findCached(db, 'global', { deleted: false }, 'id, username');
@@ -536,10 +530,10 @@ async function getUserName(db, id) {
 /**
  * Return the difference between two timestamps in milliseconds
  *
- * @param  {String|Date} start
- * @param  {String|Date} end
+ * @param  {string|Date} start
+ * @param  {string|Date} end
  *
- * @return {Number}
+ * @return {number}
  */
 function getTimeElapsed(start, end) {
   if (!start) {

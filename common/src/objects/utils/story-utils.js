@@ -10,7 +10,7 @@ import { cloneDeep, get, set, isEmpty, decoupleSet, decoupleUnset } from 'common
  *
  * @param  {Story}  story
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isSaved(story) {
   if (!story) {
@@ -27,7 +27,7 @@ function isSaved(story) {
  *
  * @param  {Story}  story
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isActuallyPublished(story) {
   if (!story) {
@@ -44,7 +44,7 @@ function isActuallyPublished(story) {
  *
  * @param  {Story}  story
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isEditable(story) {
   if (!story) {
@@ -66,7 +66,7 @@ function isEditable(story) {
  *
  * @param  {Story}  story
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isCancelable(story) {
   if (!story) {
@@ -83,7 +83,7 @@ function isCancelable(story) {
  *
  * @param  {Story}  story
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function hasContents(story) {
   if (!story) {
@@ -104,7 +104,7 @@ function hasContents(story) {
  *
  * @param  {Story}  story
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isTrackable(story) {
   if (!story) {
@@ -122,10 +122,10 @@ function isTrackable(story) {
  * Return true if story is published within the given time
  *
  * @param  {Story}  story
- * @param  {Number}  time
- * @param  {String}  unit
+ * @param  {number}  time
+ * @param  {string}  unit
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function wasPublishedWithin(story, time, unit) {
   if (!story || !story.published) {
@@ -145,10 +145,10 @@ function wasPublishedWithin(story, time, unit) {
  * Return true if story is published within the given time
  *
  * @param  {Story}  story
- * @param  {Number}  time
- * @param  {String}  unit
+ * @param  {number}  time
+ * @param  {string}  unit
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function wasBumpedWithin(story, time, unit) {
   if (!story || !story.published) {
@@ -170,7 +170,7 @@ function wasBumpedWithin(story, time, unit) {
  *
  * @param  {Story} story
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function hasUncomittedChanges(story) {
   // a special property set by RemoteDataSource
@@ -184,7 +184,7 @@ function hasUncomittedChanges(story) {
  * @param  {Story} remote
  * @param  {Story} common
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function mergeRemoteChanges(local, remote, common) {
   if (!remote) {

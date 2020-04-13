@@ -10,7 +10,7 @@ const table = 'statistics';
  * @param  {Database} db
  * @param  {Object} project
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function findStatistics(db, params) {
   let type, user, project, publicOnly = false;
@@ -47,9 +47,9 @@ async function findStatistics(db, params) {
  *
  * @param  {Database} db
  * @param  {Project} project
- * @param  {Boolean} publicOnly
+ * @param  {boolean} publicOnly
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function findDailyActivitiesOfProject(db, project, publicOnly) {
   if (!project || project.deleted) {
@@ -97,9 +97,9 @@ async function findDailyActivitiesOfProject(db, project, publicOnly) {
  * Fetch daily activities of multiple projects, with results keyed by project id
  *
  * @param  {Database} db
- * @param  {Array<Project>} projects
+ * @param  {Project[]} projects
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function findDailyActivitiesOfProjects(db, projects) {
   const results = {};
@@ -114,9 +114,9 @@ async function findDailyActivitiesOfProjects(db, projects) {
  *
  * @param  {Database} db
  * @param  {Project} project
- * @param  {Boolean} publicOnly
+ * @param  {boolean} publicOnly
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function findDailyActivitiesOfUser(db, project, user, publicOnly) {
   if (!user || user.deleted) {
@@ -131,10 +131,10 @@ async function findDailyActivitiesOfUser(db, project, user, publicOnly) {
  *
  * @param  {Database} db
  * @param  {Project} project
- * @param  {Array<User>} users
- * @param  {Boolean} publicOnly
+ * @param  {User[]} users
+ * @param  {boolean} publicOnly
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
   if (!project || project.deleted) {
@@ -207,7 +207,7 @@ async function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
  * @param  {Project} project
  * @param  {User} user
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function findDailyNotificationsOfUser(db, project, user) {
   if (!user || user.deleted) {
@@ -222,9 +222,9 @@ async function findDailyNotificationsOfUser(db, project, user) {
  *
  * @param  {Database} db
  * @param  {Project} project
- * @param  {Array<User>} users
+ * @param  {User[]} users
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function findDailyNotificationsOfUsers(db, project, users) {
   if (!project || project.deleted) {
@@ -291,7 +291,7 @@ async function findDailyNotificationsOfUsers(db, project, users) {
  * @param  {Project} project
  * @param  {Repo} repo
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function findDailyActivitiesOfRepo(db, project, repo) {
   if (!project || project.deleted || !repo || repo.deleted) {
@@ -306,9 +306,9 @@ async function findDailyActivitiesOfRepo(db, project, repo) {
  *
  * @param  {Database} db
  * @param  {Project} project
- * @param  {Array<Repo>} repos
+ * @param  {Repo[]} repos
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function findDailyActivitiesOfRepos(db, project, repos) {
   if (!project || project.deleted) {

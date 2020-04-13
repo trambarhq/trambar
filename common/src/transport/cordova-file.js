@@ -23,7 +23,7 @@ class CordovaFile {
   /**
    * Get the FileEntry object
    *
-   * @return {Promise<FileEntry>}
+   * @return {FileEntry}
    */
   async getFileEntry() {
     if (!this.fileEntry) {
@@ -75,8 +75,6 @@ class CordovaFile {
 
   /**
    * Obtain the size and mime type of the file
-   *
-   * @return {Promise}
    */
   async obtainMetadata() {
     await this.getFile();
@@ -84,8 +82,6 @@ class CordovaFile {
 
   /**
    * Remove the file
-   *
-   * @return {Promise}
    */
   async remove() {
     let fileEntry = await this.getFileEntry();

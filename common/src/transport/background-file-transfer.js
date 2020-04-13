@@ -33,9 +33,9 @@ function initializeBackgroundTransfer() {
 /**
  * Queue a file for background upload
  *
- * @param  {String} token
- * @param  {String} path
- * @param  {String} url
+ * @param  {string} token
+ * @param  {string} path
+ * @param  {string} url
  * @param  {Object|undefined} options
  */
 function performBackgroundTransfer(token, path, url, options) {
@@ -61,9 +61,7 @@ function performBackgroundTransfer(token, path, url, options) {
 /**
  * Cancel an upload
  *
- * @param  {String} token
- *
- * @return {Promise}
+ * @param  {string} token
  */
 function cancelBackgroundTransfer(token) {
   return new Promise((resolve, reject) => {

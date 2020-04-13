@@ -15,7 +15,7 @@ class SQLiteCache {
   /**
    * Return true if SQLite is available
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static isAvailable() {
     return !!openDatabase;
@@ -47,7 +47,7 @@ class SQLiteCache {
    *
    * @param  {Object} query
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async find(query) {
     const { address = '', schema, table, criteria } = query;
@@ -88,9 +88,9 @@ class SQLiteCache {
    * Save objects originating from specified location into cache
    *
    * @param  {Object} location
-   * @param  {Array<Object>} objects
+   * @param  {Object[]} objects
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async save(location, objects) {
     const { address = '', schema, table } = location;
@@ -125,9 +125,9 @@ class SQLiteCache {
    * Remove objects from cache that originated from specified location
    *
    * @param  {Object} location
-   * @param  {Array<Object>} objects
+   * @param  {Object[]} objects
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async remove(location, objects) {
     const { address = '', schema, table } = location;
@@ -168,7 +168,7 @@ class SQLiteCache {
    *
    * @param  {Object} criteria
    *
-   * @return {Promise<Number>}
+   * @return {number}
    */
   async clean(criteria) {
     let sql, params;
@@ -220,10 +220,10 @@ class SQLiteCache {
   /**
    * Run a query and return the resulting rows
    *
-   * @param  {String} sql
-   * @param  {Array<*>} params
+   * @param  {string} sql
+   * @param  {*[]} params
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async query(sql, params) {
     const db = await this.open();
@@ -245,10 +245,8 @@ class SQLiteCache {
   /**
    * Execute a SQL statement
    *
-   * @param  {String} sql
-   * @param  {Array<*>} params
-   *
-   * @return {Promise}
+   * @param  {string} sql
+   * @param  {*[]} params
    */
   async execute(sql, params) {
     const db = await this.open();
@@ -274,11 +272,11 @@ class SQLiteCache {
   /**
    * Fetch cached rows of a table
    *
-   * @param  {String} address
-   * @param  {String} schema
-   * @param  {String} table
+   * @param  {string} address
+   * @param  {string} schema
+   * @param  {string} table
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   fetchTable(address, schema, table) {
     const tbl = this.getTableEntry(address, schema, table);
@@ -291,12 +289,12 @@ class SQLiteCache {
   /**
    * Load all rows for a table into memory
    *
-   * @param  {String} address
-   * @param  {String} schema
-   * @param  {String} table
+   * @param  {string} address
+   * @param  {string} schema
+   * @param  {string} table
    * @param  {Object} tbl
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   async loadTable(address, schema, table, tbl) {
     let sql, params;
@@ -326,7 +324,7 @@ class SQLiteCache {
   /**
    * Open database, creating schema if it doesn't exist already
    *
-   * @return {Promise<Database>}
+   * @return {Database}
    */
   open() {
     if (!this.databasePromise) {
@@ -403,8 +401,8 @@ class SQLiteCache {
   /**
    * Clear objects cached in memory
    *
-   * @param  {String|undefined} address
-   * @param  {String|undefined} schema
+   * @param  {string|undefined} address
+   * @param  {string|undefined} schema
    */
   reset(address, schema) {
     const path = [];
@@ -425,9 +423,9 @@ class SQLiteCache {
   /**
    * Return name of object key
    *
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {String}
+   * @return {string}
    */
   getObjectKeyName(schema) {
     if (schema === 'local') {
@@ -440,9 +438,9 @@ class SQLiteCache {
   /**
    * Return in-memory object for storing table rows
    *
-   * @param  {String} address
-   * @param  {String} schema
-   * @param  {String} table
+   * @param  {string} address
+   * @param  {string} schema
+   * @param  {string} table
    *
    * @return {Object}
    */
@@ -467,11 +465,11 @@ class SQLiteCache {
   /**
    * Update list of objects that have been loaded
    *
-   * @param  {String} address
-   * @param  {String} schema
-   * @param  {String} table
-   * @param  {Array<Objects>} objects
-   * @param  {Boolean} remove
+   * @param  {string} address
+   * @param  {string} schema
+   * @param  {string} table
+   * @param  {Object[]} objects
+   * @param  {boolean} remove
    */
   updateTableEntry(address, schema, table, objects, remove) {
     const tbl = this.getTableEntry(address, schema, table);
@@ -498,8 +496,8 @@ class SQLiteCache {
   /**
    * Count the number of rows in the table (on a time delay)
    *
-   * @param  {String} schema
-   * @param  {Number} delay
+   * @param  {string} schema
+   * @param  {number} delay
    */
   updateRecordCount(schema, delay) {
     const cacheTableName = (schema === 'local') ? 'local_data' : 'remote_data';

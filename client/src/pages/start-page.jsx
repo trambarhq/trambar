@@ -740,7 +740,7 @@ function sortServers(servers, env) {
 /**
  * Return the device OS
  *
- * @return {String}
+ * @return {string}
  */
 function getDeviceType() {
   if (window.cordova) {
@@ -755,7 +755,7 @@ function getDeviceType() {
 /**
  * Return device unique id
  *
- * @return {String}
+ * @return {string}
  */
 function getDeviceUUID() {
   const device = window.device;

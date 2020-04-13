@@ -31,7 +31,7 @@ class BlobManager {
   /**
    * Find a blob that's associated with the given URL
    *
-   * @param  {String} url
+   * @param  {string} url
    *
    * @return {Blob|CordovaFile|null}
    */
@@ -51,7 +51,7 @@ class BlobManager {
    * Associate a blob with a URL
    *
    * @param  {Blob|CordovaFile} target
-   * @param  {String} url
+   * @param  {string} url
    */
   static associate(target, url) {
     if (!target || !url) {
@@ -68,9 +68,9 @@ class BlobManager {
   /**
    * Load a blob from remote location
    *
-   * @param  {String} remoteURL
+   * @param  {string} remoteURL
    *
-   * @return {Promise<Blob>}
+   * @return {Blob}
    */
   static async fetch(remoteURL) {
     if (!remoteURL) {

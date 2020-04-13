@@ -58,9 +58,7 @@ export class Reaction extends ExternalData {
    * Create table in schema
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -98,9 +96,7 @@ export class Reaction extends ExternalData {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
@@ -116,11 +112,11 @@ export class Reaction extends ExternalData {
    * Filter out rows that user doesn't have access to
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async filter(db, schema, rows, credentials) {
     if (credentials.user.type === 'guest') {
@@ -133,11 +129,9 @@ export class Reaction extends ExternalData {
    * Add conditions to SQL query based on criteria object
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} criteria
    * @param  {Object} query
-   *
-   * @return {Promise}
    */
   static async apply(db, schema, criteria, query) {
     const { time_range, newer_than, older_than, search, ...basic } = criteria;
@@ -163,12 +157,12 @@ export class Reaction extends ExternalData {
    * Import object sent by client-side code
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} reactionReceived
    * @param  {Object} reactionBefore
    * @param  {Object} credentials
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async importOne(db, schema, reactionReceived, reactionBefore, credentials, options) {
     const row = await super.importOne(db, schema, reactionReceived, reactionBefore, credentials, options);
@@ -211,12 +205,12 @@ export class Reaction extends ExternalData {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
@@ -248,13 +242,11 @@ export class Reaction extends ExternalData {
    * rows in other tables
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} objects
-   * @param  {Array<Object>} originals
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} objects
+   * @param  {Object[]} originals
+   * @param  {Object[]} rows
    * @param  {Object} credentials
-   *
-   * @return {Promise}
    */
    static async associate(db, schema, objects, originals, rows, credentials) {
      const deletedReactions = _.filter(rows, { deleted: true });
@@ -268,7 +260,7 @@ export class Reaction extends ExternalData {
    * @param  {User} user
    * @param  {Subscription} subscription
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static isRelevantTo(event, user, subscription) {
     if (subscription.area === 'admin') {
@@ -326,10 +318,8 @@ export class Reaction extends ExternalData {
    * Mark reactions as deleted if their authors are those specified
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} associations
-   *
-   * @return {Promise}
    */
   static async deleteAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
@@ -353,10 +343,8 @@ export class Reaction extends ExternalData {
    * Clear deleted flag of reactions beloging to specified users
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} associations
-   *
-   * @return {Promise}
    */
   static async restoreAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {

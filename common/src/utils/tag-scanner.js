@@ -4,10 +4,10 @@ import { findTags } from '../../../backend/src/lib/tag-scanner.mjs';
 /**
  * Find @name and #keyword tags
  *
- * @param  {String|Object} text
- * @param  {Boolean} markdown
+ * @param  {string|Object} text
+ * @param  {boolean} markdown
  *
- * @return {Array<String>}
+ * @return {string[]}
  */
 function findTagsInText(text, markdown) {
   let strings;

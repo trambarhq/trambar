@@ -94,10 +94,8 @@ async function handleDatabaseChangesAffectingListings(events) {
  * Mark statistics impacted by database changes as dirty
  *
  * @param  {Database} db
- * @param  {String} schema
- * @param  {Array<Object>} events
- *
- * @return {Promise}
+ * @param  {string} schema
+ * @param  {Object[]} events
  */
 async function invalidateStatistics(db, schema, events) {
   const taskLog = TaskLog.start('statistics-invalidate', { project: schema });
@@ -122,10 +120,10 @@ async function invalidateStatistics(db, schema, events) {
  * Find statistics impacted by database changes
  *
  * @param  {Database} db
- * @param  {String} schema
- * @param  {Array<Object>} events
+ * @param  {string} schema
+ * @param  {Object[]} events
  *
- * @return {Promise<Array<Number>>}
+ * @return {number[]}
  */
 async function findStatisticsImpactedByDatabaseChanges(db, schema, events) {
   const impactedRows = [];
@@ -205,10 +203,8 @@ async function findStatisticsImpactedByDatabaseChanges(db, schema, events) {
  * Mark listings impacted by database changes as dirty
  *
  * @param  {Database} db
- * @param  {String} schema
- * @param  {Array<Object>} events
- *
- * @return {Promise}
+ * @param  {string} schema
+ * @param  {Object[]} events
  */
 async function invalidateListings(db, schema, events) {
   const taskLog = TaskLog.start('listing-invalidate', { project: schema });
@@ -235,10 +231,10 @@ async function invalidateListings(db, schema, events) {
  * Find listings impacted by story changes
  *
  * @param  {Database} db
- * @param  {String} schema
- * @param  {Array<Object>} events
+ * @param  {string} schema
+ * @param  {Object[]} events
  *
- * @return {Promise<Array<Number>>}
+ * @return {number[]}
  */
 async function findListingsImpactedByStoryChanges(db, schema, events) {
   // these columns determines whether a story is included in a listing or not
@@ -302,10 +298,10 @@ async function findListingsImpactedByStoryChanges(db, schema, events) {
  * Find listings impacted by statistic changes
  *
  * @param  {Database} db
- * @param  {String} schema
- * @param  {Array<Object>} events
+ * @param  {string} schema
+ * @param  {Object[]} events
  *
- * @return {Promise<Array<Number>>}
+ * @return {number[]}
  */
 async function findListingsImpactedByStatisticsChange(db, schema, events) {
   // only story-popularity is used
@@ -338,10 +334,10 @@ async function findListingsImpactedByStatisticsChange(db, schema, events) {
  * Only columns provided to createNotificationTriggers() when the database
  * table was created would be available.
  *
- * @param  {Array<Object>} events
- * @param  {Array<String>} columns
+ * @param  {Object[]} events
+ * @param  {string[]} columns
  *
- * @return {Array<Object>}
+ * @return {Object[]}
  */
 function extractCurrentValues(events, columns) {
   return _.filter(_.map(events, (event) => {
@@ -355,9 +351,9 @@ function extractCurrentValues(events, columns) {
 /**
  * Extract the values of columns prior to a change from database change events
  *
- * @param  {Array<Object>} events
+ * @param  {Object[]} events
  *
- * @return {Array<Object>}
+ * @return {Object[]}
  */
 function extractPreviousValues(events, columns) {
   return _.filter(_.map(events, (event) => {

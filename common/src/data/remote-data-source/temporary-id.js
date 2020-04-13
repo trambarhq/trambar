@@ -1,7 +1,7 @@
 /**
  * Return a temporary id that can be used to identify an uncommitted object
  *
- * @return {Number}
+ * @return {number}
  */
 function allocateTempoaryID() {
   const newTemporaryID = lastTemporaryID + 0.000000001;

@@ -14,8 +14,6 @@ import { Story } from '../accessors/story.mjs';
  * @param  {Project} project
  * @param  {User} author
  * @param  {Object} glEvent
- *
- * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent) {
   // creation of a branch or a tag is handled by PushImporter

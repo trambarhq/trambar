@@ -19,7 +19,7 @@ import { Story } from '../accessors/story.mjs';
  * @param  {Database} db
  * @param  {Server} server
  *
- * @return {Promise<Repo[]>}
+ * @return {Repo[]}
  */
 async function importRepositories(db, server) {
   const taskLog = TaskLog.start('gitlab-repo-import', {
@@ -127,8 +127,6 @@ async function detectTemplate(db, server, repo) {
  * @param  {User} author
  * @param  {Project} project
  * @param  {Object} glEvent
- *
- * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent) {
   const schema = project.name;
@@ -142,8 +140,6 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
  * @param  {Database} db
  * @param  {Server} server
  * @param  {Object} glHookEvent
- *
- * @return {Promise}
  */
 async function processSystemEvent(db, server, glHookEvent) {
   const eventName = _.snakeCase(glHookEvent.event_name);
@@ -235,10 +231,10 @@ function copyEventProperties(story, system, server, repo, author, glEvent) {
  *
  * @param  {Database} db
  * @param  {Server} server
- * @param  {Array<Repo>} repos
+ * @param  {Repo[]} repos
  * @param  {Object} glRepo
  *
- * @return {Promise<Repo|null>}
+ * @return {Repo|null}
  */
 async function findExistingRepo(db, server, repos, glRepo) {
   const repo = _.find(repos, (repo) => {
@@ -260,9 +256,9 @@ async function findExistingRepo(db, server, repos, glRepo) {
  *
  * @param {Database} db
  * @param {Repo} repo
- * @param {Array<User>} users
+ * @param {User[]} users
  *
- * @return {Promise<Array<Project>>}
+ * @return {Project[]}
  */
 async function addProjectMembers(db, repo, users) {
   const newUserIDs = _.map(users, 'id');
@@ -284,9 +280,9 @@ async function addProjectMembers(db, repo, users) {
  *
  * @param  {Repo|null} repo
  * @param  {Server} server
- * @param  {Array<User>} members
+ * @param  {User[]} members
  * @param  {Object} glRepo
- * @param  {Array<Object>} glLabels
+ * @param  {Object[]} glLabels
  *
  * @return {Repo}
  */
@@ -346,7 +342,7 @@ function copyRepoDetails(repo, server, members, glRepo, glLabels) {
  *
  * @param  {Server} server
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function fetchRepos(server) {
   const url = `/projects`;
@@ -357,9 +353,9 @@ async function fetchRepos(server) {
  * Retrieve all labels used by a Gitlab repo
  *
  * @param  {Server} server
- * @param  {Number} glRepoID
+ * @param  {number} glRepoID
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function fetchLabels(server, glRepoID) {
   const url = `/projects/${glRepoID}/labels`;
@@ -370,9 +366,9 @@ async function fetchLabels(server, glRepoID) {
  * Retrieve member records from Gitlab (these are not complete user records)
  *
  * @param  {Server} server
- * @param  {Number} glRepoID
+ * @param  {number} glRepoID
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function fetchMembers(server, glRepoID) {
   const url = `/projects/${glRepoID}/members`;
@@ -383,9 +379,9 @@ async function fetchMembers(server, glRepoID) {
  * Retrieve package.json
  *
  * @param  {Server} server
- * @param  {Number} glRepoID
+ * @param  {number} glRepoID
  *
- * @return {Promise<Array<Object|null>>}
+ * @return {Object[]}
  */
 async function fetchPackageJSON(server, glRepoID) {
   const treeURL = `/projects/${glRepoID}/repository/tree`;

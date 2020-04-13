@@ -23,7 +23,7 @@ import { User } from '../accessors/user.mjs';
  * @param  {Project} project
  * @param  {Task} task
  *
- * @return {Promise<Story|null>}
+ * @return {Story|null}
  */
 async function exportStory(db, system, project, task) {
   const story = await findSourceStory(db, project, task);
@@ -52,7 +52,7 @@ async function exportStory(db, system, project, task) {
  * @param  {Repo} repo
  * @param  {Task} issueLink
  *
- * @return {Promise<Story|null>}
+ * @return {Story|null}
  */
 async function exportStoryCreate(db, system, project, story, repo, task) {
   const server = await findRepoServer(db, repo);
@@ -83,7 +83,7 @@ async function exportStoryCreate(db, system, project, story, repo, task) {
  * @param  {Repo} repo
  * @param  {Task} task
  *
- * @return {Promise<Story>}
+ * @return {Story}
  */
 async function exportStoryUpdate(db, system, project, story, repo, task) {
   const server = await findRepoServer(db, repo);
@@ -113,7 +113,7 @@ async function exportStoryUpdate(db, system, project, story, repo, task) {
  * @param  {Repo} repo
  * @param  {Task} task
  *
- * @return {Promise<Story>}
+ * @return {Story}
  */
 async function exportStoryRemove(db, system, project, story, repo, task) {
   const server = await findRepoServer(db, repo);
@@ -151,7 +151,7 @@ async function exportStoryRemove(db, system, project, story, repo, task) {
  * @param  {Repo} toRepo
  * @param  {Task} task
  *
- * @return {Promise<Story>}
+ * @return {Story}
  */
 async function exportStoryMove(db, system, project, story, fromRepo, toRepo, task) {
   const fromRepoLink = findLinkByServerType(fromRepo, 'gitlab');
@@ -206,7 +206,7 @@ async function exportStoryMove(db, system, project, story, fromRepo, toRepo, tas
  * @param  {System} system
  * @param  {Project} project
  * @param  {Story} story
- * @param  {Array<User>} authors
+ * @param  {User[]} authors
  * @param  {Task} task
  *
  * @param  {Task} task
@@ -245,10 +245,10 @@ function exportIssueProperties(glIssue, server, system, project, story, authors,
  * @param  {System} system
  * @param  {Project} project
  * @param  {Story} story
- * @param  {Array<User>} authors
+ * @param  {User[]} authors
  * @param  {Task} task
  *
- * @return {String}
+ * @return {string}
  */
 function generateIssueText(system, project, story, authors, task) {
   const markdown = story.details.markdown;
@@ -426,7 +426,7 @@ function adjustReactionProperties(reaction, server, story) {
  * @param  {Project} project
  * @param  {Task} task
  *
- * @return {Promise<Story|null>}
+ * @return {Story|null}
  */
 async function findSourceStory(db, project, task) {
   const schema = project.name;
@@ -448,7 +448,7 @@ async function findSourceStory(db, project, task) {
  * @param  {Database} db
  * @param  {Task} task
  *
- * @return {Promise<Repo|null>}
+ * @return {Repo|null}
  */
 async function findDestinationRepo(db, task) {
   const repoID = task.options.repo_id;
@@ -468,7 +468,7 @@ async function findDestinationRepo(db, task) {
  * @param  {Database} db
  * @param  {Story} story
  *
- * @return {Promise<Repo|null>}
+ * @return {Repo|null}
  */
 async function findCurrentRepo(db, story) {
   const issueLink = findIssueLink(story);
@@ -493,7 +493,7 @@ async function findCurrentRepo(db, story) {
  * @param  {Database} db
  * @param  {Repo} repo
  *
- * @return {Promise<Server>}
+ * @return {Server}
  */
 async function findRepoServer(db, repo) {
   const repoLink = findLinkByServerType(repo, 'gitlab');
@@ -565,10 +565,10 @@ function findUserLink(user, server) {
  * Retrieve issue from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectID
- * @param  {Number} glIssueNumber
+ * @param  {number} glProjectID
+ * @param  {number} glIssueNumber
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function fetchIssue(server, glProjectID, glIssueNumber) {
   const url = `/projects/${glProjectID}/issues/${glIssueNumber}`;
@@ -579,12 +579,12 @@ async function fetchIssue(server, glProjectID, glIssueNumber) {
  * Create or update an issue at Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectID
- * @param  {Number|undefined} glIssueNumber
+ * @param  {number} glProjectID
+ * @param  {number|undefined} glIssueNumber
  * @param  {Object} glIssue
- * @param  {Number} glUserID
+ * @param  {number} glUserID
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function saveIssue(server, glProjectID, glIssueNumber, glIssue, glUserID) {
   const url = `/projects/${glProjectID}/issues`;
@@ -607,10 +607,8 @@ async function saveIssue(server, glProjectID, glIssueNumber, glIssue, glUserID) 
  * Delete issue at Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectID
- * @param  {Number} glIssueNumber
- *
- * @return {Promise}
+ * @param  {number} glProjectID
+ * @param  {number} glIssueNumber
  */
 async function removeIssue(server, glProjectID, glIssueNumber) {
   const url = `/projects/${glProjectID}/issues/${glIssueNumber}`;
@@ -621,11 +619,11 @@ async function removeIssue(server, glProjectID, glIssueNumber) {
  * Move an issue at Gitlab from one project to another
  *
  * @param  {Server} server
- * @param  {Number} glSrcProjectID
- * @param  {Number} glSrcIssueNumber
- * @param  {Number} glDstProjectID
+ * @param  {number} glSrcProjectID
+ * @param  {number} glSrcIssueNumber
+ * @param  {number} glDstProjectID
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function moveIssue(server, glSrcProjectID, glSrcIssueNumber, glDstProjectID) {
   const url = `/projects/${glSrcProjectID}/issues/${glSrcIssueNumber}/move`;
@@ -636,9 +634,9 @@ async function moveIssue(server, glSrcProjectID, glSrcIssueNumber, glDstProjectI
 /**
  * Turn plain text into Markdown text by escaping special characters
  *
- * @param  {String} text
+ * @param  {string} text
  *
- * @return {String}
+ * @return {string}
  */
 function escapeMarkdownCharacters(text) {
   let regExp = /([\\\`\*\_\{\}\[\]\(\)\#\+\-\.\!])/g;
@@ -648,11 +646,11 @@ function escapeMarkdownCharacters(text) {
 /**
  * Attach resources to Markdown text
  *
- * @param  {String} text
- * @param  {Array<Object>} resources
- * @param  {String} address
+ * @param  {string} text
+ * @param  {Object[]} resources
+ * @param  {string} address
  *
- * @return {String}
+ * @return {string}
  */
 function attachResources(text, resources, address) {
   let inlineImages = [];
@@ -707,9 +705,9 @@ function attachResources(text, resources, address) {
  * Return URL to resource
  *
  * @param  {Object} res
- * @param  {String} address
+ * @param  {string} address
  *
- * @return {String}
+ * @return {string}
  */
 function getURL(res, address) {
   let url = res.url;
@@ -737,10 +735,10 @@ function getURL(res, address) {
  * Return URL to image resized for given purpose
  *
  * @param  {Object} res
- * @param  {String} address
- * @param  {String} purpose
+ * @param  {string} address
+ * @param  {string} purpose
  *
- * @return {String}
+ * @return {string}
  */
 function getImageURL(res, address, purpose) {
   let url;
@@ -772,9 +770,9 @@ function getImageURL(res, address, purpose) {
 /**
  * Return a square clipping rect
  *
- * @param  {Number} width
- * @param  {Number} height
- * @param  {String} align
+ * @param  {number} width
+ * @param  {number} height
+ * @param  {string} align
  *
  * @return {Object}
  */

@@ -6,9 +6,9 @@ const emptyArray = [];
  * Find project by ID
  *
  * @param  {Database} db
- * @param  {Number} id
+ * @param  {number} id
  *
- * @return {Promise<Project>}
+ * @return {Project}
  */
 async function findProject(db, id) {
   return db.findOne({
@@ -23,9 +23,9 @@ async function findProject(db, id) {
  * Find project by ID
  *
  * @param  {Database} db
- * @param  {String} name
+ * @param  {string} name
  *
- * @return {Promise<Project>}
+ * @return {Project}
  */
 async function findProjectByName(db, name) {
   return db.findOne({
@@ -40,9 +40,9 @@ async function findProjectByName(db, name) {
  * Find all projects
  *
  * @param  {Database} db
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Project>>}
+ * @return {Project[]}
  */
 async function findAllProjects(db, minimum) {
   return db.find({
@@ -58,7 +58,7 @@ async function findAllProjects(db, minimum) {
  *
  * @param  {Database} db
  *
- * @return {Promise<Project>}
+ * @return {Project}
  */
 async function findCurrentProject(db) {
   return db.findOne({
@@ -73,9 +73,9 @@ async function findCurrentProject(db) {
  * Find projects that aren't deleted or archived
  *
  * @param  {Database} db
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Project>>}
+ * @return {Project[]}
  */
 async function findActiveProjects(db, minimum) {
   return db.find({
@@ -93,10 +93,10 @@ async function findActiveProjects(db, minimum) {
  * Find active projects that have given users as members
  *
  * @param  {Database} db
- * @param  {Array<User>} users
- * @param  {Number|undefined} minimum
+ * @param  {User[]} users
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Project>>}
+ * @return {Project[]}
  */
 async function findProjectsWithMembers(db, users, minimum) {
   const ids = users.map(usr => usr.id);

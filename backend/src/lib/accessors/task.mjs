@@ -44,9 +44,7 @@ export class Task extends Data {
    * Create table in schema
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -77,10 +75,10 @@ export class Task extends Data {
    * Upgrade table in schema to given DB version (from one version prior)
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Number} version
+   * @param  {string} schema
+   * @param  {number} version
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async upgrade(db, schema, version) {
     if (version === 3) {
@@ -102,9 +100,7 @@ export class Task extends Data {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
@@ -153,12 +149,12 @@ export class Task extends Data {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
@@ -189,7 +185,7 @@ export class Task extends Data {
    * @param  {User} user
    * @param  {Subscription} subscription
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static isRelevantTo(event, user, subscription) {
     if (super.isRelevantTo(event, user, subscription)) {
@@ -229,12 +225,10 @@ export class Task extends Data {
    * Create a trigger on this table that updates another table
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {String} triggerName
-   * @param  {String} method
-   * @param  {Array<String>} args
-   *
-   * @return {Promise}
+   * @param  {string} schema
+   * @param  {string} triggerName
+   * @param  {string} method
+   * @param  {string[]} args
    */
   static async createUpdateTrigger(db, schema, triggerName, method, args) {
     const table = this.getTableName(schema);

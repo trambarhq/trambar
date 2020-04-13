@@ -33,7 +33,7 @@ import { Wiki } from '../accessors/wiki.mjs';
  * @param  {Repo} repo
  * @param  {Project} project
  *
- * @return {Promise<Array<Wiki>>}
+ * @return {Wiki[]}
  */
 async function importWikis(db, system, server, repo, project) {
   const taskLog = TaskLog.start('gitlab-wiki-import', {
@@ -148,7 +148,7 @@ async function importWikis(db, system, server, repo, project) {
  * @param  {Repo} repo
  * @param  {Project} project
  *
- * @return {Promise<Array<Wiki>>}
+ * @return {Wiki[]}
  */
 async function removeWikis(db, system, server, repo, project) {
   const taskLog = TaskLog.start('gitlab-wiki-remove', {
@@ -279,10 +279,10 @@ async function parseGitlabWiki(glWiki, baseURL) {
  * Retrieve milestone from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
- * @param  {String} slug
+ * @param  {number} glProjectId
+ * @param  {string} slug
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function fetchWiki(server, glProjectId, slug) {
   const url = `/projects/${glProjectId}/wikis/${slug}`;
@@ -293,9 +293,9 @@ async function fetchWiki(server, glProjectId, slug) {
  * Retrieve milestone from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
+ * @param  {number} glProjectId
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function fetchWikis(server, glProjectId) {
   const url = `/projects/${glProjectId}/wikis/`;
@@ -312,8 +312,6 @@ async function fetchWikis(server, glProjectId) {
  * @param  {Project} project
  * @param  {User} author
  * @param  {Object} glHookEvent
- *
- * @return {Promise}
  */
 async function processHookEvent(db, system, server, repo, project, author, glHookEvent) {
   await importWikis(db, system, server, repo, project);

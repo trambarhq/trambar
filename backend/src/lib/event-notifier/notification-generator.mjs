@@ -13,9 +13,9 @@ import { User } from '../accessors/user.mjs';
  * Create new notification objects based on database events
  *
  * @param  {Database} db
- * @param  {Array<Object>} events
+ * @param  {Object[]} events
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function generate(db, events) {
   // filter out undelete events
@@ -87,7 +87,7 @@ const notificationGeneratingFunctions = [
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function generateCoauthoringNotifications(db, event) {
   if (!isModifying(event, 'story')) {
@@ -129,7 +129,7 @@ async function generateCoauthoringNotifications(db, event) {
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function generateStoryPublicationNotifications(db, event) {
   if (!isPublishing(event, 'story')) {
@@ -163,11 +163,11 @@ async function generateStoryPublicationNotifications(db, event) {
  * Return an object containing certain details from story
  *
  * @param  {Database} db
- * @param  {String} schema
- * @param  {Number} storyID
- * @param  {String} notificationType
+ * @param  {string} schema
+ * @param  {number} storyID
+ * @param  {string} notificationType
  *
- * @return {Promise<Object|undefined>}
+ * @return {Object|undefined}
  */
 async function getStoryPublicationDetails(db, schema, storyID, notificationType) {
   switch (notificationType) {
@@ -189,7 +189,7 @@ async function getStoryPublicationDetails(db, schema, storyID, notificationType)
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function generateReactionPublicationNotifications(db, event) {
   if (!isPublishing(event, 'reaction')) {
@@ -237,7 +237,7 @@ async function generateReactionPublicationNotifications(db, event) {
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function generateBookmarkNotifications(db, event) {
   if (!isModifying(event, 'bookmark')) {
@@ -282,7 +282,7 @@ async function generateBookmarkNotifications(db, event) {
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function generateUserMentionNotifications(db, event) {
   if (!isModifying(event, 'story') && !isModifying(event, 'reaction')) {
@@ -346,7 +346,7 @@ async function generateUserMentionNotifications(db, event) {
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Array<Object>}
+ * @return {Object[]}
  */
 async function generateJoinRequestNotifications(db, event) {
   const newProjectIDs = getNewRequestedProjectIDs(event);
@@ -385,9 +385,9 @@ async function generateJoinRequestNotifications(db, event) {
  * Check if an event indicates a row in the given table is being inserted/update
  *
  * @param  {Object}  event
- * @param  {String}  table
+ * @param  {string}  table
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isModifying(event, table) {
   if (event.table === table) {
@@ -403,9 +403,9 @@ function isModifying(event, table) {
  * Check if an event indicates a story or reaction is being published
  *
  * @param  {Object}  event
- * @param  {String}  table
+ * @param  {string}  table
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isPublishing(event, table) {
   if (isModifying(event, table)) {
@@ -427,7 +427,7 @@ function isPublishing(event, table) {
  *
  * @param  {Object} event
  *
- * @return {Array<Number>}
+ * @return {number[]}
  */
 function getNewCoauthorIDs(event) {
   if (isModifying(event, 'story')) {
@@ -445,7 +445,7 @@ function getNewCoauthorIDs(event) {
  *
  * @param  {Object} event
  *
- * @return {Array<String>}
+ * @return {string[]}
  */
 function getNewTags(event) {
   if (event.diff.tags) {
@@ -461,7 +461,7 @@ function getNewTags(event) {
  *
  * @param  {Object} event
  *
- * @return {Array<String>}
+ * @return {string[]}
  */
 function getNewRequestedProjectIDs(event) {
   if (isModifying(event, 'user')) {
@@ -479,7 +479,7 @@ function getNewRequestedProjectIDs(event) {
  * @param  {User}  user
  * @param  {Notification}  notification
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function checkUserPreference(user, notification) {
   const name = _.snakeCase(notification.type);

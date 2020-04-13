@@ -37,9 +37,7 @@ export class User extends ExternalData {
    * Create table in schema
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -74,9 +72,7 @@ export class User extends ExternalData {
    * Grant privileges to table to appropriate Postgres users
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async grant(db, schema) {
     // TODO revoke INSERT and UPDATE of column 'type'
@@ -93,9 +89,7 @@ export class User extends ExternalData {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
@@ -125,10 +119,10 @@ export class User extends ExternalData {
    * Save a row, appending a number if a username conflict occurs
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {user} object
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async saveUnique(db, schema, user) {
     // this doesn't work within a transaction
@@ -157,12 +151,12 @@ export class User extends ExternalData {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
@@ -207,13 +201,13 @@ export class User extends ExternalData {
    * Import object sent by client-side code
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} userReceived
    * @param  {Object} userBefore
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async importOne(db, schema, userReceived, userBefore, credentials, options) {
     const row = await super.importOne(db, schema, userReceived, userBefore, credentials, options);
@@ -251,7 +245,7 @@ export class User extends ExternalData {
    * @param  {User} user
    * @param  {Subscription} subscription
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static isRelevantTo(event, user, subscription) {
     if (super.isRelevantTo(event, user, subscription)) {
@@ -274,7 +268,7 @@ export class User extends ExternalData {
    * @param  {User} user
    * @param  {Project} project
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static canJoin(user, project) {
     if (!project) {
@@ -293,7 +287,7 @@ export class User extends ExternalData {
    * @param  {User} user
    * @param  {Project} project
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static canJoinAutomatically(user, project) {
     if (_.includes(project.user_ids, user.id)) {
@@ -349,13 +343,11 @@ export class User extends ExternalData {
    * rows in other tables
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} usersReceived
-   * @param  {Array<Object>} usersBefore
-   * @param  {Array<Object>} usersAfter
+   * @param  {string} schema
+   * @param  {Object[]} usersReceived
+   * @param  {Object[]} usersBefore
+   * @param  {Object[]} usersAfter
    * @param  {Object} credentials
-   *
-   * @return {Promise}
    */
    static async associate(db, schema, usersReceived, usersBefore, usersAfter, credentials) {
      await this.updateMemberList(db, schema, usersReceived, usersBefore, usersAfter);
@@ -367,12 +359,10 @@ export class User extends ExternalData {
    * Add users to projects
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} usersReceived
-   * @param  {Array<Object>} usersBefore
-   * @param  {Array<Object>} usersAfter
-   *
-   * @return {Promise}
+   * @param  {string} schema
+   * @param  {Object[]} usersReceived
+   * @param  {Object[]} usersBefore
+   * @param  {Object[]} usersAfter
    */
   static async updateMemberList(db, schema, usersReceived, usersBefore, usersAfter) {
     const newMembers = {};
@@ -414,11 +404,9 @@ export class User extends ExternalData {
    * Update stories of users when they acquire new roles (or lose them)
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} usersBefore
-   * @param  {Array<Object>} usersAfter
-   *
-   * @return {Promise}
+   * @param  {string} schema
+   * @param  {Object[]} usersBefore
+   * @param  {Object[]} usersAfter
    */
   static async updateStoryRoles(db, schema, usersBefore, usersAfter) {
     const usersWithRoleChanges = _.filter(usersBefore, (userBefore, index) => {
@@ -446,11 +434,9 @@ export class User extends ExternalData {
    * Update deleted flag of stories when user is deleted or undeleted
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} usersBefore
-   * @param  {Array<Object>} usersAfter
-   *
-   * @return {Promise}
+   * @param  {string} schema
+   * @param  {Object[]} usersBefore
+   * @param  {Object[]} usersAfter
    */
   static async updateContentDeletion(db, schema, usersBefore, usersAfter) {
     const deletedUsers = _.filter(usersAfter, (userAfter, index) => {

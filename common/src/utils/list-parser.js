@@ -6,9 +6,9 @@ const regExp = /^([ \t]*)\*\s+\[([ xхχ])\]([ \t]*)(.*?)([ \t]*?)$/mig;
 /**
  * Extract "[ ] label..." item lists from text
  *
- * @param  {String} text
+ * @param  {string} text
  *
- * @return {Array<Object>}
+ * @return {Object[]}
  */
 function extractListItems(text) {
   text = (text) ? text : '';
@@ -63,9 +63,9 @@ function extractListItems(text) {
 /**
  * Detect whether text contains a list
  *
- * @param  {String|Object} text
+ * @param  {string|Object} text
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isList(text) {
   if (typeof(text) === 'object') {
@@ -90,10 +90,10 @@ function isList(text) {
  * Check or uncheck item
  *
  * @param  {Array} tokens
- * @param  {Number|String} list
- * @param  {Number|String} key
- * @param  {Boolean} checked
- * @param  {Boolean} clearOthers
+ * @param  {number|string} list
+ * @param  {number|string} key
+ * @param  {boolean} checked
+ * @param  {boolean} clearOthers
  */
 function setListItem(tokens, list, key, checked, clearOthers) {
   for (let token of tokens) {
@@ -135,8 +135,8 @@ function updateListItem(item, checked) {
  * Find an item
  *
  * @param  {Array} tokens
- * @param  {Number|String} list
- * @param  {Number|String} key
+ * @param  {number|string} list
+ * @param  {number|string} key
  *
  * @return {Object|null}
  */
@@ -159,7 +159,7 @@ function findListItem(tokens, list, key) {
  * @param  {Array} tokens
  * @param  {Boolean|undefined} checked
  *
- * @return {Number}
+ * @return {number}
  */
 function countListItems(tokens, checked) {
   let total = 0;
@@ -180,7 +180,7 @@ function countListItems(tokens, checked) {
  *
  * @param  {Array} tokens
  *
- * @return {String}
+ * @return {string}
  */
 function stringifyList(tokens) {
   const lines = [];

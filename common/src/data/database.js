@@ -11,7 +11,7 @@ class Database {
    *
    * @param  {Object} query
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async find(query) {
     query = { ...this.context, ...query };
@@ -23,7 +23,7 @@ class Database {
    *
    * @param  {Object} query
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   async findOne(query) {
     query = { ...query, expected: 1 };
@@ -36,10 +36,10 @@ class Database {
    * (if schema is "local") or the remote server.
    *
    * @param  {Object} location
-   * @param  {Array<Object>} objects
+   * @param  {Object[]} objects
    * @param  {Object} options
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async save(location, objects, options) {
     location = { ...this.context, ...location };
@@ -53,7 +53,7 @@ class Database {
    * @param  {Object} object
    * @param  {Object} options
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   async saveOne(location, object, options) {
     const objects = await this.save(location, [ object ], options);
@@ -64,9 +64,9 @@ class Database {
    * Remove objects at given location
    *
    * @param  {Object} location
-   * @param  {Array<Object>} objects
+   * @param  {Object[]} objects
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async remove(location, objects) {
     location = { ...this.context, ...location };
@@ -79,7 +79,7 @@ class Database {
    * @param  {Object} location
    * @param  {Object} object
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   async removeOne(location, object) {
     const objects = await this.remove(location, [ object ]);
@@ -91,9 +91,9 @@ class Database {
    *
    * @param  {Object} location
    * @param  {Object} object
-   * @param  {Number} timeout
+   * @param  {number} timeout
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async waitForChange(location, object, timeout) {
     location = { ...this.context, ...location };
@@ -106,7 +106,7 @@ class Database {
    * @param  {Object} location
    * @param  {Object} object
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async refresh(location, object) {
     location = { ...this.context, ...location };
@@ -135,7 +135,7 @@ class Database {
    *
    * @param  {Object|undefined} location
    *
-   * @return {Promise<Number>}
+   * @return {number}
    */
   async start(location) {
     location = { ...this.context, ...location };
@@ -146,9 +146,9 @@ class Database {
    * Create a session and retrieve information about the remote server,
    * including a list of OAuth providers
    *
-   * @param  {String} area
+   * @param  {string} area
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   async beginSession(area) {
     return this.remoteDataSource.beginSession(this.context, area);
@@ -157,7 +157,7 @@ class Database {
   /**
    * Query server to see if authorization has been granted
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async checkAuthorization() {
     return this.remoteDataSource.checkAuthorization(this.context);
@@ -166,7 +166,7 @@ class Database {
   /**
    * Return true if the current user has access to the remote database
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   hasAuthorization() {
     return this.remoteDataSource.hasAuthorization(this.context);
@@ -177,7 +177,7 @@ class Database {
    *
    * @param  {Object} credentials
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async authenticate(credentials) {
     return this.remoteDataSource.authenticate(this.context, credentials);
@@ -186,7 +186,7 @@ class Database {
   /**
    * Remove authorization
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async endSession() {
     return this.remoteDataSource.endSession(this.context);
@@ -195,7 +195,7 @@ class Database {
   /**
    * Create a session for a mobile device (on browser)
    *
-   * @return {Promise<String>}
+   * @return {string}
    */
   async beginMobileSession() {
     return this.remoteDataSource.beginMobileSession(this.context);
@@ -204,9 +204,9 @@ class Database {
   /**
    * Acquired a session created earlier through a web-browser (on mobile device)
    *
-   * @param  {String} handle
+   * @param  {string} handle
    *
-   * @return {Promise<Number>}
+   * @return {number}
    */
   async acquireMobileSession(handle) {
     return this.remoteDataSource.acquireMobileSession(this.context, handle);
@@ -214,8 +214,6 @@ class Database {
 
   /**
    * Release the session created for a mobile device (on browser)
-   *
-   * @return {Promise}
    */
   async releaseMobileSession() {
     return this.remoteDataSource.releaseMobileSession(this.context);
@@ -224,9 +222,7 @@ class Database {
   /**
    * Remove authorization from mobile device
    *
-   * @param  {String} handle
-   *
-   * @return {Promise}
+   * @param  {string} handle
    */
   async endMobileSession(handle) {
     return this.remoteDataSource.endMobileSession(this.context, handle);
@@ -236,9 +232,9 @@ class Database {
    * Return an URL for testing OAuth integration or gaining API access
    *
    * @param  {Object} oauthServer
-   * @param  {String} type
+   * @param  {string} type
    *
-   * @return {String}
+   * @return {string}
    */
   getOAuthURL(oauthServer, type) {
     return this.remoteDataSource.getOAuthURL(this.context, oauthServer, type);
@@ -248,9 +244,9 @@ class Database {
    * Return the temporary used to reference an object prior to it being saved
    *
    * @param  {Object} location
-   * @param  {Number} id
+   * @param  {number} id
    *
-   * @return {Number|undefined}
+   * @return {number|undefined}
    */
   findTemporaryID(location, id) {
     location = { ...this.context, ...location };
@@ -261,9 +257,9 @@ class Database {
    * Return the permanent ID assigned to an object after saving
    *
    * @param  {Object} location
-   * @param  {Number} id
+   * @param  {number} id
    *
-   * @return {Number|undefined}
+   * @return {number|undefined}
    */
   findPermanentID(location, id) {
     location = { ...this.context, ...location };

@@ -9,10 +9,10 @@ import { HTTPError } from '../errors.mjs';
 /**
  * Save file to cache folder, using the MD5 hash of its content as name
  *
- * @param  {String} srcPath
- * @param  {String} dstFolder
+ * @param  {string} srcPath
+ * @param  {string} dstFolder
  *
- * @return {String}
+ * @return {string}
  */
 async function saveFile(srcPath, dstFolder) {
   const hash = await hashFile(srcPath);
@@ -33,10 +33,8 @@ async function saveFile(srcPath, dstFolder) {
 /**
  * Rename a file, deleting it if the destination already exists
  *
- * @param  {String} srcPath
- * @param  {String} dstPath
- *
- * @return {Promise}
+ * @param  {string} srcPath
+ * @param  {string} dstPath
  */
 async function moveFile(srcPath, dstPath) {
   if (srcPath === dstPath) {
@@ -69,9 +67,9 @@ async function moveFile(srcPath, dstPath) {
 /**
  * Generate MD5 hash of file contents
  *
- * @param  {String} srcPath
+ * @param  {string} srcPath
  *
- * @return {Promise<String>}
+ * @return {string}
  */
 async function hashFile(srcPath) {
   const hash = Crypto.createHash('md5');
@@ -89,9 +87,9 @@ async function hashFile(srcPath) {
  * Download file file off the Internet
  *
  * @param  {Object} source
- * @param  {String} dstFolder
+ * @param  {string} dstFolder
  *
- * @return {Promise<String>}
+ * @return {string}
  */
 async function downloadFile(source, dstFolder) {
   const { url, headers: additionalHeaders } = source;
@@ -145,10 +143,10 @@ async function downloadFile(source, dstFolder) {
  * Preserve user-uploaded file or a file at a URL
  *
  * @param  {Object} source
- * @param  {String} dstFolder
+ * @param  {string} dstFolder
  * @param  {TaskLog|null} taskLog
  *
- * @return {Promise<String|null>}
+ * @return {string|null}
  */
 async function preserveFile(source, dstFolder, taskLog) {
   if (source.file) {
@@ -169,9 +167,9 @@ async function preserveFile(source, dstFolder, taskLog) {
 /**
  * Generate MD5 hash
  *
- * @param  {String|Buffer} data
+ * @param  {string|Buffer} data
  *
- * @return {String}
+ * @return {string}
  */
 function md5(data) {
   const hash = Crypto.createHash('md5').update(data);
@@ -181,11 +179,11 @@ function md5(data) {
 /**
  * Return a temporary path for a URL
  *
- * @param  {String} dstFolder
- * @param  {String} url
- * @param  {String} ext
+ * @param  {string} dstFolder
+ * @param  {string} url
+ * @param  {string} ext
  *
- * @return {String}
+ * @return {string}
  */
 function makeTempPath(dstFolder, url, ext) {
   const date = (new Date).toISOString();
@@ -199,12 +197,10 @@ function makeTempPath(dstFolder, url, ext) {
 /**
  * Save information about a downloaded file
  *
- * @param  {String} url
- * @param  {String} dstFolder
- * @param  {String} hash
- * @param  {Object<String>} headers
- *
- * @return {Promise}
+ * @param  {string} url
+ * @param  {string} dstFolder
+ * @param  {string} hash
+ * @param  {Object} headers
  */
 async function rememberDownload(url, dstFolder, hash, headers) {
   const etag = headers.get('etag');
@@ -227,10 +223,10 @@ async function rememberDownload(url, dstFolder, hash, headers) {
 /**
  * Retrieve saved information about a previous download (if any)
  *
- * @param  {String} url
- * @param  {String} dstFolder
+ * @param  {string} url
+ * @param  {string} dstFolder
  *
- * @return {Promise<Object|undefined>}
+ * @return {Object|undefined}
  */
 async function recallDownload(url, dstFolder) {
   try {

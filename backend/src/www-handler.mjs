@@ -505,7 +505,7 @@ async function handleStaticFileRequest(req, res, next) {
 /**
  * Called when changes occurs in the database
  *
- * @param  {Array<Object>} events
+ * @param  {Object[]} events
  */
 async function handleDatabaseChanges(events) {
   const db = this;

@@ -34,7 +34,7 @@ async function discover(project, identifier, search) {
         contents.push(wiki.slug);
       } else {
         // need to look up the repo
-        const repoLink = findLinkByRelations(wiki, 'repo');
+        const repoLink = findLinkByRelations(wiki, 'project');
         const repoCriteria = {
           external_object: repoLink,
           deleted: false

@@ -8,9 +8,9 @@ const emptyArray = [];
  * Find a story by ID
  *
  * @param  {Database} db
- * @param  {Number} id
+ * @param  {number} id
  *
- * @return {Promise<Story>}
+ * @return {Story}
  */
 async function findStory(db, id) {
   return db.findOne({
@@ -24,9 +24,9 @@ async function findStory(db, id) {
  * Find a stories by ids
  *
  * @param  {Database} db
- * @param  {Array<Number>} ids
+ * @param  {number[]} ids
  *
- * @return {Promise<Story>}
+ * @return {Story}
  */
 async function findStories(db, ids) {
   ids = uniqIds(ids);
@@ -43,10 +43,10 @@ async function findStories(db, ids) {
  * Find stories by ids, with access check
  *
  * @param  {Database} db
- * @param  {Array<Number>} ids
+ * @param  {number[]} ids
  * @param  {User} currentUser
  *
- * @return {Promise<Story>}
+ * @return {Story}
  */
 async function findViewableStories(db, ids, currentUser) {
   ids = uniqIds(ids);
@@ -70,7 +70,7 @@ async function findViewableStories(db, ids, currentUser) {
  * @param  {Database} db
  * @param  {User} user
  *
- * @return {Promise<Array<Story>>}
+ * @return {Story[]}
  */
 async function findDraftStories(db, user) {
   if (!user) {
@@ -90,10 +90,10 @@ async function findDraftStories(db, user) {
  *
  * @param  {Database} db
  * @param  {User} user
- * @param  {Array<Story>} listedStories
- * @param  {String} limit
+ * @param  {Story[]} listedStories
+ * @param  {string} limit
  *
- * @return {Promise<Array<Story>>}
+ * @return {Story[]}
  */
 async function findUnlistedStories(db, user, listedStories, limit) {
   if (!user) {
@@ -125,12 +125,12 @@ async function findUnlistedStories(db, user, listedStories, limit) {
  * Find published stories that match a search string
  *
  * @param  {Database} db
- * @param  {String} text
+ * @param  {string} text
  * @param  {Locale} locale
  * @param  {User} currentUser
- * @param  {Number} perUserLimit
+ * @param  {number} perUserLimit
  *
- * @return {Promise<Array<Story>>}
+ * @return {Story[]}
  */
 async function findStoriesMatchingText(db, text, locale, currentUser, perUserLimit) {
   return db.find({
@@ -154,12 +154,12 @@ async function findStoriesMatchingText(db, text, locale, currentUser, perUserLim
  * Find published stories that have the specified tags
  *
  * @param  {Database} db
- * @param  {Array<String>} tags
+ * @param  {string[]} tags
  * @param  {User} currentUser
- * @param  {Number} perUserLimit
- * @param  {Number|undefined} minimum
+ * @param  {number} perUserLimit
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Story>>}
+ * @return {Story[]}
  */
 async function findStoriesWithTags(db, tags, currentUser, perUserLimit, minimum) {
   return db.find({
@@ -180,12 +180,12 @@ async function findStoriesWithTags(db, tags, currentUser, perUserLimit, minimum)
  * Find stories by a user that were published on a given date
  *
  * @param  {Database} db
- * @param  {String} date
+ * @param  {string} date
  * @param  {User} currentUser
- * @param  {Number} perUserLimit
- * @param  {Number|undefined} minimum
+ * @param  {number} perUserLimit
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Story>>}
+ * @return {Story[]}
  */
 async function findStoriesOnDate(db, date, currentUser, perUserLimit, minimum) {
   return db.find({
@@ -206,11 +206,11 @@ async function findStoriesOnDate(db, date, currentUser, perUserLimit, minimum) {
  * Find stories in listing for current user
  *
  * @param  {Database} db
- * @param  {String} type
+ * @param  {string} type
  * @param  {User} currentUser
  * @param  {Boolean|undefined} blockIfStale
  *
- * @return {Promise<Array<Story>|null>}
+ * @return {Story[]|null}
  */
 async function findStoriesInListing(db, type, currentUser, blockIfStale) {
   if (!currentUser) {
@@ -252,11 +252,11 @@ async function findStoriesInListing(db, type, currentUser, blockIfStale) {
  *
  * @param  {Database} db
  * @param  {User} user
- * @param  {String} text
+ * @param  {string} text
  * @param  {Locale} locale
  * @param  {User} currentUser
  *
- * @return {Promise<Array<Story>>}
+ * @return {Story[]}
  */
 async function findStoriesByUserMatchingText(db, user, text, locale, currentUser) {
   return db.find({
@@ -281,11 +281,11 @@ async function findStoriesByUserMatchingText(db, user, text, locale, currentUser
  *
  * @param  {Database} db
  * @param  {User} user
- * @param  {Array<String>} tags
+ * @param  {string[]} tags
  * @param  {User} currentUser
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Story>>}
+ * @return {Story[]}
  */
 async function findStoriesByUserWithTags(db, user, tags, currentUser, minimum) {
   return db.find({
@@ -307,11 +307,11 @@ async function findStoriesByUserWithTags(db, user, tags, currentUser, minimum) {
  *
  * @param  {Database} db
  * @param  {User} user
- * @param  {String} date
+ * @param  {string} date
  * @param  {User} currentUser
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Story>>}
+ * @return {Story[]}
  */
 async function findStoriesByUserOnDate(db, user, date, currentUser, minimum) {
   return db.find({
@@ -332,12 +332,12 @@ async function findStoriesByUserOnDate(db, user, date, currentUser, minimum) {
  * Find stories by a particular user in a listing
  *
  * @param  {Database} db
- * @param  {String} type
+ * @param  {string} type
  * @param  {User} user
  * @param  {User} currentUser
  * @param  {Boolean|undefined} blockIfStale
  *
- * @return {Promise<Array<Story>|null>}
+ * @return {Story[]|null}
  */
 async function findStoriesByUserInListing(db, type, user, currentUser, blockIfStale) {
   if (!currentUser) {
@@ -378,13 +378,13 @@ async function findStoriesByUserInListing(db, type, user, currentUser, blockIfSt
  * Find stories by selected users in their listings
  *
  * @param  {Database} db
- * @param  {String} type
+ * @param  {string} type
  * @param  {User} user
  * @param  {User} currentUser
- * @param  {Number} perUserLimit
+ * @param  {number} perUserLimit
  * @param  {Boolean|undefined} blockIfStale
  *
- * @return {Promise<Array<Story>|null>}
+ * @return {Story[]|null}
  */
 async function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit, blockIfStale) {
   let query = {
@@ -424,12 +424,12 @@ async function findStoriesByUsersInListings(db, type, users, currentUser, perUse
  * Find stories by selected users in their listings
  *
  * @param  {Database} db
- * @param  {String} type
- * @param  {Array<Number>} roleIDs
+ * @param  {string} type
+ * @param  {number[]} roleIDs
  * @param  {User} currentUser
  * @param  {Boolean|undefined} blockIfStale
  *
- * @return {Promise<Array<Story>|null>}
+ * @return {Story[]|null}
  */
 async function findStoriesWithRolesInListing(db, type, roleIDs, currentUser, blockIfStale) {
   if (!currentUser) {
@@ -464,10 +464,10 @@ async function findStoriesWithRolesInListing(db, type, roleIDs, currentUser, blo
  * Find the stories that notifications are referring to
  *
  * @param  {Database} db
- * @param  {Array<Notification>r} notifications
+ * @param  {Notification[]} notifications
  * @param  {User} currentUser
  *
- * @return {Promise<Array<Story>>}
+ * @return {Story[]}
  */
 async function findStoriesOfNotifications(db, notifications, currentUser) {
   const ids = notifications.map(n => n.story_id).filter(Boolean);
@@ -478,10 +478,10 @@ async function findStoriesOfNotifications(db, notifications, currentUser) {
  * Find the stories that notifications are referring to
  *
  * @param  {Database} db
- * @param  {Array<Bookmark>} bookmarks
+ * @param  {Bookmark[]} bookmarks
  * @param  {User} currentUser
  *
- * @return {Promise<Array<Story>>}
+ * @return {Story[]}
  */
 async function findStoriesOfBookmarks(db, bookmarks, currentUser) {
   let ids = bookmarks.map(bm => bm.story_id);

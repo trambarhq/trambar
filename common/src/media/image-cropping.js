@@ -1,8 +1,8 @@
 /**
  * Return a square cropping rect that's centered on the image
  *
- * @param  {Number} width
- * @param  {Number} height
+ * @param  {number} width
+ * @param  {number} height
  *
  * @return {Object}
  */

@@ -31,11 +31,11 @@ function renderPlainText(props) {
 /**
  * Render text containing a survey
  *
- * @param  {String} text
+ * @param  {string} text
  * @param  {Object} answers
  * @param  {Function} onChange
  *
- * @return {Array<String|ReactElement>}
+ * @return {string[]|ReactElement[]}
  */
 function renderSurvey(text, answers, onChange) {
   const listTokens = extractListItems(text);
@@ -81,10 +81,10 @@ function renderSurvey(text, answers, onChange) {
 /**
  * Render text containing a survey, showing the results
  *
- * @param  {String} text
+ * @param  {string} text
  * @param  {Object} voteCounts
  *
- * @return {Array<String|ReactElement>}
+ * @return {string[]|ReactElement[]}
  */
 function renderSurveyResults(text, voteCounts) {
   const listTokens = extractListItems(text);
@@ -125,11 +125,11 @@ function renderSurveyResults(text, voteCounts) {
 /**
  * Render text containing a tasj list
  *
- * @param  {String} text
+ * @param  {string} text
  * @param  {Object} answers
  * @param  {Function} onChange
  *
- * @return {Array<String|ReactElement>}
+ * @return {string[]|ReactElement[]}
  */
 function renderTaskList(text, answers, onChange) {
   const listTokens = extractListItems(text);
@@ -179,10 +179,10 @@ let needSkinToneStripping = !needEmojiHandling && !hasSkinToneSupport();
 /**
  * Render text that might contain emojis unsupported by browser
  *
- * @param  {String} text
+ * @param  {string} text
  * @param  {Object|undefined} options
  *
- * @return {Array<String|ReactElement>}
+ * @return {string[]|ReactElement[]}
  */
 function renderEmoji(text, options) {
   if (!needEmojiHandling) {
@@ -212,7 +212,7 @@ function renderEmojiImage(parentKey, code, string, characterKey) {
 /**
  * Return true if browser supports emojis
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function hasEmojiSupport() {
   return canDrawEmoji('\ud83d\ude03');
@@ -221,7 +221,7 @@ function hasEmojiSupport() {
 /**
  * Return true if browser supports emojis with different skin tones
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function hasSkinToneSupport() {
   return canDrawEmoji('\ud83c\udffb');
@@ -230,7 +230,7 @@ function hasSkinToneSupport() {
 /**
  * Return true browser is able to draw the specified emoji
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canDrawEmoji(text) {
   const canvas = document.createElement('canvas');
@@ -253,9 +253,9 @@ const skinToneRegExp = /\ud83c\udffb|\ud83c\udffc|\ud83c\udffd|\ud83c\udffe|\ud8
 /**
  * Strip skin tone modifier from a string
  *
- * @param  {String} s
+ * @param  {string} s
  *
- * @return {String}
+ * @return {string}
  */
 function stripSkinTone(s) {
   return s.replace(skinToneRegExp, '');

@@ -5,11 +5,11 @@ const emptyArray = [];
  * Find reactions to given stories
  *
  * @param  {Database} db
- * @param  {Array<Story>} stories
+ * @param  {Story[]} stories
  * @param  {User} currentUser
- * @param  {Number|undefined} minimum
+ * @param  {number|undefined} minimum
  *
- * @return {Promise<Array<Reaction>>}
+ * @return {Reaction[]}
  */
 async function findReactionsToStories(db, stories, currentUser, minimum) {
   const storyIDs = [];

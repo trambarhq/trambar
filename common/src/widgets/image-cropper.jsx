@@ -334,8 +334,8 @@ export const ImageCropper = React.forwardRef((props, ref) => {
  * Keep clipping rect from going outside of the image
  *
  * @param  {Object} clippingRect
- * @param  {Number} imageWidth
- * @param  {Number} imageHeight
+ * @param  {number} imageWidth
+ * @param  {number} imageHeight
  */
 function constrainPosition(clippingRect, imageWidth, imageHeight) {
   if (clippingRect.left < 0) {

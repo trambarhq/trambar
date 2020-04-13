@@ -61,11 +61,9 @@ async function handleDatabaseChanges(events) {
  * Send cache revalidation requests
  *
  * @param  {Database} db
- * @param  {Array<Object>} events
- * @param  {Array<Listener>} listeners
+ * @param  {Object[]} events
+ * @param  {Listener[]} listeners
  * @param  {System} system
- *
- * @return {Promise}
  */
 async function sendRevalidationRequests(db, events, listeners, system) {
   const messages = [];
@@ -101,11 +99,9 @@ async function sendRevalidationRequests(db, events, listeners, system) {
  * Send change notifications
  *
  * @param  {Database} db
- * @param  {Array<Object>} events
- * @param  {Array<Listener>} listeners
+ * @param  {Object[]} events
+ * @param  {Listener[]} listeners
  * @param  {System} system
- *
- * @return {Promise}
  */
 async function sendChangeNotifications(db, events, listeners, system) {
   const messages = [];
@@ -153,11 +149,9 @@ async function sendChangeNotifications(db, events, listeners, system) {
  * Send alert messages
  *
  * @param  {Database} db
- * @param  {Array<Object>} events
- * @param  {Array<Listener>} listeners
+ * @param  {Object[]} events
+ * @param  {Listener[]} listeners
  * @param  {System} system
- *
- * @return {Promise}
  */
 async function sendAlerts(db, events, listeners, system) {
   const eventsBySchema = _.entries(_.groupBy(events, 'schema'))

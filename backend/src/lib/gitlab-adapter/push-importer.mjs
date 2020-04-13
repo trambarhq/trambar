@@ -20,8 +20,6 @@ import { Story } from '../accessors/story.mjs';
  * @param  {Project} project
  * @param  {User} author
  * @param  {Object} glEvent
- *
- * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent) {
   const schema = project.name;
@@ -64,7 +62,7 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
  * @param  {Repo} repo
  * @param  {User} author
  * @param  {Object} push
- * @param  {Array<Object>} components
+ * @param  {Object[]} components
  * @param  {Object} glEvent
  *
  * @return {Story}

@@ -3,9 +3,9 @@ import Moment from 'moment';
 /**
  * Return time range of given date
  *
- * @param  {String|Moment} date
+ * @param  {string|Moment} date
  *
- * @return {Array<String>}
+ * @return {string[]}
  */
 function getDayRange(date) {
   let s = (date instanceof Moment) ? date : Moment(date);
@@ -19,10 +19,10 @@ function getDayRange(date) {
 /**
  * Return time ranges of months that cover that a given time span
  *
- * @param  {String|Moment} startTime
- * @param  {String|Moment} endTime
+ * @param  {string|Moment} startTime
+ * @param  {string|Moment} endTime
  *
- * @return {Array<String>}
+ * @return {string[]}
  */
 function getMonthRanges(startTime, endTime) {
   let ms = (startTime instanceof Moment) ? startTime : Moment(startTime);
@@ -42,10 +42,10 @@ function getMonthRanges(startTime, endTime) {
 /**
  * Return a list of day between the start time and end time (YYYY-MM-DD)
  *
- * @param  {String|Moment} startTime
- * @param  {String|Moment} endTime
+ * @param  {string|Moment} startTime
+ * @param  {string|Moment} endTime
  *
- * @return {Array<String>}
+ * @return {string[]}
  */
 function getDates(startTIme, endTime) {
   let ms = (startTime instanceof Moment) ? startTime : Moment(startTime);
@@ -63,7 +63,7 @@ function getDates(startTIme, endTime) {
 /**
  * Return the time offset from UTC
  *
- * @return {Number}
+ * @return {number}
  */
 function getTimeZoneOffset() {
   return Moment().utcOffset();

@@ -57,7 +57,7 @@ class Notifier extends EventEmitter {
    *
    * @param  {Object} payload
    *
-   * @return {Array<Object>}
+   * @return {Object[]}
    */
   unpackChanges(payload) {
     const list = [];

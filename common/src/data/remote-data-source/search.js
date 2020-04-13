@@ -53,7 +53,7 @@ export class Search extends Operation {
    *
    * @param  {Object} other
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   match(other) {
     if (!this.matchLocation(other)) {
@@ -73,7 +73,7 @@ export class Search extends Operation {
    *
    * @param  {Object} other
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   matchCriteria(other) {
     return isEqual(this.criteria, other.criteria);
@@ -90,9 +90,9 @@ export class Search extends Operation {
    * Check if cached objects are retrieved so long enough ago that a
    * server-side search is advisable
    *
-   * @param  {Number} refreshInterval
+   * @param  {number} refreshInterval
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   isSufficientlyRecent(refreshInterval) {
     if (this.local) {
@@ -122,9 +122,9 @@ export class Search extends Operation {
   /**
    * Check if a recent search is fresh
    *
-   * @param  {Number} refreshInterval
+   * @param  {number} refreshInterval
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   isFresh(refreshInterval) {
     if (this.schema === 'local') {
@@ -147,7 +147,7 @@ export class Search extends Operation {
    * Check if there're enough cached records to warrant displaying them
    * while a remote search at takes place
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   isSufficientlyCached() {
     if (!this.results) {
@@ -165,7 +165,7 @@ export class Search extends Operation {
   /**
    * Check if the number of object retrieved from cache meet expectation
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   isMeetingExpectation() {
     if (!this.results) {
@@ -182,10 +182,10 @@ export class Search extends Operation {
    * either are missing from the current results or the objects' gns are
    * different from the ones provided
    *
-   * @param  {Array<Number>} ids
-   * @param  {Array<Number>} gns
+   * @param  {number[]} ids
+   * @param  {number[]} gns
    *
-   * @return {Array<Number>}
+   * @return {number[]}
    */
   getUpdateList(ids, gns) {
     const objects = (this.invalid || !this.results) ? [] : this.results;
@@ -204,9 +204,9 @@ export class Search extends Operation {
   /**
    * Return ids of objects that aren't found in the list provided
    *
-   * @param  {Array<Number>} ids
+   * @param  {number[]} ids
    *
-   * @return {Array<Number>}
+   * @return {number[]}
    */
   getRemovalList(ids) {
     const objects = (!this.results) ? [] : this.results;
@@ -222,9 +222,9 @@ export class Search extends Operation {
   /**
    * Given a list of ids, return the ids that are missing from the current results
    *
-   * @param  {Array<Number>} ids
+   * @param  {number[]} ids
    *
-   * @return {Array<Number>}
+   * @return {number[]}
    */
   getFetchList(ids) {
     const objects = (this.invalid) ? [] : this.results;
@@ -288,9 +288,9 @@ export class Search extends Operation {
  * Count criteria of a given type
  *
  * @param  {Object} criteria
- * @param  {String} name
+ * @param  {string} name
  *
- * @return {Number|undefined}
+ * @return {number|undefined}
  */
 function countCriteria(criteria, name) {
   if (criteria) {

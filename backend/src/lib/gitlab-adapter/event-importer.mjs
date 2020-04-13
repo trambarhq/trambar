@@ -25,8 +25,6 @@ import { Story } from '../accessors/story.mjs';
  * @param  {Repo} repo
  * @param  {Project} project
  * @param  {Object} glHookEvent
- *
- * @return {Promise}
  */
 async function processNewEvents(db, system, server, repo, project, glHookEvent) {
   const lastTask = await TaskLog.last('gitlab-event-import', {
@@ -96,8 +94,6 @@ async function processNewEvents(db, system, server, repo, project, glHookEvent) 
  * @param  {Project} project
  * @param  {Object} glEvent
  * @param  {Object} glHookEvent
- *
- * @return {Promise}
  */
 async function processEvent(db, system, server, repo, project, glEvent, glHookEvent) {
   try {

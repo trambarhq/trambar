@@ -7,11 +7,11 @@ import { orderBy } from '../../utils/array-utils.js';
 /**
  * Merge remote resource list into local one
  *
- * @param  {Array<Object>} local
- * @param  {Array<Object>} remote
- * @param  {Array<Object>} common
+ * @param  {Object[]} local
+ * @param  {Object[]} remote
+ * @param  {Object[]} common
  *
- * @param  {Array<Object>}
+ * @param  {Object[]}
  */
 function mergeLists(local, remote, common) {
   const commonToLocal = findIndexMapping(common, local);
@@ -158,7 +158,7 @@ function getDimensions(res, params, env) {
  * @param  {Object} params
  * @param  {Environment} env
  *
- * @return {String|undefined}
+ * @return {string|undefined}
  */
 function getLocalImageURL(res, params, env) {
   let blob;
@@ -201,7 +201,7 @@ function getLocalImageURL(res, params, env) {
  * @param  {Object} params
  * @param  {Environment} env
  *
- * @return {String|undefined}
+ * @return {string|undefined}
  */
 function getRemoteImageURL(res, params, env) {
   let resURL;
@@ -364,7 +364,7 @@ function getURL(res, params, env) {
  * @param  {Object} params
  * @param  {Environment} env
  *
- * @return {String|undefined}
+ * @return {string|undefined}
  */
 function getImageURL(res, params, env) {
   if (!res) {
@@ -392,7 +392,7 @@ function getImageURL(res, params, env) {
  * @param  {Object} params
  * @param  {Environment} env
  *
- * @return {String|null}
+ * @return {string|null}
  */
 function getVideoURL(res, params, env) {
   if (!res.url) {
@@ -419,7 +419,7 @@ function getVideoURL(res, params, env) {
  * @param  {Object} params
  * @param  {Environment} env
  *
- * @return {String|null}
+ * @return {string|null}
  */
 function getAudioURL(res, params, env) {
   if (!res.url) {
@@ -461,10 +461,8 @@ function getMarkdownIconURL(res, type, env) {
 /**
  * Attach mosaic to images
  *
- * @param  {Array<Object>} resources
+ * @param  {Object[]} resources
  * @param  {Environment} env
- *
- * @return {Promise}
  */
 async function attachMosaic(resources, env) {
   if (!(resources instanceof Array)) {
@@ -485,7 +483,7 @@ async function attachMosaic(resources, env) {
 /**
  * Parse a JSON URL crated by getLocalImageURL()
  *
- * @param  {String} url
+ * @param  {string} url
  *
  * @return {Object|null}
  */
@@ -536,7 +534,7 @@ function getBandwidth(networkType) {
  *
  * @param  {Object}  res
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isZoomable(res) {
   switch (res.type) {

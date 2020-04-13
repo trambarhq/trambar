@@ -38,9 +38,7 @@ export class Listing extends LiveData {
    * Create table in schema
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -72,9 +70,9 @@ export class Listing extends LiveData {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
@@ -140,12 +138,12 @@ export class Listing extends LiveData {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async export(db, schema, rows, credentials, options) {
     for (let row of rows) {
@@ -181,7 +179,7 @@ export class Listing extends LiveData {
    * @param  {User} user
    * @param  {Subscription} subscription
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static isRelevantTo(event, user, subscription) {
     if (subscription.area === 'admin') {
@@ -209,7 +207,7 @@ export class Listing extends LiveData {
    * Move stories from candidate list into actual list
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} row
    */
   static finalize(db, schema, row) {
@@ -254,7 +252,7 @@ export class Listing extends LiveData {
  *
  * @param  {Story} row
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function chooseStories(row) {
   const now = new Date;
@@ -364,11 +362,11 @@ function chooseStories(row) {
 /**
  * Return a new list with new stories added, ordered by btime
  *
- * @param  {Array<Object>} stories
- * @param  {Array<Object>} newStories
- * @param  {String} rtime
+ * @param  {Object[]} stories
+ * @param  {Object[]} newStories
+ * @param  {string} rtime
  *
- * @return {Array<Object>}
+ * @return {Object[]}
  */
 function addStories(stories, newStories, rtime) {
   if (_.isEmpty(newStories)) {
@@ -394,11 +392,11 @@ function addStories(stories, newStories, rtime) {
  * Return a list with the desired number of stories, removing those that are
  * lowly rated
  *
- * @param  {Array<Object>} stories
+ * @param  {Object[]} stories
  * @param  {Listing} listing
- * @param  {Number} desiredLength
+ * @param  {number} desiredLength
  *
- * @return {Array<Object>}
+ * @return {Object[]}
  */
 function removeStoriesWithLowRating(stories, listing, desiredLength) {
   // apply retrieval time rating adjustments
@@ -429,7 +427,7 @@ function getTimeElapsed(start, end) {
  *
  * @param  {Object} filters
  *
- * @return {String}
+ * @return {string}
  */
 function hash(filters) {
   const values = {};

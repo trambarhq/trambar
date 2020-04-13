@@ -92,7 +92,7 @@ class BlobStream {
   /**
    * Return the next part that hasn't been uploaded yet
    *
-   * @return {Promise<Blob>}
+   * @return {Blob}
    */
   async pull() {
     const unsent = this.parts.find(p => !p.sent);
@@ -141,8 +141,6 @@ class BlobStream {
 
   /**
    * Return when all parts have been uploaded
-   *
-   * @return {Promise}
    */
   async wait() {
     if (this.closed) {
@@ -164,7 +162,7 @@ class BlobStream {
    * Send contents of file through stream
    *
    * @param  {File} file
-   * @param  {Number} chunkSize
+   * @param  {number} chunkSize
    *
    * @return {BlobStream}
    */
@@ -208,7 +206,7 @@ class BlobStream {
   /**
    * Start streaming data to remote server
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   async start() {
     if (!this.initialChunkPromise) {
@@ -223,8 +221,6 @@ class BlobStream {
 
   /**
    * Wait for initial chunk to get sent then send all chunks
-   *
-   * @return {Promise}
    */
   async sendRemainingChunks() {
     await this.initialChunkPromise;
@@ -258,9 +254,9 @@ class BlobStream {
   /**
    * Send the next chunk
    *
-   * @param  {Number}  index
+   * @param  {number}  index
    *
-   * @return {Promise<Object|undefined>}
+   * @return {Object|undefined}
    */
   async sendNextChunk(index) {
     let transferredBefore = this.transferred;

@@ -17,9 +17,9 @@ const isTrambar = /(^|\/).trambar\//;
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Push} push
- * @param  {String} defLang
+ * @param  {string} defLang
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function retrieveDescriptions(server, repo, push, defLang) {
   const cxt = await createDescriptionContext(server, repo, push, defLang);
@@ -38,9 +38,9 @@ const descriptionContexts = [];
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Push} push
- * @param  {String} defLang
+ * @param  {string} defLang
  *
- * @return {Promise<Context>}
+ * @return {Context}
  */
 async function createDescriptionContext(server, repo, push, defLang) {
   let cxt = _.find(descriptionContexts, (cxt) => {
@@ -144,7 +144,7 @@ function inheritPreviousContext(cxt, push) {
  * @param  {Context} cxt
  * @param  {Push} push
  *
- * @return {Array<Component>}
+ * @return {Component[]}
  */
 function findMatchingComponents(cxt, push) {
   const fileChanges = _.filter(_.concat(
@@ -170,10 +170,10 @@ function findMatchingComponents(cxt, push) {
 /**
  * Return true if a path matches the descriptor's rules
  *
- * @param  {String} path
+ * @param  {string} path
  * @param  {Descriptor} descriptor
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function matchDescriptor(path, descriptor) {
   if (descriptor.matching) {
@@ -222,10 +222,8 @@ function isInFolder(filePath, folderPath) {
  * Load Trambar descriptor from repo
  *
  * @param  {Context} cxt
- * @param  {String} folderPath
- * @param  {String} filePath
- *
- * @return {Promise}
+ * @param  {string} folderPath
+ * @param  {string} filePath
  */
 async function loadDescriptor(cxt, folderPath, filePath) {
   const descriptor = cxt.descriptors[filePath];
@@ -245,9 +243,7 @@ async function loadDescriptor(cxt, folderPath, filePath) {
  * Load Trambar descriptors from repo recursively
  *
  * @param  {Context} cxt
- * @param  {String} folderPath
- *
- * @return {Promise}
+ * @param  {string} folderPath
  */
 async function loadDescriptors(cxt, folderPath) {
   // scan .trambar folder
@@ -276,10 +272,10 @@ async function loadDescriptors(cxt, folderPath) {
  * Parse a Trambar-specific Markdown file
  *
  * @param  {Context} cxt
- * @param  {String} path
- * @param  {String} defaultLanguageCode
+ * @param  {string} path
+ * @param  {string} defaultLanguageCode
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function parseDescriptorFile(cxt, path) {
   const file = await retrieveFile(cxt, path);
@@ -335,9 +331,9 @@ async function parseDescriptorFile(cxt, path) {
  * Scan git tree for list of objects
  *
  * @param  {Context} cxt
- * @param  {String} folderPath
+ * @param  {string} folderPath
  *
- * @return {Promise<Array<Object>>}
+ * @return {Object[]}
  */
 async function scanFolder(cxt, folderPath) {
   let listing = cxt.folders[folderPath];
@@ -369,9 +365,9 @@ async function scanFolder(cxt, folderPath) {
  * Retrieve a file from Gitlab
  *
  * @param  {Context} cxt
- * @param  {String} filePath
+ * @param  {string} filePath
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function retrieveFile(cxt, filePath) {
   // only files in a .trambar folder is ever retrieved
@@ -393,7 +389,7 @@ async function retrieveFile(cxt, filePath) {
  *
  * @param  {Object} file
  *
- * @return {Buffer|String}
+ * @return {Buffer|string}
  */
 function getFileContents(file, encoding) {
   const buffer = Buffer.from(file.content, 'base64');
@@ -415,10 +411,10 @@ const gitConflicts = /<{7}\s\w+\r?\n([\s\S]*?\r?\n)={7}\r?\n([\s\S]*?\r?\n)>{7}\
  * Upload file to media server
  *
  * @param  {Context} cxt
- * @param  {String} folderPath
- * @param  {String} url
+ * @param  {string} folderPath
+ * @param  {string} url
  *
- * @return {Promise<String|Object|undefined>}
+ * @return {string|Object|undefined}
  */
 async function importImage(cxt, folderPath, url) {
   try {
@@ -445,7 +441,7 @@ async function importImage(cxt, folderPath, url) {
 /**
  * Parse rules for matching filename against patterns
  *
- * @param  {Array<String>} rules
+ * @param  {string[]} rules
  *
  * @return {Function|null}
  */

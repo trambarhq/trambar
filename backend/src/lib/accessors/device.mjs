@@ -36,9 +36,7 @@ export class Device extends Data {
    * Create table in schema
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -66,9 +64,7 @@ export class Device extends Data {
    * Grant privileges to table to appropriate Postgres users
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async grant(db, schema) {
     const table = this.getTableName(schema);
@@ -84,10 +80,10 @@ export class Device extends Data {
    * Upgrade table in schema to given DB version (from one version prior)
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Number} version
+   * @param  {string} schema
+   * @param  {number} version
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async upgrade(db, schema, version) {
     if (version === 2) {
@@ -109,9 +105,9 @@ export class Device extends Data {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
@@ -123,12 +119,12 @@ export class Device extends Data {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
@@ -149,13 +145,13 @@ export class Device extends Data {
    * Import objects sent by client-side code, applying access control
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} deviceReceived
    * @param  {Object} deviceBefore
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array>}
+   * @return {Object[]}
    */
   static async importOne(db, schema, deviceReceived, deviceBefore, credentials, options) {
     const row = await super.importOne(db, schema, deviceReceived, deviceBefore, credentials, options);
@@ -186,7 +182,7 @@ export class Device extends Data {
    * @param  {User} user
    * @param  {Subscription} subscription
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static isRelevantTo(event, user, subscription) {
     if (subscription.area === 'admin') {
@@ -222,8 +218,6 @@ export class Device extends Data {
  * Attach marketing name to device details if found and fix manufacturer name
  *
  * @param  {Device} device
- *
- * @return {Promise}
  */
 async function fixDeviceDetails(device) {
   const type = device.type;
@@ -239,9 +233,9 @@ async function fixDeviceDetails(device) {
 /**
  * Return proper name of manufacturer (if different from what the phone reports)
  *
- * @param  {String} manufacturer
+ * @param  {string} manufacturer
  *
- * @return {String}
+ * @return {string}
  */
 function getManufactureName(manufacturer) {
   switch (manufacturer) {
@@ -255,11 +249,11 @@ function getManufactureName(manufacturer) {
 /**
  * Return marketing name of a device
  *
- * @param  {String} type
- * @param  {String} manufacturer
- * @param  {String} model
+ * @param  {string} type
+ * @param  {string} manufacturer
+ * @param  {string} model
  *
- * @return {Promise<String|undefined>}
+ * @return {string|undefined}
  */
 async function getDeviceDisplayName(type, manufacturer, model) {
   if (type === 'ios') {
@@ -276,9 +270,9 @@ async function getDeviceDisplayName(type, manufacturer, model) {
 /**
  * Return marketing name of an Apple device
  *
- * @param  {String} model
+ * @param  {string} model
  *
- * @return {Promise<String|undefined>}
+ * @return {string|undefined}
  */
 async function getAppleDeviceDisplayName(model) {
   const name = _.findKey(appleModelNumbers, (regExp) => {
@@ -290,9 +284,9 @@ async function getAppleDeviceDisplayName(model) {
 /**
  * Return marketing name of a Windows device
  *
- * @param  {String} model
+ * @param  {string} model
  *
- * @return {Promise<String|undefined>}
+ * @return {string|undefined}
  */
 async function getWindowsDeviceDisplayName(model) {
   const name = _.findKey(wpModelNumbers, (regExp) => {
@@ -304,9 +298,9 @@ async function getWindowsDeviceDisplayName(model) {
 /**
  * Return marketing name of an Android device
  *
- * @param  {String} model
+ * @param  {string} model
  *
- * @return {Promise<String|undefined>}
+ * @return {string|undefined}
  */
 async function getAndroidDeviceDisplayName(manufacturer, model) {
   const db = await getAndroidDeviceDatabase();
@@ -340,9 +334,9 @@ let androidDeviceDatabase = null;
 /**
  * Return Android device name database
  *
- * @param  {String} model
+ * @param  {string} model
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function getAndroidDeviceDatabase() {
   try {
@@ -358,7 +352,7 @@ async function getAndroidDeviceDatabase() {
 /**
  * Download Android device name database
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function fetchAndroidDeviceDatabase() {
   const response = await CrossFetch('http://storage.googleapis.com/play_public/supported_devices.csv');

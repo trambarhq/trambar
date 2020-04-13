@@ -466,9 +466,9 @@ function handleError(err, req, res, next) {
  * @param  {Session} session
  * @param  {User} user
  * @param  {Object} details
- * @param  {Boolean} activate
+ * @param  {boolean} activate
  *
- * @return {Promise<Session>}
+ * @return {Session}
  */
 async function authorizeUser(session, user, details, activate) {
   const token = await createRandomToken(16);
@@ -516,7 +516,7 @@ async function authorizeUser(session, user, details, activate) {
  * @param  {Server} server
  * @param  {Object} params
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function authenticateThruPassport(req, res, system, server, params) {
   const provider = req.params.provider;
@@ -590,9 +590,9 @@ async function authenticateThruPassport(req, res, system, server, params) {
  * Remove link between user and an external account
  *
  * @param  {Server} server
- * @param  {String|Number} externalUserID
+ * @param  {string|number} externalUserID
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function detachExternalAccount(server, externalUserID) {
   const db = await Database.open();
@@ -623,7 +623,7 @@ async function detachExternalAccount(server, externalUserID) {
  *
  * @param  {Object} session
  *
- * @return {Promise<Session>}
+ * @return {Session}
  */
 async function saveSession(session) {
   const db = await Database.open();
@@ -635,7 +635,7 @@ async function saveSession(session) {
  *
  * @param  {Object} session
  *
- * @return {Promise<Session>}
+ * @return {Session}
  */
 async function removeSession(handle) {
   const db = await Database.open();
@@ -650,9 +650,9 @@ async function removeSession(handle) {
 /**
  * Find a session object
  *
- * @param  {String} handle
+ * @param  {string} handle
  *
- * @return {Promise<Session>}
+ * @return {Session}
  */
 async function findSession(handle) {
   const db = await Database.open();
@@ -667,7 +667,7 @@ async function findSession(handle) {
 /**
  * Find a system object
  *
- * @return {Promise<System>}
+ * @return {System}
  */
 async function findSystem() {
   const db = await Database.open();
@@ -678,9 +678,9 @@ async function findSystem() {
 /**
  * Find a server object
  *
- * @param  {Number} serverID
+ * @param  {number} serverID
  *
- * @return {Promise<Server>}
+ * @return {Server}
  */
 async function findServer(serverID) {
   const db = await Database.open();
@@ -695,9 +695,9 @@ async function findServer(serverID) {
 /**
  * Find a server objects of given type
  *
- * @param  {String} type
+ * @param  {string} type
  *
- * @return {Promise<Server>}
+ * @return {Server}
  */
 async function findServersByType(type) {
   const db = await Database.open();
@@ -708,9 +708,9 @@ async function findServersByType(type) {
 /**
  * Find servers that provide OAuth authentication
  *
- * @param  {String} area
+ * @param  {string} area
  *
- * @return {Promise<Array<Server>>}
+ * @return {Server[]}
  */
 async function findOAuthServers(area) {
   const db = await Database.open();
@@ -727,7 +727,7 @@ async function findOAuthServers(area) {
  *
  * @param  {Server} server
  *
- * @return {Promise<Server>}
+ * @return {Server}
  */
 async function saveServer(server) {
   const db = await Database.open();
@@ -737,9 +737,9 @@ async function saveServer(server) {
 /**
  * Find a user object
  *
- * @param  {Number} userID
+ * @param  {number} userID
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findUser(userID) {
   const db = await Database.open();
@@ -754,9 +754,9 @@ async function findUser(userID) {
 /**
  * Find a user object by username
  *
- * @param  {String} username
+ * @param  {string} username
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findUserByName(username) {
   const db = await Database.open();
@@ -783,9 +783,9 @@ async function findUserByName(username) {
 /**
  * Remove devices connected with specified session handle(s)
  *
- * @param  {String|Array<String>} handles
+ * @param  {string|string[]} handles
  *
- * @return {Array<Device>}
+ * @return {Device[]}
  */
 async function removeDevices(handles) {
   const db = await Database.open();
@@ -799,7 +799,7 @@ async function removeDevices(handles) {
  * @param  {Server} server
  * @param  {Object} account
  *
- * @return {Promise<User>}
+ * @return {User}
  */
 async function findMatchingUser(server, account) {
   const db = await Database.open();
@@ -866,10 +866,8 @@ async function findMatchingUser(server, account) {
 /**
  * Find matching entry in htpasswd file (throw otherwise)
  *
- * @param  {String} username
- * @param  {String} password
- *
- * @return {Promise}
+ * @param  {string} username
+ * @param  {string} password
  */
 async function findHtpasswdRecord(username, password) {
   try {
@@ -898,7 +896,7 @@ async function findHtpasswdRecord(username, password) {
  *
  * @param  {Server} server
  *
- * @return {Promise<Function>}
+ * @return {Function}
  */
 async function findPassportPlugin(server) {
   const plugins = {
@@ -921,9 +919,9 @@ async function findPassportPlugin(server) {
  * Return true if server can provide access to an area
  *
  * @param  {Server} server
- * @param  {String} area
+ * @param  {string} area
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function canProvideAccess(server, area) {
   if (server.settings.oauth) {
@@ -954,7 +952,7 @@ function canProvideAccess(server, area) {
  * @param  {Server} server
  * @param  {Object} profile
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function acceptNewUser(server, profile) {
   const type = _.get(server, 'settings.user.type');
@@ -976,10 +974,10 @@ function acceptNewUser(server, profile) {
 /**
  * Return true if a email address matches an item on a whitelist
  *
- * @param  {String} email
- * @param  {String} whitelist
+ * @param  {string} email
+ * @param  {string} whitelist
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function matchWhiteList(email, whitelist) {
   let items = _.split(_.trim(whitelist), /\s*\n\s*/);
@@ -1008,7 +1006,7 @@ function matchWhiteList(email, whitelist) {
  *
  * @param  {Object} profile
  *
- * @return {Number|String}
+ * @return {number|string}
  */
 function getProfileID(profile) {
   // return the id from the raw object if it's there so we have the
@@ -1095,7 +1093,7 @@ function copyUserProperties(user, server, image, profile) {
  *
  * @param  {Object} profile
  *
- * @return {String}
+ * @return {string}
  */
 function proposeUsername(profile) {
   if (profile.username) {
@@ -1118,9 +1116,9 @@ function proposeUsername(profile) {
 /**
  * Convert string to ASCII lowercase
  *
- * @param  {String} s
+ * @param  {string} s
  *
- * @return {String}
+ * @return {string}
  */
 function toSimpleLatin(s) {
   if (s) {
@@ -1133,7 +1131,7 @@ function toSimpleLatin(s) {
  *
  * @param  {Object} profile
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function retrieveProfileImage(profile) {
   let avatarURL = profile.avatarURL || profile.avatarUrl;
@@ -1152,8 +1150,6 @@ async function retrieveProfileImage(profile) {
  * @param  {User} user
  * @param  {Server} server
  * @param  {Object} profile
- *
- * @return {Promise}
  */
 async function updateProfileImage(db, user, server, profile) {
   try {
@@ -1169,9 +1165,9 @@ async function updateProfileImage(db, user, server, profile) {
 /**
  * Create a random token with given number of bytes
  *
- * @param  {Number} bytes
+ * @param  {number} bytes
  *
- * @return {Promise<String>}
+ * @return {string}
  */
 async function createRandomToken(bytes) {
   const buffer = await Crypto.randomBytesAsync(bytes);
@@ -1182,7 +1178,7 @@ async function createRandomToken(bytes) {
  * Return an boxed string contain the PostgreSQL expression for time
  * that's the given number of minutes ahead of now
  *
- * @param  {Number} minutes
+ * @param  {number} minutes
  *
  * @return {Object}
  */
@@ -1253,7 +1249,7 @@ function extractQueryVariables(query) {
 /**
  * Parse a query string
  *
- * @param  {String} queryString
+ * @param  {string} queryString
  *
  * @return {Object}
  */
@@ -1273,8 +1269,8 @@ function parseQueryString(queryString) {
  * Parse a signed request, checking whether the given signature was
  * signed using the app secret
  *
- * @param  {String} signedRequest
- * @param  {String} appSecret
+ * @param  {string} signedRequest
+ * @param  {string} appSecret
  *
  * @return {Object}
  */
@@ -1300,7 +1296,7 @@ function parseDeauthorizationRequest(signedRequest, appSecret){
 /**
  * Remove old unused session objects
  *
- * @return {Promise<Array>}
+ * @return {Object[]}
  */
 async function deleteExpiredSessions() {
   const db = await Database.open();

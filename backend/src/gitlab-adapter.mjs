@@ -111,7 +111,7 @@ async function stop() {
 /**
  * Called when changes occurs in the database
  *
- * @param  {Array<Object>} events
+ * @param  {Object[]} events
  */
 function handleDatabaseChanges(events) {
   for (let event of events) {
@@ -302,8 +302,6 @@ function handleSystemChangeEvent(event) {
  * @param  {Request} req
  * @param  {Response} res
  * @param  {Function} next
- *
- * @return {Promise}
  */
 async function handleSystemHookCallback(req, res, next) {
   try {
@@ -323,8 +321,6 @@ async function handleSystemHookCallback(req, res, next) {
  * @param  {Request} req
  * @param  {Response} res
  * @param  {Function} next
- *
- * @return {Promise}
  */
 async function handleProjectHookCallback(req, res, next) {
   try {

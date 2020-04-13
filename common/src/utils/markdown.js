@@ -26,10 +26,10 @@ function renderMarkdown(props) {
 /**
  * Detect whether text appears to be Markdown
  *
- * @param  {String|Object} text
+ * @param  {string|Object} text
  * @param  {Function} onReference
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function isMarkdown(text, onReference) {
   if (typeof(text) === 'object') {
@@ -64,12 +64,12 @@ function findReferencedResource(resources, name) {
 /**
  * Render text containing a survey
  *
- * @param  {String} text
+ * @param  {string} text
  * @param  {Object} answers
  * @param  {Function} onChange
  * @param  {Function} onReference
  *
- * @return {Array<String|ReactElement>}
+ * @return {string[]|ReactElement[]}
  */
 function renderSurvey(text, answers, onChange, onReference) {
   const listTokens = extractListItems(text);
@@ -117,11 +117,11 @@ function renderSurvey(text, answers, onChange, onReference) {
 /**
  * Render text containing a survey, showing the results
  *
- * @param  {String} text
+ * @param  {string} text
  * @param  {Object} voteCounts
  * @param  {Function} onReference
  *
- * @return {Array<String|ReactElement>}
+ * @return {string[]|ReactElement[]}
  */
 function renderSurveyResults(text, voteCounts, onReference) {
   const listTokens = extractListItems(text);
@@ -162,12 +162,12 @@ function renderSurveyResults(text, voteCounts, onReference) {
 /**
  * Render text containing a task list
  *
- * @param  {String} text
+ * @param  {string} text
  * @param  {Object} answers
  * @param  {Function} onChange
  * @param  {Function} onReference
  *
- * @return {Array<String|ReactElement>}
+ * @return {string[]|ReactElement[]}
  */
 function renderTaskList(text, answers, onChange, onReference) {
   const listTokens = extractListItems(text);
@@ -216,10 +216,10 @@ function renderTaskList(text, answers, onChange, onReference) {
 /**
  * Render Markdown text
  *
- * @param  {String} text
+ * @param  {string} text
  * @param  {Function} onReference
  *
- * @return {Array<ReactElement>}
+ * @return {ReactElement[]}
  */
 function renderText(text, onReference) {
   const parser = new CustomParser({ onReference });
@@ -232,7 +232,7 @@ function renderText(text, onReference) {
  * Parse results from extractListItems() as Markdown. Results are saved into
  * the tokens themselves.
  *
- * @param  {Array<String|Array<Object>>} listTokens
+ * @param  {string[]|Object[][]} listTokens
  * @param  {Function} onReference
  */
 function renderListItems(listTokens, onReference) {
@@ -287,7 +287,7 @@ class CustomParser extends Parser {
    * Parse markdown text in list items from extractListItems(), storing
    * tokens into the list tokens themselves
    *
-   * @param  {Array<Object>} listTokens
+   * @param  {Object[]} listTokens
    */
   parseList(listTokens) {
     this.initialize('');
@@ -299,7 +299,7 @@ class CustomParser extends Parser {
   /**
    * Parse token at block level
    *
-   * @param  {Object|Array<Object>} listToken
+   * @param  {Object|Object[]} listToken
    */
   processListItemBlocks(listToken) {
     if (listToken instanceof Array) {
@@ -323,7 +323,7 @@ class CustomParser extends Parser {
   /**
    * Parse token at inline level
    *
-   * @param  {Object|Array<Object>} listToken
+   * @param  {Object|Object[]} listToken
    */
   processListItemInline(listToken) {
     if (listToken instanceof Array) {
@@ -360,7 +360,7 @@ class CustomRenderer extends ReactRenderer {
   /**
    * Convert markdown tokens in list tokens into React elements
    *
-   * @param  {Array<Object>} listTokens
+   * @param  {Object[]} listTokens
    */
   renderList(listTokens) {
     this.renderListItem(listTokens);
@@ -370,7 +370,7 @@ class CustomRenderer extends ReactRenderer {
    * Convert markdown tokens into a React element, storing it in the
    * given list token itself
    *
-   * @param  {Object|Array<Object>} listToken
+   * @param  {Object|Object[]} listToken
    */
   renderListItem(listToken) {
     if (listToken instanceof Array) {
@@ -391,7 +391,7 @@ class CustomRenderer extends ReactRenderer {
    * Render image referenced in text
    *
    * @param  {Object} token
-   * @param  {Number} key
+   * @param  {number} key
    *
    * @return {ReactElement}
    */
@@ -412,9 +412,9 @@ class CustomRenderer extends ReactRenderer {
    * Render text with emoji
    *
    * @param  {Object} token
-   * @param  {Number} key
+   * @param  {number} key
    *
-   * @return {Array<String|ReactElement>}
+   * @return {string[]|ReactElement[]}
    */
   outputText(token, key) {
     const { text } = token;

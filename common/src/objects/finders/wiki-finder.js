@@ -5,10 +5,10 @@ const emptyArray = [];
  * Find a wiki by id
  *
  * @param  {Database} db
- * @param  {String} schema
- * @param  {Number} id
+ * @param  {string} schema
+ * @param  {number} id
  *
- * @return {Promise<Wiki>}
+ * @return {Wiki}
  */
 async function findWiki(db, schema, id) {
   return db.findOne({
@@ -23,9 +23,9 @@ async function findWiki(db, schema, id) {
  * Find all wikis
  *
  * @param  {Database} db
- * @param  {String} schema
+ * @param  {string} schema
  *
- * @return {Promise<Array<Wiki>>}
+ * @return {Wiki[]}
  */
 async function findAllWikis(db, schema) {
   return db.find({
@@ -39,9 +39,9 @@ async function findAllWikis(db, schema) {
  * Find public wikis
  *
  * @param  {Database} db
- * @param  {String} schema
+ * @param  {string} schema
  *
- * @return {Promise<Array<Wiki>>}
+ * @return {Wiki[]}
  */
 async function findPublicWikis(db, schema) {
   return db.find({

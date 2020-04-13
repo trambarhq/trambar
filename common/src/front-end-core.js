@@ -279,9 +279,9 @@ async function start(cfg) {
 /**
  * Load user-selected locale from local database
  *
- * @param  {String} key
+ * @param  {string} key
  *
- * @return {Promise<*>}
+ * @return {*}
  */
 async function loadSetting(key) {
   let criteria = { key };
@@ -296,10 +296,8 @@ async function loadSetting(key) {
 /**
  * Save user-selected locale to local database
  *
- * @param  {String} key
+ * @param  {string} key
  * @param  {*} value
- *
- * @return {Promise}
  */
 async function saveSetting(key, value) {
   let record = { key, value };
@@ -309,9 +307,7 @@ async function saveSetting(key, value) {
 /**
  * Remove saved setting
  *
- * @param  {String} key
- *
- * @return {Promise}
+ * @param  {string} key
  */
 async function removeSetting(key) {
   let record = { key };
@@ -321,9 +317,9 @@ async function removeSetting(key) {
 /**
  * Load saved session from local database for a particular host
  *
- * @param  {String} address
+ * @param  {string} address
  *
- * @return {Promise<Object|undefined>}
+ * @return {Object|undefined}
  */
 async function loadSession(address) {
   const criteria = { key: address };
@@ -347,8 +343,6 @@ async function loadSession(address) {
  * Save session to local database
  *
  * @param  {Object} session
- *
- * @return {Promise}
  */
 async function saveSession(session) {
   const now = (new Date).toISOString();
@@ -368,8 +362,6 @@ async function saveSession(session) {
  * Remove a saved session
  *
  * @param  {Object} session
- *
- * @return {Promise}
  */
 async function removeSession(session) {
   const record = {
@@ -470,11 +462,11 @@ async function changeSubscription() {
  * Return the destination URL for file upload
  *
  * @param  {Object} destination
- * @param  {String} id
- * @param  {String} type
- * @param  {String} part
+ * @param  {string} id
+ * @param  {string} type
+ * @param  {string} part
  *
- * @return {String}
+ * @return {string}
  */
 function getUploadURL(destination, id, type, part) {
   const { address, schema } = destination;
@@ -507,9 +499,9 @@ function getUploadURL(destination, id, type, part) {
  * Return the URL for uploading a stream
  *
  * @param  {Object} destination
- * @param  {String} id
+ * @param  {string} id
  *
- * @return {String}
+ * @return {string}
  */
 function getStreamURL(destination, id) {
   const { address, schema } = destination;
@@ -520,9 +512,7 @@ function getStreamURL(destination, id) {
  * Add a upload tasks to remote database
  *
  * @param {Object} destination
- * @param {Array<Object>} payloads
- *
- * @return {Promise}
+ * @param {Object[]} payloads
  */
 async function addPayloadTasks(destination, payloads) {
   const { address, schema } = destination;
@@ -557,9 +547,9 @@ async function addPayloadTasks(destination, payloads) {
  * video transcoding progress)
  *
  * @param  {Object} destination
- * @param  {Array<Object>} payloads
+ * @param  {Object[]} payloads
  *
- * @return {Promise<Boolean>}
+ * @return {boolean}
  */
 async function updateBackendProgress(destination, payloads) {
   const query = {

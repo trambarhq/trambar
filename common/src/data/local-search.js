@@ -5,11 +5,11 @@ import { isEqual } from '../utils/object-utils.js';
  *
  * Need to keep functionality in-sync with backend
  *
- * @param  {String} table
+ * @param  {string} table
  * @param  {Object} object
  * @param  {Object} criteria
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 function matchSearchCriteria(table, object, criteria) {
   let matching = true;

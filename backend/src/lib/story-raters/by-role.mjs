@@ -14,10 +14,10 @@ export class ByRole {
    *
    * @param  {Database} db
    * @param  {Schema} schema
-   * @param  {Array<Story>} stories
+   * @param  {Story[]} stories
    * @param  {Listing} listing
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async prepareContext(db, schema, stories, listing) {
     const roles = [];
@@ -40,7 +40,7 @@ export class ByRole {
    * @param  {Object} context
    * @param  {Story} story
    *
-   * @return {Number}
+   * @return {number}
    */
   static calculateRating(context, story) {
     const roles = _.filter(context.roles, (role) => {
@@ -69,7 +69,7 @@ export class ByRole {
    * Load role from database, saving it to cache
    *
    * @param  {Database} db
-   * @param  {Number} roleID
+   * @param  {number} roleID
    *
    * @return {Object|null}
    */
@@ -100,7 +100,7 @@ export class ByRole {
   /**
    * Find cached role
    *
-   * @param  {Number} roleID
+   * @param  {number} roleID
    *
    * @return {Object|null}
    */
@@ -118,7 +118,7 @@ export class ByRole {
   /**
    * Remove an entry from cache
    *
-   * @param  {Number} roleID
+   * @param  {number} roleID
    */
   static clearCachedRole(roleID) {
     const index = _.findIndex(this.roleCache, { id: roleID });

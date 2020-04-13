@@ -129,7 +129,7 @@ export async function TaskList(props) {
     if (!expandedTaskIDs.includes(task.id)) {
       return null;
     }
-    const message = getDetails(task);
+    const message = renderDetails(task);
     return (
       <div>
         <div className="details">{message}</div>
@@ -248,15 +248,16 @@ function formatAddedDeleteChanged(object) {
   for (let key of [ 'deleted', 'modified', 'added' ]) {
     if (object[key] instanceof Array) {
       for (let s of object[key]) {
-        pushItem(list, s, `item ${key}`);
+        pushItem(list, s, key);
       }
     }
   }
   return list;
 }
 
-function pushItem(list, text, className) {
+function pushItem(list, text, key) {
   const key = list.length;
+  class className = `item ${key}`;
   list.push(
     <span className={className} key={key}>
       {text}

@@ -4,7 +4,7 @@
  * @param  {HTMLVideoElement} video
  * @param  {Object} options
  *
- * @return {Promise<Blob>}
+ * @return {Blob}
  */
 async function captureFrame(video, options) {
   const { start = 0, timeout = 1000, toDataURL = false } = options;
@@ -80,9 +80,9 @@ async function seekVideo(video, time) {
  * otherwise fallback to toDataURL()
  *
  * @param  {HTMLCanvasElement} canvas
- * @param  {String} mimeType
- * @param  {Number} quality
- * @param  {Boolean} toDataURL
+ * @param  {string} mimeType
+ * @param  {number} quality
+ * @param  {boolean} toDataURL
  */
 async function saveCanvasContents(canvas, mimeType, quality, toDataURL) {
   let blob;

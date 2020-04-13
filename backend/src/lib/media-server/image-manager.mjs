@@ -9,9 +9,9 @@ import SVGSon from 'svgson';
 /**
  * Return metadata of an image file
  *
- * @param  {String} path
+ * @param  {string} path
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function getImageMetadata(path) {
   try {
@@ -88,11 +88,11 @@ const sharpOperators = {
 /**
  * Apply filters to an image and reencode it in the specified format
  *
- * @param  {String} path
- * @param  {String} filters
- * @param  {String} format
+ * @param  {string} path
+ * @param  {string} filters
+ * @param  {string} format
  *
- * @return {Promise<Buffer>}
+ * @return {Buffer}
  */
 async function applyFilters(path, filters, format) {
   if (format === 'svg') {
@@ -156,10 +156,10 @@ const svgOperators = {
 /**
  * Apply filters on an SVG document
  *
- * @param  {String} path
- * @param  {String} filters
+ * @param  {string} path
+ * @param  {string} filters
  *
- * @return {Promise<Buffer>}
+ * @return {Buffer}
  */
 async function applyFiltersToSVGDocument(path, filters) {
   if (!filters) {
@@ -239,8 +239,8 @@ async function applyFiltersToSVGDocument(path, filters) {
  * Find functions for filters and call them on target
  *
  * @param  {Object} target
- * @param  {Object<Function>} operators
- * @param  {String} filters
+ * @param  {Object} operators
+ * @param  {string} filters
  */
 function applyOperators(target, operators, filters) {
   for (let filter of _.split(filters, /[ +]/)) {
@@ -274,8 +274,8 @@ function applyOperators(target, operators, filters) {
 /**
  * Embed description into JPEG file
  *
- * @param {String} description
- * @param {String} dstPath
+ * @param {string} description
+ * @param {string} dstPath
  */
 async function addJPEGDescription(description, dstPath) {
   const buffer = await FS.readFileAsync(dstPath);
@@ -296,9 +296,9 @@ async function addJPEGDescription(description, dstPath) {
 /**
  * Get description embedded in JPEG filename
  *
- * @param  {String} path
+ * @param  {string} path
  *
- * @return {Promise<String>}
+ * @return {string}
  */
 async function getJPEGDescription(path) {
   const buffer = await FS.readFileAsync(path);

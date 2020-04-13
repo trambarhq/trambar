@@ -4,10 +4,10 @@ import { HTTPError } from '../errors.mjs';
 /**
  * Ask Media Server to import a file at the specified URL
  *
- * @param  {String} url
+ * @param  {string} url
  * @param  {Object|undefined} retrievalHeaders
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function importFile(url, retrievalHeaders) {
   const importURL = 'http://media_server/internal/import';

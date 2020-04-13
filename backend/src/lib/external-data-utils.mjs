@@ -120,7 +120,7 @@ function findLink(object, server, props) {
  * Find a link by server type
  *
  * @param  {ExternalObject} object
- * @param  {String} serverType
+ * @param  {string} serverType
  * @param  {Object|undefined} props
  *
  * @return {Object|null}
@@ -142,7 +142,7 @@ function findLinkByServerType(object, serverType, props) {
  * Find a link by relations it has
  *
  * @param  {ExternalObject} object
- * @param  {Array<String>} ...relations
+ * @param  {string[]} ...relations
  *
  * @return {Object|null}
  */
@@ -165,7 +165,7 @@ function findLinkByRelations(object, ...relations) {
  * Find a link that also exists in another object
  *
  * @param  {ExternalObject} object
- * @param  {String} ...relations
+ * @param  {string} ...relations
  *
  * @return {Object|null}
  */
@@ -216,7 +216,7 @@ function removeLink(object, server, props) {
  *
  * @param  {ExternalObject} object
  *
- * @return {Number}
+ * @return {number}
  */
 function countLinks(object) {
   return (object.external) ? object.external.length : 0;
@@ -227,7 +227,7 @@ function countLinks(object) {
  *
  * @param  {ExternalObject} object
  * @param  {Server} server
- * @param  {String} path
+ * @param  {string} path
  * @param  {Object} prop
  */
 function importProperty(object, server, path, prop) {
@@ -352,7 +352,7 @@ function importResource(object, server, prop) {
  *
  * @param  {ExternalObject} object
  * @param  {Server} server
- * @param  {String} path
+ * @param  {string} path
  * @param  {Object} dest
  * @param  {Object} prop
  */

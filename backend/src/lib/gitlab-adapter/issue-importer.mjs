@@ -21,7 +21,7 @@ import { Story } from '../accessors/story.mjs';
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Boolean>}
+ * @return {boolean}
  */
 async function processEvent(db, system, server, repo, project, author, glEvent) {
   if (!glEvent.target_id) {
@@ -66,8 +66,6 @@ async function processEvent(db, system, server, repo, project, author, glEvent) 
  * @param  {Project} project
  * @param  {User} author
  * @param  {Object} glEvent
- *
- * @return {Promise}
  */
 async function processHookEvent(db, system, server, repo, project, author, glHookEvent) {
   if (glHookEvent.object_attributes.action !== 'update') {
@@ -130,7 +128,7 @@ async function processHookEvent(db, system, server, repo, project, author, glHoo
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {User} opener
- * @param  {Array<Object>} assignments
+ * @param  {Object[]} assignments
  * @param  {Object} glIssue
  *
  * @return {Story}
@@ -238,8 +236,8 @@ function copyIssueProperties(story, system, server, repo, opener, assignments, g
  * Retrieve issue from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
- * @param  {Number} glIssueId
+ * @param  {number} glProjectId
+ * @param  {number} glIssueId
  *
  * @return {Object}
  */
@@ -256,10 +254,10 @@ async function fetchIssue(server, glProjectId, glIssueId) {
  * find the mapping
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
- * @param  {Number} glIssueId
+ * @param  {number} glProjectId
+ * @param  {number} glIssueId
  *
- * @return {Promise<Number>}
+ * @return {number}
  */
 async function getIssueNumber(server, glProjectId, glIssueId) {
   const baseURL = _.get(server, 'settings.oauth.base_url');
@@ -286,8 +284,8 @@ const issueNumberCache = {};
  * Retrieve issue from Gitlab by issue number
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
- * @param  {Number} glIssueId
+ * @param  {number} glProjectId
+ * @param  {number} glIssueId
  *
  * @return {Object}
  */

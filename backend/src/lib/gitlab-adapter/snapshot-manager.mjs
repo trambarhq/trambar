@@ -118,8 +118,6 @@ async function retrieveFile(schema, tag, type, path) {
  * @param  {Database} db
  * @param  {Server} server
  * @param  {Repo} repo
- *
- * @return {Promise}
  */
 async function processNewEvents(db, server, repo) {
   const lastTask = await TaskLog.last('gitlab-snapshot-import', {

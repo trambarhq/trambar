@@ -149,7 +149,7 @@ function parseResponse(buffer) {
  *
  * @param  {ReadableStream} stream
  *
- * @return {Promise<Buffer>}
+ * @return {Buffer}
  */
 async function readStream(stream) {
   const chunks = [];
@@ -164,9 +164,7 @@ async function readStream(stream) {
  * Write data into a stream
  *
  * @param  {WritableStream} stream
- * @param  {Array<String|Buffer>} chunks
- *
- * @return {Promise}
+ * @param  {string[]|Buffer[]} chunks
  */
 async function writeStream(stream, chunks) {
   for (let chunk of chunks) {

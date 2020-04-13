@@ -8,7 +8,7 @@ export class Payloads {
   /**
    * Add a new payload
    *
-   * @param  {String} type
+   * @param  {string} type
    *
    * @return {Payload}
    */
@@ -31,8 +31,6 @@ export class Payloads {
    * Scan an object's resource array and cancel any unfinished uploads
    *
    * @param  {Object} object
-   *
-   * @return {Promise}
    */
   abandon(object) {
     let ids = getPayloadIDs(object);
@@ -43,8 +41,6 @@ export class Payloads {
    * Scan an object's resource array and upload any blobs to the server
    *
    * @param  {Object} object
-   *
-   * @return {Promise}
    */
   dispatch(object) {
     let ids = getPayloadIDs(object);
@@ -66,9 +62,7 @@ export class Payloads {
   /**
    * Cancel a payload
    *
-   * @param  {String} id
-   *
-   * @return {Promise}
+   * @param  {string} id
    */
   cancel(id) {
     return this.payloadManager.abandon([ id ]);

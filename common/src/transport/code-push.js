@@ -19,7 +19,7 @@ class CodePush extends EventEmitter {
    * Check for update if the given amount of time, specified in seconds,
    * has passed since the last check.
    *
-   * @param  {Number} interval
+   * @param  {number} interval
    */
   check(interval) {
     if (interval) {
@@ -34,7 +34,7 @@ class CodePush extends EventEmitter {
   /**
    * Return available deployment names
    *
-   * @return {Array<String>}
+   * @return {string[]}
    */
   getDeploymentNames() {
     const names = [];
@@ -51,7 +51,7 @@ class CodePush extends EventEmitter {
   /**
    * Get the deployment name from a file stored on device
    *
-   * @return {Promise<String>}
+   * @return {string}
    */
   async loadDeploymentName() {
     const names = this.getDeploymentNames();
@@ -69,8 +69,6 @@ class CodePush extends EventEmitter {
 
   /**
    * Write the desired deployment name to a file stored on device
-   *
-   * @return {Promise}
    */
   async saveDeploymentName(type) {
     await writeTextFile('codepush', type);
@@ -80,7 +78,7 @@ class CodePush extends EventEmitter {
   /**
    * Retrieves metadata about currently installed package
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   async getCurrentPackage() {
     return new Promise((resolve, reject) => {
@@ -99,7 +97,7 @@ class CodePush extends EventEmitter {
   /**
    * Retrieves metadata about pending package
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   async getPendingPackage() {
     return new Promise((resolve, reject) => {
@@ -117,8 +115,6 @@ class CodePush extends EventEmitter {
 
   /**
    * Check for update
-   *
-   * @return {Promise}
    */
   async checkForUpdate() {
     const deployment = await this.loadDeploymentName();
@@ -136,9 +132,9 @@ class CodePush extends EventEmitter {
   /**
    * Run code synchronization
    *
-   * @param  {String} deploymentKey
+   * @param  {string} deploymentKey
    *
-   * @return {Promise<String>}
+   * @return {string}
    */
   async synchronize(deploymentKey) {
     if (typeof(codePush) !== 'object') {

@@ -13,7 +13,7 @@ export class TaskLog {
   /**
    * Start a task log
    *
-   * @param  {String} action
+   * @param  {string} action
    * @param  {Object|undefined} options
    *
    * @return {TaskLog}
@@ -25,9 +25,9 @@ export class TaskLog {
   /**
    * Obtain a task that was created earlier
    *
-   * @param  {String} schema
-   * @param  {String} token
-   * @param  {String} action
+   * @param  {string} schema
+   * @param  {string} token
+   * @param  {string} action
    *
    * @return {TaskLog}
    */
@@ -53,10 +53,10 @@ export class TaskLog {
   /**
    * Return the last task
    *
-   * @param  {String} action
+   * @param  {string} action
    * @param  {Object|undefined} options
    *
-   * @return {Promise<Task|null>}
+   * @return {Task|null}
    */
   static async last(action, options) {
     const db = await Database.open();
@@ -71,7 +71,7 @@ export class TaskLog {
   }
 
   /**
-   * @param  {String} action
+   * @param  {string} action
    * @param  {Object|undefined} options
    *
    * @constructor
@@ -120,8 +120,8 @@ export class TaskLog {
    * Set details about task
    *
    * @param  {path} current
-   * @param  {Number} total
-   * @param  {String|undefined} unit
+   * @param  {number} total
+   * @param  {string|undefined} unit
    */
   set(path, value, unit) {
     if (unit === 'byte') {
@@ -147,7 +147,7 @@ export class TaskLog {
    * Add an item to details
    *
    * @param  {path} current
-   * @param  {Number} total
+   * @param  {number} total
    */
   append(path, item) {
     const array = _.get(this.details, path, []);
@@ -158,7 +158,7 @@ export class TaskLog {
   /**
    * Attach description of what's happening
    *
-   * @param  {String} text
+   * @param  {string} text
    */
   describe(text) {
     this.description = text;
@@ -168,8 +168,8 @@ export class TaskLog {
   /**
    * Record progress of task
    *
-   * @param  {Number} current
-   * @param  {Number} total
+   * @param  {number} current
+   * @param  {number} total
    */
   report(current, total) {
     if (total === undefined) {
@@ -192,9 +192,7 @@ export class TaskLog {
   /**
    * Record that the task is done
    *
-   * @param  {String} part
-   *
-   * @return {Promise}
+   * @param  {string} part
    */
   async finish(part) {
     if (this.aborted && this.finished) {
@@ -235,8 +233,6 @@ export class TaskLog {
    * Record that the task failed to finish, probably due to an error
    *
    * @param  {Error|undefined} err
-   *
-   * @return {Promise}
    */
   async abort(err) {
     if (this.aborted && this.finished) {
@@ -258,7 +254,7 @@ export class TaskLog {
   /**
    * Preserved any unsaved progress info
    *
-   * @return {Promise<Task|null>}
+   * @return {Task|null}
    */
   async save() {
     if (!this.saving) {

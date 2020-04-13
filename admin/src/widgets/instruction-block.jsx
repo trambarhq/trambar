@@ -38,11 +38,11 @@ export async function InstructionBlock(props) {
 /**
  * Load and parse instruction text
  *
- * @param  {String} folder
- * @param  {String} topic
- * @param  {String} lang
+ * @param  {string} folder
+ * @param  {string} topic
+ * @param  {string} lang
  *
- * @return {Promise<ReactElement>}
+ * @return {ReactElement}
  */
 async function loadMarkdown(folder, topic, lang) {
   const text = await loadText(folder, topic, lang);
@@ -53,11 +53,11 @@ async function loadMarkdown(folder, topic, lang) {
 /**
  * Load instruction text
  *
- * @param  {String} folder
- * @param  {String} topic
- * @param  {String} lang
+ * @param  {string} folder
+ * @param  {string} topic
+ * @param  {string} lang
  *
- * @return {Promise}
+ * @return {string}
  */
 async function loadText(folder, topic, lang) {
   try {
@@ -79,7 +79,7 @@ async function loadText(folder, topic, lang) {
  * Load images used by img tags
  *
  * @param  {ReactElement} element
- * @param  {String} folder
+ * @param  {string} folder
  *
  * @return {ReactElement}
  */

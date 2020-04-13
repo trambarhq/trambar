@@ -34,9 +34,7 @@ export class Repo extends ExternalData {
    * Create table in schema
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -66,10 +64,10 @@ export class Repo extends ExternalData {
    * Upgrade table in schema to given DB version (from one version prior)
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Number} version
+   * @param  {string} schema
+   * @param  {number} version
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   static async upgrade(db, schema, version) {
     if (version === 3) {
@@ -90,9 +88,7 @@ export class Repo extends ExternalData {
    * Grant privileges to table to appropriate Postgres users
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async grant(db, schema) {
     const table = this.getTableName(schema);
@@ -107,9 +103,7 @@ export class Repo extends ExternalData {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
@@ -123,12 +117,12 @@ export class Repo extends ExternalData {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
@@ -159,10 +153,8 @@ export class Repo extends ExternalData {
    * Mark repos as deleted if they're associated with the deleted server
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} associations
-   *
-   * @return {Promise}
    */
   static async deleteAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {
@@ -185,10 +177,8 @@ export class Repo extends ExternalData {
    * Clear deleted flag of repos associated with to specified servers
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object} associations
-   *
-   * @return {Promise}
    */
   static async restoreAssociated(db, schema, associations) {
     for (let [ type, objects ] of _.entries(associations)) {

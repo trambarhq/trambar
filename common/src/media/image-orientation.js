@@ -31,9 +31,9 @@ function getOrientationMatrix(orientation, width, height) {
 /**
  * Calculate inverse of affine matrix
  *
- * @param  {Array<Number>} m
+ * @param  {number[]} m
  *
- * @return {Array<Number>}
+ * @return {number[]}
  */
 function invertMatrix(m) {
 	let [a, b, c, d, e, f] = m;
@@ -51,10 +51,10 @@ function invertMatrix(m) {
 /**
  * Transform a point using affine matrix
  *
- * @param  {Array<Number>} m
- * @param  {Array<Number>} p
+ * @param  {number[]} m
+ * @param  {number[]} p
  *
- * @return {Array<Number>}
+ * @return {number[]}
  */
 function transform(m, p) {
 	let [a, b, c, d, e, f] = m;
@@ -68,7 +68,7 @@ function transform(m, p) {
 /**
  * Transform a rectangle using affine matrix
  *
- * @param  {Array<Number>} m
+ * @param  {number[]} m
  * @param  {Object} r
  *
  * @return {Object}

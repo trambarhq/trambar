@@ -8,7 +8,7 @@ import { CordovaFile } from '../transport/cordova-file.js';
 /**
  * Load an image
  *
- * @param  {Blob|CordovaFile|String} blob
+ * @param  {Blob|CordovaFile|string} blob
  *
  * @return {Promise<HTMLImageElement}
  */
@@ -39,7 +39,7 @@ async function loadImage(blob) {
 /**
  * Load an video
  *
- * @param  {Blob|CordovaFile|String} blob
+ * @param  {Blob|CordovaFile|string} blob
  *
  * @return {Promise<HTMLVideoElement}
  */
@@ -70,7 +70,7 @@ async function loadVideo(blob) {
 /**
  * Load an audio
  *
- * @param  {Blob|CordovaFile|String} blob
+ * @param  {Blob|CordovaFile|string} blob
  *
  * @return {Promise<HTMLAudioElement}
  */
@@ -97,7 +97,7 @@ async function loadAudio(blob) {
 /**
  * Load an SVG picture
  *
- * @param  {Blob|CordovaFile|String} blob
+ * @param  {Blob|CordovaFile|string} blob
  *
  * @return {Promise<HTMLImageElement}
  */
@@ -115,9 +115,9 @@ async function loadSVG(blob) {
 /**
  * Obtain dimensions of image
  *
- * @param  {Blob|CordovaFile|String} blob
+ * @param  {Blob|CordovaFile|string} blob
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function getImageMetadata(blob) {
   if (typeof(blob) === 'string') {
@@ -184,9 +184,9 @@ async function getImageMetadata(blob) {
 /**
  * Obtain dimensions and duration of video
  *
- * @param  {Blob|CordovaFile|String} blob
+ * @param  {Blob|CordovaFile|string} blob
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function getVideoMetadata(blob) {
   if (typeof(blob) === 'string') {
@@ -220,9 +220,9 @@ async function getVideoMetadata(blob) {
 /**
  * Obtain duration of audio
  *
- * @param  {Blob|CordovaFile|String} blob
+ * @param  {Blob|CordovaFile|string} blob
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function getAudioMetadata(blob) {
   if (typeof(blob) === 'string') {
@@ -248,10 +248,10 @@ async function getAudioMetadata(blob) {
 /**
  * Guess image format based on file extension
  *
- * @param  {String} url
- * @param  {String} category
+ * @param  {string} url
+ * @param  {string} category
  *
- * @return {String}
+ * @return {string}
  */
 function guessFileFormat(url, category) {
   const m = /\.(\w+)$/.execute(url.replace(/#.*/, '').replace(/\?.*/, ''));
@@ -274,9 +274,9 @@ function guessFileFormat(url, category) {
 /**
  * Obtain file category from MIME type
  *
- * @param  {String} mimeType
+ * @param  {string} mimeType
  *
- * @return {String}
+ * @return {string}
  */
 function extractFileCategory(mimeType) {
   const parts = mimeType.split('/');
@@ -286,9 +286,9 @@ function extractFileCategory(mimeType) {
 /**
  * Obtain file format from MIME type
  *
- * @param  {String} mimeType
+ * @param  {string} mimeType
  *
- * @return {String}
+ * @return {string}
  */
 function extractFileFormat(mimeType) {
   const parts = mimeType.split('/');
@@ -304,10 +304,10 @@ function extractFileFormat(mimeType) {
 /**
  * Extract a 4x4 mosiac of an image file
  *
- * @param  {Blob|CordovaFile|String} blob
+ * @param  {Blob|CordovaFile|string} blob
  * @param  {Object} rect
  *
- * @return {Promise<Object>}
+ * @return {Object}
  */
 async function extractMosaic(blob, rect) {
   try {
@@ -366,7 +366,7 @@ async function extractMosaic(blob, rect) {
  *
  * @param  {MediaFile} mediaFile
  *
- * @return {Promise<MediaFileData>}
+ * @return {MediaFileData}
  */
 function getFormatData(mediaFile) {
   return new Promise((resolve, reject) => {

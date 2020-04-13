@@ -58,7 +58,7 @@ class PayloadManager extends EventEmitter {
    * Add a payload
    *
    * @param  {Object} destination
-   * @param  {String} type
+   * @param  {string} type
    *
    * @return {Payload}
    */
@@ -89,7 +89,7 @@ class PayloadManager extends EventEmitter {
   /**
    * Start sending payloads
    *
-   * @param  {Array<String>} ids
+   * @param  {string[]} ids
    */
   dispatch(ids) {
     const payloads = this.payloads.filter((payload) => {
@@ -101,7 +101,7 @@ class PayloadManager extends EventEmitter {
   /**
    * Cancel payloads
    *
-   * @param  {Array<String>} ids
+   * @param  {string[]} ids
    */
   abandon(ids) {
     const abandoning = this.payloads.filter((payload) => {
@@ -116,7 +116,7 @@ class PayloadManager extends EventEmitter {
   /**
    * Obtain progress about a bunch of payloads
    *
-   * @param  {Array<String>} ids
+   * @param  {string[]} ids
    * @param  {Object|undefined} destination
    *
    * @return {Object|null}
@@ -212,9 +212,9 @@ class PayloadManager extends EventEmitter {
    * Obtain URL for uploading a file or posting a request
    *
    * @param  {Payload} payload
-   * @param  {String} part
+   * @param  {string} part
    *
-   * @return {String}
+   * @return {string}
    */
   getUploadURL(payload, part) {
     const { uploadURL } = this.options;
@@ -240,9 +240,9 @@ class PayloadManager extends EventEmitter {
    * Obtain URL for streaming a file to remote server
    *
    * @param  {Object} destination
-   * @param  {String} id
+   * @param  {string} id
    *
-   * @return {String}
+   * @return {string}
    */
   getStreamURL(destination, id) {
     const { streamURL } = this.options;
@@ -265,7 +265,7 @@ class PayloadManager extends EventEmitter {
   /**
    * Acquire permission for payloads and send them
    *
-   * @param  {Array<Payload>} payloads
+   * @param  {Payload[]} payloads
    */
   async dispatchPayloads(payloads) {
     const payloadGroups = separatePayloads(payloads);
@@ -285,8 +285,6 @@ class PayloadManager extends EventEmitter {
    * Update backend progress of payloads
    *
    * @param  {Object|null} destination
-   *
-   * @return {Promise}
    */
   async updatePayloadsBackendProgress(destination) {
     if (!this.active) {
@@ -309,9 +307,7 @@ class PayloadManager extends EventEmitter {
    * necessary action to gain permission for uploading a file
    *
    * @param  {Object} destination
-   * @param  {Array<Payloads>} payloads
-   *
-   * @return {Promise}
+   * @param  {Payload[]} payloads
    */
   async acquirePermission(destination, payloads) {
     const unapprovedPayloads = payloads.filter(p => !p.approved);
@@ -351,7 +347,7 @@ class PayloadManager extends EventEmitter {
    *
    * @param  {Object} payloadGroup
    *
-   * @return {Promise}
+   * @return {boolean}
    */
   async requestBackendUpdate(payloadGroup) {
     try {
@@ -367,8 +363,6 @@ class PayloadManager extends EventEmitter {
   /**
    * Resolve immediately if active = true, otherwise wait for resume()
    * to be called
-   *
-   * @return {Promise}
    */
   async waitForConnectivity() {
     if (this.active) {
@@ -386,8 +380,6 @@ class PayloadManager extends EventEmitter {
    * Send the payload
    *
    * @param  {Payload} payload
-   *
-   * @return {Promise}
    */
   async sendPayload(payload) {
     if (payload.started) {
@@ -440,8 +432,6 @@ class PayloadManager extends EventEmitter {
    *
    * @param  {Payload} payload
    * @param  {Object} part
-   *
-   * @return {Promise}
    */
   async sendPayloadPart(payload, part) {
     if (part.stream) {
@@ -460,8 +450,6 @@ class PayloadManager extends EventEmitter {
    *
    * @param  {Payload} payload
    * @param  {Object} part
-   *
-   * @return {Promise}
    */
   async sendPayloadBlob(payload, part) {
     const url = this.getUploadURL(payload, part);
@@ -492,7 +480,7 @@ class PayloadManager extends EventEmitter {
    * @param  {Payload} payload
    * @param  {Object} part
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   async sendPayloadCordovaFile(payload, part) {
     const url = this.getUploadURL(payload, part);
@@ -536,7 +524,7 @@ class PayloadManager extends EventEmitter {
    * @param  {Payload} payload
    * @param  {Object} part
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   async sendPayloadStream(payload, part) {
     const url = this.getUploadURL(payload, part);
@@ -561,7 +549,7 @@ class PayloadManager extends EventEmitter {
    * @param  {Payload} payload
    * @param  {Object} part
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   async sendPayloadURL(payload, part) {
     const url = this.getUploadURL(payload, part);
@@ -579,8 +567,6 @@ class PayloadManager extends EventEmitter {
    * Cancel a payload
    *
    * @param  {Payload} payload
-   *
-   * @return {Promise}
    */
   async cancelPayload(payload) {
     if (payload.started) {
@@ -603,8 +589,6 @@ class PayloadManager extends EventEmitter {
    *
    * @param  {Payload} payload
    * @param  {Object} part
-   *
-   * @return {Promise}
    */
   cancelPayloadPart(payload, part) {
     if (part.stream) {
@@ -623,8 +607,6 @@ class PayloadManager extends EventEmitter {
    *
    * @param  {Payload} payload
    * @param  {Object} part
-   *
-   * @return {Promise}
    */
   async cancelPayloadStream(payload, part) {
     try {
@@ -638,8 +620,6 @@ class PayloadManager extends EventEmitter {
    *
    * @param  {Payload} payload
    * @param  {Object} part
-   *
-   * @return {Promise}
    */
   async cancelPayloadBlob(payload, part) {
     try {
@@ -655,8 +635,6 @@ class PayloadManager extends EventEmitter {
    *
    * @param  {Payload} payload
    * @param  {Object} part
-   *
-   * @return {Promise}
    */
   async cancelPayloadCordovaFile(payload, part) {
     try {
@@ -672,8 +650,6 @@ class PayloadManager extends EventEmitter {
    *
    * @param  {Payload} payload
    * @param  {Object} part
-   *
-   * @return {Promise}
    */
   async cancelPayloadURL(payload, part) {
     try {
@@ -687,7 +663,7 @@ class PayloadManager extends EventEmitter {
   /**
    * Pause stream uploading
    *
-   * @param  {Array<Payload>} payloads
+   * @param  {Payload[]} payloads
    */
   pausePayloads(payloads) {
     for (let payload of payloads) {
@@ -706,7 +682,7 @@ class PayloadManager extends EventEmitter {
   /**
    * Restart stream uploading
    *
-   * @param  {Array<Payload>} payloads
+   * @param  {Payload[]} payloads
    */
   restartPayloads(payloads) {
     for (let payload of payloads) {
@@ -726,7 +702,7 @@ class PayloadManager extends EventEmitter {
    * Update progress of a given part and trigger change event
    *
    * @param  {Object} part
-   * @param  {Number} completed
+   * @param  {number} completed
    */
   updatePayloadProgress(payload, part, completed) {
     if (completed > 0) {
@@ -761,9 +737,9 @@ class PayloadManager extends EventEmitter {
 /**
  * Group payloads by destination
  *
- * @param  {Array<Payload>} payloads
+ * @param  {Payload[]} payloads
  *
- * @return {Array<Object>}
+ * @return {Object[]}
  */
 function separatePayloads(payloads) {
   const groups = [];

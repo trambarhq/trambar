@@ -7,9 +7,9 @@ const emptyArray = [];
  *
  * @param  {Database} db
  * @param  {Repo} repo
- * @param  {Number} limit
+ * @param  {number} limit
  *
- * @return {Promise<Snapshot>}
+ * @return {Snapshot}
  */
 function findSnapshots(db, repo, limit) {
   if (!repo) {

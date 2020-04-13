@@ -12,7 +12,7 @@ const emptyObject = {};
  * Clone objects along path to parent, then set property
  *
  * @param  {Object} srcObj
- * @param  {String|Array<String>} path
+ * @param  {string|string[]} path
  * @param  {*} value
  *
  * @return {Object}
@@ -29,7 +29,7 @@ function decoupleSet(srcObj, path, value) {
  * Clone objects along path to parent, then unset property
  *
  * @param  {Object} srcObj
- * @param  {String|Array<String>} path
+ * @param  {string|string[]} path
  *
  * @return {Object}
  */
@@ -45,7 +45,7 @@ function decoupleUnset(srcObj, path) {
  * Clone objects along path, then push value into targetted array
  *
  * @param  {Object} srcObj
- * @param  {String|Array<String>} path
+ * @param  {string|string[]} path
  * @param  {*} ...value
  *
  * @return {Object}
@@ -82,7 +82,7 @@ function shallowDiff(objA, objB) {
  * Clone objects along a path
  *
  * @param  {Object} srcObj
- * @param  {String|Array<String>} path
+ * @param  {string|string[]} path
  * @param  {Object} defaultValue
  *
  * @return {Object}
@@ -122,7 +122,7 @@ function decouple(srcObj, path, defaultValue) {
 /**
  * Ensure that an object path is an array
  *
- * @param  {String|Number|Array} path
+ * @param  {string|number|Array} path
  *
  * @return {Array}
  */

@@ -8,7 +8,7 @@ const table = 'project_link';
  *
  * @param  {Database} db
  *
- * @return {Promise<Array<ProjectLink>>}
+ * @return {ProjectLink[]}
  */
 async function findAllLinks(db) {
   return db.find({
@@ -23,7 +23,7 @@ async function findAllLinks(db) {
  *
  * @param  {ProjectLink}  link
  *
- * @return {Boolean}
+ * @return {boolean}
  */
 async function hasUnexpiredSession(db, link) {
   const record = await db.findOne({
@@ -44,9 +44,9 @@ async function hasUnexpiredSession(db, link) {
  * Find links to projects at a server
  *
  * @param  {Database} db
- * @param  {String} address
+ * @param  {string} address
  *
- * @return {Promise<Array<ProjectLink>>}
+ * @return {ProjectLink[]}
  */
 async function findLinksToServer(db, address) {
   return db.find({
@@ -61,7 +61,7 @@ async function findLinksToServer(db, address) {
  *
  * @param  {Database} db
  *
- * @return {Promise<Array<ProjectLink>>}
+ * @return {ProjectLink[]}
  */
 async function findActiveLinks(db) {
   const results = [];
@@ -80,7 +80,7 @@ async function findActiveLinks(db) {
  *
  * @param  {Database} db
  *
- * @return {Promise<Array<ProjectLink>>}
+ * @return {ProjectLink[]}
  */
 async function findDefunctLinks(db) {
   const results = [];
@@ -101,7 +101,7 @@ async function findDefunctLinks(db) {
  * @param  {Database} db
  * @param  {Project} project
  *
- * @return {Promise<Project|null>}
+ * @return {Project|null}
  */
 async function findProjectLink(db, project) {
   if (!project) {

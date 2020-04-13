@@ -4,10 +4,10 @@ const table = 'rest';
  * Find a REST source by id
  *
  * @param  {Database} db
- * @param  {String} schema
- * @param  {Number} id
+ * @param  {string} schema
+ * @param  {number} id
  *
- * @return {Promise<Rest>}
+ * @return {Rest}
  */
 function findRest(db, schema, id) {
   return db.findOne({
@@ -22,9 +22,9 @@ function findRest(db, schema, id) {
  * Find all REST sources
  *
  * @param  {Database} db
- * @param  {String} schema
+ * @param  {string} schema
  *
- * @return {Promise<Array<Rest>>}
+ * @return {Rest[]}
  */
 function findAllRests(db, schema) {
   return db.find({

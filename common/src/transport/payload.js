@@ -28,7 +28,7 @@ class Payload {
    * Attach a file to a payload
    *
    * @param  {Blob|CordovaFile} file
-   * @param  {String|undefined} name
+   * @param  {string|undefined} name
    *
    * @return {this}
    */
@@ -56,7 +56,7 @@ class Payload {
    * Attach a stream to a payload
    *
    * @param  {BlobStream} stream
-   * @param  {String|undefined} name
+   * @param  {string|undefined} name
    *
    * @return {this}
    */
@@ -74,7 +74,7 @@ class Payload {
    * Attach a URL to a payload
    *
    * @param  {BlobStream} stream
-   * @param  {String|undefined} name
+   * @param  {string|undefined} name
    *
    * @return {this}
    */
@@ -85,8 +85,8 @@ class Payload {
   /**
    * Attach a part that generated from the main part (or some other part)
    *
-   * @param  {String} source
-   * @param  {String} name
+   * @param  {string} source
+   * @param  {string} name
    *
    * @return {this}
    */
@@ -127,7 +127,7 @@ class Payload {
   /**
    * Set options for a part
    *
-   * @param  {String} name
+   * @param  {string} name
    * @param  {Object} options
    */
   setPartOptions(name, options) {
@@ -146,7 +146,7 @@ class Payload {
   /**
    * Return the overall size of the payload
    *
-   * @return {Number}
+   * @return {number}
    */
   getSize() {
     return this.parts.reduce((sum, p) => sum + (p.size || 0), 0);
@@ -155,7 +155,7 @@ class Payload {
   /**
    * Return the number of bytes uploaded
    *
-   * @return {Number}
+   * @return {number}
    */
   getUploaded() {
     return this.parts.reduce((sum, p) => sum + (p.uploaded || 0), 0);
@@ -164,7 +164,7 @@ class Payload {
   /**
    * Return the number of files that haven't been fully transferred
    *
-   * @return {Number}
+   * @return {number}
    */
   getRemainingFiles() {
     const remaining = Object.values(this.parts).filter(p => p.size > 0 && p.uploaded < p.size);
@@ -174,7 +174,7 @@ class Payload {
   /**
    * Return the number of bytes remaining to be uploaded
    *
-   * @return {Number}
+   * @return {number}
    */
   getRemainingBytes() {
     const remaining = Object.values(this.parts).filter(p => p.size > 0 && p.uploaded < p.size);

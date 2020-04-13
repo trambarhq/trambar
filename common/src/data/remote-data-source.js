@@ -77,7 +77,7 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} location
    *
-   * @return {Promise<Number>}
+   * @return {number}
    */
   async start(location) {
     if (location.schema === 'local') {
@@ -97,7 +97,7 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} query
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async find(query) {
     const newSearch = new Search(query);
@@ -202,10 +202,10 @@ export class RemoteDataSource extends EventEmitter {
    * (if schema is "local") or the remote server.
    *
    * @param  {Object} location
-   * @param  {Array<Object>} objects
+   * @param  {Object[]} objects
    * @param  {Object|undefined} options
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async save(location, objects, options) {
     if (objects.length === 0) {
@@ -237,9 +237,9 @@ export class RemoteDataSource extends EventEmitter {
    * Remove objects at given location
    *
    * @param  {Object} location
-   * @param  {Array<Object>} objects
+   * @param  {Object[]} objects
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   async remove(location, objects) {
     if (objects.length === 0) {
@@ -268,7 +268,7 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} location
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   hasAuthorization(location) {
     try {
@@ -285,7 +285,7 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} location
    *
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   beginSession(location) {
     const session = this.obtainSession(location);
@@ -300,7 +300,7 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} location
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async checkAuthorization(location) {
     const session = this.obtainSession(location);
@@ -315,8 +315,6 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} location
    * @param  {Object} credentials
-   *
-   * @return {Promise}
    */
   async authenticate(location, credentials) {
     const session = this.obtainSession(location);
@@ -330,8 +328,6 @@ export class RemoteDataSource extends EventEmitter {
    * End session at location
    *
    * @param  {Object} location
-   *
-   * @return {Promise}
    */
   async endSession(location) {
     const session = this.obtainSession(location);
@@ -347,7 +343,7 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} location
    *
-   * @return {Promise<String>}
+   * @return {string}
    */
   async beginMobileSession(location) {
     const mobileSession = this.obtainSession(location, 'mobile');
@@ -361,9 +357,9 @@ export class RemoteDataSource extends EventEmitter {
    * Acquired a session created earlier through a web-browser (on mobile device)
    *
    * @param  {Object} location
-   * @param  {String} handle
+   * @param  {string} handle
    *
-   * @return {Promise<Number>}
+   * @return {number}
    */
   async acquireMobileSession(location, handle) {
     let session = this.obtainSession(location);
@@ -385,8 +381,6 @@ export class RemoteDataSource extends EventEmitter {
    * End the activation process, so another device can be activated (on browser side)
    *
    * @param  {Object} location
-   *
-   * @return {Promise}
    */
   releaseMobileSession(location) {
     const mobileSession = this.obtainSession(location, 'mobile');
@@ -397,9 +391,7 @@ export class RemoteDataSource extends EventEmitter {
    * Remove authorization from mobile device
    *
    * @param  {Object} location
-   * @param  {String} handle
-   *
-   * @return {Promise}
+   * @param  {string} handle
    */
   async endMobileSession(location, handle) {
     const { address } = location;
@@ -414,9 +406,9 @@ export class RemoteDataSource extends EventEmitter {
    * was saved
    *
    * @param  {Object} location
-   * @param  {Number} permanentID
+   * @param  {number} permanentID
    *
-   * @return {Number|undefined}
+   * @return {number|undefined}
    */
   findTemporaryID(location, permanentID) {
     const path = [ location.address, location.schema, location.table ];
@@ -431,9 +423,9 @@ export class RemoteDataSource extends EventEmitter {
    * Return the permanent ID assigned to an object after saving
    *
    * @param  {Object} location
-   * @param  {Number} temporaryID
+   * @param  {number} temporaryID
    *
-   * @return {Number|undefined}
+   * @return {number|undefined}
    */
   findPermanentID(location, temporaryID) {
     const path = [ location.address, location.schema, location.table ];
@@ -461,9 +453,7 @@ export class RemoteDataSource extends EventEmitter {
   /**
    * Invalidate queries based on changes
    *
-   * @param  {Array<Object>|undefined} changes
-   *
-   * @return {Promise}
+   * @param  {Object[]|undefined} changes
    */
   async invalidate(changes) {
     if (changes) {
@@ -566,8 +556,8 @@ export class RemoteDataSource extends EventEmitter {
   /**
    * Indicate that we're not longer using data from specific location
    *
-   * @param  {String} address
-   * @param  {String|undefined} schema
+   * @param  {string} address
+   * @param  {string|undefined} schema
    */
   abandon(address, schema) {
     for (let search of this.recentSearchResults) {
@@ -589,9 +579,9 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} location
    * @param  {Object} object
-   * @param  {Number} timeout
+   * @param  {number} timeout
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async waitForChange(location, object, timeout) {
     const { address, schema, table } = location;
@@ -607,9 +597,9 @@ export class RemoteDataSource extends EventEmitter {
   /**
    * Filter out notification about changes made by this browser instance
    *
-   * @param  {Array<Object>|null} changes
+   * @param  {Object[]|null} changes
    *
-   * @return {Array<Object>|null}
+   * @return {Object[]|null}
    */
   omitOwnChanges(changes) {
     return changes.filter((their) => {
@@ -650,9 +640,7 @@ export class RemoteDataSource extends EventEmitter {
   /**
    * Adjust items in change queue to reflect data on server
    *
-   * @param  {Array<Object>|null} changes
-   *
-   * @return {Promise}
+   * @param  {Object[]|null} changes
    */
   async reconcileChanges(changes) {
     if (!this.active) {
@@ -754,7 +742,7 @@ export class RemoteDataSource extends EventEmitter {
    * Find existing session object for location or create a new one
    *
    * @param  {Object} location
-   * @param  {String} type
+   * @param  {string} type
    *
    * @return {Object|null}
    */
@@ -940,9 +928,9 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} location
    * @param  {Object} oauthServer
-   * @param  {String} type
+   * @param  {string} type
    *
-   * @return {String}
+   * @return {string}
    */
   getOAuthURL(location, oauthServer, type) {
     const session = this.obtainSession(location);
@@ -965,8 +953,6 @@ export class RemoteDataSource extends EventEmitter {
    * or authenticate() is called.
    *
    * @param  {Object} location
-   *
-   * @return {Promise}
    */
   async requestAuthentication(location) {
     const session = this.obtainSession(location);
@@ -1007,8 +993,6 @@ export class RemoteDataSource extends EventEmitter {
    * Return a promise that fulfills when authorization has been granted
    *
    * @param  {Object} session
-   *
-   * @return {Promise}
    */
   waitForAuthorization(session) {
     if (!session.authorizationPromise) {
@@ -1208,7 +1192,7 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} location
    *
-   * @return {Promise<String>}
+   * @return {string}
    */
   async getCacheSignature(location) {
     const { address, schema } = location;
@@ -1222,9 +1206,7 @@ export class RemoteDataSource extends EventEmitter {
    * Save signature of cached schema
    *
    * @param  {Object} location
-   * @param  {String} signature
-   *
-   * @return {Promise}
+   * @param  {string} signature
    */
   async setCacheSignature(location, signature) {
     const { address, schema } = location;
@@ -1238,7 +1220,7 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} location
    *
-   * @return {Promise<String>}
+   * @return {string}
    */
   async getRemoteSignature(location) {
     const { address, schema } = location;
@@ -1258,7 +1240,7 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} location
    *
-   * @return {Promise<Number>}
+   * @return {number}
    */
   async clearLocalCache(location) {
     const { address, schema } = location;
@@ -1270,8 +1252,6 @@ export class RemoteDataSource extends EventEmitter {
     * Clear cached schema at given address
     *
     * @param  {Object} session
-    *
-    * @return {Promise}
     */
   async clearCachedSchemas(session) {
     // remove cached remote signatures
@@ -1314,7 +1294,7 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Search|Storage|Removal} op
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async updateLocalCache(op) {
     try {
@@ -1475,7 +1455,7 @@ export class RemoteDataSource extends EventEmitter {
    * @param  {Object} location
    * @param  {Object} criteria
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   discoverRemoteObjects(location, criteria) {
     return this.performRemoteAction(location, 'discovery', criteria);
@@ -1485,9 +1465,9 @@ export class RemoteDataSource extends EventEmitter {
    * Retrieve objects that were discovered
    *
    * @param  {Object} location
-   * @param  {Array<Number>} ids
+   * @param  {number[]} ids
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   retrieveRemoteObjects(location, ids) {
     return this.performRemoteAction(location, 'retrieval', { ids });
@@ -1498,7 +1478,7 @@ export class RemoteDataSource extends EventEmitter {
    * server
    *
    * @param  {Object} location
-   * @param  {String} action
+   * @param  {string} action
    * @param  {*} payload
    *
    * @return {Prmise}
@@ -1562,7 +1542,7 @@ export class RemoteDataSource extends EventEmitter {
    *
    * @param  {Object} location
    *
-   * @return {Array<Object>}
+   * @return {Object[]}
    */
   getRelevantRecentSearches(location) {
     return this.recentSearchResults.filter((search) => {
@@ -1669,8 +1649,8 @@ export class RemoteDataSource extends EventEmitter {
    * Save relationships between temporary IDs and database IDs
    *
    * @param  {Object} location
-   * @param  {Array<Object>} localObjects
-   * @param  {Array<Object>} remoteObjects
+   * @param  {Object[]} localObjects
+   * @param  {Object[]} remoteObjects
    */
   saveIDMapping(location, localObjects, remoteObjects) {
     if (localObjects.length !== remoteObjects.length) {
@@ -1697,10 +1677,10 @@ export class RemoteDataSource extends EventEmitter {
  * Remove objects matching a list of ids from a sorted array, returning a
  * new array
  *
- * @param  {Array<Object>} objects
- * @param  {Array<Number>} ids
+ * @param  {Object[]} objects
+ * @param  {number[]} ids
  *
- * @return {Array<Object>}
+ * @return {Object[]}
  */
 function removeObjects(objects, ids) {
   if (ids.length === 0) {
@@ -1720,10 +1700,10 @@ function removeObjects(objects, ids) {
 /**
  * Insert objects into an array of objects sorted by id, returning a new array
  *
- * @param  {Array<Object>} objects
- * @param  {Array<Object>} newObjects
+ * @param  {Object[]} objects
+ * @param  {Object[]} newObjects
  *
- * @return {Array<Object>}
+ * @return {Object[]}
  */
 function insertObjects(objects, newObjects) {
   if (newObjects.length === 0) {

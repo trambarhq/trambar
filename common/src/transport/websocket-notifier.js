@@ -32,9 +32,9 @@ class WebsocketNotifier extends Notifier {
   /**
    * Connect to server
    *
-   * @param  {String} address
+   * @param  {string} address
    *
-   * @return {Promise<Boolean>}
+   * @return {boolean}
    */
   async connect(address) {
     let { reconnectionDelay } = this.options;
@@ -130,9 +130,9 @@ class WebsocketNotifier extends Notifier {
   /**
    * Create a SockJS socket
    *
-   * @param  {String} address
+   * @param  {string} address
    *
-   * @return {Promise<SockJS>}
+   * @return {SockJS}
    */
   createSocket(address) {
     let url = address + this.options.basePath;

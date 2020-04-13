@@ -28,9 +28,7 @@ export class Statistics extends LiveData {
    * Create table in schemaroot
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async create(db, schema) {
     const table = this.getTableName(schema);
@@ -61,9 +59,7 @@ export class Statistics extends LiveData {
    * Attach triggers to the table.
    *
    * @param  {Database} db
-   * @param  {String} schema
-   *
-   * @return {Promise}
+   * @param  {string} schema
    */
   static async watch(db, schema) {
     await this.createChangeTrigger(db, schema);
@@ -93,11 +89,11 @@ export class Statistics extends LiveData {
    * not yet there
    *
    * @param  {Database} db
-   * @param  {String} schema
+   * @param  {string} schema
    * @param  {Object|null} criteria
-   * @param  {String} columns
+   * @param  {string} columns
    *
-   * @return {Promise<Array>}
+   * @return {Object[]}
    */
   static async find(db, schema, criteria, columns) {
     // autovivify rows when type and filters are specified
@@ -133,12 +129,12 @@ export class Statistics extends LiveData {
    * unnecessary information
    *
    * @param  {Database} db
-   * @param  {String} schema
-   * @param  {Array<Object>} rows
+   * @param  {string} schema
+   * @param  {Object[]} rows
    * @param  {Object} credentials
    * @param  {Object} options
    *
-   * @return {Promise<Array<Object>>}
+   * @return {Object[]}
    */
   static async export(db, schema, rows, credentials, options) {
     const objects = await super.export(db, schema, rows, credentials, options);
@@ -157,7 +153,7 @@ export class Statistics extends LiveData {
    * @param  {User} user
    * @param  {Subscription} subscription
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   static isRelevantTo(event, user, subscription) {
     if (super.isRelevantTo(event, user, subscription)) {
@@ -182,7 +178,7 @@ export class Statistics extends LiveData {
  *
  * @param  {Object} filters
  *
- * @return {String}
+ * @return {string}
  */
 function hash(filters) {
   const keys = _.sortBy(_.keys(filters));

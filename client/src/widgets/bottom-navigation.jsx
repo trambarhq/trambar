@@ -189,7 +189,7 @@ let favIcons;
 /**
  * Use favicon with a badge if there are unread notifications
  *
- * @param  {Number} count
+ * @param  {number} count
  */
 function changeFavIcon(count) {
   if (!favIcons) {
@@ -230,7 +230,7 @@ function changeFavIcon(count) {
  * Add the number of un-read notifications to the document's title, so the
  * user would see it if he's browsing in another tab.
  *
- * @param  {Number} count
+ * @param  {number} count
  */
 function changeDocumentTitle(count) {
   let title = document.title.replace(/^\(\d+\)\s*/, '');

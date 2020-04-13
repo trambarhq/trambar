@@ -3,9 +3,9 @@ import { externalIdStrings } from './runtime.mjs';
 /**
  * Convert strings in an array to lower case
  *
- * @param  {Array<String>} strings
+ * @param  {string[]} strings
  *
- * @return {Array<String>}
+ * @return {string[]}
  */
 function lowerCase(strings) {
   const results = [];
@@ -62,7 +62,7 @@ hasCandidates.flags = 'IMMUTABLE';
  *
  * @param  {Object} details
  *
- * @return {Array<String>|null}
+ * @return {string[]|null}
  */
 function payloadTokens(details) {
   const tokens = [];
@@ -121,10 +121,10 @@ updatePayload.flags = 'IMMUTABLE';
  *
  * NOTE: Runs as root
  *
- * @param  {String} token
- * @param  {String} area
+ * @param  {string} token
+ * @param  {string} area
  *
- * @return {Number}
+ * @return {number}
  */
 function checkAuthorization(token, area) {
   const sql = `
@@ -147,8 +147,8 @@ checkAuthorization.flags = 'SECURITY DEFINER';
  *
  * NOTE: Runs as root
  *
- * @param  {String} token
- * @param  {Number} days
+ * @param  {string} token
+ * @param  {number} days
  */
 function extendAuthorization(token, days) {
   const etime = new Date;
@@ -178,9 +178,9 @@ externalIdStrings.flags = 'IMMUTABLE';
  * Extract text from details column
  *
  * @param  {Object} details
- * @param  {String} lang
+ * @param  {string} lang
  *
- * @return {String}
+ * @return {string}
  */
 function extractText(details, lang) {
   const list = [];
@@ -196,12 +196,12 @@ extractText.flags = 'IMMUTABLE';
 /**
  * Extract text from story
  *
- * @param  {String} type
+ * @param  {string} type
  * @param  {Object} details
- * @param  {Array<Object>} external
- * @param  {String} lang
+ * @param  {Object[]} external
+ * @param  {string} lang
  *
- * @return {String}
+ * @return {string}
  */
 function extractStoryText(type, details, external, lang) {
   const list = [];
@@ -270,9 +270,9 @@ extractStoryText.flags = 'IMMUTABLE';
  * Extract text from wiki
  *
  * @param  {Object} details
- * @param  {String} lang
+ * @param  {string} lang
  *
- * @return {String}
+ * @return {string}
  */
 function extractWikiText(details, lang) {
   const list = [];
@@ -292,9 +292,9 @@ extractWikiText.flags = 'IMMUTABLE';
  * Extract text from spreadsheet
  *
  * @param  {Object} details
- * @param  {String} lang
+ * @param  {string} lang
  *
- * @return {String}
+ * @return {string}
  */
 function extractSpreadsheetText(details, lang) {
   const list = [];
