@@ -51,7 +51,7 @@ export function OptionList(props) {
   );
 
   function renderRow(option, i) {
-    const { name, hidden, selected, previous, children } = option.props;
+    const { name, hidden, selected, previous, title, children } = option.props;
     if (hidden) {
       return null;
     }
@@ -70,6 +70,7 @@ export function OptionList(props) {
     const props = {
       className: classNames.join(' '),
       'data-name': name,
+      title,
       onClick: (!readOnly) ? handleClick : undefined,
     };
     return (

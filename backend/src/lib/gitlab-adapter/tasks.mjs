@@ -90,7 +90,7 @@ class TaskDetectTemplate extends BasicTask {
     const repo = await getRepo(db, this.repoID);
     const server = await getRepoServer(db, repo);
     if (repo && server) {
-      await RepoImporter.detectTemplate(db, server, repo);
+      await RepoImporter.updateTemplate(db, server, repo);
     }
   }
 }

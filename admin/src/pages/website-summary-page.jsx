@@ -5,7 +5,7 @@ import { useProgress, useListener, useSaveBuffer, useErrorCatcher } from 'relaks
 import { findProject } from 'common/objects/finders/project-finder.js';
 import { saveProject } from 'common/objects/savers/project-saver.js';
 import { findTemplates } from 'common/objects/finders/repo-finder.js';
-import { getRepoName } from 'common/objects/utils/repo-utils.js';
+import { getTemplateName, getTemplateDescription } from 'common/objects/utils/repo-utils.js';
 import { findSnapshots } from 'common/objects/finders/snapshot-finder.js';
 import { uniqBy, uniq } from 'common/utils/array-utils.js';
 
@@ -256,8 +256,9 @@ function WebsiteSummaryPageSync(props) {
       name: repo.id,
       selected: (repoIDCurr === repo.id),
       previous: (repoIDPrev === repo.id),
+      title: getTemplateDescription(repo, env),
     };
-    const label = getRepoName(repo, env);
+    const label = getTemplateName(repo, env);
     return <option key={repo.id} {...props}>{label}</option>;
   }
 
@@ -340,7 +341,7 @@ function WebsiteSummaryPageSync(props) {
       template,
       snapshots,
       env,
-      provisional: draft.get('template_repo_id') !== project.template_repo_id,
+      provisional: draft.get('template_repo_id') !== project?.template_repo_id,
     };
     return (
       <div className="snapshots">

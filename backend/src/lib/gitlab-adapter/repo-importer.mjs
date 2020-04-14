@@ -100,18 +100,20 @@ async function importRepositories(db, server) {
   return reposAfter;
 }
 
-async function detectTemplate(db, server, repo) {
+/**
+ * Update a template
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Repo} repo
+ */
+async function updateTemplate(db, server, repo) {
   try {
     const repoLink = findLink(repo, server);
-    const packageInfo = await fetchPackageJSON(server, repoLink.project.id);
-    const keywords = _.get(packageInfo, 'keywords');
-    const template = _.includes(keywords, 'trambar-template');
-    if (repo.template !== template) {
-      const repoChanges = {
-        id: repo.id,
-        template
-      };
-      const repoAfter = await Repo.updateOne(db, 'global', repoChanges);
+    const packageJSON = await fetchPackageJSON(server, repoLink.project.id);
+    const repoChanges = copyTemplateProperties(repo, server, packageJSON);
+    if (repoChanges) {
+      await Repo.updateOne(db, 'global', repoChanges);
     }
   } catch (err) {
   }
@@ -160,10 +162,9 @@ async function processSystemEvent(db, server, glHookEvent) {
     if (repo) {
       if (repo.template) {
         await SnapshotManager.processNewEvents(db, server, repo);
-      } else {
-        if (isMasterChanged(glHookEvent)) {
-          await detectTemplate(db, server, repo);
-        }
+      }
+      if (isMasterChanged(glHookEvent)) {
+        await updateTemplate(db, server, repo);
       }
     }
   } else if (/^project_(create|destroy|rename|transfer|update)/.test(eventName)) {
@@ -224,6 +225,40 @@ function copyEventProperties(story, system, server, repo, author, glEvent) {
   }
   storyChanges.itime = new String('NOW()');
   return storyChanges;
+}
+
+/**
+ * Copy template properties from package.json into repo object
+ *
+ * @param  {Repo} repo
+ * @param  {Server} server
+ * @param  {Object} packageJSON
+ *
+ * @return {Repo}
+ */
+function copyTemplateProperties(repo, server, packageJSON) {
+  const repoChanges = _.cloneDeep(repo);
+  const template = _.includes(packageJSON.keywords, 'trambar-template');
+  importProperty(repoChanges, server, 'template', {
+    value: template,
+    overwrite: 'always',
+  });
+  importProperty(repoChanges, server, 'details.template_version', {
+    value: (template) ? packageJSON.version : undefined,
+    overwrite: 'always',
+  });
+  importProperty(repoChanges, server, 'details.template_name', {
+    value: (template) ? packageJSON.displayName || packageJSON.name : undefined,
+    overwrite: 'always',
+  });
+  importProperty(repoChanges, server, 'details.template_description', {
+    value: (template) ? packageJSON.description : undefined,
+    overwrite: 'always',
+  });
+  if (_.isEqual(repoChanges, repo)) {
+    return null;
+  }
+  return repoChanges;
 }
 
 /**
@@ -414,7 +449,7 @@ function isMasterChanged(glHookEvent) {
 
 export {
   importRepositories,
-  detectTemplate,
+  updateTemplate,
   processEvent,
   processSystemEvent,
 };

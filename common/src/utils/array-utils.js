@@ -54,7 +54,9 @@ function hashById(objects, f) {
 
 function uniqIds(ids) {
   const list = [];
-  collectIds(ids, list);
+  if (ids) {
+    collectIds(ids, list);
+  }
   return list.sort();
 }
 

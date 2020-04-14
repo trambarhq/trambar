@@ -208,7 +208,7 @@ async function findNotificationTriggerers(db, notifications) {
 }
 
 async function findSnapshotAuthors(db, snapshots) {
-  const userIDs = snapshots.map(s => s.user_id);
+  const userIDs = snapshots?.map(s => s.user_id);
   return findUsers(db, userIDs);
 }
 

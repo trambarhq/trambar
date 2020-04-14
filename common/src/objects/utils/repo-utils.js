@@ -18,6 +18,18 @@ function getRepoIconClass(repo) {
   }
 }
 
+function getTemplateName(repo, env) {
+  return repo?.details?.template_name || getRepoName(repo, env);
+}
+
+function getTemplateVersion(repo) {
+  return repo?.details?.template_version || '';
+}
+
+function getTemplateDescription(repo, env) {
+  return repo?.details?.template_description || '';
+}
+
 function getMembershipPageURL(repo) {
   let projectURL = getRepoURL(repo)
   if (projectURL) {
@@ -158,6 +170,9 @@ export {
   getRepoName,
   getRepoURL,
   getRepoIconClass,
+  getTemplateName,
+  getTemplateVersion,
+  getTemplateDescription,
   getMembershipPageURL,
   getIssueNumber,
   getIssueURL,
