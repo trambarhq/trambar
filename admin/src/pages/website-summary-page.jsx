@@ -320,7 +320,7 @@ function WebsiteSummaryPageSync(props) {
       hidden: readOnly,
       env,
     };
-    if (typeof(draft.getCurrent('template_repo_id')) !== 'number') {
+    if (!using) {
       instructionProps.topic += '-disabled';
     }
     return (
@@ -331,10 +331,7 @@ function WebsiteSummaryPageSync(props) {
   }
 
   function renderSnapshots() {
-    if (!project || project.template_repo_id === null) {
-      return;
-    }
-    if (!snapshots && !!project.template_repo_id) {
+    if (!using) {
       return;
     }
     const props = {
@@ -343,6 +340,7 @@ function WebsiteSummaryPageSync(props) {
       template,
       snapshots,
       env,
+      provisional: draft.get('template_repo_id') !== project.template_repo_id,
     };
     return (
       <div className="snapshots">

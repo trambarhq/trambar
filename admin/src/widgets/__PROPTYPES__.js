@@ -20,6 +20,7 @@ import { OptionList } from './option-list.jsx';
 import { ProfileImage } from './profile-image.jsx';
 import { SideNavigation } from './side-navigation.jsx';
 import { SignOffMenu } from './sign-off-menu.jsx';
+import { SnapshotList } from './snapshot-list.jsx';
 import { SortableTable } from './sortable-table.jsx';
 import { TaskAlertBar } from './task-alert-bar.jsx';
 import { TaskList } from './task-list.jsx';
@@ -105,6 +106,14 @@ SignOffMenu.propTypes = {
   database: PropTypes.instanceOf(Database).isRequired,
   route: PropTypes.instanceOf(Route).isRequired,
   env: PropTypes.instanceOf(Environment).isRequired,
+};
+SnapshotList.propTypes = {
+  database: PropTypes.instanceOf(Database).isRequired,
+  env: PropTypes.instanceOf(Environment).isRequired,
+  project: PropTypes.object,
+  template: PropTypes.object,
+  snapshots: PropTypes.arrayOf(PropTypes.object),
+  provisional: PropTypes.bool,
 };
 SortableTable.propTypes = {
   sortColumns: PropTypes.arrayOf(PropTypes.string).isRequired,

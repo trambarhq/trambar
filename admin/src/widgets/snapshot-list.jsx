@@ -9,8 +9,7 @@ import { orderBy } from 'common/utils/array-utils.js';
 import './snapshot-list.scss';
 
 export async function SnapshotList(props) {
-  const { database, project, role, template, snapshots } = props;
-  const { env } = props;
+  const { database, env, project, template, snapshots, provisional } = props;
   const { t, f, localeCode } = env.locale;
   const [ show ] = useProgress();
   const projectURL = getWebsiteAddress(project);
@@ -31,7 +30,9 @@ export async function SnapshotList(props) {
   }
 
   function renderItems() {
-    if (template === null) {
+    if (provisional) {
+      return renderProvisional();
+    } else if (template === null) {
       return renderGeneric();
     } else {
       return snapshotsSorted.map(renderItem);
@@ -83,6 +84,19 @@ export async function SnapshotList(props) {
           </div>
           <div className="name" title={absoluteTime}>
             {authorName}
+          </div>
+        </div>
+      </a>
+    );
+  }
+
+  function renderProvisional() {
+    const classNames = [ 'snapshot', 'provisional' ];
+    return (
+      <a>
+        <div className={classNames.join(' ')}>
+          <div className="commit">
+            <span className="branch">&nbsp;</span>
           </div>
         </div>
       </a>

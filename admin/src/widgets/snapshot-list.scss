@@ -52,7 +52,7 @@
       }
 
       &.master {
-        background-color: $table-selected-row-background-color;
+        background-color: $snapshot-master-background-color;
       }
     }
 
@@ -62,6 +62,10 @@
       &:hover {
         opacity: 1;
       }
+    }
+
+    &.provisional {
+      border: 2px dashed $snapshot-provisional-border-color;
     }
   }
 }
