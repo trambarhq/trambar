@@ -5,37 +5,46 @@ import { isEqual } from '../../utils/object-utils.js';
 export class Search extends Operation {
   constructor(query) {
     super(query);
-    this.criteria = query.criteria || {};
-    this.remote = query.remote || false;
-    this.dirty = false;
-    this.invalid = false;
-    this.signature = '';
-    this.notifying = false;
-    this.failed = false;
-    this.initial = true;
-    this.updating = false;
-    this.lastRetrieved = 0;
-    this.results = undefined;
-    this.missingResults = [];
-    this.localSearchPromise = null;
-    this.remoteSearchPromise = null;
+    if (query) {
+      this.criteria = query.criteria || {};
+      this.remote = query.remote || false;
+      this.dirty = false;
+      this.invalid = false;
+      this.signature = '';
+      this.notifying = false;
+      this.failed = false;
+      this.initial = true;
+      this.updating = false;
+      this.lastRetrieved = 0;
+      this.results = undefined;
+      this.missingResults = [];
+      this.localSearchPromise = null;
+      this.remoteSearchPromise = null;
 
-    this.minimum = query.minimum;
-    this.expected = query.expected;
-    this.prefetch = query.prefetch;
+      this.minimum = query.minimum;
+      this.expected = query.expected;
+      this.prefetch = query.prefetch;
 
-    if (typeof(this.expected) !== 'number') {
-      // if expected object count isn't specified, try inferring it from
-      // the search criteria
-      this.expected = countCriteria(this.criteria, 'id')
-             || countCriteria(this.criteria, 'name')
-             || countCriteria(this.criteria, 'filters')
-             || undefined;
+      if (typeof(this.expected) !== 'number') {
+        // if expected object count isn't specified, try inferring it from
+        // the search criteria
+        this.expected = countCriteria(this.criteria, 'id')
+               || countCriteria(this.criteria, 'name')
+               || countCriteria(this.criteria, 'filters')
+               || undefined;
+      }
+
+      // filter out bad values
+      this.criteria = removeUndefined(this.criteria);
+      this.criteria = removeTemporaryIDs(this.criteria);
     }
+  }
 
-    // filter out bad values
-    this.criteria = removeUndefined(this.criteria);
-    this.criteria = removeTemporaryIDs(this.criteria);
+  clone() {
+    const newSearch = new Search;
+    Object.assign(newSearch, this);
+    newSearch.results = newSearch.results.slice();
+    return newSearch;
   }
 
   /**

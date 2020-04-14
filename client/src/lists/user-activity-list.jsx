@@ -80,8 +80,10 @@ export function UserActivityList(props) {
         return t(`user-activity-$name-${action}-repo`, name);
       case 'post':
         const counts = {};
-        for (let res of story.details.resources) {
-          counts[res.type] = (counts[res.type] || 0) + 1;
+        if (story.details.resources) {
+          for (let res of story.details.resources) {
+            counts[res.type] = (counts[res.type] || 0) + 1;
+          }
         }
         if (counts.video > 0) {
           return t(`user-activity-$name-posted-$count-video-clips`, name, counts.video);

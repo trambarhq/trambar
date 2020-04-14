@@ -734,11 +734,9 @@ export class RemoteDataSource extends EventEmitter {
     for (let change of this.changeQueue) {
       if (change.matchLocation(search)) {
         if (!change.committed && !change.canceled && !change.error) {
-          if (!newSearch) {
-            newSearch = { ...search };
-            newSearch.results = search.results.slice();
-          }
+          newSearch = search.clone();
           change.apply(newSearch, includeDeleted);
+          break;
         }
       }
     }

@@ -1,19 +1,21 @@
 export class Operation {
   constructor(location) {
-    const byComponent = location.by?.constructor?.name;
-    if (location.schema !== 'local') {
-      this.address =  location.address;
+    if (location) {
+      const byComponent = location.by?.constructor?.name;
+      if (location.schema !== 'local') {
+        this.address =  location.address;
+      }
+      this.local = (location.schema === 'local');
+      this.schema = location.schema;
+      this.table = location.table;
+      this.canceled = false;
+      this.failed = false;
+      this.error = null;
+      this.startTime = null;
+      this.finishTime = null;
+      this.results = [];
+      this.by = (byComponent) ? [ byComponent ] : [];
     }
-    this.local = (location.schema === 'local');
-    this.schema = location.schema;
-    this.table = location.table;
-    this.canceled = false;
-    this.failed = false;
-    this.error = null;
-    this.startTime = null;
-    this.finishTime = null;
-    this.results = [];
-    this.by = (byComponent) ? [ byComponent ] : [];
   }
 
   /**

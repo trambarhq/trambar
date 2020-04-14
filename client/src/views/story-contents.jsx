@@ -447,7 +447,7 @@ export function StoryContents(props) {
 
   function renderLabels() {
     const { labels } = story.details;
-    if (labels.length === 0) {
+    if (!(labels?.length > 0)) {
       return null;
     }
     const tags = labels.map(renderLabel);

@@ -1,5 +1,6 @@
 import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 import { difference } from '../utils/array-utils.js';
+import { isEqual } from '../utils/object-utils.js';
 
 const defaultOptions = {
   defaultLocale: 'en-US',
@@ -148,11 +149,11 @@ class LocaleManager extends EventEmitter {
     if (process.env.NODE_ENV !== 'production') {
       const unsorted = Object.keys(this.phraseTable);
       const targetKeys = unsorted.slice().sort();
-      if (isEqual(targetKeys, unsorted)) {
+      if (!isEqual(targetKeys, unsorted)) {
         console.log(`The following phrases are out of order [${localeCode}]:`);
         for (let [ index, phrase ] of unsorted.entries()) {
           const unsortedIndex = targetKeys.indexOf(phrase);
-          if (unsorted[sortedIndex - 1] !== targetKeys[index - 1]) {
+          if (unsorted[unsortedIndex - 1] !== targetKeys[index - 1]) {
             console.log(phrase);
           }
         }

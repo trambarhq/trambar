@@ -77,7 +77,7 @@ function isList(text) {
     return false;
   }
   const tokens = extractListItems(text);
-  for (let tokens of token) {
+  for (let token of tokens) {
     // lists are arrays
     if (token instanceof Array) {
       return true;

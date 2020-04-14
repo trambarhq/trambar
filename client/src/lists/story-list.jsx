@@ -245,11 +245,11 @@ function attachDrafts(stories, drafts, currentUser) {
   });
 
   // current user's own drafts are listed first
-  const own = s => story.user_ids[0] === currentUser.id;
+  const own = s => s.user_ids[0] === currentUser.id;
   newDrafts = orderBy(newDrafts, [ own, 'id' ], [ 'desc', 'desc' ]);
 
   // see if the current user has a draft
-  const currentUserDraft = newDrafts.find(s => story.user_ids[0] === currentUser.id);
+  const currentUserDraft = newDrafts.find(own);
   if (!currentUserDraft) {
     // add a blank
     newDrafts.unshift(null);

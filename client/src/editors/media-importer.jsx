@@ -76,10 +76,13 @@ export const MediaImporter = React.forwardRef((props, ref) => {
 
   async function importFiles(files) {
     // filter for acceptable files
-    const acceptable = files.filter((file) => {
+    const acceptable = [];
+    for (let file of files) {
       const type = extractFileCategory(file.type);
-      return types.includes(type);
-    });
+      if (types.includes(type)) {
+        acceptable.push(file);
+      }
+    }
     if (acceptable.length === 0) {
       return 0;
     }
