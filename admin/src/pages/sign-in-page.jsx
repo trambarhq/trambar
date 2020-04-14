@@ -96,6 +96,7 @@ function SignInPageSync(props) {
       id: 'username',
       type: 'text',
       value: username,
+      autofocus: true,
       disabled: submitting,
       env,
       onChange: handleUsernameChange,

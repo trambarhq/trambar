@@ -260,6 +260,7 @@ function SpreadsheetSummaryPageSync(props) {
     const props = {
       id: 'url',
       value: draft.get('url', ''),
+      autofocus: creating,
       readOnly,
       env,
       onChange: handleURLChange,
@@ -489,7 +490,7 @@ function Sheet(props) {
 }
 
 async function requestUpdate(project, spreadsheet, env) {
-  if (spreadsheet.url && spreadsheet.name) {
+  if (spreadsheet?.url && spreadsheet?.name) {
     const baseURL = getWebsiteAddress(project);
     const relativeURL = ExcelFile.getObjectURL([ spreadsheet.name ]);
     const url = `${baseURL}${relativeURL}`;

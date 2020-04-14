@@ -256,8 +256,7 @@ function formatAddedDeleteChanged(object) {
 }
 
 function pushItem(list, text, key) {
-  const key = list.length;
-  class className = `item ${key}`;
+  const className = `item ${key}`;
   list.push(
     <span className={className} key={key}>
       {text}

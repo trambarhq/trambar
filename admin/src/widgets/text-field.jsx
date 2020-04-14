@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 
 // widgets
 import { AutosizeTextArea } from 'common/widgets/autosize-text-area.jsx';
@@ -10,8 +10,20 @@ import './text-field.scss';
  * text input.
  */
 export function TextField(props) {
-  const { env, children, readOnly, list, ...inputProps } = props;
+  const { env, children, readOnly, autofocus, list, ...inputProps } = props;
   const { t } = env.locale;
+  const inputRef = useRef();
+
+  useEffect(() => {
+    if (autofocus) {
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
+    }
+  }, []);
+
   const classNames = [ 'text-field' ];
   let Input = 'input';
   if (props.type === 'textarea') {
@@ -38,7 +50,7 @@ export function TextField(props) {
   return (
     <div className={classNames.join(' ')}>
       <label htmlFor={props.id}>{children}</label>
-      <Input {...inputProps} />
+      <Input ref={inputRef} {...inputProps} />
       {datalist}
     </div>
   );

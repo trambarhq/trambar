@@ -319,6 +319,7 @@ function UserSummaryPageSync(props) {
     const props = {
       id: 'name',
       value: name,
+      autofocus: creating,
       spellCheck: false,
       readOnly,
       env,

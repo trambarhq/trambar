@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useImperativeHandle, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useImperativeHandle, useEffect } from 'react';
 import { useListener } from 'relaks';
 
 // widgets
@@ -10,7 +10,7 @@ import './multilingual-text-field.scss';
  * A text field that accepts text in multiple languages.
  */
 export const MultilingualTextField = React.forwardRef((props, ref) => {
-  const { env, type, id, readOnly, value, availableLanguageCodes, children, onChange, ...otherProps } = props;
+  const { env, type, id, readOnly, autofocus, value, availableLanguageCodes, children, onChange, ...otherProps } = props;
   const { t, languageCode, directory } = env.locale;
   const [ selectedLanguageCode, setSelectedLanguageCode ] = useState();
   const currentLanguageCode = useMemo(() => {
@@ -56,6 +56,7 @@ export const MultilingualTextField = React.forwardRef((props, ref) => {
     return list;
   }, [ env, availableLanguageCodes ]);
   const [ instance ] = useState({ value });
+  const inputRef = useRef();
 
   useImperativeHandle(ref, () => {
     return instance;
@@ -127,6 +128,15 @@ export const MultilingualTextField = React.forwardRef((props, ref) => {
       setSelectedLanguageCode(languageCode);
     }
   }, [ languageCode ])
+  useEffect(() => {
+    if (autofocus) {
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
+    }
+  }, []);
 
   const classNames = [ 'multilingual-text-field' ];
   let Input;
@@ -158,7 +168,7 @@ export const MultilingualTextField = React.forwardRef((props, ref) => {
   return (
     <div className={classNames.join(' ')}>
       <label htmlFor={id}>{children}</label>
-      <Input {...inputProps} />
+      <Input ref={inputRef} {...inputProps} />
       {renderTabs()}
     </div>
   );

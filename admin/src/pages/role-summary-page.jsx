@@ -60,7 +60,7 @@ function RoleSummaryPageSync(props) {
     original: role || {},
     reset: readOnly,
   });
-  const members = users.filter((user) => {
+  const members = users?.filter((user) => {
     return (role) ? user.role_ids.includes(role.id) : false;
   });
   const userSelection = useSelectionBuffer({
@@ -242,6 +242,7 @@ function RoleSummaryPageSync(props) {
     const props = {
       id: 'title',
       value: draft.get('details.title', {}),
+      autofocus: creating,
       availableLanguageCodes,
       readOnly,
       env,
@@ -296,18 +297,19 @@ function RoleSummaryPageSync(props) {
     return (
       <OptionList {...listProps}>
         <label>{t('role-summary-rating')}</label>
-        {messageRatings.map(renderRatingOption)}
+        {Object.entries(messageRatings).map(renderRatingOption)}
       </OptionList>
     );
   }
 
-  function renderRatingOption(rating, key) {
+  function renderRatingOption(entry, key) {
+    const [ name, rating ] = entry;
     const [ ratingPrev, ratingCurr ] = draft.getBoth('settings.rating', 0);
     const props = {
-      name: key,
+      name,
       selected: (ratingCurr === rating),
       previous: (ratingPrev === rating),
-      children: t(`role-summary-rating-${key}`),
+      children: t(`role-summary-rating-${name}`),
     };
     return <option key={key} {...props} />;
   }

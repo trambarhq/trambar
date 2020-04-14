@@ -75,6 +75,7 @@ MarkdownPreview.propTypes = {
 MultilingualTextField.propTypes = {
   type: PropTypes.string,
   value: PropTypes.oneOfType([ PropTypes.object, PropTypes.string ]),
+  autofocus: PropTypes.bool,
   availableLanguageCodes: PropTypes.arrayOf(PropTypes.string),
   env: PropTypes.instanceOf(Environment).isRequired,
   onChange: PropTypes.func,
@@ -126,6 +127,7 @@ TaskList.propTypes = {
 };
 TextField.propTypes = {
   env: PropTypes.instanceOf(Environment).isRequired,
+  autofocus: PropTypes.bool,
 };
 Tooltip.propTypes = {
   upward: PropTypes.bool,

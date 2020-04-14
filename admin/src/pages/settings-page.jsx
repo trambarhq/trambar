@@ -156,6 +156,7 @@ function SettingsPageSync(props) {
     const props = {
       id: 'title',
       value: draft.get('details.title', {}),
+      autofocus: !system,
       availableLanguageCodes,
       readOnly,
       env,

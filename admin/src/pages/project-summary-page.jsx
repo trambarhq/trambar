@@ -234,6 +234,7 @@ function ProjectSummaryPageSync(props) {
     const props = {
       id: 'title',
       value: draft.get('details.title', {}),
+      autofocus: creating,
       availableLanguageCodes,
       readOnly,
       env,
@@ -324,7 +325,6 @@ function ProjectSummaryPageSync(props) {
       if (!creating) {
         previous = isEmpty(optsPrev);
       }
-      console.log({ selected, previous });
     } else {
       selected = optsCurr[option.name];
       previous = optsPrev[option.name];

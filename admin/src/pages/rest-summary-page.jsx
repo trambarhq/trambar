@@ -247,6 +247,7 @@ function RestSummaryPageSync(props) {
     const props = {
       id: 'url',
       value: draft.get('url', ''),
+      autofocus: creating,
       readOnly,
       env,
       onChange: handleURLChange,
