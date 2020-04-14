@@ -149,20 +149,20 @@ export function StoryViewOptions(props) {
   function renderButtons(section) {
     if (section === 'main') {
       const recipients = options.get('recipients');
-      const self = recipients.find(usr => usr.id === currentUser.id);
+      const self = recipients?.find(usr => usr.id === currentUser.id);
       const bookmarkProps = {
          label: t(bookmarkExpected ? 'option-keep-bookmark' : 'option-add-bookmark'),
          selected: !!self,
          hidden: !bookmarkExpected && !canCreateBookmark(currentUser, story, access),
          onClick: handleAddBookmarkClick,
       };
-      const otherRecipients = recipients.filters(usr => usr.id !== currentUser.id);
+      const otherRecipients = recipients?.filter(usr => usr.id !== currentUser.id);
       const sendBookmarkProps = {
-        label: (otherRecipients.length > 0)
-          ? t('option-send-bookmarks')
-          : t('option-send-bookmarks-to-$count-users', otherRecipients.length),
+        label: (otherRecipients?.length > 0)
+          ? t('option-send-bookmarks-to-$count-users', otherRecipients.length)
+          : t('option-send-bookmarks'),
         hidden: !canSendBookmarks(currentUser, story, access),
-        selected: (otherRecipients.length > 0) || selectingRecipients,
+        selected: (otherRecipients?.length > 0) || selectingRecipients,
         onClick: handleSendBookmarkClick,
       };
       const addIssueProps = {
@@ -228,7 +228,7 @@ export function StoryViewOptions(props) {
     // don't allow issue to be deleted once someone has been assigned to it
     const props = {
       show: enteringIssueDetails,
-      allowDeletion: !reactions.some(r => r.type === 'assignment'),
+      allowDeletion: !reactions?.some(r => r.type === 'assignment'),
       currentUser,
       story,
       issue: options.get('issue'),

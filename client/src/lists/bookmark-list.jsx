@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useProgress } from 'relaks';
 import { findStoryAuthors, findReactionAuthors, findBookmarkSenders, findBookmarkRecipients } from 'common/objects/finders/user-finder.js';
 import { findStoriesOfBookmarks, findDraftStories } from 'common/objects/finders/story-finder.js';
 import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
 import { findBookmarksByUser } from 'common/objects/finders/bookmark-finder.js';
 import { findReactionsToStories } from 'common/objects/finders/reaction-finder.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { SmartList } from 'common/widgets/smart-list.jsx';
@@ -21,7 +22,7 @@ export async function BookmarkList(props) {
   const { access, bookmarks, currentUser, project } = props;
   const { highlightStoryID, scrollToStoryID } = props;
   const { t } = env.locale;
-  const [ hiddenStoryIDs, setHiddenStoryIDs ] = useState();
+  const [ hiddenStoryIDs, setHiddenStoryIDs ] = useState([]);
   const [ show ] = useProgress();
   const currentUserArray = useMemo(() => {
     return [ currentUser ];
@@ -196,7 +197,7 @@ export async function BookmarkList(props) {
 }
 
 function sortBookmarks(bookmarks, stories) {
-  const withStory = bookmarks.filter((bookmark) => {
+  const withStory = bookmarks?.filter((bookmark) => {
     return stories?.some(s => s.id === bookmark.story_id);
   });
   return orderBy(withStory, [ 'id' ], [ 'desc' ]);
@@ -204,7 +205,7 @@ function sortBookmarks(bookmarks, stories) {
 
 function findReactions(reactions, story) {
   if (story) {
-    return reactions.filter({ story_id: story.id });
+    return reactions.filter(r => r.story_id === story.id);
   }
 }
 

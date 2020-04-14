@@ -258,6 +258,5 @@ function removeByKey(rows, object, keyName) {
 }
 
 export {
-  LocalStorageCache as default,
   LocalStorageCache,
 };

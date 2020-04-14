@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useListener } from 'relaks';
 import Moment from 'moment';
-import StoryTypes from 'common/objects/types/story-types.js';
+import { StoryTypes } from 'common/objects/types/story-types.js';
 
 // widgets
 import { Chartist, Svg } from 'common/widgets/chartist.jsx';
@@ -94,19 +94,20 @@ export const UserStatistics = React.memo((props) => {
     if (!chartType) {
       return null;
     }
-    let items = indices.map(renderLegendItem);
+    let items = Object.entries(indices).map(renderLegendItem);
     if (items.length === 0) {
       items = '\u00a0';
     }
     return <div className="legend">{items}</div>;
   }
 
-  function renderLegendItem(index, type) {
+  function renderLegendItem(entry, key) {
+    const [ type, index ] = entry;
     const props = {
       series: String.fromCharCode('a'.charCodeAt(0) + index),
       label: t(`user-statistics-legend-${type}`),
     };
-    return <LegendItem key={index} {...props} />;
+    return <LegendItem key={key} {...props} />;
   }
 
   function renderChart() {
@@ -268,9 +269,11 @@ function getActivityIndices(activities, dates) {
   const present = {};
   for (let date of dates) {
     const counts = activities[date];
-    for (let [ type, count ] of Object.entries(counts)) {
-      if (count) {
-        present[type] = true;
+    if (counts) {
+      for (let [ type, count ] of Object.entries(counts)) {
+        if (count) {
+          present[type] = true;
+        }
       }
     }
   }
@@ -338,7 +341,7 @@ function getUpperRange(series, additive) {
 
 function getDateOfWeekLabels(dates, localeCode) {
   return dates.map((date) => {
-    return Moment(d).locale(localeCode).format('dd');
+    return Moment(date).locale(localeCode).format('dd');
   });
 }
 

@@ -57,12 +57,9 @@ export function ProjectPanel(props) {
   const handleSignOutClick = useListener((evt) => {
     run(async () => {
       await confirm(t('project-management-sign-out-are-you-sure'));
-
-      const { address } = route.context;
       await database.endSession();
-
       // delete links of all projects on server
-      const serverLinks = projectLinks.filter({ address });
+      const serverLinks = projectLinks.filter(lnk => lnk.address === route.context.address);
       await removeLinks(database, serverLinks);
     });
   });
@@ -107,7 +104,7 @@ export function ProjectPanel(props) {
         <i className="fas fa-database" /> {t('settings-projects')}
       </header>
       <body>
-        {projectLinks.map(renderProject)}
+        {projectLinks?.map(renderProject)}
         {renderDialogBox()}
       </body>
       <footer>

@@ -13,7 +13,7 @@ export class KonamiCode {
 
   static removeListener(listener) {
     const index = this.listeners.indexOf(listener);
-    list.listeners.splice(index, 1);
+    this.listeners.splice(index, 1);
     if (this.listeners.length === 0) {
       window.removeEventListener('keydown', this.handleKeydown);
     }

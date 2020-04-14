@@ -14,7 +14,7 @@ const emptyArray = [];
  * @return {Bookmark[]}
  */
 async function findBookmarksByUser(db, user, stories, minimum) {
-  const storyIds = uniqIds(stories.map(s => s.id));
+  const storyIds = uniqIds(stories?.map(s => s?.id));
   if (storyIds.length === 0 || !user) {
     return emptyArray;
   }

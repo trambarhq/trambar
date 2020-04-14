@@ -1,5 +1,5 @@
-import Moment from 'moment';
 import React from 'react';
+import { orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { ProfileImage } from '../widgets/profile-image.jsx';

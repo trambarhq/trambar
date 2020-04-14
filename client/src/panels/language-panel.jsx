@@ -67,12 +67,13 @@ export function LanguagePanel(props) {
     };
     return (
       <select key={1} {...props}>
-        {language.countries.map(renderCountryOption)}
+        {Object.entries(language.countries).map(renderCountryOption)}
       </select>
     );
   }
 
-  function renderCountryOption(name, code) {
-    return <option key={code} value={code}>{name}</option>;
+  function renderCountryOption(entry, key) {
+    const [ code, name ] = entry;
+    return <option key={key} value={code}>{name}</option>;
   }
 }

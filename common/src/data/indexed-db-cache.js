@@ -574,6 +574,5 @@ class IndexedDBCache {
 }
 
 export {
-  IndexedDBCache as default,
   IndexedDBCache,
 };

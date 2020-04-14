@@ -523,7 +523,7 @@ export function StoryContents(props) {
 
   function renderAppComponents() {
     const components = story.details.components;
-    if (components.length === 0) {
+    if (!components?.length) {
       return null;
     }
     const sorted = sortComponents(components, env);

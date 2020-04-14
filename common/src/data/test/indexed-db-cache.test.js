@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import IndexedDBCache from '../indexed-db-cache.js';
+import { IndexedDBCache } from '../indexed-db-cache.js';
 
 describe('IndexedDBCache', function() {
   let cache = new IndexedDBCache({ databaseName: 'test' });

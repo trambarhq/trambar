@@ -1,8 +1,8 @@
 import React from 'react';
-import IndexedDBCache from 'common/data/indexed-db-cache.js';
-import SQLIteCache from 'common/data/sqlite-cache.js';
-import WebsocketNotifier from 'common/transport/websocket-notifier.js';
-import PushNotifier from 'common/transport/push-notifier.js';
+import { IndexedDBCache } from 'common/data/indexed-db-cache.js';
+import { SQLiteCache } from 'common/data/sqlite-cache.js';
+import { WebsocketNotifier } from 'common/transport/websocket-notifier.js';
+import { PushNotifier } from 'common/transport/push-notifier.js';
 
 // widgets
 import { PageContainer } from '../widgets/page-container.jsx';

@@ -69,7 +69,6 @@ if (!isNodeJs) {
 }
 
 export {
-  StoryTypes as default,
   StoryTypes,
   ListStoryTypes,
   EditableStoryTypes,

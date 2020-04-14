@@ -95,20 +95,20 @@ export function StoryEditorOptions(props) {
     if (section === 'main') {
       const access = 'read-write';
       const recipients = options.get('recipients');
-      const self = recipients.find(usr => usr.id === currentUser.id);
+      const self = recipients?.find(usr => usr.id === currentUser.id);
       const bookmarkProps = {
         label: t('option-add-bookmark'),
         selected: !!self,
         hidden: !canCreateBookmark(currentUser, story, access),
         onClick: handleAddBookmarkClick,
       };
-      const otherRecipients = recipients.filter(usr => usr.id !== currentUser.id);
+      const otherRecipients = recipients?.filter(usr => usr.id !== currentUser.id);
       const sendBookmarkProps = {
-        label: (!otherRecipients.length)
-          ? t('option-send-bookmarks')
-          : t('option-send-bookmarks-to-$count-users', otherRecipients.length),
+        label: (otherRecipients?.length > 0)
+          ? t('option-send-bookmarks-to-$count-users', otherRecipients?.length)
+          : t('option-send-bookmarks'),
         hidden: !canSendBookmarks(currentUser, story, access),
-        selected: (otherRecipients.length > 0) || selectingRecipients,
+        selected: (otherRecipients?.length > 0) || selectingRecipients,
         onClick: handleSendBookmarkClick,
       };
       const addIssueProps = {

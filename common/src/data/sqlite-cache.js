@@ -525,6 +525,5 @@ function decodeJSON(s) {
 }
 
 export {
-  SQLiteCache as default,
   SQLiteCache,
 };

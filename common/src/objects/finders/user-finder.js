@@ -77,9 +77,11 @@ async function findProjectMembers(db, projects) {
       }
     }
   } else {
-    for (let userID of projects.user_ids) {
-      if (!userIDs.includes(userID)) {
-        userIDs.push(userID);
+    if (projects) {
+      for (let userID of projects.user_ids) {
+        if (!userIDs.includes(userID)) {
+          userIDs.push(userID);
+        }
       }
     }
   }
@@ -151,7 +153,7 @@ async function findUsersWithRoles(db, roles, minimum) {
  * @return {User}
  */
 async function findStoryAuthors(db, stories) {
-  const userIDs = stories.map(s => s.user_ids);
+  const userIDs = stories?.map(s => s?.user_ids);
   return findUsers(db, userIDs);
 }
 
@@ -164,7 +166,7 @@ async function findStoryAuthors(db, stories) {
  * @return {User}
  */
 async function findReactionAuthors(db, reactions) {
-  const userIDs = reactions.map(r => r.user_id);
+  const userIDs = reactions?.map(r => r?.user_id);
   return findUsers(db, userIDs);
 }
 
@@ -177,7 +179,7 @@ async function findReactionAuthors(db, reactions) {
  * @return {User}
  */
 async function findBookmarkRecipients(db, bookmarks) {
-  const userIDs = bookmarks.map(bm => bm.target_user_id);
+  const userIDs = bookmarks?.map(bm => bm?.target_user_id);
   return findUsers(db, userIDs);
 }
 
@@ -190,7 +192,7 @@ async function findBookmarkRecipients(db, bookmarks) {
  * @return {User}
  */
 async function findBookmarkSenders(db, bookmarks) {
-  const userIDs = bookmarks.map(bm => bm.user_ids);
+  const userIDs = bookmarks?.map(bm => bm?.user_ids);
   return findUsers(db, userIDs);
 }
 
@@ -203,12 +205,12 @@ async function findBookmarkSenders(db, bookmarks) {
  * @return {User}
  */
 async function findNotificationTriggerers(db, notifications) {
-  const userIDs = notifications.map(n => n.user_id);
+  const userIDs = notifications?.map(n => n?.user_id);
   return findUsers(db, userIDs);
 }
 
 async function findSnapshotAuthors(db, snapshots) {
-  const userIDs = snapshots?.map(s => s.user_id);
+  const userIDs = snapshots?.map(s => s?.user_id);
   return findUsers(db, userIDs);
 }
 

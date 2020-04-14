@@ -35,9 +35,16 @@ export class RemoteDataSource extends EventEmitter {
   constructor(options) {
     super();
     this.active = false;
-    this.options = Object.assign({ ...defaultOptions }, options);
     this.idMappings = {};
-    this.cache = this.options.cache;
+    this.options = {};
+    for (let [ name, value ] of Object.entries(defaultOptions)) {
+      if (options && options[name] !== undefined) {
+        this.options[name] = options[name];
+      } else {
+        this.options[name] = value;
+      }
+    }
+    this.cache = options.cache;
     this.cacheSignatures = [];
     this.changeMonitors = [];
     this.recentSearchResults = [];
@@ -413,7 +420,7 @@ export class RemoteDataSource extends EventEmitter {
   findTemporaryID(location, permanentID) {
     const path = [ location.address, location.schema, location.table ];
     const list = get(this.idMappings, path);
-    const entry = list.find(e => e.permanent === permanentID);
+    const entry = list?.find(e => e.permanent === permanentID);
     if (entry) {
       return entry.temporary;
     }

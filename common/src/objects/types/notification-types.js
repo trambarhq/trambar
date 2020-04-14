@@ -37,9 +37,9 @@ const MembershipNotificationTypes = [
 ];
 
 export {
-  NotificationTypes as default,
-  NotificationTypes,
+  UserNotificationTypes,
   AdminNotificationTypes,
+  NotificationTypes,
   GitNotificationTypes,
   MembershipNotificationTypes,
 };

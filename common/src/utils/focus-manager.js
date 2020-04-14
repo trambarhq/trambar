@@ -9,12 +9,13 @@ export class FocusManager {
     this.entries.unshift({ component, props });
 
     // see if a request for focus has been made
-    remove(this.requests, (request) => {
+    const focused = this.requests.filter((request) => {
       if (isMatch(props, request)) {
         component.focus();
         return true;
       }
     });
+    pullAll(this.requests, focused);
   }
 
   static unregister(component) {

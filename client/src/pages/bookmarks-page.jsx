@@ -53,7 +53,7 @@ export default async function BookmarksPage(props) {
   }
 
   function renderEmptyMessage() {
-    if (bookmarks.length > 0) {
+    if (bookmarks?.length > 0) {
       return null;
     }
     if (!bookmarks) {

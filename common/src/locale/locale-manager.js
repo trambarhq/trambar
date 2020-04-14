@@ -12,7 +12,7 @@ class LocaleManager extends EventEmitter {
 
     this.options = {};
     for (let [ name, value ] of Object.entries(defaultOptions)) {
-      if (options && options[name]) {
+      if (options && options[name] !== undefined) {
         this.options[name] = options[name];
       } else {
         this.options[name] = value;

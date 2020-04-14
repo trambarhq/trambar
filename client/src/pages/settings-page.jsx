@@ -193,7 +193,7 @@ function SettingsPageSync(props) {
   }
 
   function renderMobileAlertPanel() {
-    if (devices.length === 0) {
+    if (!(devices?.length > 0)) {
       return null;
     }
     const props = {

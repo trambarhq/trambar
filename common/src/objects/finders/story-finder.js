@@ -46,7 +46,7 @@ async function findStories(db, ids) {
  * @param  {number[]} ids
  * @param  {User} currentUser
  *
- * @return {Story}
+ * @return {Story[]}
  */
 async function findViewableStories(db, ids, currentUser) {
   ids = uniqIds(ids);
@@ -470,7 +470,7 @@ async function findStoriesWithRolesInListing(db, type, roleIDs, currentUser, blo
  * @return {Story[]}
  */
 async function findStoriesOfNotifications(db, notifications, currentUser) {
-  const ids = notifications.map(n => n.story_id).filter(Boolean);
+  const ids = notifications?.map(n => n.story_id).filter(Boolean);
   return findViewableStories(db, ids, currentUser);
 }
 
@@ -484,7 +484,7 @@ async function findStoriesOfNotifications(db, notifications, currentUser) {
  * @return {Story[]}
  */
 async function findStoriesOfBookmarks(db, bookmarks, currentUser) {
-  let ids = bookmarks.map(bm => bm.story_id);
+  const ids = bookmarks?.map(bm => bm.story_id);
   return findViewableStories(db, ids, currentUser);
 }
 

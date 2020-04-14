@@ -419,7 +419,7 @@ const defaultOptions = {
 };
 
 function findRepo(repos, story) {
-  return repos.some(r => findLinkByRelative(story, r, 'project'));
+  return repos?.find(r => findLinkByRelative(story, r, 'project'));
 }
 
 function countRespondents(reactions) {

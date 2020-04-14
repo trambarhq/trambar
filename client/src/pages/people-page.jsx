@@ -55,7 +55,7 @@ export default async function PeoplePage(props) {
     // if we're not searching for stories, then we know which
     // users to list at this point
     if (!(search || date)) {
-      if (roleIDs.length > 0) {
+      if (roleIDs?.length > 0) {
         // show users with roles
         visibleUsers = findUsersWithRoles(props.members, roleIDs);
       } else {
@@ -83,7 +83,7 @@ export default async function PeoplePage(props) {
       }
     }
     if (users) {
-      if (roleIDs.length > 0) {
+      if (roleIDs?.length > 0) {
         visibleUsers = findUsersWithRoles(users, roleIDs);
       } else {
         visibleUsers = users;
@@ -230,7 +230,7 @@ export default async function PeoplePage(props) {
 
   function renderEmptyMessage() {
     if (selectedUser) {
-      if (selectedUserStories.length > 0) {
+      if (selectedUserStories?.length > 0) {
         return null;
       }
       if (!selectedUserStories) {
@@ -239,7 +239,7 @@ export default async function PeoplePage(props) {
         let phrase;
         if (date) {
           phrase = 'news-no-stories-on-date';
-        } else if (roleIDs.length > 0) {
+        } else if (roleIDs?.length > 0) {
           phrase = 'news-no-stories-by-role';
         } else if (search) {
           phrase = 'news-no-stories-found';
@@ -250,7 +250,7 @@ export default async function PeoplePage(props) {
         return <EmptyMessage {...props} />;
       }
     } else {
-      if (visibleUsers.length > 0) {
+      if (visibleUsers?.length > 0) {
         return null;
       }
       if (!visibleUsers) {
@@ -259,7 +259,7 @@ export default async function PeoplePage(props) {
         let phrase;
         if (date) {
           phrase = 'people-no-stories-on-date';
-        } else if (roleIDs.length > 0) {
+        } else if (roleIDs?.length > 0) {
           phrase = 'people-no-users-by-role';
         } else if (search) {
           phrase = 'people-no-stories-found';
@@ -291,7 +291,7 @@ export default async function PeoplePage(props) {
 
 function findUsersWithRoles(users, roleIDs) {
   return users.filter((user) => {
-    return user.role_ids.some(id => roleIDs.includes(id));
+    return user.role_ids.some(id => roleIDs?.includes(id));
   });
 }
 

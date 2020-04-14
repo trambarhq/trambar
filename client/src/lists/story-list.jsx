@@ -4,7 +4,7 @@ import { findStoryAuthors, findReactionAuthors, findBookmarkRecipients } from 'c
 import { findProjectRepos } from 'common/objects/finders/repo-finder.js';
 import { findBookmarksByUser } from 'common/objects/finders/bookmark-finder.js';
 import { findReactionsToStories } from 'common/objects/finders/reaction-finder.js';
-import { findByIds, orderBy } from 'common/utils/array-utils.js';
+import { findByIds, orderBy, uniq } from 'common/utils/array-utils.js';
 
 // widgets
 import { SmartList } from 'common/widgets/smart-list.jsx';
@@ -263,7 +263,7 @@ function getStoryTime(story) {
 
 function findReactions(reactions, story) {
   if (story && reactions) {
-    return reactions.filter({ story_id: story.id });
+    return reactions.filter(r => r.story_id === story.id);
   }
 }
 

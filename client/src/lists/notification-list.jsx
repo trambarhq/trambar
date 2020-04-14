@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useProgress } from 'relaks';
 import { findNotificationTriggerers } from 'common/objects/finders/user-finder.js';
 import { findStoriesOfNotifications } from 'common/objects/finders/story-finder.js';
+import { orderBy } from 'common/utils/array-utils.js';
 
 // widgets
 import { SmartList } from 'common/widgets/smart-list.jsx';
@@ -118,7 +119,7 @@ export async function NotificationList(props) {
   }
 
   function updateNotificationView() {
-    if (!env.focus || !env.visible)  {
+    if (!env.focus || !env.visible || !notifications)  {
       return;
     }
     const unread = notifications.filter((notification) => {

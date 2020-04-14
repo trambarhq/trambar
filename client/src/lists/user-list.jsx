@@ -147,7 +147,7 @@ function findListingStories(stories, listing) {
 }
 
 function findUserStories(stories, user) {
-  return stories.filter((story) => {
+  return stories?.filter((story) => {
     return (story.user_ids.includes(user.id));
   });
 }

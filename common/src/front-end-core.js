@@ -284,10 +284,9 @@ async function start(cfg) {
  * @return {*}
  */
 async function loadSetting(key) {
-  let criteria = { key };
-  let query = Object.assign({ criteria }, settingsLocation);
-  let records = await dataSource.find(query);
-  let record = records[0];
+  const query = { criteria: { key }, ...settingsLocation };
+  const records = await dataSource.find(query);
+  const record = records[0];
   if (record) {
     return record.value;
   }
@@ -300,7 +299,7 @@ async function loadSetting(key) {
  * @param  {*} value
  */
 async function saveSetting(key, value) {
-  let record = { key, value };
+  const record = { key, value };
   await dataSource.save(settingsLocation, [ record ]);
 }
 
@@ -310,7 +309,7 @@ async function saveSetting(key, value) {
  * @param  {string} key
  */
 async function removeSetting(key) {
-  let record = { key };
+  const record = { key };
   await dataSource.remove(settingsLocation, [ record ]);
 }
 

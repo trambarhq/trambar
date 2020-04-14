@@ -33,7 +33,7 @@ function isPendingMember(user, project) {
   if (!user || !project) {
     return false;
   }
-  return !!user?.requested_project_ids.includes(project.id);
+  return !!user?.requested_project_ids?.includes(project.id);
 }
 
 /**
@@ -124,7 +124,7 @@ function isCoauthor(authors, user) {
   if (!authors || !user) {
     return false;
   }
-  return authors.findIndex(usr.id === user.id) >= 1;
+  return authors.findIndex(usr => usr.id === user.id) >= 1;
 }
 
 /**
@@ -293,6 +293,9 @@ function canAddIssue(user, story, repo, access) {
 function canAccessRepo(user, repo) {
   if (!user || !repo) {
     return false;
+  }
+  if (repo === true) {
+    debugger;
   }
   if (repo.user_ids.includes(user.id)) {
     if (repo.details.web_url) {
