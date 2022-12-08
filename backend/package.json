@@ -20,7 +20,7 @@
     "csv-parse": "^2.5.0",
     "dnscache": "^1.0.1",
     "esm": "^3.0.82",
-    "express": "^4.16.3",
+    "express": "^4.17.3",
     "file-type": "^7.7.1",
     "htpasswd-auth": "^2.0.1",
     "ignore": "^3.3.10",
